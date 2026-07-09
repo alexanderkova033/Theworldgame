@@ -15,6 +15,7 @@ A practical, near-term checklist. For bigger-picture future ideas, see [ROADMAP.
 - [x] Permanent start-screen nation picker (card grid + clickable preview map); no in-game way to change nations.
 - [x] Visual pass: serif display font, brass/gold palette, panel shadows/depth, map gradients + drop-shadow, shape-based building/stat icons.
 - [x] Roads render as an actual dashed road network (capital hub → connected provinces, thicker with more roads) instead of a dot icon; provinces got decorative terrain textures (hills/forest/coast); building icons upgraded to pictorial (barn, chimney'd factory, book, flask).
+- [x] Roads fixed to fan out as separate visible lanes per road built (plus a "×N" count badge past 5), since a single line only getting marginally thicker wasn't a visible enough change. Same fix applied to army: a crossed-swords marker + number now appears at the capital once you've recruited any soldiers. All 8 stat-panel icons upgraded from abstract shapes to pictorial models (coin stack, person, wheat sheaf, factory, shield, crossed swords, flask, star), and the 3 nation crests on the start screen got a thematic emblem each (wheat sheaf / book / gear).
 
 ## Known rough edges / near-term follow-ups
 

@@ -55,6 +55,7 @@ function App() {
           <MapPanel
             nation={nation}
             placedBuildings={state.placedBuildings}
+            armyStrength={state.stats.armyStrength}
             selectedProvinceId={currentProvinceId}
             onSelectProvince={setSelectedProvinceId}
           />

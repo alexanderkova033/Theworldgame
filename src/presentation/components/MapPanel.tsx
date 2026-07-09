@@ -8,6 +8,7 @@ import { BUILDING_COLORS, BuildingIcon } from "./BuildingIcon";
 interface MapPanelProps {
   nation: Nation;
   placedBuildings: PlacedBuilding[];
+  armyStrength: number;
   selectedProvinceId: string;
   onSelectProvince: (provinceId: string) => void;
 }
@@ -20,7 +21,25 @@ const TERRAIN_PATTERN: Partial<Record<Terrain, string>> = {
   coast: "url(#terrain-coast)",
 };
 
-export function MapPanel({ nation, placedBuildings, selectedProvinceId, onSelectProvince }: MapPanelProps) {
+// Each road built adds its own visible lane (parallel to the last), up to
+// this many, fanning out from the centerline. Beyond that, a "×N" badge
+// keeps the count legible instead of the lines turning into an unreadable
+// smear.
+const MAX_ROAD_LANES = 5;
+const LANE_SPACING = 5;
+
+function getLaneOffsets(count: number): number[] {
+  const lanes = Math.min(count, MAX_ROAD_LANES);
+  const offsets: number[] = [0];
+  for (let i = 1; i < lanes; i++) {
+    const pair = Math.ceil(i / 2);
+    const sign = i % 2 === 1 ? 1 : -1;
+    offsets.push(pair * sign * LANE_SPACING);
+  }
+  return offsets;
+}
+
+export function MapPanel({ nation, placedBuildings, armyStrength, selectedProvinceId, onSelectProvince }: MapPanelProps) {
   const { width, height, coastPath, provinces } = MAP_GEOMETRY;
   const capital = provinces.find((p) => p.id === nation.capitalProvinceId);
 
@@ -99,8 +118,10 @@ export function MapPanel({ nation, placedBuildings, selectedProvinceId, onSelect
           })}
         </g>
 
-        {/* Road network: a line from the capital to every owned province with
-            at least one road, thicker the more roads have been built there. */}
+        {/* Road network: every road built in the capital grows its hub;
+            every road built elsewhere adds its own visible lane on the road
+            connecting that province to the capital, so building more roads
+            is always visibly different — not just a slightly thicker line. */}
         {capital &&
           [...roadCountByProvince.entries()].map(([provinceId, count]) => {
             const province = provinces.find((p) => p.id === provinceId);
@@ -108,38 +129,83 @@ export function MapPanel({ nation, placedBuildings, selectedProvinceId, onSelect
 
             if (provinceId === nation.capitalProvinceId) {
               return (
-                <circle
-                  key={`road-hub-${provinceId}`}
-                  cx={province.labelX}
-                  cy={province.labelY - 24}
-                  r={2.5 + count}
-                  className="map-panel__road-hub"
-                />
+                <g key={`road-hub-${provinceId}`}>
+                  <circle
+                    cx={province.labelX}
+                    cy={province.labelY - 24}
+                    r={Math.min(2.5 + count * 1.2, 10)}
+                    className="map-panel__road-hub"
+                  />
+                  {count > 1 && (
+                    <text x={province.labelX + 14} y={province.labelY - 20} className="map-panel__road-count">
+                      ×{count}
+                    </text>
+                  )}
+                </g>
               );
             }
 
-            const strokeWidth = Math.min(2 + count * 1.4, 7);
+            const dx = province.labelX - capital.labelX;
+            const dy = province.labelY - capital.labelY;
+            const length = Math.hypot(dx, dy) || 1;
+            const perpX = -dy / length;
+            const perpY = dx / length;
+
             return (
               <g key={`road-${provinceId}`}>
-                <line
-                  x1={capital.labelX}
-                  y1={capital.labelY}
-                  x2={province.labelX}
-                  y2={province.labelY}
-                  className="map-panel__road-line-base"
-                  style={{ strokeWidth: strokeWidth + 2 }}
-                />
-                <line
-                  x1={capital.labelX}
-                  y1={capital.labelY}
-                  x2={province.labelX}
-                  y2={province.labelY}
-                  className="map-panel__road-line-top"
-                  style={{ strokeWidth }}
-                />
+                {getLaneOffsets(count).map((offset, laneIndex) => {
+                  const ox = perpX * offset;
+                  const oy = perpY * offset;
+                  return (
+                    <g key={laneIndex}>
+                      <line
+                        x1={capital.labelX + ox}
+                        y1={capital.labelY + oy}
+                        x2={province.labelX + ox}
+                        y2={province.labelY + oy}
+                        className="map-panel__road-line-base"
+                      />
+                      <line
+                        x1={capital.labelX + ox}
+                        y1={capital.labelY + oy}
+                        x2={province.labelX + ox}
+                        y2={province.labelY + oy}
+                        className="map-panel__road-line-top"
+                      />
+                    </g>
+                  );
+                })}
+                {count > MAX_ROAD_LANES && (
+                  <text
+                    x={(capital.labelX + province.labelX) / 2}
+                    y={(capital.labelY + province.labelY) / 2 - 8}
+                    className="map-panel__road-count"
+                  >
+                    ×{count}
+                  </text>
+                )}
               </g>
             );
           })}
+
+        {/* Army marker: crossed swords at the capital, growing (and labeled)
+            with army strength, so recruiting soldiers shows up on the map too. */}
+        {capital && armyStrength > 0 && (
+          <g
+            transform={`translate(${capital.labelX - 32}, ${capital.labelY}) scale(${Math.min(0.7 + armyStrength / 150, 1.8)})`}
+            className="map-panel__army-marker"
+          >
+            <line x1={-6} y1={-6} x2={6} y2={6} />
+            <line x1={6} y1={-6} x2={-6} y2={6} />
+            <circle cx={6} cy={6} r={1.2} />
+            <circle cx={-6} cy={6} r={1.2} />
+          </g>
+        )}
+        {capital && armyStrength > 0 && (
+          <text x={capital.labelX - 32} y={capital.labelY + 17} className="map-panel__road-count">
+            {Math.round(armyStrength)}
+          </text>
+        )}
 
         {provinces.map((province) => (
           <text

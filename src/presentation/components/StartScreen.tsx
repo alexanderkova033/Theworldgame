@@ -47,7 +47,9 @@ export function StartScreen({ nations, onSelectNation }: StartScreenProps) {
               style={{ "--nation-color": nation.color } as CSSProperties}
               onClick={() => onSelectNation(nation.id)}
             >
-              <span className="nation-card__crest" />
+              <span className="nation-card__crest">
+                <CrestEmblem nationId={nation.id} />
+              </span>
               <span className="nation-card__name">{nation.name}</span>
               <span className="nation-card__blurb">{nation.blurb}</span>
               <span className="nation-card__cta">Play as {nation.name}</span>
@@ -56,5 +58,72 @@ export function StartScreen({ nations, onSelectNation }: StartScreenProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+function starPoints(outerR: number, innerR: number): string {
+  const points: string[] = [];
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const angle = (Math.PI / 5) * i - Math.PI / 2;
+    points.push(`${Math.cos(angle) * r},${Math.sin(angle) * r}`);
+  }
+  return points.join(" ");
+}
+
+function cogPoints(outerR: number, innerR: number, teeth: number): string {
+  const points: string[] = [];
+  const vertices = teeth * 2;
+  for (let i = 0; i < vertices; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const angle = ((Math.PI * 2) / vertices) * i - Math.PI / 2;
+    points.push(`${Math.cos(angle) * r},${Math.sin(angle) * r}`);
+  }
+  return points.join(" ");
+}
+
+// A small emblem per nation, echoing its flavor (farmland, schools,
+// industry) — purely decorative, drawn from the same basic-shape approach
+// as BuildingIcon/StatIcon.
+function CrestEmblem({ nationId }: { nationId: string }) {
+  const emblem = (() => {
+    switch (nationId) {
+      case "astravia":
+        // A wheat sheaf, for a farming republic.
+        return (
+          <g stroke="#f4efe2" strokeWidth={1.3} strokeLinecap="round" fill="none">
+            <line x1={0} y1={-7} x2={0} y2={6} />
+            <line x1={0} y1={-5} x2={-3.5} y2={-7} />
+            <line x1={0} y1={-5} x2={3.5} y2={-7} />
+            <line x1={0} y1={-1.5} x2={-4} y2={-3.5} />
+            <line x1={0} y1={-1.5} x2={4} y2={-3.5} />
+            <line x1={-3} y1={5} x2={3} y2={5} />
+          </g>
+        );
+      case "caldenreich":
+        // An open book, for a kingdom proud of its schools.
+        return (
+          <g fill="#f4efe2">
+            <polygon points="0,-6 -7,-2 -7,6 0,2" />
+            <polygon points="0,-6 7,-2 7,6 0,2" />
+          </g>
+        );
+      case "veldoria":
+        // A gear, for an industrial power.
+        return (
+          <g fill="#f4efe2">
+            <polygon points={cogPoints(6.5, 5, 8)} />
+            <circle cx={0} cy={0} r={2.1} className="nation-card__crest-hole" />
+          </g>
+        );
+      default:
+        return <polygon points={starPoints(6, 2.6)} fill="#f4efe2" />;
+    }
+  })();
+
+  return (
+    <svg width={22} height={22} viewBox="-8 -8 16 16">
+      {emblem}
+    </svg>
   );
 }
