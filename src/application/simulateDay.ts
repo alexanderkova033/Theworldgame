@@ -4,7 +4,7 @@
 // returns a new GameState.
 import { calculateDailyExpenses, calculateDailyIncome } from "../domain/economy/economyRules";
 import { advanceProject, isProjectComplete } from "../domain/construction/constructionRules";
-import { advanceDay, isFirstDayOfMonth } from "../domain/country/calendar";
+import { advanceDay, isEveryNMonths, isFirstDayOfMonth } from "../domain/country/calendar";
 import { generateId } from "../domain/country/id";
 import type { CountryStats, DailyDelta, GameEvent, GameState } from "../domain/country/types";
 import { updateFood } from "../domain/food/foodRules";
@@ -13,13 +13,14 @@ import { getNation } from "../domain/nations/nationRules";
 import { updatePopularity } from "../domain/politics/politicsRules";
 import { updatePopulation } from "../domain/population/populationRules";
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
+import { applyRandomEventEffect, pickRandomEvent } from "../domain/randomEvents/randomEventRules";
 import { calculateDailyResearch } from "../domain/research/researchRules";
 import { addResources, calculateDailyProduction } from "../domain/resources/resourceRules";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
 import { isCollapseRisk, updateStability } from "../domain/stability/stabilityRules";
 import { applyProjectCompletion } from "./applyProjectCompletion";
 import { generateMonthlyReport } from "./generateMonthlyReport";
-import { MAX_EVENT_LOG_LENGTH } from "../domain/constants";
+import { MAX_EVENT_LOG_LENGTH, RANDOM_EVENT_INTERVAL_MONTHS } from "../domain/constants";
 
 export function simulateDay(state: GameState): GameState {
   const efficiencyMultiplier = calculateEfficiencyMultiplier(state.roadCount);
@@ -118,11 +119,27 @@ export function simulateDay(state: GameState): GameState {
     finalHistory = [];
   }
 
+  // 12. A random world event, roughly every RANDOM_EVENT_INTERVAL_MONTHS.
+  let finalStats = updatedStats;
+  let finalResources = resources;
+  if (isEveryNMonths(date, RANDOM_EVENT_INTERVAL_MONTHS)) {
+    const randomEvent = pickRandomEvent();
+    const applied = applyRandomEventEffect(finalStats, finalResources, randomEvent.effect);
+    finalStats = applied.stats;
+    finalResources = applied.resources;
+    events.unshift({
+      id: generateId("event"),
+      date,
+      message: `${randomEvent.name}: ${randomEvent.message}`,
+      severity: randomEvent.severity,
+    });
+  }
+
   return {
     ...working,
     date,
-    stats: updatedStats,
-    resources,
+    stats: finalStats,
+    resources: finalResources,
     events: events.slice(0, MAX_EVENT_LOG_LENGTH),
     history: finalHistory,
     monthlyReports,

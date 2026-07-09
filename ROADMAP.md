@@ -19,6 +19,7 @@ This roadmap is intentionally staged: each version should be a playable, stable 
 - [x] Map-centric layout (map as the central canvas, side panels instead of everything stacked below it), a bigger world (extra unclaimed islands beyond the main continent), other nations rendered in their own colors instead of flat grey, and a real road network (lanes that visibly multiply per road built, not just a thicker line).
 - [x] Development/Military/Taxes actions (and their stats) temporarily hidden from the UI to focus on the core build/food/economy loop — see "Deliberately paused" below.
 - [x] Catan-inspired raw resources: terrain produces Wood/Ore/Grain/Fish, buildings cost a matching resource alongside Crowns, and nations trade with the continental market (better rate with a coastal port). This pulled the "additional resources" idea forward from Version 0.3 below, scoped to bank trading rather than needing the other nations simulated first.
+- [x] Random world events every 6 in-game months (droughts, trade booms, civil unrest, festivals, mineral finds, timber blight — a mix of positive and negative, hitting treasury/food/stability/resources). Pulled forward from Version 0.2 below.
 
 ## Deliberately paused (hidden, not deleted)
 
@@ -34,7 +35,6 @@ Removed from the UI on purpose while the basics get solid — the domain/applica
 - [ ] Save/load (localStorage first; file export/import later).
 - [ ] Basic win/lose-adjacent conditions or milestones (e.g., stability collapse consequences, population milestones).
 - [ ] More granular construction: build queue/limits, cancel a project, multiple farms/factories with independent progress.
-- [ ] Random events (positive and negative) that interrupt the steady simulation — droughts, trade booms, unrest, discoveries.
 - [ ] Better balancing pass with data-driven constants (a single tunable config file, sanity-checked against long simulated playtests).
 - [ ] Basic settings: difficulty, starting country size.
 
@@ -46,6 +46,7 @@ Removed from the UI on purpose while the basics get solid — the domain/applica
 - [ ] Elections: popularity determines whether the player's government (or a rival) stays in power.
 - [ ] Laws: toggleable policies with trade-offs (beyond the tax slider).
 - [ ] Rebellions: low stability can spawn an active rebellion mechanic, not just a passive risk.
+- [ ] More random-event variety and weighting (rare vs. common events, event chains, events scoped to a specific province/terrain rather than always national).
 
 ## Version 0.4 — Beyond one isolated country
 

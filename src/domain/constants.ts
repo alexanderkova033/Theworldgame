@@ -67,6 +67,9 @@ export const STABILITY_LOW_POPULARITY_THRESHOLD = 30;
 export const STABILITY_GOOD_POPULARITY_THRESHOLD = 50;
 export const STABILITY_COLLAPSE_THRESHOLD = 15;
 
+// --- Random world events ---
+export const RANDOM_EVENT_INTERVAL_MONTHS = 6; // a random event fires every N in-game months
+
 // --- Misc ---
 export const MAX_EVENT_LOG_LENGTH = 100;
 export const CURRENCY_SYMBOL = "Cr"; // "Crowns" — the shared continental currency

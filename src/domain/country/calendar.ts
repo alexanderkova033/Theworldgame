@@ -22,6 +22,14 @@ export function isFirstDayOfMonth(date: GameDate): boolean {
   return date.day === 1;
 }
 
+// True on the first day of every Nth month since the game began (month 1),
+// e.g. isEveryNMonths(date, 6) is true at the start of month 7, 13, 19...
+export function isEveryNMonths(date: GameDate, n: number): boolean {
+  if (!isFirstDayOfMonth(date)) return false;
+  const totalMonths = (date.year - 1) * MONTHS_PER_YEAR + date.month;
+  return totalMonths % n === 1;
+}
+
 const MONTH_NAMES = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",

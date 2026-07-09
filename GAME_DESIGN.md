@@ -58,6 +58,7 @@ Trading happens with "the continental market" (an abstract bank, not the other t
 - The player can set a **speed**: 1x, 2x, 3x, or 5x, which controls how many real-world milliseconds pass per in-game day (higher speed = shorter real time per day).
 - Every 30 in-game days is treated as one **month** for reporting purposes (a simplified calendar, not real calendar months — see TECHNICAL_DESIGN.md for why).
 - At the start of a new month, a **monthly report** is generated summarizing the previous month's income, expenses, and stat deltas.
+- Every **6 months**, a random world event fires — a mix of good and bad fortune (a bountiful harvest, a drought, a trade boom, civil unrest, a festival, a mineral strike, a timber blight) that nudges treasury, food, stability, or a resource up or down by a percentage. It's logged to the event log like anything else, colored by severity. Nothing the player does changes when the next one lands — it's a fixed cadence, not a random chance each day — so events are a predictable rhythm to plan around rather than a surprise that could strike on any given tick.
 
 ## Economy system
 

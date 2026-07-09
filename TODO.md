@@ -20,6 +20,7 @@ A practical, near-term checklist. For bigger-picture future ideas, see [ROADMAP.
 - [x] Catan-inspired resources: `domain/resources/` (Wood/Ore/Grain/Fish tied to terrain, produced daily per owned province), building costs now require a matching resource as well as Crowns, and a new Trade panel lets you exchange resources with the market at 4:1 (2:1 with a coastal port). `ResourcesPanel`, `TradePanel`, `ResourceIcon`, and a small per-province resource badge on the map are all new.
 - [x] Simplified two duplicated patterns: `application/actions/createBuildAction.ts` is now the one place `buildFarm`/`buildFactory`/`buildRoad` share, and `presentation/components/iconShapes.ts` holds the `starPoints`/`cogPoints` math instead of it being copy-pasted between `StatIcon.tsx` and `StartScreen.tsx`.
 - [x] Icons redone bigger and more literal (StatIcon/ResourceIcon are colorful mini-illustrations now, not small single-color glyphs) since the old ones were too small/abstract to read at a glance. Terrain textures made much bolder and extended to every province (not just owned ones), with hills changed from wavy lines to solid mound shapes since it looked too much like the coast pattern. The map also got zoom (scroll wheel, or +/−/Reset buttons) and pan (click-and-drag) — `MapPanel` now owns a `viewBox` as local camera state, with drag-vs-click disambiguated by a movement threshold so panning never accidentally reselects a province.
+- [x] Random world events every 6 in-game months: `domain/randomEvents/` (8 events, mix of good/bad, affecting treasury/food/stability/a resource by a percentage), triggered from `simulateDay` via a new `isEveryNMonths` calendar helper, logged to the event log with the right severity color. Verified deterministically (events land on exactly day 180, 360, 540, 720...) and in the running UI.
 
 ## Known rough edges / near-term follow-ups
 
@@ -33,6 +34,7 @@ A practical, near-term checklist. For bigger-picture future ideas, see [ROADMAP.
 - [ ] No hard cap on simultaneous projects — a player could queue many at once. Acceptable for MVP, worth revisiting with a build queue in v0.2.
 - [ ] Stability "collapse" is currently just a logged warning event, not a real consequence. Full collapse mechanics are a v0.2+ item.
 - [ ] Balancing numbers in `domain/constants.ts` are a first pass, not deeply playtested — expect them to need tuning as more people play.
+- [ ] Random events are uniformly-random and always national in scope (no weighting toward rarer/bigger events, no per-province targeting) — see ROADMAP.md's v0.3 note for where this goes next.
 - [ ] No automated tests yet. Domain layer is pure functions and should be straightforward to unit test — worth adding before the codebase grows further.
 - [ ] No mobile/responsive layout pass — designed for desktop browser widths first.
 - [ ] No accessibility pass (keyboard navigation, ARIA labels) yet — the map in particular relies on mouse clicks with no keyboard equivalent.

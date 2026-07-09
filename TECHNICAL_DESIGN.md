@@ -76,9 +76,12 @@ None of these functions know about days, projects, or the UI — they just trans
 6. Applies stability and popularity adjustments based on the new food/tax/army numbers.
 7. Applies slow population growth/decline based on food and stability.
 8. Appends a `DailyDelta` to `state.history` (what changed today), used later for the monthly report.
-9. Returns a **new** `GameState` object (the engine never mutates the state it's given — this keeps React's state updates predictable and makes the engine easy to unit test).
+9. Every `RANDOM_EVENT_INTERVAL_MONTHS` (6), applies a random world event on top of everything else that day (see below) and logs it.
+10. Returns a **new** `GameState` object (the engine never mutates the state it's given — this keeps React's state updates predictable and makes the engine easy to unit test).
 
 A simplified calendar is used: every month has 30 days, and every year has 12 months (360 days/year). This avoids leap-year/variable-month-length edge cases that add complexity without adding gameplay value in the MVP. It can be swapped for a real calendar later without touching any other system, since only `domain/country`'s calendar helper knows about day/month/year math.
+
+**Random events**: `domain/country/calendar.ts` exports `isEveryNMonths(date, n)` (true on the first day of month 7, 13, 19... for `n=6`), and `domain/randomEvents/` holds a flat list of plain-data definitions (`RandomEventDefinition`: a name, flavor message, severity, and an *effect* — multipliers on treasury/food/population/a resource, or a flat stability delta) plus two pure functions: `pickRandomEvent()` (uniform random pick) and `applyRandomEventEffect(stats, resources, effect)`. `simulateDay` calls both only when `isEveryNMonths` is true for the newly-advanced date, folding the result into that day's stats/resources before returning. Multipliers rather than flat deltas were a deliberate choice — treasury and food both grow by orders of magnitude over a long game, so a flat "-500 treasury" would be devastating on day 1 and unnoticeable by year 5, while "-15%" scales with wherever the game currently is.
 
 ## Map and provinces
 
