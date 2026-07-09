@@ -6,8 +6,8 @@ export const DAYS_PER_MONTH = 30;
 export const MONTHS_PER_YEAR = 12;
 
 // --- Food ---
-export const FOOD_PER_FARM = 50; // food produced per farm per in-game day
-export const FOOD_PER_POP_CONSUMPTION = 0.005; // food eaten per person per in-game day
+export const FOOD_PER_FARM = 10000; // food produced per farm per in-game day
+export const FOOD_PER_POP_CONSUMPTION = 1; // food eaten per person per in-game day
 export const FARM_COST = 500;
 export const FARM_BUILD_DAYS = 60;
 

@@ -46,7 +46,7 @@ export function startNewGame(nationId: string): GameState {
     stats: {
       treasury: 5000,
       population: 10000,
-      food: 500,
+      food: 8000,
       industry: calculateIndustryOutput(factoryCount, 0),
       stability: 60,
       armyStrength: 0,

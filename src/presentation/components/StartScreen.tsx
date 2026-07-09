@@ -9,7 +9,7 @@ interface StartScreenProps {
 }
 
 export function StartScreen({ nations, onSelectNation }: StartScreenProps) {
-  const { width, height, coastPath, provinces } = MAP_GEOMETRY;
+  const { width, height, coastPath, provinces, otherLandmasses } = MAP_GEOMETRY;
 
   return (
     <div className="start-screen">
@@ -22,6 +22,9 @@ export function StartScreen({ nations, onSelectNation }: StartScreenProps) {
         </p>
 
         <svg viewBox={`0 0 ${width} ${height}`} className="start-screen__map" aria-hidden="true">
+          {otherLandmasses.map((land) => (
+            <path key={land.id} d={land.path} className="start-screen__unclaimed-land" />
+          ))}
           <path d={coastPath} className="start-screen__coast" />
           {provinces.map((province) => {
             const owner = getNationForProvince(province.id);

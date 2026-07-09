@@ -51,7 +51,12 @@ function App() {
       />
 
       <main className="game-layout__main">
-        <div className="game-layout__map-row">
+        <aside className="game-layout__sidebar game-layout__sidebar--left">
+          <StatsPanel stats={state.stats} />
+          <ActionsPanel state={state} selectedProvinceId={currentProvinceId} dispatch={dispatch} />
+        </aside>
+
+        <div className="game-layout__map-stage">
           <MapPanel
             nation={nation}
             placedBuildings={state.placedBuildings}
@@ -61,21 +66,11 @@ function App() {
           />
         </div>
 
-        <div className="game-layout__columns">
-          <div className="game-layout__column">
-            <StatsPanel stats={state.stats} taxRate={state.taxRate} />
-            <ActionsPanel state={state} selectedProvinceId={currentProvinceId} dispatch={dispatch} />
-          </div>
-
-          <div className="game-layout__column">
-            <ProjectsPanel projects={state.projects} />
-            <ReportsPanel reports={state.monthlyReports} />
-          </div>
-
-          <div className="game-layout__column">
-            <EventLog events={state.events} />
-          </div>
-        </div>
+        <aside className="game-layout__sidebar game-layout__sidebar--right">
+          <ProjectsPanel projects={state.projects} />
+          <ReportsPanel reports={state.monthlyReports} />
+          <EventLog events={state.events} />
+        </aside>
       </main>
     </div>
   );

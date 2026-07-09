@@ -4,24 +4,22 @@ import { StatIcon, type StatIconType } from "./StatIcon";
 
 interface StatsPanelProps {
   stats: CountryStats;
-  taxRate: number;
 }
 
 function formatNumber(value: number): string {
   return Math.round(value).toLocaleString();
 }
 
-export function StatsPanel({ stats, taxRate }: StatsPanelProps) {
-  const rows: Array<[StatIconType | null, string, string]> = [
+// Army/Research/Popularity/Tax Rate are hidden for now, alongside the
+// Development/Military/Taxes actions that would let you affect them — see
+// ActionsPanel.tsx. They come back together.
+export function StatsPanel({ stats }: StatsPanelProps) {
+  const rows: Array<[StatIconType, string, string]> = [
     ["treasury", "Treasury", `${formatNumber(stats.treasury)} ${CURRENCY_SYMBOL}`],
     ["population", "Population", formatNumber(stats.population)],
     ["food", "Food", formatNumber(stats.food)],
     ["industry", "Industry", formatNumber(stats.industry)],
     ["stability", "Stability", `${formatNumber(stats.stability)}/100`],
-    ["army", "Army Strength", formatNumber(stats.armyStrength)],
-    ["research", "Research Points", formatNumber(stats.researchPoints)],
-    ["popularity", "Popularity", `${formatNumber(stats.popularity)}/100`],
-    [null, "Tax Rate", `${Math.round(taxRate * 100)}%`],
   ];
 
   return (
@@ -31,7 +29,7 @@ export function StatsPanel({ stats, taxRate }: StatsPanelProps) {
         {rows.map(([icon, label, value]) => (
           <div className="stats-panel__row" key={label}>
             <dt>
-              {icon && <StatIcon type={icon} />}
+              <StatIcon type={icon} />
               {label}
             </dt>
             <dd>{value}</dd>

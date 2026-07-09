@@ -12,13 +12,13 @@ This project is an **MVP (minimum viable product)** — a small, working foundat
 
 ## What the game is
 
-You govern one nation, made up of two or three provinces on an eight-province continental map (the rest belongs to the other two nations, visible but not yet playable). Every in-game day, the simulation updates your stats automatically:
+You govern one nation, made up of two or three provinces on an eight-province continent (the rest belongs to the other two nations, shown in their own colors but not yet playable — plus a few unclaimed islands further out, purely decorative for now). Every in-game day, the simulation updates your stats automatically:
 
-- Farms grow food, factories grow industry and income, roads improve efficiency.
-- Taxes fund your treasury but affect how popular your government is.
-- Your population needs food and stability to stay content.
-- You can construct buildings, invest in education, recruit soldiers, and start research — all of which take real in-game time to complete, and all (except recruiting) happen in whichever province you've selected on the map.
+- Farms grow food (each person eats 1 food/day — build enough farms to keep up), factories grow industry and income, roads improve efficiency and visibly connect your provinces to your capital.
+- Building happens in whichever province you've selected on the map.
 - At the end of each in-game month, you get a report summarizing what happened.
+
+**Currently trimmed down on purpose:** taxes, education/research, and recruiting soldiers are temporarily removed from the Actions panel (and their stats hidden) while the core build/economy/food loop gets nailed down. The underlying code for them still exists — see ROADMAP.md — they're coming back once the basics feel right.
 
 There is no win/lose condition yet. The current goal is to build and manage a stable, growing nation.
 
@@ -46,16 +46,17 @@ npm run lint      # Run the linter
 
 ## Current features (MVP)
 
-- A start screen where you permanently choose one of three nations (Astravia, Caldenreich, Veldoria) — pick by clicking a card or clicking your nation directly on a preview map.
+- A start screen where you permanently choose one of three nations (Astravia, Caldenreich, Veldoria) — pick by clicking a card or clicking your nation directly on a preview map that shows the whole world, including the other nations and a few unclaimed islands.
+- A map-centric layout: the map is the big central view, with stats/actions and projects/reports/events as scrollable side panels flanking it — not stacked underneath.
 - Continuous day-by-day time system with a real in-game calendar (year/month/day).
 - Pause / resume and speed controls (1x, 2x, 3x, 5x).
 - Daily simulation ticks that update the economy, population, and stability.
 - Monthly reports summarizing income, expenses, and stat changes.
 - An event log that records important happenings (buildings finished, low food, low stability, etc).
-- A stylized SVG map of the continent's eight provinces — your nation's territory is colored and clickable (with a star on your capital), the rest is muted and non-interactive. Click a province to select it, then build there; completed buildings show up as small shape icons on the map.
-- Player actions: build farms, build factories, build roads, invest in education, recruit soldiers, adjust taxes, start research.
-- Construction and research projects that take in-game time and show live progress.
-- A single-nation simulation with core stats: treasury, population, food, industry, stability, army strength, research points, and government popularity — each with its own icon in the stats panel.
+- A stylized SVG map: your nation's territory is colored and clickable (with a star on your capital), the other two nations render in their own colors (dimmed, non-interactive), and a few decorative islands sit further out. Click a province to select it, then build there; completed buildings show up as small pictorial icons, and roads render as an actual dashed road network fanning out from your capital.
+- Player actions: build farms, build factories, build roads. (Taxes/education/research/military are temporarily hidden — see "What the game is" above.)
+- Construction projects that take in-game time and show live progress.
+- A single-nation simulation with core stats: treasury, population, food, industry, and stability — each with its own pictorial icon in the stats panel.
 
 See [GAME_DESIGN.md](GAME_DESIGN.md) for the full design and [TECHNICAL_DESIGN.md](TECHNICAL_DESIGN.md) for how it's built.
 
@@ -64,9 +65,8 @@ See [GAME_DESIGN.md](GAME_DESIGN.md) for the full design and [TECHNICAL_DESIGN.m
 - **Start screen** — pick your nation (card or map click). Permanent for the game — there's no undo.
 - **Pause / Resume** — stop or continue the flow of time.
 - **1x / 2x / 3x / 5x** — change how fast days pass while unpaused.
-- **Map** — click a province to choose where your next building goes.
-- **Actions panel** — spend treasury/resources to start a building, research, or policy change in the selected province.
-- **Tax slider/buttons** — raise or lower the tax rate, trading income for popularity.
+- **Map** — click one of your own provinces to choose where your next building goes.
+- **Actions panel** (left sidebar) — spend treasury to build a farm, factory, or road in the selected province.
 - Everything else (food, income, stability, etc.) updates automatically as time passes.
 
 ## Project structure

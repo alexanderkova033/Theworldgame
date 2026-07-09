@@ -1,5 +1,7 @@
 import type { CSSProperties } from "react";
 import type { ProjectType } from "../../domain/construction/types";
+import { NATIONS } from "../../domain/nations/nationData";
+import { getNationForProvince } from "../../domain/nations/nationRules";
 import type { Nation } from "../../domain/nations/types";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
 import type { PlacedBuilding, Terrain } from "../../domain/provinces/types";
@@ -40,7 +42,7 @@ function getLaneOffsets(count: number): number[] {
 }
 
 export function MapPanel({ nation, placedBuildings, armyStrength, selectedProvinceId, onSelectProvince }: MapPanelProps) {
-  const { width, height, coastPath, provinces } = MAP_GEOMETRY;
+  const { width, height, coastPath, provinces, otherLandmasses } = MAP_GEOMETRY;
   const capital = provinces.find((p) => p.id === nation.capitalProvinceId);
 
   const buildingsByProvince = new Map<string, PlacedBuilding[]>();
@@ -62,6 +64,7 @@ export function MapPanel({ nation, placedBuildings, armyStrength, selectedProvin
         viewBox={`0 0 ${width} ${height}`}
         className="map-panel__svg"
         style={{ "--nation-color": nation.color } as CSSProperties}
+        preserveAspectRatio="xMidYMid meet"
       >
         <defs>
           <radialGradient id="ocean-gradient" cx="50%" cy="40%" r="75%">
@@ -87,11 +90,26 @@ export function MapPanel({ nation, placedBuildings, armyStrength, selectedProvin
 
         <rect x={0} y={0} width={width} height={height} fill="url(#ocean-gradient)" />
 
+        {/* Other landmasses: decorative only, not part of any nation yet. */}
+        <g filter="url(#coast-shadow)">
+          {otherLandmasses.map((land) => (
+            <path key={land.id} d={land.path} className="map-panel__unclaimed-land">
+              <title>{land.name} (unclaimed)</title>
+            </path>
+          ))}
+        </g>
+        {otherLandmasses.map((land) => (
+          <text key={`${land.id}-label`} x={land.labelX} y={land.labelY} className="map-panel__label is-foreign" pointerEvents="none">
+            {land.name}
+          </text>
+        ))}
+
         <g filter="url(#coast-shadow)">
           <path d={coastPath} className="map-panel__coast" />
 
           {provinces.map((province) => {
             const isOwned = nation.provinceIds.includes(province.id);
+            const owner = isOwned ? nation : getNationForProvince(province.id);
             const isSelected = isOwned && province.id === selectedProvinceId;
             return (
               <path
@@ -102,14 +120,18 @@ export function MapPanel({ nation, placedBuildings, armyStrength, selectedProvin
                   isOwned ? "is-owned" : "is-foreign",
                   isSelected ? "is-selected" : "",
                 ].join(" ")}
+                style={!isOwned ? { fill: owner?.color ?? "#414a58" } : undefined}
                 onClick={isOwned ? () => onSelectProvince(province.id) : undefined}
               >
-                <title>{province.name}{isOwned ? " (yours)" : " (foreign territory)"}</title>
+                <title>
+                  {province.name}
+                  {isOwned ? " (yours)" : owner ? ` (${owner.name})` : " (unclaimed)"}
+                </title>
               </path>
             );
           })}
 
-          {/* Terrain texture, only for owned provinces (foreign ones stay flat/muted). */}
+          {/* Terrain texture, only for owned provinces (foreign ones stay flat). */}
           {provinces.map((province) => {
             if (!nation.provinceIds.includes(province.id)) return null;
             const pattern = TERRAIN_PATTERN[province.terrain];
@@ -233,14 +255,13 @@ export function MapPanel({ nation, placedBuildings, armyStrength, selectedProvin
       </svg>
 
       <div className="map-panel__legend">
-        <span className="map-panel__legend-item">
-          <span className="map-panel__legend-swatch map-panel__legend-swatch--owned" />
-          {nation.name} (yours)
-        </span>
-        <span className="map-panel__legend-item">
-          <span className="map-panel__legend-swatch map-panel__legend-swatch--foreign" />
-          Foreign territory
-        </span>
+        {NATIONS.map((n) => (
+          <span key={n.id} className="map-panel__legend-item">
+            <span className="map-panel__legend-swatch" style={{ backgroundColor: n.color }} />
+            {n.name}
+            {n.id === nation.id ? " (yours)" : ""}
+          </span>
+        ))}
         {(Object.keys(BUILDING_COLORS) as ProjectType[]).map((type) => (
           <span key={type} className="map-panel__legend-item">
             <BuildingIconSwatch type={type} />

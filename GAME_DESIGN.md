@@ -33,11 +33,13 @@ Every country tracks the following core stats (see `CountryStats` in `src/domain
 
 The MVP simulates the player's chosen nation only — the other two nations exist on the map but aren't separately simulated yet. Playable/AI multi-nation simulation is a roadmap item.
 
+**Scope note:** Army Strength, Research Points, and Popularity are still part of `CountryStats` and the simulation, but the actions that would let the player affect them (Recruit Soldiers, Invest in Education, Start Research, raise/lower taxes) are temporarily hidden from the UI while the core build/food/economy loop is being tuned. They're hidden together with their stats — see TODO.md for exactly what comes back and when.
+
 ## Map and provinces
 
-The continent is divided into eight provinces, rendered as a stylized SVG map (an organic coastline with province borders, similar in spirit to a Paradox-style province map) — Redgate, Thornwick, Marrow Coast, Caldermoor, Ashford, Duskhaven, Veldshire, and Brindlewood. Each of the three nations controls two or three of them; the player's own territory is colored in their nation's crest color, with a star marking the capital, while the rest of the continent is shown muted and non-interactive.
+The continent is divided into eight provinces, rendered as a stylized SVG map (an organic coastline with province borders, similar in spirit to a Paradox-style province map) — Redgate, Thornwick, Marrow Coast, Caldermoor, Ashford, Duskhaven, Veldshire, and Brindlewood. Each of the three nations controls two or three of them; the player's own territory is colored in their nation's crest color, with a star marking the capital. The other two nations render in *their* crest colors too (dimmed, non-interactive) rather than a flat "foreign" grey, so you can tell them apart at a glance. A few small unclaimed islands (Kestrel Isles, Solmere, Vashtel Cay) sit further out on the map — purely decorative for now, a hint that the world extends beyond the one continent.
 
-The player picks one of their own provinces before starting a build action ("Building in: Redgate — click the map to change"), and every completed farm, factory, road, education investment, or research initiative is remembered as a small icon on the province it was built in.
+The player picks one of their own provinces before starting a build action ("Building in: Redgate — click the map to change"), and every completed farm, factory, or road is remembered as a small pictorial icon on the province it was built in. Roads are the exception: instead of a single icon, each road built adds a visible lane to an actual road line connecting that province back to the capital, so building more roads is always visibly different.
 
 Provinces are geographic and visual in the MVP — **the national economy is still one shared pool** (treasury, food, industry, and so on are national totals, not per-province). Splitting the economy so each province has its own local stats is a natural next step, tracked in ROADMAP.md.
 
@@ -70,7 +72,7 @@ Provinces are geographic and visual in the MVP — **the national economy is sti
 These systems are intentionally simple in the MVP but designed to be tuned and expanded later:
 
 - **Taxes**: Higher tax rate → more income, but lower popularity over time. Popularity slowly drifts back toward a neutral baseline when taxes are moderate.
-- **Food**: Population consumes food daily. If food stock runs low or goes negative, stability drops. Building farms is the main way to keep up with a growing population.
+- **Food**: Every person consumes 1 food per day. If food stock runs low or goes negative, stability drops. Building farms is the main way to keep up with a growing population.
 - **Stability**: Falls when food is scarce or popularity is very low. Very low stability increases the risk of a "collapse" event (early MVP: this is logged as a warning; full collapse consequences are a roadmap item).
 - **Population**: Grows slowly when food and stability are both healthy; growth stalls or reverses under famine or unrest.
 - **Army**: Recruiting soldiers costs treasury immediately and adds ongoing upkeep (a daily treasury cost). Army strength does not yet have a gameplay use beyond being a stat to manage (wars are a roadmap item).

@@ -16,6 +16,16 @@ This roadmap is intentionally staged: each version should be a playable, stable 
 - [x] Visual map: 8 provinces, click-to-select, completed buildings shown as icons (national economy still one shared pool — see Version 0.2).
 - [x] Permanent nation picker: choose Astravia, Caldenreich, or Veldoria on a start screen before the game begins; no way to change it afterward. The other two nations' territory shows on the map but isn't simulated yet (see Version 0.4).
 - [x] Visual polish pass: serif display type, brass/gold accent palette, panel depth/shadows, gradient+shadow map rendering, shape-based building and stat icons.
+- [x] Map-centric layout (map as the central canvas, side panels instead of everything stacked below it), a bigger world (extra unclaimed islands beyond the main continent), other nations rendered in their own colors instead of flat grey, and a real road network (lanes that visibly multiply per road built, not just a thicker line).
+- [x] Development/Military/Taxes actions (and their stats) temporarily hidden from the UI to focus on the core build/food/economy loop — see "Deliberately paused" below.
+
+## Deliberately paused (hidden, not deleted)
+
+Removed from the UI on purpose while the basics get solid — the domain/application code for all of these is untouched, so bringing each back is a presentation-layer change, not a rebuild:
+
+- [ ] Re-add Taxes actions (raise/lower) and the Popularity stat.
+- [ ] Re-add Development actions (Invest in Education, Start Research) and the Research Points stat.
+- [ ] Re-add Military actions (Recruit Soldiers) and the Army Strength stat, plus its existing map marker.
 
 ## Version 0.2 — Make it a real game loop
 
@@ -42,6 +52,7 @@ This roadmap is intentionally staged: each version should be a playable, stable 
 - [ ] Trade: import/export resources between nations, affecting prices and availability.
 - [ ] Diplomacy: treaties, alliances, rivalries between nations.
 - [ ] Basic AI nation behavior (simple heuristics, not full parity with the player).
+- [ ] Turn the decorative islands (Kestrel Isles, Solmere, Vashtel Cay) into real, ownable territory — new nations to play as, or land the player's nation can colonize/settle.
 
 ## Long-term dream version
 

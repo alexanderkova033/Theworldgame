@@ -1,26 +1,11 @@
-import {
-  buildFactory,
-  buildFarm,
-  buildRoad,
-  canStartResearch,
-  investEducation,
-  lowerTaxes,
-  raiseTaxes,
-  recruitSoldiers,
-  startResearch,
-} from "../../application/actions";
+// Development, Military, and Taxes actions are temporarily removed from the
+// UI while the core build/economy/food loop is being nailed down — the
+// underlying domain/application code for them still exists (see
+// application/actions/), so bringing them back later is just re-adding a
+// couple of button groups here.
+import { buildFactory, buildFarm, buildRoad } from "../../application/actions";
 import { canAfford } from "../../domain/economy/economyRules";
-import {
-  CURRENCY_SYMBOL,
-  EDUCATION_COST,
-  FACTORY_COST,
-  FARM_COST,
-  MAX_TAX_RATE,
-  MIN_TAX_RATE,
-  RESEARCH_PROJECT_COST,
-  ROAD_COST,
-} from "../../domain/constants";
-import { getRecruitmentCost } from "../../domain/army/armyRules";
+import { CURRENCY_SYMBOL, FACTORY_COST, FARM_COST, ROAD_COST } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 
@@ -31,7 +16,6 @@ interface ActionsPanelProps {
 }
 
 export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPanelProps) {
-  const recruitCost = getRecruitmentCost();
   const provinceName = getProvinceName(selectedProvinceId);
 
   return (
@@ -60,39 +44,6 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
           onClick={() => dispatch((s) => buildRoad(s, selectedProvinceId))}
         >
           Build Road ({ROAD_COST} {CURRENCY_SYMBOL})
-        </button>
-      </div>
-
-      <div className="actions-panel__group">
-        <h3>Development</h3>
-        <button
-          disabled={!canAfford(state.stats, EDUCATION_COST)}
-          onClick={() => dispatch((s) => investEducation(s, selectedProvinceId))}
-        >
-          Invest in Education ({EDUCATION_COST} {CURRENCY_SYMBOL})
-        </button>
-        <button
-          disabled={!canStartResearch(state)}
-          onClick={() => dispatch((s) => startResearch(s, selectedProvinceId))}
-        >
-          Start Research ({RESEARCH_PROJECT_COST} {CURRENCY_SYMBOL})
-        </button>
-      </div>
-
-      <div className="actions-panel__group">
-        <h3>Military</h3>
-        <button disabled={!canAfford(state.stats, recruitCost)} onClick={() => dispatch(recruitSoldiers)}>
-          Recruit Soldiers ({recruitCost} {CURRENCY_SYMBOL})
-        </button>
-      </div>
-
-      <div className="actions-panel__group">
-        <h3>Taxes</h3>
-        <button disabled={state.taxRate <= MIN_TAX_RATE} onClick={() => dispatch(lowerTaxes)}>
-          Lower Taxes
-        </button>
-        <button disabled={state.taxRate >= MAX_TAX_RATE} onClick={() => dispatch(raiseTaxes)}>
-          Raise Taxes
         </button>
       </div>
     </section>

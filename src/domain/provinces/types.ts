@@ -17,11 +17,23 @@ export interface Province {
   terrain: Terrain;
 }
 
+// A purely decorative landmass — not divided into provinces, not ownable by
+// any nation. Exists so the world map doesn't feel like it's just one
+// continent; a natural place to grow into (new nations, colonization) later.
+export interface DecorativeLandmass {
+  id: string;
+  name: string;
+  path: string;
+  labelX: number;
+  labelY: number;
+}
+
 export interface MapGeometry {
   width: number;
   height: number;
-  coastPath: string; // outline of the whole landmass
+  coastPath: string; // outline of the main continent
   provinces: Province[];
+  otherLandmasses: DecorativeLandmass[];
 }
 
 // A completed building, remembered so the map can show where it is.
