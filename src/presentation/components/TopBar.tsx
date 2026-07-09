@@ -12,9 +12,21 @@ interface TopBarProps {
   onPause: () => void;
   onResume: () => void;
   onSetSpeed: (speed: GameSpeed) => void;
+  onOpenLaws: () => void;
+  onOpenVentures: () => void;
 }
 
-export function TopBar({ nationName, date, isPaused, speed, onPause, onResume, onSetSpeed }: TopBarProps) {
+export function TopBar({
+  nationName,
+  date,
+  isPaused,
+  speed,
+  onPause,
+  onResume,
+  onSetSpeed,
+  onOpenLaws,
+  onOpenVentures,
+}: TopBarProps) {
   return (
     <header className="top-bar">
       <span className="top-bar__nation">{nationName}</span>
@@ -37,6 +49,13 @@ export function TopBar({ nationName, date, isPaused, speed, onPause, onResume, o
             {s}x
           </button>
         ))}
+      </div>
+
+      <div className="top-bar__spacer" />
+
+      <div className="top-bar__panel-buttons">
+        <button onClick={onOpenLaws}>Laws</button>
+        <button onClick={onOpenVentures}>Ventures</button>
       </div>
     </header>
   );

@@ -1,5 +1,25 @@
+.expedition-panel__island-card {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.15);
+  margin-bottom: 0.7rem;
+}
+
+.expedition-panel__island-card:last-child {
+  margin-bottom: 0;
+}
+
+.expedition-panel__island-card.is-focused {
+  border-color: var(--accent-active);
+  background: var(--accent-soft);
+}
+
 .expedition-panel__island {
   margin-top: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--text);
 }
 
 .expedition-panel__hint {
@@ -13,4 +33,9 @@
   font-size: 0.85rem;
   color: var(--text);
   line-height: 1.4;
+  margin: 0;
+}
+
+.expedition-panel__island-card .progress-bar {
+  margin-bottom: 0.2rem;
 }

@@ -25,8 +25,7 @@ export function LawsPanel({ state, dispatch }: LawsPanelProps) {
   const [armedLawId, setArmedLawId] = useState<string | null>(null);
 
   return (
-    <section className="panel laws-panel">
-      <h2>Laws</h2>
+    <div className="laws-panel">
       <p className="resources-panel__hint">Each choice below is permanent — enacting one locks out its counterpart for good.</p>
 
       {lawsByCategory().map(([category, laws]) => {
@@ -73,6 +72,6 @@ export function LawsPanel({ state, dispatch }: LawsPanelProps) {
           </div>
         );
       })}
-    </section>
+    </div>
   );
 }

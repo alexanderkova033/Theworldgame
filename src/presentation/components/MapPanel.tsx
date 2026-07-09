@@ -32,6 +32,17 @@ const TERRAIN_PATTERN: Record<Terrain, string> = {
   plains: "url(#terrain-plains)",
 };
 
+// A faint terrain-colored wash underneath that texture (blended with
+// multiply, so it darkens/tints rather than washing out the nation's
+// color) — the two together read as an actual colored terrain instead of
+// a flat political fill with a pattern stamped on it.
+const TERRAIN_TINT: Record<Terrain, string> = {
+  hills: "#5c4a2e",
+  forest: "#173a22",
+  coast: "#28576b",
+  plains: "#8a6f2e",
+};
+
 // Each road built thickens the single line to its province (instead of
 // fanning out extra parallel lines) — a "×N" badge carries the exact count
 // so the line itself never has to turn into a tangle to stay informative.
@@ -58,7 +69,21 @@ interface ViewBox {
 }
 
 const BASE_VIEW: ViewBox = { x: 0, y: 0, width: MAP_GEOMETRY.width, height: MAP_GEOMETRY.height };
-const MIN_ZOOM = 1; // can't zoom out past the full map
+
+// The world is bigger than the continent: zooming all the way out reveals
+// open sea around it (textured, shaded, alive) instead of hitting a hard
+// edge at the coastline. WORLD_VIEW is that outer bound — centered on the
+// continent, half again as wide/tall on every side.
+const WORLD_MARGIN_X = MAP_GEOMETRY.width * 0.5;
+const WORLD_MARGIN_Y = MAP_GEOMETRY.height * 0.5;
+const WORLD_VIEW: ViewBox = {
+  x: BASE_VIEW.x - WORLD_MARGIN_X,
+  y: BASE_VIEW.y - WORLD_MARGIN_Y,
+  width: BASE_VIEW.width + WORLD_MARGIN_X * 2,
+  height: BASE_VIEW.height + WORLD_MARGIN_Y * 2,
+};
+
+const MIN_ZOOM = BASE_VIEW.width / WORLD_VIEW.width; // zooming out this far shows the whole surrounding sea
 const MAX_ZOOM = 6;
 const DRAG_CLICK_THRESHOLD = 4; // pixels of movement before a drag stops counting as a click
 
@@ -68,15 +93,15 @@ function clampViewBox(vb: ViewBox): ViewBox {
   const width = Math.min(Math.max(vb.width, minWidth), maxWidth);
   const height = width * (BASE_VIEW.height / BASE_VIEW.width);
 
-  // Allow a little overscroll past the coastline so provinces at the edge
-  // aren't stuck glued to the panel border, but not so much you can pan
-  // away into the void indefinitely.
-  const padX = BASE_VIEW.width * 0.2;
-  const padY = BASE_VIEW.height * 0.2;
-  const minX = -padX;
-  const maxX = Math.max(minX, BASE_VIEW.width + padX - width);
-  const minY = -padY;
-  const maxY = Math.max(minY, BASE_VIEW.height + padY - height);
+  // Allow a little overscroll past the open sea so the world edge never
+  // feels glued to the panel border, but not so much you can pan away into
+  // the void indefinitely.
+  const padX = WORLD_VIEW.width * 0.15;
+  const padY = WORLD_VIEW.height * 0.15;
+  const minX = WORLD_VIEW.x - padX;
+  const maxX = Math.max(minX, WORLD_VIEW.x + WORLD_VIEW.width + padX - width);
+  const minY = WORLD_VIEW.y - padY;
+  const maxY = Math.max(minY, WORLD_VIEW.y + WORLD_VIEW.height + padY - height);
 
   return {
     width,
@@ -85,6 +110,16 @@ function clampViewBox(vb: ViewBox): ViewBox {
     y: Math.min(Math.max(vb.y, minY), maxY),
   };
 }
+
+// The visible ocean canvas itself, generous enough to cover the full pan
+// range above with room to spare — it should never run out before the pan
+// clamp does.
+const OCEAN_RECT = {
+  x: WORLD_VIEW.x - WORLD_VIEW.width * 0.2,
+  y: WORLD_VIEW.y - WORLD_VIEW.height * 0.2,
+  width: WORLD_VIEW.width * 1.4,
+  height: WORLD_VIEW.height * 1.4,
+};
 
 export function MapPanel({
   nation,
@@ -227,6 +262,19 @@ export function MapPanel({
             <filter id="coast-shadow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#000" floodOpacity="0.45" />
             </filter>
+            <filter id="shallow-blur" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="9" />
+            </filter>
+
+            {/* Open-sea texture: soft, wide-set swells across the whole
+                ocean, distinct from the tighter shoreline ripples in
+                terrain-coast, so the water reads as alive everywhere, not
+                just at the water's edge. */}
+            <pattern id="ocean-swell" width={140} height={90} patternUnits="userSpaceOnUse">
+              <path d="M-10,20 Q25,4 60,20 T130,20" stroke="#3a7093" strokeWidth={1.6} fill="none" opacity={0.16} />
+              <path d="M-10,55 Q25,39 60,55 T130,55" stroke="#3a7093" strokeWidth={1.4} fill="none" opacity={0.12} />
+              <path d="M15,80 Q50,66 85,80 T155,80" stroke="#3a7093" strokeWidth={1.2} fill="none" opacity={0.1} />
+            </pattern>
 
             {/* Terrain textures — a quiet relief hint (like a HOI4 elevation
                 layer) rather than a competing pattern of their own color, so
@@ -251,7 +299,31 @@ export function MapPanel({
             </pattern>
           </defs>
 
-          <rect x={BASE_VIEW.x} y={BASE_VIEW.y} width={BASE_VIEW.width} height={BASE_VIEW.height} fill="url(#ocean-gradient)" />
+          <rect x={OCEAN_RECT.x} y={OCEAN_RECT.y} width={OCEAN_RECT.width} height={OCEAN_RECT.height} fill="url(#ocean-gradient)" />
+          <rect
+            x={OCEAN_RECT.x}
+            y={OCEAN_RECT.y}
+            width={OCEAN_RECT.width}
+            height={OCEAN_RECT.height}
+            fill="url(#ocean-swell)"
+            pointerEvents="none"
+          />
+
+          {/* Shallow water: a soft blurred halo hugging every coastline,
+              plus a thin surf line right at the water's edge — drawn before
+              any land fill, so the fill's inner half covers it and only the
+              water-side sliver shows through. Reads as an actual sea meeting
+              an actual shore instead of a flat shape dropped on blue. */}
+          <g pointerEvents="none">
+            <path d={coastPath} className="map-panel__shallows" filter="url(#shallow-blur)" />
+            {otherLandmasses.map((land) => (
+              <path key={`${land.id}-shallows`} d={land.path} className="map-panel__shallows" filter="url(#shallow-blur)" />
+            ))}
+            <path d={coastPath} className="map-panel__surf" />
+            {otherLandmasses.map((land) => (
+              <path key={`${land.id}-surf`} d={land.path} className="map-panel__surf" />
+            ))}
+          </g>
 
           {/* Other landmasses: unowned, but chartable via ventures. */}
           <g filter="url(#coast-shadow)">
@@ -277,6 +349,11 @@ export function MapPanel({
                 </path>
               );
             })}
+            {/* A hint of vegetation so unclaimed islands read as actual
+                islands, not flat brown blobs. */}
+            {otherLandmasses.map((land) => (
+              <path key={`${land.id}-terrain`} d={land.path} fill="url(#terrain-forest)" opacity={0.55} pointerEvents="none" />
+            ))}
           </g>
           {otherLandmasses.map((land) => (
             <text key={`${land.id}-label`} x={land.labelX} y={land.labelY} className="map-panel__label is-foreign" pointerEvents="none">
@@ -308,6 +385,25 @@ export function MapPanel({
                     {isOwned ? " (yours)" : owner ? ` (${owner.name})` : " (unclaimed)"}
                   </title>
                 </path>
+              );
+            })}
+
+            {/* Terrain tint: a faint multiply wash in the terrain's own
+                color, underneath its texture — the two together make hills,
+                forest, plains, and coast actually look different from each
+                other, instead of only differing by which pattern is
+                stamped on the same flat political fill. */}
+            {provinces.map((province) => {
+              const isOwned = nation.provinceIds.includes(province.id);
+              return (
+                <path
+                  key={`${province.id}-tint`}
+                  d={province.path}
+                  fill={TERRAIN_TINT[province.terrain]}
+                  opacity={isOwned ? 0.32 : 0.2}
+                  className="map-panel__terrain-tint"
+                  pointerEvents="none"
+                />
               );
             })}
 

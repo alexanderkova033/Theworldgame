@@ -30,3 +30,12 @@
 .top-bar__speed-button {
   min-width: 2.5rem;
 }
+
+.top-bar__spacer {
+  flex: 1;
+}
+
+.top-bar__panel-buttons {
+  display: flex;
+  gap: 0.5rem;
+}

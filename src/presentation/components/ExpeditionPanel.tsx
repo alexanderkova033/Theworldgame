@@ -12,48 +12,49 @@ interface ExpeditionPanelProps {
   dispatch: (action: (state: GameState) => GameState) => void;
 }
 
+// Lists every unclaimed island at once — opened deliberately (top bar button
+// or clicking an island on the map), so there's no need to make the player
+// pick an island first the way the old always-visible sidebar panel did.
 export function ExpeditionPanel({ state, selectedIslandId, dispatch }: ExpeditionPanelProps) {
-  if (!selectedIslandId) {
-    return (
-      <section className="panel expedition-panel">
-        <h2>Ventures</h2>
-        <p className="expedition-panel__hint">Click an unclaimed island on the map to charter a venture there.</p>
-      </section>
-    );
-  }
-
-  const island = MAP_GEOMETRY.otherLandmasses.find((land) => land.id === selectedIslandId);
-  const data = getIslandExpeditionData(selectedIslandId);
-  const inProgress = state.expeditions.find((e) => e.islandId === selectedIslandId);
-  const isScouted = state.scoutedIslandIds.includes(selectedIslandId);
-
   return (
-    <section className="panel expedition-panel">
-      <h2>Ventures</h2>
-      <h3 className="expedition-panel__island">{island?.name ?? "Unknown island"}</h3>
+    <div className="expedition-panel">
+      <p className="resources-panel__hint">Charter a venture to an unclaimed island for a one-time reward.</p>
 
-      {isScouted && data && <p className="expedition-panel__result">Charted. {data.reward.flavor}</p>}
+      {MAP_GEOMETRY.otherLandmasses.map((island) => {
+        const data = getIslandExpeditionData(island.id);
+        const inProgress = state.expeditions.find((e) => e.islandId === island.id);
+        const isScouted = state.scoutedIslandIds.includes(island.id);
+        const isFocused = island.id === selectedIslandId;
 
-      {!isScouted && inProgress && (
-        <>
-          <p className="expedition-panel__hint">Venture under way — {Math.ceil(inProgress.daysRemaining)} days left.</p>
-          <div className="progress-bar">
-            <div className="progress-bar__fill" style={{ width: `${Math.round(expeditionProgress(inProgress) * 100)}%` }} />
+        return (
+          <div className={["expedition-panel__island-card", isFocused ? "is-focused" : ""].join(" ")} key={island.id}>
+            <h3 className="expedition-panel__island">{island.name}</h3>
+
+            {isScouted && data && <p className="expedition-panel__result">Charted. {data.reward.flavor}</p>}
+
+            {!isScouted && inProgress && (
+              <>
+                <p className="expedition-panel__hint">Venture under way — {Math.ceil(inProgress.daysRemaining)} days left.</p>
+                <div className="progress-bar">
+                  <div className="progress-bar__fill" style={{ width: `${Math.round(expeditionProgress(inProgress) * 100)}%` }} />
+                </div>
+              </>
+            )}
+
+            {!isScouted && !inProgress && (
+              <>
+                <p className="expedition-panel__hint">Uncharted. Chartering a venture there takes {EXPEDITION_DAYS} days.</p>
+                <button
+                  disabled={!canSendExpedition(state, island.id)}
+                  onClick={() => dispatch((s) => sendExpedition(s, island.id))}
+                >
+                  Charter Venture ({EXPEDITION_COST} {CURRENCY_SYMBOL})
+                </button>
+              </>
+            )}
           </div>
-        </>
-      )}
-
-      {!isScouted && !inProgress && (
-        <>
-          <p className="expedition-panel__hint">Uncharted. Chartering a venture there takes {EXPEDITION_DAYS} days.</p>
-          <button
-            disabled={!canSendExpedition(state, selectedIslandId)}
-            onClick={() => dispatch((s) => sendExpedition(s, selectedIslandId))}
-          >
-            Charter Venture ({EXPEDITION_COST} {CURRENCY_SYMBOL})
-          </button>
-        </>
-      )}
-    </section>
+        );
+      })}
+    </div>
   );
 }
