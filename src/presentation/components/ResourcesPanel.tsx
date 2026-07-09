@@ -21,8 +21,8 @@ export function ResourcesPanel({ resources }: ResourcesPanelProps) {
         {RESOURCE_TYPES.map((type) => (
           <div className="stats-panel__row" key={type}>
             <dt>
-              <svg width={15} height={15} viewBox="-8 -8 16 16" className="stats-panel__icon">
-                <ResourceIcon type={type} size={7} />
+              <svg width={30} height={30} viewBox="-10 -10 20 20" className="stats-panel__icon">
+                <ResourceIcon type={type} size={8} />
               </svg>
               {RESOURCE_LABELS[type]}
             </dt>
