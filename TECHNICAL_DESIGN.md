@@ -14,7 +14,7 @@ presentation/   →   application/   →   domain/
    (React)          (use cases)         (rules & types)
 ```
 
-- **`domain/`** — The rules of the world, grouped by game concept. Each subfolder (`economy`, `population`, `food`, `industry`, `roads`, `stability`, `politics`, `army`, `research`, `construction`, `country`) exports pure functions and types for that concept only. A function like `applyFoodConsumption(stats, days)` takes data in and returns new data out — no mutation, no side effects, no imports from React or `application/`.
+- **`domain/`** — The rules of the world, grouped by game concept. Each subfolder (`economy`, `population`, `food`, `industry`, `roads`, `stability`, `politics`, `army`, `research`, `construction`, `provinces`, `country`) exports pure functions and types for that concept only. A function like `applyFoodConsumption(stats, days)` takes data in and returns new data out — no mutation, no side effects, no imports from React or `application/`.
 - **`application/`** — Use cases that orchestrate multiple domain modules to do something meaningful: "simulate one day," "build a farm," "generate this month's report," "start a new game." This is the only layer allowed to call more than one domain module at a time.
 - **`presentation/`** — React components and hooks. This layer calls `application/` functions in response to user input (button clicks) or time passing (the game clock hook), and renders whatever `GameState` it's given. It never contains simulation math itself.
 
@@ -31,7 +31,10 @@ interface GameState {
   speed: GameSpeed;        // 1 | 2 | 3 | 5
   stats: CountryStats;     // treasury, population, food, industry, stability, army, research, popularity
   taxRate: number;         // 0–1
-  projects: Project[];     // active construction/research projects
+  farmCount: number; factoryCount: number; roadCount: number;
+  educationLevel: number; researchLevel: number;
+  projects: Project[];     // active construction/research projects (each has a provinceId)
+  placedBuildings: PlacedBuilding[]; // completed buildings, remembered for the map
   events: GameEvent[];     // event log, newest first
   monthlyReports: MonthlyReport[]; // history of past reports
   history: DailyDelta[];   // rolling buffer of recent daily changes, used to build the next report
@@ -39,6 +42,8 @@ interface GameState {
 ```
 
 Because `GameState` is a plain object, saving/loading later (see ROADMAP) is just serializing/deserializing JSON — no special class instances or hidden state.
+
+Note what's *not* in `GameState`: which province is currently selected on the map to build in next. That's ephemeral UI selection, not simulation truth, so it lives as local `useState` in `App.tsx` (see "Map and provinces" below) rather than polluting the state the simulation engine reasons about.
 
 ## Simulation engine structure
 
@@ -65,13 +70,23 @@ None of these functions know about days, projects, or the UI — they just trans
 2. Applies economy rules (income from tax/industry, expenses from army/projects) to `treasury`.
 3. Applies food production/consumption to `food`.
 4. Applies industry, roads, and research accumulation.
-5. Advances any active `projects` by one day; when a project's `daysRemaining` hits 0, applies its completion effect (e.g., "+1 farm" → increases food production rate) and logs an event.
+5. Advances any active `projects` by one day; when a project's `daysRemaining` hits 0, applies its completion effect (e.g., "+1 farm" → increases food production rate), records a `PlacedBuilding` at that project's `provinceId` (so the map can show it), and logs an event.
 6. Applies stability and popularity adjustments based on the new food/tax/army numbers.
 7. Applies slow population growth/decline based on food and stability.
 8. Appends a `DailyDelta` to `state.history` (what changed today), used later for the monthly report.
 9. Returns a **new** `GameState` object (the engine never mutates the state it's given — this keeps React's state updates predictable and makes the engine easy to unit test).
 
 A simplified calendar is used: every month has 30 days, and every year has 12 months (360 days/year). This avoids leap-year/variable-month-length edge cases that add complexity without adding gameplay value in the MVP. It can be swapped for a real calendar later without touching any other system, since only `domain/country`'s calendar helper knows about day/month/year math.
+
+## Map and provinces
+
+`domain/provinces/` holds the map's static geometry (`provinceData.ts` — an SVG coastline path plus eight province polygons, generated once offline with a Voronoi diagram clipped to a procedural coastline, then hardcoded; no geometry library ships to the browser) and a `PlacedBuilding` type (`{ id, provinceId, type }`).
+
+Every `Project` now carries a `provinceId`, set by whichever province is selected on the map when the player clicks a build action. When `applyProjectCompletion` finishes a project, it appends a `PlacedBuilding` to `state.placedBuildings` in addition to incrementing the usual national count (`farmCount`, etc.) — the map is a second, purely additive view of the same event, not a separate source of truth.
+
+Deliberately **not** modeled yet: per-province stats. `treasury`, `food`, `industry`, and the rest remain one national pool regardless of where buildings are placed — `domain/economy`, `domain/food`, and friends are untouched by provinces. Splitting the economy per-province (so a province's own farms feed its own population, etc.) is a real architectural change — probably a `Province` gaining its own `CountryStats`-shaped slice — and is tracked as a ROADMAP item rather than done here, to keep this step additive instead of a rewrite.
+
+`presentation/components/MapPanel.tsx` renders the geometry as an SVG: provinces are clickable `<path>` elements (selection is forwarded up to `App.tsx`, which owns `selectedProvinceId` as local `useState`), and `placedBuildings` are grouped by province and drawn as small colored dots so the map fills in as the country develops.
 
 ## Monthly report system
 
@@ -92,7 +107,7 @@ Because of the layering, most future features (see ROADMAP.md) follow the same r
 
 1. **New stat or resource** (e.g., "steel"): add it to `CountryStats`, add a `domain/steel/` module with its production/consumption rules, wire it into `simulateDay`, and add a line to `StatsPanel`.
 2. **New player action** (e.g., "build a mine"): add a new file in `application/actions/`, following the same shape as `buildFarm.ts` (validate cost → deduct treasury → push a new `Project`).
-3. **New system entirely** (e.g., trade, diplomacy, provinces): add a new `domain/<system>/` folder and a corresponding `application/` use case, without needing to touch unrelated domains. Multi-country play would mean `GameState` holds a collection of country objects instead of one, but the per-country rules in `domain/` stay the same.
+3. **New system entirely** (e.g., trade, diplomacy): add a new `domain/<system>/` folder and a corresponding `application/` use case, without needing to touch unrelated domains — `domain/provinces/` (see above) is an example of this already done. Multi-country play would mean `GameState` holds a collection of country objects instead of one, but the per-country rules in `domain/` stay the same.
 4. **Persistence** (save/load): since `GameState` is a plain serializable object, this is a `presentation/` (or new `infrastructure/`) concern — serialize to `localStorage`/a file, no changes needed to `domain/` or `application/`.
 
 The goal is that adding a feature almost always means *adding* a file, rarely *editing* several existing ones.

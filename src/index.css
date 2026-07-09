@@ -99,6 +99,12 @@ h3 {
   border-bottom: 1px solid var(--panel-border);
 }
 
+.top-bar__nation {
+  font-weight: 700;
+  color: var(--accent-active);
+  letter-spacing: 0.03em;
+}
+
 .top-bar__date {
   font-weight: 600;
   min-width: 10rem;
@@ -117,10 +123,16 @@ h3 {
 
 .game-layout__main {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+}
+
+.game-layout__columns {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
-  padding: 1rem 1.25rem;
   align-items: start;
 }
 
@@ -130,9 +142,74 @@ h3 {
 }
 
 @media (max-width: 900px) {
-  .game-layout__main {
+  .game-layout__columns {
     grid-template-columns: 1fr;
   }
+}
+
+/* --- Map panel --- */
+
+.map-panel__svg {
+  width: 100%;
+  height: auto;
+  max-height: 26rem;
+  display: block;
+  background: #16283a;
+  border-radius: 6px;
+}
+
+.map-panel__coast {
+  fill: none;
+  stroke: #0a1420;
+  stroke-width: 5;
+}
+
+.map-panel__province {
+  fill: #4c7a63;
+  stroke: #16283a;
+  stroke-width: 2.5;
+  cursor: pointer;
+  transition: fill 0.15s ease;
+}
+
+.map-panel__province:hover {
+  fill: #5c8e73;
+}
+
+.map-panel__province.is-selected {
+  fill: var(--accent);
+  stroke: var(--accent-active);
+}
+
+.map-panel__label {
+  font-size: 15px;
+  fill: #0a1420;
+  text-anchor: middle;
+  font-weight: 600;
+  user-select: none;
+}
+
+.map-panel__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.map-panel__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.map-panel__legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
 }
 
 /* --- Stats panel --- */
@@ -159,6 +236,16 @@ h3 {
 
 /* --- Actions panel --- */
 
+.actions-panel__target {
+  font-size: 0.85rem;
+  margin: 0 0 0.75rem 0;
+  color: var(--text-muted);
+}
+
+.actions-panel__hint {
+  font-size: 0.75rem;
+}
+
 .actions-panel__group {
   display: flex;
   flex-direction: column;
@@ -181,6 +268,11 @@ h3 {
   justify-content: space-between;
   font-size: 0.85rem;
   margin-bottom: 0.3rem;
+}
+
+.projects-panel__province {
+  color: var(--text-muted);
+  font-size: 0.8rem;
 }
 
 .progress-bar {

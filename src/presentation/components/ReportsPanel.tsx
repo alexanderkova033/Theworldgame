@@ -1,4 +1,5 @@
 import { formatMonthYear } from "../../domain/country/calendar";
+import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { MonthlyReport } from "../../domain/country/types";
 
 interface ReportsPanelProps {
@@ -23,11 +24,11 @@ export function ReportsPanel({ reports }: ReportsPanelProps) {
             <div className="reports-panel__item-header">{formatMonthYear(report.date)}</div>
             <div className="reports-panel__item-row">
               <span>Income</span>
-              <span>+${Math.round(report.totalIncome)}</span>
+              <span>+{Math.round(report.totalIncome)} {CURRENCY_SYMBOL}</span>
             </div>
             <div className="reports-panel__item-row">
               <span>Expenses</span>
-              <span>-${Math.round(report.totalExpenses)}</span>
+              <span>-{Math.round(report.totalExpenses)} {CURRENCY_SYMBOL}</span>
             </div>
             <div className="reports-panel__item-row">
               <span>Net Treasury</span>

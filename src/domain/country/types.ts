@@ -1,6 +1,7 @@
 // The shape of a country and its game state. This is the aggregate root of the
 // whole simulation: every other domain module reads from and writes pieces of it.
 import type { Project } from "../construction/types";
+import type { PlacedBuilding } from "../provinces/types";
 
 export interface GameDate {
   year: number;
@@ -65,6 +66,7 @@ export interface GameState {
   researchLevel: number;
 
   projects: Project[];
+  placedBuildings: PlacedBuilding[]; // completed buildings, for the map
   events: GameEvent[];
   monthlyReports: MonthlyReport[];
   history: DailyDelta[]; // daily deltas since the last monthly report

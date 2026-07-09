@@ -4,16 +4,18 @@ A browser-based country-building strategy simulator, inspired by *Hearts of Iron
 
 Time flows continuously, day by day, instead of turns. You pause, resume, and speed up time while managing your country's treasury, food supply, industry, stability, and more.
 
+You govern **Astravia**, a fictional nation in a period that feels like the years just before 1914 — steam, rail, early factories, and rising tension in the background. It's not a real place or history, which keeps the game free of both real-world politics and the (very crowded) WW2-strategy-game space.
+
 This project is an **MVP (minimum viable product)** — a small, working foundation that is meant to be expanded over time. See [ROADMAP.md](ROADMAP.md) for where it's headed.
 
 ## What the game is
 
-You govern a single country. Every in-game day, the simulation updates your stats automatically:
+You govern a single country, made up of eight provinces on a map. Every in-game day, the simulation updates your stats automatically:
 
 - Farms grow food, factories grow industry and income, roads improve efficiency.
 - Taxes fund your treasury but affect how popular your government is.
 - Your population needs food and stability to stay content.
-- You can construct buildings, invest in education, recruit soldiers, and start research — all of which take real in-game time to complete.
+- You can construct buildings, invest in education, recruit soldiers, and start research — all of which take real in-game time to complete, and all (except recruiting) happen in whichever province you've selected on the map.
 - At the end of each in-game month, you get a report summarizing what happened.
 
 There is no win/lose condition yet. The current goal is to build and manage a stable, growing nation.
@@ -47,6 +49,7 @@ npm run lint      # Run the linter
 - Daily simulation ticks that update the economy, population, and stability.
 - Monthly reports summarizing income, expenses, and stat changes.
 - An event log that records important happenings (buildings finished, low food, low stability, etc).
+- A stylized SVG map of Astravia's eight provinces — click a province to select it, then build there; completed buildings show up as icons on the map.
 - Player actions: build farms, build factories, build roads, invest in education, recruit soldiers, adjust taxes, start research.
 - Construction and research projects that take in-game time and show live progress.
 - A single-country simulation with core stats: treasury, population, food, industry, stability, army strength, research points, and government popularity.
@@ -57,7 +60,8 @@ See [GAME_DESIGN.md](GAME_DESIGN.md) for the full design and [TECHNICAL_DESIGN.m
 
 - **Pause / Resume** — stop or continue the flow of time.
 - **1x / 2x / 3x / 5x** — change how fast days pass while unpaused.
-- **Actions panel** — spend treasury/resources to start a building, research, or policy change.
+- **Map** — click a province to choose where your next building goes.
+- **Actions panel** — spend treasury/resources to start a building, research, or policy change in the selected province.
 - **Tax slider/buttons** — raise or lower the tax rate, trading income for popularity.
 - Everything else (food, income, stability, etc.) updates automatically as time passes.
 
@@ -79,6 +83,7 @@ src/
     army/                Recruitment & upkeep rules.
     research/            Research point accumulation rules.
     construction/        Project types + progress/completion rules.
+    provinces/           Map geometry (8 provinces) + placed-building records.
     constants.ts         Tunable balancing numbers shared by domain rules.
 
   application/        Use cases. Orchestrates domain rules into meaningful actions.
@@ -91,7 +96,8 @@ src/
     hooks/
       useGameClock.ts     Drives the day-by-day loop (pause/resume/speed).
     components/
-      TopBar.tsx          Date display, pause/resume, speed controls.
+      TopBar.tsx          Nation name, date display, pause/resume, speed controls.
+      MapPanel.tsx        Clickable SVG map of Astravia's provinces.
       StatsPanel.tsx      Country stats readout.
       ActionsPanel.tsx    Buttons/controls for player actions.
       ProjectsPanel.tsx   Active projects and progress bars.

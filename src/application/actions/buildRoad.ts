@@ -4,7 +4,7 @@ import { generateId } from "../../domain/country/id";
 import type { GameState } from "../../domain/country/types";
 import type { Project } from "../../domain/construction/types";
 
-export function buildRoad(state: GameState): GameState {
+export function buildRoad(state: GameState, provinceId: string): GameState {
   if (!canAfford(state.stats, ROAD_COST)) return state;
 
   const project: Project = {
@@ -13,6 +13,7 @@ export function buildRoad(state: GameState): GameState {
     label: "Road",
     totalDays: ROAD_BUILD_DAYS,
     daysRemaining: ROAD_BUILD_DAYS,
+    provinceId,
   };
 
   return {

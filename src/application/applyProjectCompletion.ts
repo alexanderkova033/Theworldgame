@@ -3,19 +3,27 @@
 // so it lives here in the application layer rather than in one domain module.
 import type { GameState } from "../domain/country/types";
 import type { Project } from "../domain/construction/types";
+import type { PlacedBuilding } from "../domain/provinces/types";
 
 export function applyProjectCompletion(state: GameState, project: Project): GameState {
+  const placedBuilding: PlacedBuilding = {
+    id: project.id,
+    provinceId: project.provinceId,
+    type: project.type,
+  };
+  const placedBuildings = [...state.placedBuildings, placedBuilding];
+
   switch (project.type) {
     case "farm":
-      return { ...state, farmCount: state.farmCount + 1 };
+      return { ...state, farmCount: state.farmCount + 1, placedBuildings };
     case "factory":
-      return { ...state, factoryCount: state.factoryCount + 1 };
+      return { ...state, factoryCount: state.factoryCount + 1, placedBuildings };
     case "road":
-      return { ...state, roadCount: state.roadCount + 1 };
+      return { ...state, roadCount: state.roadCount + 1, placedBuildings };
     case "education":
-      return { ...state, educationLevel: state.educationLevel + 1 };
+      return { ...state, educationLevel: state.educationLevel + 1, placedBuildings };
     case "research":
-      return { ...state, researchLevel: state.researchLevel + 1 };
+      return { ...state, researchLevel: state.researchLevel + 1, placedBuildings };
     default:
       return state;
   }

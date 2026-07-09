@@ -8,9 +8,15 @@ Time moves continuously and automatically, one in-game day at a time, rather tha
 
 The intended feel is closer to a management/economy game (think city-builder or *Democracy*) wearing the visual language of a grand strategy game.
 
+## Setting
+
+The player governs **Astravia**, a fictional nation on an invented continent, in a period that *feels* like the years just before 1914 — steam and rail infrastructure, early factories, telegraphs, expanding public education, and simmering great-power tension in the background. Astravia is not tied to any real country or history: this sidesteps the real-world politics and research burden of a historical setting, avoids the (extremely crowded) WW2-strategy-game space, and means the map, provinces, and events can be designed freely rather than constrained by real geography.
+
+The currency is the **Crown** (shown as `Cr`), and the nation is currently a single country on a map of eight provinces (see "Map and provinces" below). Multiple, independently-playable nations are a roadmap item.
+
 ## Main stats/resources
 
-Every country tracks the following core stats (see `CountryStats` in `src/simulation/types.ts`):
+Every country tracks the following core stats (see `CountryStats` in `src/domain/country/types.ts`):
 
 | Stat | Meaning |
 |---|---|
@@ -24,6 +30,12 @@ Every country tracks the following core stats (see `CountryStats` in `src/simula
 | **Popularity** | Government approval (0–100). Affected by taxes, stability, and food shortages. |
 
 The MVP models one country only. Multi-country play is a roadmap item.
+
+## Map and provinces
+
+Astravia is divided into eight provinces, rendered as a stylized SVG map (an organic coastline with province borders, similar in spirit to a Paradox-style province map). The player picks a province before starting a build action ("Building in: Redgate — click the map to change"), and every completed farm, factory, road, education investment, or research initiative is remembered as a small icon on the province it was built in.
+
+Provinces are geographic and visual in the MVP — **the national economy is still one shared pool** (treasury, food, industry, and so on are national totals, not per-province). Splitting the economy so each province has its own local stats is a natural next step, tracked in ROADMAP.md.
 
 ## Time system
 
@@ -64,8 +76,8 @@ These systems are intentionally simple in the MVP but designed to be tuned and e
 
 A session should feel like:
 
-1. Start with a small, modest country: limited treasury, low industry, small population.
-2. Queue a few early buildings (a farm or two, maybe a road) to establish a stable base.
+1. Start with a small, modest country: limited treasury, low industry, small population, and a handful of starting buildings scattered across the map.
+2. Click a province on the map, then queue a few early buildings there (a farm or two, maybe a road) to establish a stable base.
 3. Let time pass at increased speed while watching stats and the event log.
 4. Periodically pause to react to problems (falling stability, food shortages, an unpopular tax rate) or to queue new projects.
 5. Read monthly reports to understand macro trends (are we growing, stagnating, or declining?).

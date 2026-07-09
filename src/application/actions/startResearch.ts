@@ -14,7 +14,7 @@ export function canStartResearch(state: GameState): boolean {
   );
 }
 
-export function startResearch(state: GameState): GameState {
+export function startResearch(state: GameState, provinceId: string): GameState {
   if (!canStartResearch(state)) return state;
 
   const project: Project = {
@@ -23,6 +23,7 @@ export function startResearch(state: GameState): GameState {
     label: "Research Initiative",
     totalDays: RESEARCH_PROJECT_DAYS,
     daysRemaining: RESEARCH_PROJECT_DAYS,
+    provinceId,
   };
 
   return {

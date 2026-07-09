@@ -1,3 +1,4 @@
+import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { CountryStats } from "../../domain/country/types";
 
 interface StatsPanelProps {
@@ -11,7 +12,7 @@ function formatNumber(value: number): string {
 
 export function StatsPanel({ stats, taxRate }: StatsPanelProps) {
   const rows: Array<[string, string]> = [
-    ["Treasury", `$${formatNumber(stats.treasury)}`],
+    ["Treasury", `${formatNumber(stats.treasury)} ${CURRENCY_SYMBOL}`],
     ["Population", formatNumber(stats.population)],
     ["Food", formatNumber(stats.food)],
     ["Industry", formatNumber(stats.industry)],

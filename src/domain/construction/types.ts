@@ -6,4 +6,5 @@ export interface Project {
   label: string;
   totalDays: number;
   daysRemaining: number;
+  provinceId: string; // which province this is being built in, for the map
 }

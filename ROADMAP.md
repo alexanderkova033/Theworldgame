@@ -12,9 +12,12 @@ This roadmap is intentionally staged: each version should be a playable, stable 
 - [x] Monthly reports.
 - [x] Event log.
 - [x] Clean/screaming architecture separating domain rules, use cases, and UI.
+- [x] Fictional setting (Astravia, a pre-1914-feeling nation) instead of a real historical war.
+- [x] Visual map: 8 provinces, click-to-select, completed buildings shown as icons (national economy still one shared pool — see Version 0.2).
 
 ## Version 0.2 — Make it a real game loop
 
+- [ ] Split the economy per-province: each province gets its own local stats (food, industry, etc.) instead of one national pool, so *where* you build actually matters mechanically, not just visually.
 - [ ] Save/load (localStorage first; file export/import later).
 - [ ] Basic win/lose-adjacent conditions or milestones (e.g., stability collapse consequences, population milestones).
 - [ ] More granular construction: build queue/limits, cancel a project, multiple farms/factories with independent progress.
@@ -33,10 +36,9 @@ This roadmap is intentionally staged: each version should be a playable, stable 
 
 ## Version 0.4 — Beyond one isolated country
 
-- [ ] Multiple countries simulated simultaneously (at least a few AI-controlled neighbors).
+- [ ] Multiple countries simulated simultaneously (at least a few AI-controlled neighbors), sharing Astravia's map/continent.
 - [ ] Trade: import/export resources between countries, affecting prices and availability.
 - [ ] Diplomacy: treaties, alliances, rivalries between countries.
-- [ ] Provinces/map: split a country into regions with local stats instead of one national pool.
 - [ ] Basic AI country behavior (simple heuristics, not full parity with the player).
 
 ## Long-term dream version

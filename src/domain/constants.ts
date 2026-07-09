@@ -59,3 +59,6 @@ export const STABILITY_COLLAPSE_THRESHOLD = 15;
 
 // --- Misc ---
 export const MAX_EVENT_LOG_LENGTH = 100;
+export const NATION_NAME = "Astravia";
+export const CURRENCY_SYMBOL = "Cr"; // "Crowns" — the nation's currency
+export const CAPITAL_PROVINCE_ID = "province-7"; // Redgate, the central province
