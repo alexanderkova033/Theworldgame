@@ -225,6 +225,24 @@ h3 {
   stroke-width: 4;
 }
 
+.map-panel__road-line-base {
+  stroke: #2a1f14;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+
+.map-panel__road-line-top {
+  stroke: #e8d9ab;
+  stroke-linecap: round;
+  stroke-dasharray: 7 5;
+}
+
+.map-panel__road-hub {
+  fill: #e8d9ab;
+  stroke: #2a1f14;
+  stroke-width: 1.5;
+}
+
 .map-panel__label {
   font-family: var(--font-display);
   font-size: 15px;

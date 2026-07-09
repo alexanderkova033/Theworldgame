@@ -14,6 +14,7 @@ A practical, near-term checklist. For bigger-picture future ideas, see [ROADMAP.
 - [x] Fictional setting (3 nations on one continent) and SVG province map, clickable and tied to where buildings get placed.
 - [x] Permanent start-screen nation picker (card grid + clickable preview map); no in-game way to change nations.
 - [x] Visual pass: serif display font, brass/gold palette, panel shadows/depth, map gradients + drop-shadow, shape-based building/stat icons.
+- [x] Roads render as an actual dashed road network (capital hub → connected provinces, thicker with more roads) instead of a dot icon; provinces got decorative terrain textures (hills/forest/coast); building icons upgraded to pictorial (barn, chimney'd factory, book, flask).
 
 ## Known rough edges / near-term follow-ups
 
