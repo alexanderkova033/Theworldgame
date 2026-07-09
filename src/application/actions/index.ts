@@ -5,3 +5,4 @@ export { investEducation } from "./investEducation";
 export { canStartResearch, startResearch } from "./startResearch";
 export { recruitSoldiers } from "./recruitSoldiers";
 export { raiseTaxes, lowerTaxes } from "./taxActions";
+export { canTrade, tradeResources } from "./tradeResources";

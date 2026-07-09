@@ -2,6 +2,7 @@
 // whole simulation: every other domain module reads from and writes pieces of it.
 import type { Project } from "../construction/types";
 import type { PlacedBuilding } from "../provinces/types";
+import type { ResourceBundle } from "../resources/types";
 
 export interface GameDate {
   year: number;
@@ -55,6 +56,7 @@ export interface GameState {
   isPaused: boolean;
   speed: GameSpeed;
   stats: CountryStats;
+  resources: ResourceBundle; // wood/ore/grain/fish, produced by terrain, spent on building or traded
   taxRate: number; // 0..1
 
   // Infrastructure counts. Each is owned conceptually by its matching domain

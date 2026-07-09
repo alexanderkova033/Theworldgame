@@ -9,9 +9,11 @@ import { EventLog } from "./presentation/components/EventLog";
 import { MapPanel } from "./presentation/components/MapPanel";
 import { ProjectsPanel } from "./presentation/components/ProjectsPanel";
 import { ReportsPanel } from "./presentation/components/ReportsPanel";
+import { ResourcesPanel } from "./presentation/components/ResourcesPanel";
 import { StartScreen } from "./presentation/components/StartScreen";
 import { StatsPanel } from "./presentation/components/StatsPanel";
 import { TopBar } from "./presentation/components/TopBar";
+import { TradePanel } from "./presentation/components/TradePanel";
 import { useGameClock } from "./presentation/hooks/useGameClock";
 
 function App() {
@@ -53,7 +55,9 @@ function App() {
       <main className="game-layout__main">
         <aside className="game-layout__sidebar game-layout__sidebar--left">
           <StatsPanel stats={state.stats} />
+          <ResourcesPanel resources={state.resources} />
           <ActionsPanel state={state} selectedProvinceId={currentProvinceId} dispatch={dispatch} />
+          <TradePanel state={state} dispatch={dispatch} />
         </aside>
 
         <div className="game-layout__map-stage">

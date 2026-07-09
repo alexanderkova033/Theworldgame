@@ -15,6 +15,7 @@ This project is an **MVP (minimum viable product)** — a small, working foundat
 You govern one nation, made up of two or three provinces on an eight-province continent (the rest belongs to the other two nations, shown in their own colors but not yet playable — plus a few unclaimed islands further out, purely decorative for now). Every in-game day, the simulation updates your stats automatically:
 
 - Farms grow food (each person eats 1 food/day — build enough farms to keep up), factories grow industry and income, roads improve efficiency and visibly connect your provinces to your capital.
+- Every province also produces a raw resource based on its terrain — forest → Wood, hills → Ore, plains → Grain, coast → Fish (*Catan*-inspired) — and buildings cost that resource as well as Crowns. No nation has every terrain, so you'll need to trade with the continental market (better rates if you own a coastal "port" province) to build everything you want.
 - Building happens in whichever province you've selected on the map.
 - At the end of each in-game month, you get a report summarizing what happened.
 
@@ -57,6 +58,7 @@ npm run lint      # Run the linter
 - Player actions: build farms, build factories, build roads. (Taxes/education/research/military are temporarily hidden — see "What the game is" above.)
 - Construction projects that take in-game time and show live progress.
 - A single-nation simulation with core stats: treasury, population, food, industry, and stability — each with its own pictorial icon in the stats panel.
+- Raw resources (Wood, Ore, Grain, Fish) produced daily by your provinces' terrain, spent on building, and tradeable with the continental market — with a better rate if your nation has a coastal port.
 
 See [GAME_DESIGN.md](GAME_DESIGN.md) for the full design and [TECHNICAL_DESIGN.md](TECHNICAL_DESIGN.md) for how it's built.
 
@@ -66,7 +68,8 @@ See [GAME_DESIGN.md](GAME_DESIGN.md) for the full design and [TECHNICAL_DESIGN.m
 - **Pause / Resume** — stop or continue the flow of time.
 - **1x / 2x / 3x / 5x** — change how fast days pass while unpaused.
 - **Map** — click one of your own provinces to choose where your next building goes.
-- **Actions panel** (left sidebar) — spend treasury to build a farm, factory, or road in the selected province.
+- **Actions panel** (left sidebar) — spend treasury + a matching resource to build a farm, factory, or road in the selected province.
+- **Trade panel** (left sidebar) — exchange one resource for another with the market.
 - Everything else (food, income, stability, etc.) updates automatically as time passes.
 
 ## Project structure
@@ -89,6 +92,7 @@ src/
     construction/        Project types + progress/completion rules.
     provinces/           Map geometry (8 provinces) + placed-building records.
     nations/             The 3 playable nations and which provinces each owns.
+    resources/           Wood/ore/grain/fish: terrain production + market trade rates.
     constants.ts         Tunable balancing numbers shared by domain rules.
 
   application/        Use cases. Orchestrates domain rules into meaningful actions.
@@ -105,12 +109,15 @@ src/
       TopBar.tsx          Nation name, date display, pause/resume, speed controls.
       MapPanel.tsx        Clickable SVG map of your nation's provinces.
       StatsPanel.tsx      Country stats readout, with an icon per stat.
+      ResourcesPanel.tsx  Wood/Ore/Grain/Fish readout.
       ActionsPanel.tsx    Buttons/controls for player actions.
+      TradePanel.tsx      Give/receive resource trade with the market.
       ProjectsPanel.tsx   Active projects and progress bars.
       ReportsPanel.tsx    Monthly report history.
       EventLog.tsx        Scrolling log of important events.
       BuildingIcon.tsx    Shared shape-per-building-type glyph (map + legend).
       StatIcon.tsx        Shared glyph-per-stat icon (stats panel).
+      ResourceIcon.tsx    Shared glyph-per-resource icon (map, resources, trade).
     App.tsx              Wires simulation state + hook to the UI panels.
 
   main.tsx             React entry point.

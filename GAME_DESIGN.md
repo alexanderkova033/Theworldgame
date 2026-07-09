@@ -43,6 +43,14 @@ The player picks one of their own provinces before starting a build action ("Bui
 
 Provinces are geographic and visual in the MVP — **the national economy is still one shared pool** (treasury, food, industry, and so on are national totals, not per-province). Splitting the economy so each province has its own local stats is a natural next step, tracked in ROADMAP.md.
 
+## Resources and trade
+
+Inspired by *Catan*: each province's terrain determines a raw resource it produces every day, for as long as you own it — forest → **Wood**, hills → **Ore**, plains → **Grain**, coast → **Fish**. There's no dice roll; production is steady and automatic, but which terrains your nation happens to control still shapes what you have plenty of and what you're short on. A small map badge on each of your provinces shows what it produces, matching the terrain texture underneath.
+
+This creates real asymmetry between the three nations: Astravia has no hills at all, so it can never produce Ore on its own; Veldoria has neither forest nor hills, so it's short on both Wood and Ore. Building costs treasury *and* a matching resource — a Farm needs Wood, a Factory and a Road both need Ore — so a nation without the right terrain has to trade to build at all.
+
+Trading happens with "the continental market" (an abstract bank, not the other two nations directly — they aren't simulated yet, see above): any resource for any other, at a fixed rate, batched so one click moves a meaningful amount rather than one unit at a time. A nation that owns at least one coastal province has a **port** and trades at a better rate (2:1 instead of 4:1) — Catan's maritime trade, made automatic rather than tied to a specific dock.
+
 ## Time system
 
 - The game clock advances one **day** at a time. A day is the smallest simulation unit ("tick").
@@ -82,8 +90,8 @@ These systems are intentionally simple in the MVP but designed to be tuned and e
 
 A session should feel like:
 
-1. Start with a small, modest country: limited treasury, low industry, small population, and a handful of starting buildings scattered across the map.
-2. Click a province on the map, then queue a few early buildings there (a farm or two, maybe a road) to establish a stable base.
+1. Start with a small, modest country: limited treasury, low industry, small population, a small stockpile of resources, and a handful of starting buildings scattered across the map.
+2. Click a province on the map, then queue a few early buildings there (a farm or two, maybe a road) — checking that you have both the Crowns and the matching resource, trading at the market if you're short.
 3. Let time pass at increased speed while watching stats and the event log.
 4. Periodically pause to react to problems (falling stability, food shortages, an unpopular tax rate) or to queue new projects.
 5. Read monthly reports to understand macro trends (are we growing, stagnating, or declining?).

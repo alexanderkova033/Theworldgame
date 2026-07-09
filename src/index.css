@@ -519,6 +519,50 @@ h3 {
   color: var(--accent);
 }
 
+/* --- Resources panel --- */
+
+.resources-panel__hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0 0 0.6rem;
+  line-height: 1.4;
+}
+
+/* --- Trade panel --- */
+
+.trade-panel__row {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.trade-panel__field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.trade-panel__field select {
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: var(--panel-bg-raised);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 0.45rem 0.5rem;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.trade-panel__button {
+  width: 100%;
+}
+
 /* --- Actions panel --- */
 
 .actions-panel__target {

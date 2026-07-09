@@ -5,7 +5,9 @@ import { getNationForProvince } from "../../domain/nations/nationRules";
 import type { Nation } from "../../domain/nations/types";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
 import type { PlacedBuilding, Terrain } from "../../domain/provinces/types";
+import { RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
 import { BUILDING_COLORS, BuildingIcon } from "./BuildingIcon";
+import { ResourceIcon } from "./ResourceIcon";
 
 interface MapPanelProps {
   nation: Nation;
@@ -252,6 +254,21 @@ export function MapPanel({ nation, placedBuildings, armyStrength, selectedProvin
             return <BuildingIcon key={building.id} type={building.type} x={x} y={y} />;
           });
         })}
+
+        {/* Resource badge: what each of your provinces produces, echoing the
+            terrain texture underneath — Catan-style "this hex makes wood". */}
+        {provinces.map((province) => {
+          if (!nation.provinceIds.includes(province.id)) return null;
+          return (
+            <ResourceIcon
+              key={`${province.id}-resource`}
+              type={RESOURCE_BY_TERRAIN[province.terrain]}
+              x={province.labelX + 34}
+              y={province.labelY - 16}
+              size={6}
+            />
+          );
+        })}
       </svg>
 
       <div className="map-panel__legend">
@@ -265,6 +282,14 @@ export function MapPanel({ nation, placedBuildings, armyStrength, selectedProvin
         {(Object.keys(BUILDING_COLORS) as ProjectType[]).map((type) => (
           <span key={type} className="map-panel__legend-item">
             <BuildingIconSwatch type={type} />
+            {type}
+          </span>
+        ))}
+        {(["wood", "ore", "grain", "fish"] as const).map((type) => (
+          <span key={type} className="map-panel__legend-item">
+            <svg width={16} height={16} viewBox="-8 -8 16 16" className="map-panel__legend-icon">
+              <ResourceIcon type={type} size={6} />
+            </svg>
             {type}
           </span>
         ))}

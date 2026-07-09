@@ -18,6 +18,7 @@ This roadmap is intentionally staged: each version should be a playable, stable 
 - [x] Visual polish pass: serif display type, brass/gold accent palette, panel depth/shadows, gradient+shadow map rendering, shape-based building and stat icons.
 - [x] Map-centric layout (map as the central canvas, side panels instead of everything stacked below it), a bigger world (extra unclaimed islands beyond the main continent), other nations rendered in their own colors instead of flat grey, and a real road network (lanes that visibly multiply per road built, not just a thicker line).
 - [x] Development/Military/Taxes actions (and their stats) temporarily hidden from the UI to focus on the core build/food/economy loop — see "Deliberately paused" below.
+- [x] Catan-inspired raw resources: terrain produces Wood/Ore/Grain/Fish, buildings cost a matching resource alongside Crowns, and nations trade with the continental market (better rate with a coastal port). This pulled the "additional resources" idea forward from Version 0.3 below, scoped to bank trading rather than needing the other nations simulated first.
 
 ## Deliberately paused (hidden, not deleted)
 
@@ -39,7 +40,7 @@ Removed from the UI on purpose while the basics get solid — the domain/applica
 
 ## Version 0.3 — Depth in existing systems
 
-- [ ] Additional resources: steel, oil, coal, grain (beyond the abstract "food"/"industry" of the MVP).
+- [ ] Later-era resources (steel, oil, coal) that consume the Catan-style raw resources (wood/ore) to produce, adding a production chain on top of the current flat terrain output.
 - [ ] Technology tree: research points unlock discrete, named technologies with real effects instead of a generic multiplier.
 - [ ] Political parties and government types, each with different bonuses/penalties.
 - [ ] Elections: popularity determines whether the player's government (or a rival) stays in power.
@@ -49,7 +50,7 @@ Removed from the UI on purpose while the basics get solid — the domain/applica
 ## Version 0.4 — Beyond one isolated country
 
 - [ ] Simulate the two non-player nations too (Caldenreich/Veldoria or Astravia, whichever the player didn't pick) instead of just displaying their territory.
-- [ ] Trade: import/export resources between nations, affecting prices and availability.
+- [ ] Direct nation-to-nation trade (not just the abstract market bank) once the other two nations are actually simulated and have their own resource stockpiles to trade from.
 - [ ] Diplomacy: treaties, alliances, rivalries between nations.
 - [ ] Basic AI nation behavior (simple heuristics, not full parity with the player).
 - [ ] Turn the decorative islands (Kestrel Isles, Solmere, Vashtel Cay) into real, ownable territory — new nations to play as, or land the player's nation can colonize/settle.

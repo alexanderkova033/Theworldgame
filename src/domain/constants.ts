@@ -11,6 +11,16 @@ export const FOOD_PER_POP_CONSUMPTION = 1; // food eaten per person per in-game 
 export const FARM_COST = 500;
 export const FARM_BUILD_DAYS = 60;
 
+// --- Resources (Catan-inspired: terrain produces, provinces trade) ---
+export const RESOURCE_PER_PROVINCE = 1; // units of matching resource produced per owned province per day
+export const STARTING_RESOURCE_STOCK = 5; // a small founding stockpile of each resource
+export const FARM_WOOD_COST = 10; // lumber for the barn
+export const FACTORY_ORE_COST = 15; // metal for machinery
+export const ROAD_ORE_COST = 6; // gravel for the roadbed
+export const BASE_TRADE_RATE = 4; // units given per unit received, without a port
+export const PORT_TRADE_RATE = 2; // units given per unit received, with a coastal province
+export const TRADE_BATCH_SIZE = 5; // units received per trade click (avoids one-at-a-time clicking)
+
 // --- Industry ---
 export const INDUSTRY_PER_FACTORY = 5;
 export const INCOME_PER_INDUSTRY = 1.5;

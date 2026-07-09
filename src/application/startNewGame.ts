@@ -2,6 +2,7 @@
 // GameState, with starting infrastructure placed within that nation's own
 // provinces (so different nations feel at least slightly different from day
 // one, even though the underlying economy math is the same for everyone).
+import { STARTING_RESOURCE_STOCK } from "../domain/constants";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getNation } from "../domain/nations/nationRules";
 import type { GameState } from "../domain/country/types";
@@ -52,6 +53,12 @@ export function startNewGame(nationId: string): GameState {
       armyStrength: 0,
       researchPoints: 0,
       popularity: 55,
+    },
+    resources: {
+      wood: STARTING_RESOURCE_STOCK,
+      ore: STARTING_RESOURCE_STOCK,
+      grain: STARTING_RESOURCE_STOCK,
+      fish: STARTING_RESOURCE_STOCK,
     },
 
     projects: [],

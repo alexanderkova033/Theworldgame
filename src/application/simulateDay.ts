@@ -9,9 +9,12 @@ import { generateId } from "../domain/country/id";
 import type { CountryStats, DailyDelta, GameEvent, GameState } from "../domain/country/types";
 import { updateFood } from "../domain/food/foodRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
+import { getNation } from "../domain/nations/nationRules";
 import { updatePopularity } from "../domain/politics/politicsRules";
 import { updatePopulation } from "../domain/population/populationRules";
+import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
 import { calculateDailyResearch } from "../domain/research/researchRules";
+import { addResources, calculateDailyProduction } from "../domain/resources/resourceRules";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
 import { isCollapseRisk, updateStability } from "../domain/stability/stabilityRules";
 import { applyProjectCompletion } from "./applyProjectCompletion";
@@ -38,12 +41,19 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
-  // 2. Economy: income and expenses.
+  // 2. Raw resources: every owned province produces its terrain's resource.
+  const nation = getNation(working.nationId);
+  const ownedTerrains = nation.provinceIds.map(
+    (provinceId) => MAP_GEOMETRY.provinces.find((p) => p.id === provinceId)!.terrain,
+  );
+  const resources = addResources(working.resources, calculateDailyProduction(ownedTerrains));
+
+  // 3. Economy: income and expenses.
   const income = calculateDailyIncome(working.stats, working.taxRate, efficiencyMultiplier);
   const expenses = calculateDailyExpenses(working.stats);
   const treasury = working.stats.treasury + income - expenses;
 
-  // 3. Food: production vs consumption.
+  // 4. Food: production vs consumption.
   const { newFoodStock, isShortage } = updateFood(working.stats, working.farmCount);
   if (isShortage) {
     events.unshift({
@@ -54,13 +64,13 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
-  // 4. Industry output (derived from factories + research bonus).
+  // 5. Industry output (derived from factories + research bonus).
   const industry = calculateIndustryOutput(working.factoryCount, working.researchLevel);
 
-  // 5. Research points accumulate passively.
+  // 6. Research points accumulate passively.
   const researchPoints = working.stats.researchPoints + calculateDailyResearch(working.educationLevel);
 
-  // 6. Stability reacts to food shortages and popularity.
+  // 7. Stability reacts to food shortages and popularity.
   const statsWithFood: CountryStats = { ...working.stats, food: newFoodStock };
   const stability = updateStability(statsWithFood, isShortage);
   if (isCollapseRisk({ ...statsWithFood, stability })) {
@@ -72,10 +82,10 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
-  // 7. Popularity drifts based on the current tax rate.
+  // 8. Popularity drifts based on the current tax rate.
   const popularity = updatePopularity(working.stats, working.taxRate);
 
-  // 8. Population grows or shrinks based on food and stability.
+  // 9. Population grows or shrinks based on food and stability.
   const population = updatePopulation({ ...statsWithFood, stability }, isShortage);
 
   const updatedStats: CountryStats = {
@@ -89,7 +99,7 @@ export function simulateDay(state: GameState): GameState {
     popularity,
   };
 
-  // 9. Record today's changes for the monthly report.
+  // 10. Record today's changes for the monthly report.
   const delta: DailyDelta = {
     date: state.date,
     income,
@@ -99,7 +109,7 @@ export function simulateDay(state: GameState): GameState {
   };
   const history = [...working.history, delta];
 
-  // 10. Advance the calendar; generate a monthly report if a new month started.
+  // 11. Advance the calendar; generate a monthly report if a new month started.
   const date = advanceDay(state.date);
   let monthlyReports = working.monthlyReports;
   let finalHistory = history;
@@ -112,6 +122,7 @@ export function simulateDay(state: GameState): GameState {
     ...working,
     date,
     stats: updatedStats,
+    resources,
     events: events.slice(0, MAX_EVENT_LOG_LENGTH),
     history: finalHistory,
     monthlyReports,

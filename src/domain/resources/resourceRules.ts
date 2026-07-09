@@ -1,0 +1,44 @@
+import { RESOURCE_PER_PROVINCE } from "../constants";
+import type { Terrain } from "../provinces/types";
+import type { ResourceBundle, ResourceType } from "./types";
+
+// Each terrain produces one matching raw resource — the map's terrain
+// texture (see MapPanel) isn't just decorative, it tells you what a
+// province is good for.
+export const RESOURCE_BY_TERRAIN: Record<Terrain, ResourceType> = {
+  forest: "wood",
+  hills: "ore",
+  plains: "grain",
+  coast: "fish",
+};
+
+export function emptyResourceBundle(): ResourceBundle {
+  return { wood: 0, ore: 0, grain: 0, fish: 0 };
+}
+
+// One day's production across every owned province, given their terrains.
+export function calculateDailyProduction(terrains: Terrain[]): ResourceBundle {
+  const production = emptyResourceBundle();
+  for (const terrain of terrains) {
+    const type = RESOURCE_BY_TERRAIN[terrain];
+    production[type] += RESOURCE_PER_PROVINCE;
+  }
+  return production;
+}
+
+export function addResources(a: ResourceBundle, b: ResourceBundle): ResourceBundle {
+  return {
+    wood: a.wood + b.wood,
+    ore: a.ore + b.ore,
+    grain: a.grain + b.grain,
+    fish: a.fish + b.fish,
+  };
+}
+
+export function canAffordResource(resources: ResourceBundle, type: ResourceType, amount: number): boolean {
+  return resources[type] >= amount;
+}
+
+export function deductResource(resources: ResourceBundle, type: ResourceType, amount: number): ResourceBundle {
+  return { ...resources, [type]: resources[type] - amount };
+}

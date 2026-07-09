@@ -5,7 +5,16 @@
 // couple of button groups here.
 import { buildFactory, buildFarm, buildRoad } from "../../application/actions";
 import { canAfford } from "../../domain/economy/economyRules";
-import { CURRENCY_SYMBOL, FACTORY_COST, FARM_COST, ROAD_COST } from "../../domain/constants";
+import {
+  CURRENCY_SYMBOL,
+  FACTORY_COST,
+  FACTORY_ORE_COST,
+  FARM_COST,
+  FARM_WOOD_COST,
+  ROAD_COST,
+  ROAD_ORE_COST,
+} from "../../domain/constants";
+import { canAffordResource } from "../../domain/resources/resourceRules";
 import type { GameState } from "../../domain/country/types";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 
@@ -28,22 +37,24 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
       <div className="actions-panel__group">
         <h3>Build</h3>
         <button
-          disabled={!canAfford(state.stats, FARM_COST)}
+          disabled={!canAfford(state.stats, FARM_COST) || !canAffordResource(state.resources, "wood", FARM_WOOD_COST)}
           onClick={() => dispatch((s) => buildFarm(s, selectedProvinceId))}
         >
-          Build Farm ({FARM_COST} {CURRENCY_SYMBOL})
+          Build Farm ({FARM_COST} {CURRENCY_SYMBOL} + {FARM_WOOD_COST} Wood)
         </button>
         <button
-          disabled={!canAfford(state.stats, FACTORY_COST)}
+          disabled={
+            !canAfford(state.stats, FACTORY_COST) || !canAffordResource(state.resources, "ore", FACTORY_ORE_COST)
+          }
           onClick={() => dispatch((s) => buildFactory(s, selectedProvinceId))}
         >
-          Build Factory ({FACTORY_COST} {CURRENCY_SYMBOL})
+          Build Factory ({FACTORY_COST} {CURRENCY_SYMBOL} + {FACTORY_ORE_COST} Ore)
         </button>
         <button
-          disabled={!canAfford(state.stats, ROAD_COST)}
+          disabled={!canAfford(state.stats, ROAD_COST) || !canAffordResource(state.resources, "ore", ROAD_ORE_COST)}
           onClick={() => dispatch((s) => buildRoad(s, selectedProvinceId))}
         >
-          Build Road ({ROAD_COST} {CURRENCY_SYMBOL})
+          Build Road ({ROAD_COST} {CURRENCY_SYMBOL} + {ROAD_ORE_COST} Ore)
         </button>
       </div>
     </section>

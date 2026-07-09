@@ -14,7 +14,7 @@ presentation/   →   application/   →   domain/
    (React)          (use cases)         (rules & types)
 ```
 
-- **`domain/`** — The rules of the world, grouped by game concept. Each subfolder (`economy`, `population`, `food`, `industry`, `roads`, `stability`, `politics`, `army`, `research`, `construction`, `provinces`, `nations`, `country`) exports pure functions and types for that concept only. A function like `applyFoodConsumption(stats, days)` takes data in and returns new data out — no mutation, no side effects, no imports from React or `application/`.
+- **`domain/`** — The rules of the world, grouped by game concept. Each subfolder (`economy`, `population`, `food`, `industry`, `roads`, `stability`, `politics`, `army`, `research`, `construction`, `provinces`, `nations`, `resources`, `country`) exports pure functions and types for that concept only. A function like `applyFoodConsumption(stats, days)` takes data in and returns new data out — no mutation, no side effects, no imports from React or `application/`.
 - **`application/`** — Use cases that orchestrate multiple domain modules to do something meaningful: "simulate one day," "build a farm," "generate this month's report," "start a new game." This is the only layer allowed to call more than one domain module at a time.
 - **`presentation/`** — React components and hooks. This layer calls `application/` functions in response to user input (button clicks) or time passing (the game clock hook), and renders whatever `GameState` it's given. It never contains simulation math itself.
 
@@ -31,6 +31,7 @@ interface GameState {
   isPaused: boolean;
   speed: GameSpeed;        // 1 | 2 | 3 | 5
   stats: CountryStats;     // treasury, population, food, industry, stability, army, research, popularity
+  resources: ResourceBundle; // { wood, ore, grain, fish } — see "Resources and trade" below
   taxRate: number;         // 0–1
   farmCount: number; factoryCount: number; roadCount: number;
   educationLevel: number; researchLevel: number;
@@ -92,6 +93,17 @@ Deliberately **not** modeled yet: per-province stats. `treasury`, `food`, `indus
 `MAP_GEOMETRY` also carries `otherLandmasses`: a few small decorative island coastlines (no provinces, no owner) rendered the same way as the main continent, just to make the world feel bigger than one landmass. They're generated the same offline way as the main coastline (smooth sine-harmonic noise around a circle, not per-vertex random jitter — the latter produces spiky, self-intersecting shapes) and hardcoded like everything else in `provinceData.ts`.
 
 **Roads get their own rendering**, not `BuildingIcon`: each road built adds a parallel "lane" line from the capital to that province (up to 5 visible lanes; beyond that a "×N" text badge takes over) rather than just making one line thicker. This was a deliberate fix — an earlier version only changed stroke width per road, which plateaued after ~4 roads and made "build more roads" feel like it did nothing. The same lesson was applied to the army: recruiting soldiers now shows a crossed-swords marker + number at the capital, since previously it had zero map presence at all.
+
+## Resources and trade
+
+`domain/resources/` defines `ResourceType` (`"wood" | "ore" | "grain" | "fish"`), a `ResourceBundle` (a `Record<ResourceType, number>`), and two rule files:
+
+- `resourceRules.ts` — `RESOURCE_BY_TERRAIN` maps each `Terrain` to the resource it produces; `calculateDailyProduction(terrains: Terrain[])` sums one unit per owned province of matching terrain (`RESOURCE_PER_PROVINCE` in `domain/constants.ts`); `canAffordResource`/`deductResource` mirror the `canAfford`/deduct pattern already used for treasury in `domain/economy`.
+- `tradeRules.ts` — `nationHasPort(nation)` checks whether any of `nation.provinceIds` has `terrain === "coast"` (looked up via `MAP_GEOMETRY`); `getTradeRate(nation)` returns `PORT_TRADE_RATE` (2) or `BASE_TRADE_RATE` (4) accordingly.
+
+`application/simulateDay.ts` adds resource production as its own step: it resolves the current nation via `getNation(working.nationId)`, maps its `provinceIds` to their `terrain` via `MAP_GEOMETRY`, and adds `calculateDailyProduction(...)` to `working.resources`. `buildFarm`/`buildFactory`/`buildRoad` each gained a resource cost (`FARM_WOOD_COST`, `FACTORY_ORE_COST`, `ROAD_ORE_COST`) checked and deducted the same way treasury already was — two `canAfford`-style guards instead of one. A new `application/actions/tradeResources.ts` implements the bank trade: `canTrade`/`tradeResources(state, give, receive)` deduct `rate * TRADE_BATCH_SIZE` of `give` and add `TRADE_BATCH_SIZE` of `receive`, batched so a useful trade isn't a dozen individual clicks.
+
+On the presentation side, `ResourceIcon.tsx` (log/rock/wheat-sheaf/fish glyphs, same basic-shapes approach as `BuildingIcon`/`StatIcon`) backs three consumers: `ResourcesPanel.tsx` (a stat-style readout), a small badge per owned province on `MapPanel.tsx` (positioned at a fixed offset that stays clear of the capital's road hub, army marker, and building-icon grid), and `TradePanel.tsx` (give/receive `<select>`s plus a trade button showing the live rate and whether the nation has a port).
 
 ## Nations and the start screen
 
