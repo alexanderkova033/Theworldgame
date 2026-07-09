@@ -50,6 +50,7 @@ export interface MonthlyReport {
 }
 
 export interface GameState {
+  nationId: string; // chosen at the start screen; fixed for the rest of the game
   date: GameDate;
   isPaused: boolean;
   speed: GameSpeed;

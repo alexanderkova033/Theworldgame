@@ -1,10 +1,10 @@
 import { formatDate } from "../../domain/country/calendar";
-import { NATION_NAME } from "../../domain/constants";
 import type { GameDate, GameSpeed } from "../../domain/country/types";
 
 const SPEEDS: GameSpeed[] = [1, 2, 3, 5];
 
 interface TopBarProps {
+  nationName: string;
   date: GameDate;
   isPaused: boolean;
   speed: GameSpeed;
@@ -13,10 +13,10 @@ interface TopBarProps {
   onSetSpeed: (speed: GameSpeed) => void;
 }
 
-export function TopBar({ date, isPaused, speed, onPause, onResume, onSetSpeed }: TopBarProps) {
+export function TopBar({ nationName, date, isPaused, speed, onPause, onResume, onSetSpeed }: TopBarProps) {
   return (
     <header className="top-bar">
-      <span className="top-bar__nation">{NATION_NAME}</span>
+      <span className="top-bar__nation">{nationName}</span>
       <span className="top-bar__date">{formatDate(date)}</span>
 
       <button

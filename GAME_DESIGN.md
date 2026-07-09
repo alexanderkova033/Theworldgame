@@ -10,9 +10,11 @@ The intended feel is closer to a management/economy game (think city-builder or 
 
 ## Setting
 
-The player governs **Astravia**, a fictional nation on an invented continent, in a period that *feels* like the years just before 1914 — steam and rail infrastructure, early factories, telegraphs, expanding public education, and simmering great-power tension in the background. Astravia is not tied to any real country or history: this sidesteps the real-world politics and research burden of a historical setting, avoids the (extremely crowded) WW2-strategy-game space, and means the map, provinces, and events can be designed freely rather than constrained by real geography.
+The game takes place on an invented continent in a period that *feels* like the years just before 1914 — steam and rail infrastructure, early factories, telegraphs, expanding public education, and simmering great-power tension in the background. Nothing is tied to any real country or history: this sidesteps the real-world politics and research burden of a historical setting, avoids the (extremely crowded) WW2-strategy-game space, and means the map, nations, and events can be designed freely rather than constrained by real geography.
 
-The currency is the **Crown** (shown as `Cr`), and the nation is currently a single country on a map of eight provinces (see "Map and provinces" below). Multiple, independently-playable nations are a roadmap item.
+Before play begins, the player picks one of three nations sharing the continent — **Astravia**, **Caldenreich**, or **Veldoria** — at a start screen. This choice is permanent for that game; there is no way to switch nations mid-playthrough. The other two nations' territory is still visible on the map (so the world feels populated), but isn't yet controllable — playable AI neighbors are a roadmap item.
+
+The currency is the **Crown** (shown as `Cr`), shared across the continent. Each nation controls a handful of the map's eight provinces (see "Map and provinces" below).
 
 ## Main stats/resources
 
@@ -29,11 +31,13 @@ Every country tracks the following core stats (see `CountryStats` in `src/domain
 | **Research Points** | Accumulated science output, spent on research projects. |
 | **Popularity** | Government approval (0–100). Affected by taxes, stability, and food shortages. |
 
-The MVP models one country only. Multi-country play is a roadmap item.
+The MVP simulates the player's chosen nation only — the other two nations exist on the map but aren't separately simulated yet. Playable/AI multi-nation simulation is a roadmap item.
 
 ## Map and provinces
 
-Astravia is divided into eight provinces, rendered as a stylized SVG map (an organic coastline with province borders, similar in spirit to a Paradox-style province map). The player picks a province before starting a build action ("Building in: Redgate — click the map to change"), and every completed farm, factory, road, education investment, or research initiative is remembered as a small icon on the province it was built in.
+The continent is divided into eight provinces, rendered as a stylized SVG map (an organic coastline with province borders, similar in spirit to a Paradox-style province map) — Redgate, Thornwick, Marrow Coast, Caldermoor, Ashford, Duskhaven, Veldshire, and Brindlewood. Each of the three nations controls two or three of them; the player's own territory is colored in their nation's crest color, with a star marking the capital, while the rest of the continent is shown muted and non-interactive.
+
+The player picks one of their own provinces before starting a build action ("Building in: Redgate — click the map to change"), and every completed farm, factory, road, education investment, or research initiative is remembered as a small icon on the province it was built in.
 
 Provinces are geographic and visual in the MVP — **the national economy is still one shared pool** (treasury, food, industry, and so on are national totals, not per-province). Splitting the economy so each province has its own local stats is a natural next step, tracked in ROADMAP.md.
 

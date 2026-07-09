@@ -12,8 +12,10 @@ This roadmap is intentionally staged: each version should be a playable, stable 
 - [x] Monthly reports.
 - [x] Event log.
 - [x] Clean/screaming architecture separating domain rules, use cases, and UI.
-- [x] Fictional setting (Astravia, a pre-1914-feeling nation) instead of a real historical war.
+- [x] Fictional setting (a pre-1914-feeling continent) instead of a real historical war.
 - [x] Visual map: 8 provinces, click-to-select, completed buildings shown as icons (national economy still one shared pool — see Version 0.2).
+- [x] Permanent nation picker: choose Astravia, Caldenreich, or Veldoria on a start screen before the game begins; no way to change it afterward. The other two nations' territory shows on the map but isn't simulated yet (see Version 0.4).
+- [x] Visual polish pass: serif display type, brass/gold accent palette, panel depth/shadows, gradient+shadow map rendering, shape-based building and stat icons.
 
 ## Version 0.2 — Make it a real game loop
 
@@ -36,10 +38,10 @@ This roadmap is intentionally staged: each version should be a playable, stable 
 
 ## Version 0.4 — Beyond one isolated country
 
-- [ ] Multiple countries simulated simultaneously (at least a few AI-controlled neighbors), sharing Astravia's map/continent.
-- [ ] Trade: import/export resources between countries, affecting prices and availability.
-- [ ] Diplomacy: treaties, alliances, rivalries between countries.
-- [ ] Basic AI country behavior (simple heuristics, not full parity with the player).
+- [ ] Simulate the two non-player nations too (Caldenreich/Veldoria or Astravia, whichever the player didn't pick) instead of just displaying their territory.
+- [ ] Trade: import/export resources between nations, affecting prices and availability.
+- [ ] Diplomacy: treaties, alliances, rivalries between nations.
+- [ ] Basic AI nation behavior (simple heuristics, not full parity with the player).
 
 ## Long-term dream version
 

@@ -1,5 +1,6 @@
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { CountryStats } from "../../domain/country/types";
+import { StatIcon, type StatIconType } from "./StatIcon";
 
 interface StatsPanelProps {
   stats: CountryStats;
@@ -11,25 +12,28 @@ function formatNumber(value: number): string {
 }
 
 export function StatsPanel({ stats, taxRate }: StatsPanelProps) {
-  const rows: Array<[string, string]> = [
-    ["Treasury", `${formatNumber(stats.treasury)} ${CURRENCY_SYMBOL}`],
-    ["Population", formatNumber(stats.population)],
-    ["Food", formatNumber(stats.food)],
-    ["Industry", formatNumber(stats.industry)],
-    ["Stability", `${formatNumber(stats.stability)}/100`],
-    ["Army Strength", formatNumber(stats.armyStrength)],
-    ["Research Points", formatNumber(stats.researchPoints)],
-    ["Popularity", `${formatNumber(stats.popularity)}/100`],
-    ["Tax Rate", `${Math.round(taxRate * 100)}%`],
+  const rows: Array<[StatIconType | null, string, string]> = [
+    ["treasury", "Treasury", `${formatNumber(stats.treasury)} ${CURRENCY_SYMBOL}`],
+    ["population", "Population", formatNumber(stats.population)],
+    ["food", "Food", formatNumber(stats.food)],
+    ["industry", "Industry", formatNumber(stats.industry)],
+    ["stability", "Stability", `${formatNumber(stats.stability)}/100`],
+    ["army", "Army Strength", formatNumber(stats.armyStrength)],
+    ["research", "Research Points", formatNumber(stats.researchPoints)],
+    ["popularity", "Popularity", `${formatNumber(stats.popularity)}/100`],
+    [null, "Tax Rate", `${Math.round(taxRate * 100)}%`],
   ];
 
   return (
     <section className="panel stats-panel">
       <h2>Country Stats</h2>
       <dl className="stats-panel__grid">
-        {rows.map(([label, value]) => (
+        {rows.map(([icon, label, value]) => (
           <div className="stats-panel__row" key={label}>
-            <dt>{label}</dt>
+            <dt>
+              {icon && <StatIcon type={icon} />}
+              {label}
+            </dt>
             <dd>{value}</dd>
           </div>
         ))}

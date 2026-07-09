@@ -14,7 +14,7 @@ presentation/   →   application/   →   domain/
    (React)          (use cases)         (rules & types)
 ```
 
-- **`domain/`** — The rules of the world, grouped by game concept. Each subfolder (`economy`, `population`, `food`, `industry`, `roads`, `stability`, `politics`, `army`, `research`, `construction`, `provinces`, `country`) exports pure functions and types for that concept only. A function like `applyFoodConsumption(stats, days)` takes data in and returns new data out — no mutation, no side effects, no imports from React or `application/`.
+- **`domain/`** — The rules of the world, grouped by game concept. Each subfolder (`economy`, `population`, `food`, `industry`, `roads`, `stability`, `politics`, `army`, `research`, `construction`, `provinces`, `nations`, `country`) exports pure functions and types for that concept only. A function like `applyFoodConsumption(stats, days)` takes data in and returns new data out — no mutation, no side effects, no imports from React or `application/`.
 - **`application/`** — Use cases that orchestrate multiple domain modules to do something meaningful: "simulate one day," "build a farm," "generate this month's report," "start a new game." This is the only layer allowed to call more than one domain module at a time.
 - **`presentation/`** — React components and hooks. This layer calls `application/` functions in response to user input (button clicks) or time passing (the game clock hook), and renders whatever `GameState` it's given. It never contains simulation math itself.
 
@@ -26,6 +26,7 @@ The entire simulation is one plain, serializable object: `GameState` (defined in
 
 ```ts
 interface GameState {
+  nationId: string;        // chosen once, at the start screen; fixed for the rest of the game
   date: GameDate;          // { year, month, day } — see "Daily tick system" below
   isPaused: boolean;
   speed: GameSpeed;        // 1 | 2 | 3 | 5
@@ -86,7 +87,13 @@ Every `Project` now carries a `provinceId`, set by whichever province is selecte
 
 Deliberately **not** modeled yet: per-province stats. `treasury`, `food`, `industry`, and the rest remain one national pool regardless of where buildings are placed — `domain/economy`, `domain/food`, and friends are untouched by provinces. Splitting the economy per-province (so a province's own farms feed its own population, etc.) is a real architectural change — probably a `Province` gaining its own `CountryStats`-shaped slice — and is tracked as a ROADMAP item rather than done here, to keep this step additive instead of a rewrite.
 
-`presentation/components/MapPanel.tsx` renders the geometry as an SVG: provinces are clickable `<path>` elements (selection is forwarded up to `App.tsx`, which owns `selectedProvinceId` as local `useState`), and `placedBuildings` are grouped by province and drawn as small colored dots so the map fills in as the country develops.
+`presentation/components/MapPanel.tsx` renders the geometry as an SVG: provinces are clickable `<path>` elements (selection is forwarded up to `App.tsx`, which owns `selectedProvinceId` as local `useState`), and `placedBuildings` are grouped by province and drawn using `BuildingIcon.tsx` (a small shape-per-type glyph: triangle/square/diamond/circle/star) so the map fills in as the country develops. Provinces the player doesn't own (see "Nations and the start screen" below) render muted and un-clickable, using `Nation.provinceIds` to decide ownership — `MapPanel` itself has no concept of "foreign," it just checks membership in a list.
+
+## Nations and the start screen
+
+`domain/nations/` defines a `Nation` (`{ id, name, color, capitalProvinceId, provinceIds, blurb }`) and a static roster of three (`nationData.ts`), each owning a disjoint subset of the eight provinces. `getNationForProvince(provinceId)` answers "who owns this province," used by both the in-game map and the start-screen preview map.
+
+The game doesn't begin with a `GameState` — `useGameClock`'s state starts as `null`, and `application/startNewGame.ts` now takes a `nationId` argument (it looks up the `Nation`, seeds starting buildings inside that nation's own provinces via its `capitalProvinceId` and `provinceIds`, and stamps `nationId` onto the resulting `GameState`). `App.tsx` renders `StartScreen` whenever `state` is `null`; the moment `onSelectNation` fires, `useGameClock.startGame(nationId)` creates the real `GameState` and the app switches to the normal game view. There is no action anywhere in `presentation/` that can set `nationId` again or return `state` to `null` — "locked in once chosen" is enforced simply by that action not existing, not by a runtime check.
 
 ## Monthly report system
 
@@ -96,7 +103,7 @@ Deliberately **not** modeled yet: per-province stats. `treasury`, `food`, `indus
 
 `presentation/` never computes simulation values itself. Its two responsibilities are:
 
-1. **Driving time**: `presentation/hooks/useGameClock.ts` is a `useEffect`-based hook that, once per interval (interval length depends on `speed`), calls `application/simulateDay.ts` and stores the resulting `GameState` in React state — but only while `isPaused` is false.
+1. **Driving time**: `presentation/hooks/useGameClock.ts` is a `useEffect`-based hook that, once per interval (interval length depends on `speed`), calls `application/simulateDay.ts` and stores the resulting `GameState` in React state — but only while a game has started and `isPaused` is false. Before the player picks a nation, `state` is `null` and the effect is a no-op.
 2. **Displaying state and forwarding actions**: components like `StatsPanel` or `ProjectsPanel` receive slices of `GameState` as props and render them. Components like `ActionsPanel` call `application/actions/*` functions (e.g., `buildFarm(state)`) when the player clicks a button, and hand the resulting new `GameState` back up to `App.tsx` to be stored.
 
 `App.tsx` is the only place that owns the live `GameState` (via `useState`) and is the seam between `presentation/` and the rest of the app — it imports from `application/`, never directly from deep inside `domain/`.
@@ -107,7 +114,7 @@ Because of the layering, most future features (see ROADMAP.md) follow the same r
 
 1. **New stat or resource** (e.g., "steel"): add it to `CountryStats`, add a `domain/steel/` module with its production/consumption rules, wire it into `simulateDay`, and add a line to `StatsPanel`.
 2. **New player action** (e.g., "build a mine"): add a new file in `application/actions/`, following the same shape as `buildFarm.ts` (validate cost → deduct treasury → push a new `Project`).
-3. **New system entirely** (e.g., trade, diplomacy): add a new `domain/<system>/` folder and a corresponding `application/` use case, without needing to touch unrelated domains — `domain/provinces/` (see above) is an example of this already done. Multi-country play would mean `GameState` holds a collection of country objects instead of one, but the per-country rules in `domain/` stay the same.
+3. **New system entirely** (e.g., trade, diplomacy): add a new `domain/<system>/` folder and a corresponding `application/` use case, without needing to touch unrelated domains — `domain/provinces/` and `domain/nations/` (see above) are examples of this already done. Fully simulating the two non-player nations (instead of just displaying their territory) would mean `GameState` holds a collection of country objects instead of one, but the per-country rules in `domain/` stay the same.
 4. **Persistence** (save/load): since `GameState` is a plain serializable object, this is a `presentation/` (or new `infrastructure/`) concern — serialize to `localStorage`/a file, no changes needed to `domain/` or `application/`.
 
 The goal is that adding a feature almost always means *adding* a file, rarely *editing* several existing ones.

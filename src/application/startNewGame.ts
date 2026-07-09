@@ -1,26 +1,37 @@
-// Use case: start a new game. Builds the initial GameState for a fresh country.
-import { CAPITAL_PROVINCE_ID, NATION_NAME } from "../domain/constants";
+// Use case: start a new game for a chosen nation. Builds the initial
+// GameState, with starting infrastructure placed within that nation's own
+// provinces (so different nations feel at least slightly different from day
+// one, even though the underlying economy math is the same for everyone).
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
+import { getNation } from "../domain/nations/nationRules";
 import type { GameState } from "../domain/country/types";
 import type { PlacedBuilding } from "../domain/provinces/types";
 
 const STARTING_DATE = { year: 1, month: 1, day: 1 };
 
-// The nation starts with a little infrastructure already in place, spread
-// across a few provinces so the map isn't empty on day one.
-const STARTING_BUILDINGS: PlacedBuilding[] = [
-  { id: "starting-farm-1", provinceId: CAPITAL_PROVINCE_ID, type: "farm" }, // Redgate
-  { id: "starting-farm-2", provinceId: "province-2", type: "farm" }, // Marrow Coast
-  { id: "starting-factory-1", provinceId: "province-1", type: "factory" }, // Veldshire
-  { id: "starting-road-1", provinceId: CAPITAL_PROVINCE_ID, type: "road" }, // Redgate
-];
+function buildStartingBuildings(nationId: string): PlacedBuilding[] {
+  const nation = getNation(nationId);
+  const capital = nation.capitalProvinceId;
+  const otherProvinces = nation.provinceIds.filter((id) => id !== capital);
+  const secondProvince = otherProvinces[0] ?? capital;
+  const thirdProvince = otherProvinces[1] ?? secondProvince;
 
-export function startNewGame(): GameState {
+  return [
+    { id: "starting-farm-1", provinceId: capital, type: "farm" },
+    { id: "starting-road-1", provinceId: capital, type: "road" },
+    { id: "starting-farm-2", provinceId: secondProvince, type: "farm" },
+    { id: "starting-factory-1", provinceId: thirdProvince, type: "factory" },
+  ];
+}
+
+export function startNewGame(nationId: string): GameState {
+  const nation = getNation(nationId);
   const farmCount = 2;
   const factoryCount = 1;
   const roadCount = 1;
 
   return {
+    nationId,
     date: STARTING_DATE,
     isPaused: true,
     speed: 1,
@@ -44,12 +55,12 @@ export function startNewGame(): GameState {
     },
 
     projects: [],
-    placedBuildings: STARTING_BUILDINGS,
+    placedBuildings: buildStartingBuildings(nationId),
     events: [
       {
         id: "event-start",
         date: STARTING_DATE,
-        message: `${NATION_NAME} enters the new century amid rising industry and simmering tensions across the continent.`,
+        message: `${nation.name} enters the new century amid rising industry and simmering tensions across the continent.`,
         severity: "info",
       },
     ],
