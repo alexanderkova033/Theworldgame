@@ -1,0 +1,266 @@
+:root {
+  color-scheme: dark;
+  --bg: #12161c;
+  --panel-bg: #1b212b;
+  --panel-border: #2a3240;
+  --text: #e6e9ef;
+  --text-muted: #8993a4;
+  --accent: #4f8cff;
+  --accent-active: #6ea2ff;
+  --danger: #e5484d;
+  --warning: #e5a94d;
+  --info: #4fa8ff;
+
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--panel-border);
+  background: #232a36;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  background: #2c3444;
+  border-color: var(--accent);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+button.is-active {
+  background: var(--accent);
+  border-color: var(--accent-active);
+  color: #fff;
+}
+
+h1, h2, h3 {
+  margin: 0 0 0.5rem 0;
+}
+
+h2 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+h3 {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.75rem;
+}
+
+.game-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* --- Top bar --- */
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.top-bar__date {
+  font-weight: 600;
+  min-width: 10rem;
+}
+
+.top-bar__speeds {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.top-bar__speed-button {
+  min-width: 2.5rem;
+}
+
+/* --- Main layout --- */
+
+.game-layout__main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  align-items: start;
+}
+
+.game-layout__column {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 900px) {
+  .game-layout__main {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Stats panel --- */
+
+.stats-panel__grid {
+  margin: 0;
+}
+
+.stats-panel__row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.stats-panel__row dt {
+  color: var(--text-muted);
+}
+
+.stats-panel__row dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* --- Actions panel --- */
+
+.actions-panel__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* --- Projects panel --- */
+
+.projects-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.projects-panel__item-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+}
+
+.progress-bar {
+  height: 8px;
+  background: #0f1319;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-bar__fill {
+  height: 100%;
+  background: var(--accent);
+}
+
+.projects-panel__empty,
+.reports-panel__empty {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* --- Reports panel --- */
+
+.reports-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.reports-panel__item {
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+}
+
+.reports-panel__item-header {
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.reports-panel__item-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* --- Event log --- */
+
+.event-log__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 24rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.35rem;
+}
+
+.event-log__item {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  border-left: 3px solid var(--info);
+}
+
+.event-log__item--warning {
+  border-left-color: var(--warning);
+}
+
+.event-log__item--danger {
+  border-left-color: var(--danger);
+}
+
+.event-log__date {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
