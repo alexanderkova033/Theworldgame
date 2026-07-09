@@ -2,6 +2,8 @@
 // wheat sheaf, and so on — built from basic shapes (circles, rects,
 // polygons, lines) rather than hand-authored illustration paths, matching
 // the style used for BuildingIcon.
+import { starPoints } from "./iconShapes";
+
 export type StatIconType =
   | "treasury"
   | "population"
@@ -32,16 +34,6 @@ export function StatIcon({ type }: StatIconProps) {
       {renderShape(type)}
     </svg>
   );
-}
-
-function starPoints(outerR: number, innerR: number): string {
-  const points: string[] = [];
-  for (let i = 0; i < 10; i++) {
-    const r = i % 2 === 0 ? outerR : innerR;
-    const angle = (Math.PI / 5) * i - Math.PI / 2;
-    points.push(`${Math.cos(angle) * r},${Math.sin(angle) * r}`);
-  }
-  return points.join(" ");
 }
 
 function renderShape(type: StatIconType) {
@@ -118,7 +110,7 @@ function renderShape(type: StatIconType) {
       );
     case "popularity":
       // A star rating.
-      return <polygon points={starPoints(7, 2.9)} fill="currentColor" stroke="none" />;
+      return <polygon points={starPoints(0, 0, 7, 2.9)} fill="currentColor" stroke="none" />;
     default:
       return null;
   }

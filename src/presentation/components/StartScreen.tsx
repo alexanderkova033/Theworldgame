@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { getNationForProvince } from "../../domain/nations/nationRules";
 import type { Nation } from "../../domain/nations/types";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
+import { cogPoints, starPoints } from "./iconShapes";
 
 interface StartScreenProps {
   nations: Nation[];
@@ -64,27 +65,6 @@ export function StartScreen({ nations, onSelectNation }: StartScreenProps) {
   );
 }
 
-function starPoints(outerR: number, innerR: number): string {
-  const points: string[] = [];
-  for (let i = 0; i < 10; i++) {
-    const r = i % 2 === 0 ? outerR : innerR;
-    const angle = (Math.PI / 5) * i - Math.PI / 2;
-    points.push(`${Math.cos(angle) * r},${Math.sin(angle) * r}`);
-  }
-  return points.join(" ");
-}
-
-function cogPoints(outerR: number, innerR: number, teeth: number): string {
-  const points: string[] = [];
-  const vertices = teeth * 2;
-  for (let i = 0; i < vertices; i++) {
-    const r = i % 2 === 0 ? outerR : innerR;
-    const angle = ((Math.PI * 2) / vertices) * i - Math.PI / 2;
-    points.push(`${Math.cos(angle) * r},${Math.sin(angle) * r}`);
-  }
-  return points.join(" ");
-}
-
 // A small emblem per nation, echoing its flavor (farmland, schools,
 // industry) — purely decorative, drawn from the same basic-shape approach
 // as BuildingIcon/StatIcon.
@@ -115,12 +95,12 @@ function CrestEmblem({ nationId }: { nationId: string }) {
         // A gear, for an industrial power.
         return (
           <g fill="#f4efe2">
-            <polygon points={cogPoints(6.5, 5, 8)} />
+            <polygon points={cogPoints(0, 0, 6.5, 5, 8)} />
             <circle cx={0} cy={0} r={2.1} className="nation-card__crest-hole" />
           </g>
         );
       default:
-        return <polygon points={starPoints(6, 2.6)} fill="#f4efe2" />;
+        return <polygon points={starPoints(0, 0, 6, 2.6)} fill="#f4efe2" />;
     }
   })();
 
