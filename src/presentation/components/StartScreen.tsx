@@ -1,3 +1,4 @@
+import "./StartScreen.css";
 import type { CSSProperties } from "react";
 import { getNationForProvince } from "../../domain/nations/nationRules";
 import type { Nation } from "../../domain/nations/types";

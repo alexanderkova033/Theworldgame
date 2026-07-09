@@ -63,6 +63,9 @@ export function startNewGame(nationId: string): GameState {
 
     projects: [],
     placedBuildings: buildStartingBuildings(nationId),
+    enactedLawIds: [],
+    expeditions: [],
+    scoutedIslandIds: [],
     events: [
       {
         id: "event-start",

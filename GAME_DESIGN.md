@@ -14,7 +14,7 @@ The game takes place on an invented continent in a period that *feels* like the 
 
 Before play begins, the player picks one of three nations sharing the continent — **Astravia**, **Caldenreich**, or **Veldoria** — at a start screen. This choice is permanent for that game; there is no way to switch nations mid-playthrough. The other two nations' territory is still visible on the map (so the world feels populated), but isn't yet controllable — playable AI neighbors are a roadmap item.
 
-The currency is the **Crown** (shown as `Cr`), shared across the continent. Each nation controls a handful of the map's eight provinces (see "Map and provinces" below).
+The currency is the **Crown** (shown as `Cr`), shared across the continent. Each nation controls a handful of the map's sixteen provinces (see "Map and provinces" below).
 
 ## Main stats/resources
 
@@ -37,7 +37,7 @@ The MVP simulates the player's chosen nation only — the other two nations exis
 
 ## Map and provinces
 
-The continent is divided into eight provinces, rendered as a stylized SVG map (an organic coastline with province borders, similar in spirit to a Paradox-style province map) — Redgate, Thornwick, Marrow Coast, Caldermoor, Ashford, Duskhaven, Veldshire, and Brindlewood. Each of the three nations controls two or three of them; the player's own territory is colored in their nation's crest color, with a star marking the capital. The other two nations render in *their* crest colors too (dimmed, non-interactive) rather than a flat "foreign" grey, so you can tell them apart at a glance. A few small unclaimed islands (Kestrel Isles, Solmere, Vashtel Cay) sit further out on the map — purely decorative for now, a hint that the world extends beyond the one continent.
+The continent is divided into sixteen provinces, rendered as a stylized SVG map (an organic coastline with province borders, similar in spirit to a Paradox-style province map). These are a north/south or east/west split of the original eight regions (Redgate, Thornwick, Marrow Coast, Caldermoor, Ashford, Duskhaven, Veldshire, Brindlewood), so you'll see pairs like "North Redgate"/"South Redgate" sharing a name and a stretch of coastline. Each of the three nations controls four to six of them; the player's own territory is colored in their nation's crest color, with a star marking the capital. The other two nations render in *their* crest colors too (dimmed, non-interactive) rather than a flat "foreign" grey, so you can tell them apart at a glance. A few small unclaimed islands (Kestrel Isles, Solmere, Vashtel Cay) sit further out on the map — purely decorative for now, a hint that the world extends beyond the one continent. With sixteen provinces packed into the same coastline, the map supports scroll-to-zoom and click-and-drag panning so every label stays readable.
 
 The player picks one of their own provinces before starting a build action ("Building in: Redgate — click the map to change"), and every completed farm, factory, or road is remembered as a small pictorial icon on the province it was built in. Roads are the exception: instead of a single icon, each road built adds a visible lane to an actual road line connecting that province back to the capital, so building more roads is always visibly different.
 
@@ -74,7 +74,8 @@ Trading happens with "the continental market" (an abstract bank, not the other t
 - Each project type has a fixed **duration** in in-game days (e.g., a factory takes 120 days).
 - Projects show live progress (days elapsed / total days) in the Projects panel.
 - When a project completes, its effect is applied permanently to the country (e.g., a completed farm permanently increases food production), and an event is logged.
-- Multiple projects can run at once; there is no hard limit in the MVP (a queue/limit system is a roadmap item).
+- Multiple projects can run at once across different provinces — there's no limit on that.
+- **Each individual province** does have a cap, though: at most 3 farms, 2 factories, and 5 roads per province (built *or* being built — queuing a 4th farm when 3 already exist is blocked the same as if all 3 were finished). This is what makes having sixteen smaller provinces matter mechanically, not just visually — a nation that wants more farms needs more provinces to spread them across, not just one province piled high.
 
 ## Stability, taxes, population, army, and research interactions
 

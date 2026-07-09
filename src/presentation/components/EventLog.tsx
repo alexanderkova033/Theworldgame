@@ -1,3 +1,4 @@
+import "./EventLog.css";
 import { formatDate } from "../../domain/country/calendar";
 import type { GameEvent } from "../../domain/country/types";
 

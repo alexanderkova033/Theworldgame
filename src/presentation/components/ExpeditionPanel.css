@@ -1,0 +1,16 @@
+.expedition-panel__island {
+  margin-top: 0;
+}
+
+.expedition-panel__hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0 0 0.6rem;
+  line-height: 1.4;
+}
+
+.expedition-panel__result {
+  font-size: 0.85rem;
+  color: var(--text);
+  line-height: 1.4;
+}

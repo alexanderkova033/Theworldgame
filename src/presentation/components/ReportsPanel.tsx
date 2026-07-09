@@ -1,3 +1,4 @@
+import "./ReportsPanel.css";
 import { formatMonthYear } from "../../domain/country/calendar";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { MonthlyReport } from "../../domain/country/types";

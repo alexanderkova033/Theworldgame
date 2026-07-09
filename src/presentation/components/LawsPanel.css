@@ -1,0 +1,75 @@
+.laws-panel__category {
+  margin-bottom: 1rem;
+}
+
+.laws-panel__category:last-child {
+  margin-bottom: 0;
+}
+
+.laws-panel__category-title {
+  margin-top: 0;
+}
+
+.laws-panel__options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.laws-panel__option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.laws-panel__option h4 {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.laws-panel__description {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.laws-panel__benefit {
+  font-size: 0.75rem;
+  color: var(--success);
+  margin: 0;
+  font-weight: 600;
+}
+
+.laws-panel__cost {
+  font-size: 0.75rem;
+  color: var(--danger);
+  margin: 0 0 0.2rem;
+  font-weight: 600;
+}
+
+.laws-panel__option button {
+  width: 100%;
+}
+
+.laws-panel__option.is-enacted {
+  border-color: var(--accent-active);
+  background: var(--accent-soft);
+}
+
+.laws-panel__option.is-locked {
+  opacity: 0.45;
+}
+
+.laws-panel__status {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent-active);
+  font-weight: 700;
+}

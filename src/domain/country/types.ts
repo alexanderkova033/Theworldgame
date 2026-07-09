@@ -1,6 +1,7 @@
 // The shape of a country and its game state. This is the aggregate root of the
 // whole simulation: every other domain module reads from and writes pieces of it.
 import type { Project } from "../construction/types";
+import type { Expedition } from "../expeditions/types";
 import type { PlacedBuilding } from "../provinces/types";
 import type { ResourceBundle } from "../resources/types";
 
@@ -70,6 +71,9 @@ export interface GameState {
 
   projects: Project[];
   placedBuildings: PlacedBuilding[]; // completed buildings, for the map
+  enactedLawIds: string[]; // permanent policy choices, one per category — see domain/laws
+  expeditions: Expedition[]; // in-progress scouting trips to unclaimed islands
+  scoutedIslandIds: string[]; // islands a completed expedition has already visited
   events: GameEvent[];
   monthlyReports: MonthlyReport[];
   history: DailyDelta[]; // daily deltas since the last monthly report

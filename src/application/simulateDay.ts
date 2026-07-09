@@ -7,8 +7,11 @@ import { advanceProject, isProjectComplete } from "../domain/construction/constr
 import { advanceDay, isEveryNMonths, isFirstDayOfMonth } from "../domain/country/calendar";
 import { generateId } from "../domain/country/id";
 import type { CountryStats, DailyDelta, GameEvent, GameState } from "../domain/country/types";
+import { getIslandExpeditionData } from "../domain/expeditions/expeditionData";
+import { advanceExpedition, isExpeditionComplete } from "../domain/expeditions/expeditionRules";
 import { updateFood } from "../domain/food/foodRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
+import { getActiveLawEffects } from "../domain/laws/lawsRules";
 import { getNation } from "../domain/nations/nationRules";
 import { updatePopularity } from "../domain/politics/politicsRules";
 import { updatePopulation } from "../domain/population/populationRules";
@@ -18,12 +21,14 @@ import { calculateDailyResearch } from "../domain/research/researchRules";
 import { addResources, calculateDailyProduction } from "../domain/resources/resourceRules";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
 import { isCollapseRisk, updateStability } from "../domain/stability/stabilityRules";
+import { applyExpeditionCompletion } from "./applyExpeditionCompletion";
 import { applyProjectCompletion } from "./applyProjectCompletion";
 import { generateMonthlyReport } from "./generateMonthlyReport";
 import { MAX_EVENT_LOG_LENGTH, RANDOM_EVENT_INTERVAL_MONTHS } from "../domain/constants";
 
 export function simulateDay(state: GameState): GameState {
   const efficiencyMultiplier = calculateEfficiencyMultiplier(state.roadCount);
+  const lawEffects = getActiveLawEffects(state.enactedLawIds);
   const events: GameEvent[] = [...state.events];
 
   // 1. Advance every active project; apply completed ones.
@@ -42,6 +47,24 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
+  // 1b. Advance every active expedition; apply completed ones the same way.
+  const advancedExpeditions = working.expeditions.map(advanceExpedition);
+  const completedExpeditions = advancedExpeditions.filter(isExpeditionComplete);
+  const remainingExpeditions = advancedExpeditions.filter((e) => !isExpeditionComplete(e));
+
+  working = { ...working, expeditions: remainingExpeditions };
+  for (const expedition of completedExpeditions) {
+    working = applyExpeditionCompletion(working, expedition);
+    const islandName = getIslandExpeditionData(expedition.islandId)?.islandName ?? "The expedition";
+    const flavor = getIslandExpeditionData(expedition.islandId)?.reward.flavor ?? "";
+    events.unshift({
+      id: generateId("event"),
+      date: state.date,
+      message: `Expedition to ${islandName} complete. ${flavor}`,
+      severity: "info",
+    });
+  }
+
   // 2. Raw resources: every owned province produces its terrain's resource.
   const nation = getNation(working.nationId);
   const ownedTerrains = nation.provinceIds.map(
@@ -50,7 +73,7 @@ export function simulateDay(state: GameState): GameState {
   const resources = addResources(working.resources, calculateDailyProduction(ownedTerrains));
 
   // 3. Economy: income and expenses.
-  const income = calculateDailyIncome(working.stats, working.taxRate, efficiencyMultiplier);
+  const income = calculateDailyIncome(working.stats, working.taxRate, efficiencyMultiplier * lawEffects.incomeMultiplier);
   const expenses = calculateDailyExpenses(working.stats);
   const treasury = working.stats.treasury + income - expenses;
 
@@ -65,8 +88,8 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
-  // 5. Industry output (derived from factories + research bonus).
-  const industry = calculateIndustryOutput(working.factoryCount, working.researchLevel);
+  // 5. Industry output (derived from factories + research bonus + laws).
+  const industry = calculateIndustryOutput(working.factoryCount, working.researchLevel) * lawEffects.industryMultiplier;
 
   // 6. Research points accumulate passively.
   const researchPoints = working.stats.researchPoints + calculateDailyResearch(working.educationLevel);

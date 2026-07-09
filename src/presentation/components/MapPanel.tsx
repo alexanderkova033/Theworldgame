@@ -1,3 +1,4 @@
+import "./MapPanel.css";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { ProjectType } from "../../domain/construction/types";
 import { NATIONS } from "../../domain/nations/nationData";
@@ -15,6 +16,10 @@ interface MapPanelProps {
   armyStrength: number;
   selectedProvinceId: string;
   onSelectProvince: (provinceId: string) => void;
+  scoutedIslandIds: string[];
+  expeditionIslandIds: string[]; // islands with an expedition currently in progress
+  selectedIslandId: string | null;
+  onSelectIsland: (islandId: string) => void;
 }
 
 // Every terrain gets a decorative texture, drawn on top of the province's
@@ -27,22 +32,15 @@ const TERRAIN_PATTERN: Record<Terrain, string> = {
   plains: "url(#terrain-plains)",
 };
 
-// Each road built adds its own visible lane (parallel to the last), up to
-// this many, fanning out from the centerline. Beyond that, a "×N" badge
-// keeps the count legible instead of the lines turning into an unreadable
-// smear.
-const MAX_ROAD_LANES = 5;
-const LANE_SPACING = 5;
+// Each road built thickens the single line to its province (instead of
+// fanning out extra parallel lines) — a "×N" badge carries the exact count
+// so the line itself never has to turn into a tangle to stay informative.
+const ROAD_BASE_WIDTH = 2.5;
+const ROAD_WIDTH_PER_ROAD = 1.1;
+const ROAD_MAX_WIDTH = 9;
 
-function getLaneOffsets(count: number): number[] {
-  const lanes = Math.min(count, MAX_ROAD_LANES);
-  const offsets: number[] = [0];
-  for (let i = 1; i < lanes; i++) {
-    const pair = Math.ceil(i / 2);
-    const sign = i % 2 === 1 ? 1 : -1;
-    offsets.push(pair * sign * LANE_SPACING);
-  }
-  return offsets;
+function roadLineWidth(count: number): number {
+  return Math.min(ROAD_BASE_WIDTH + count * ROAD_WIDTH_PER_ROAD, ROAD_MAX_WIDTH);
 }
 
 // --- Zoom & pan --------------------------------------------------------
@@ -88,7 +86,17 @@ function clampViewBox(vb: ViewBox): ViewBox {
   };
 }
 
-export function MapPanel({ nation, placedBuildings, armyStrength, selectedProvinceId, onSelectProvince }: MapPanelProps) {
+export function MapPanel({
+  nation,
+  placedBuildings,
+  armyStrength,
+  selectedProvinceId,
+  onSelectProvince,
+  scoutedIslandIds,
+  expeditionIslandIds,
+  selectedIslandId,
+  onSelectIsland,
+}: MapPanelProps) {
   const { coastPath, provinces, otherLandmasses } = MAP_GEOMETRY;
   const capital = provinces.find((p) => p.id === nation.capitalProvinceId);
 
@@ -167,6 +175,14 @@ export function MapPanel({ nation, placedBuildings, armyStrength, selectedProvin
     onSelectProvince(provinceId);
   }
 
+  function handleIslandClick(islandId: string) {
+    if (suppressNextClick.current) {
+      suppressNextClick.current = false;
+      return;
+    }
+    onSelectIsland(islandId);
+  }
+
   function zoomBy(factor: number) {
     setView((vb) => {
       const cx = vb.x + vb.width / 2;
@@ -212,36 +228,55 @@ export function MapPanel({ nation, placedBuildings, armyStrength, selectedProvin
               <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#000" floodOpacity="0.45" />
             </filter>
 
-            {/* Terrain textures — bold enough to read as actual landscape,
-                not just a subtle hint. */}
-            <pattern id="terrain-hills" width={24} height={20} patternUnits="userSpaceOnUse">
-              <path d="M-2,20 Q4,8 10,20 Q16,10 22,20 Q28,9 34,20 Z" fill="#3a2f18" opacity={0.55} />
-              <path d="M-2,20 Q4,15 10,20 Q16,16 22,20 Q28,15 34,20 Z" fill="#241d10" opacity={0.4} />
+            {/* Terrain textures — a quiet relief hint (like a HOI4 elevation
+                layer) rather than a competing pattern of their own color, so
+                the nation's political color and the map's icons stay the
+                clearest thing on screen. Neutral dark shading, sparse tiling,
+                low opacity. */}
+            <pattern id="terrain-hills" width={60} height={46} patternUnits="userSpaceOnUse">
+              <path d="M-4,40 Q11,20 26,40 Q41,22 56,40" fill="none" stroke="#000000" strokeWidth={2.5} opacity={0.16} />
+              <path d="M-4,26 Q11,10 26,26 Q41,12 56,26" fill="none" stroke="#000000" strokeWidth={2} opacity={0.12} />
             </pattern>
-            <pattern id="terrain-forest" width={24} height={24} patternUnits="userSpaceOnUse">
-              <polygon points="5,1 8.5,8 1.5,8" fill="#1f4a2e" opacity={0.6} />
-              <rect x={4.3} y={8} width={1.4} height={1.8} fill="#1f4a2e" opacity={0.6} />
-              <polygon points="17,12 20.5,19 13.5,19" fill="#1f4a2e" opacity={0.5} />
-              <rect x={16.3} y={19} width={1.4} height={1.8} fill="#1f4a2e" opacity={0.5} />
+            <pattern id="terrain-forest" width={40} height={40} patternUnits="userSpaceOnUse">
+              <polygon points="9,4 13.5,13 4.5,13" fill="#08170d" opacity={0.3} />
+              <rect x={8.3} y={13} width={1.4} height={2} fill="#08170d" opacity={0.3} />
+              <polygon points="29,20 33.5,29 24.5,29" fill="#08170d" opacity={0.24} />
+              <rect x={28.3} y={29} width={1.4} height={2} fill="#08170d" opacity={0.24} />
             </pattern>
-            <pattern id="terrain-coast" width={22} height={11} patternUnits="userSpaceOnUse">
-              <path d="M0,5 Q5.5,1 11,5 T22,5" stroke="#d5eefa" strokeWidth={1.6} fill="none" opacity={0.55} />
-              <path d="M0,8.5 Q5.5,5 11,8.5 T22,8.5" stroke="#d5eefa" strokeWidth={1.2} fill="none" opacity={0.4} />
+            <pattern id="terrain-coast" width={30} height={15} patternUnits="userSpaceOnUse">
+              <path d="M0,7 Q7.5,2.5 15,7 T30,7" stroke="#d5eefa" strokeWidth={1.3} fill="none" opacity={0.22} />
             </pattern>
-            <pattern id="terrain-plains" width={16} height={16} patternUnits="userSpaceOnUse" patternTransform="rotate(12)">
-              <line x1={0} y1={0} x2={0} y2={16} stroke="#e6c56a" strokeWidth={1.4} opacity={0.38} />
+            <pattern id="terrain-plains" width={26} height={26} patternUnits="userSpaceOnUse" patternTransform="rotate(12)">
+              <line x1={0} y1={0} x2={0} y2={26} stroke="#000000" strokeWidth={1.2} opacity={0.12} />
             </pattern>
           </defs>
 
           <rect x={BASE_VIEW.x} y={BASE_VIEW.y} width={BASE_VIEW.width} height={BASE_VIEW.height} fill="url(#ocean-gradient)" />
 
-          {/* Other landmasses: decorative only, not part of any nation yet. */}
+          {/* Other landmasses: unowned, but scoutable via expeditions. */}
           <g filter="url(#coast-shadow)">
-            {otherLandmasses.map((land) => (
-              <path key={land.id} d={land.path} className="map-panel__unclaimed-land">
-                <title>{land.name} (unclaimed)</title>
-              </path>
-            ))}
+            {otherLandmasses.map((land) => {
+              const isScouted = scoutedIslandIds.includes(land.id);
+              const isExpeditionActive = expeditionIslandIds.includes(land.id);
+              const isSelected = land.id === selectedIslandId;
+              const status = isScouted ? "scouted" : isExpeditionActive ? "expedition under way" : "unexplored — click to scout";
+              return (
+                <path
+                  key={land.id}
+                  d={land.path}
+                  className={[
+                    "map-panel__unclaimed-land",
+                    "map-panel__unclaimed-land--clickable",
+                    isSelected ? "is-selected" : "",
+                  ].join(" ")}
+                  onClick={() => handleIslandClick(land.id)}
+                >
+                  <title>
+                    {land.name} ({status})
+                  </title>
+                </path>
+              );
+            })}
           </g>
           {otherLandmasses.map((land) => (
             <text key={`${land.id}-label`} x={land.labelX} y={land.labelY} className="map-panel__label is-foreign" pointerEvents="none">
@@ -276,9 +311,9 @@ export function MapPanel({ nation, placedBuildings, armyStrength, selectedProvin
               );
             })}
 
-            {/* Terrain texture for every province — owned provinces get it
-                at full strength, foreign ones a bit quieter so your own
-                territory still reads as the focus. */}
+            {/* Terrain texture for every province — a quiet relief hint, not
+                a second competing color. Owned provinces get it a little
+                clearer, foreign ones quieter still. */}
             {provinces.map((province) => {
               const isOwned = nation.provinceIds.includes(province.id);
               return (
@@ -286,7 +321,7 @@ export function MapPanel({ nation, placedBuildings, armyStrength, selectedProvin
                   key={`${province.id}-terrain`}
                   d={province.path}
                   fill={TERRAIN_PATTERN[province.terrain]}
-                  opacity={isOwned ? 1 : 0.5}
+                  opacity={isOwned ? 0.85 : 0.4}
                   pointerEvents="none"
                 />
               );
@@ -294,9 +329,10 @@ export function MapPanel({ nation, placedBuildings, armyStrength, selectedProvin
           </g>
 
           {/* Road network: every road built in the capital grows its hub;
-              every road built elsewhere adds its own visible lane on the road
-              connecting that province to the capital, so building more roads
-              is always visibly different — not just a slightly thicker line. */}
+              every road built elsewhere thickens the single line connecting
+              that province to the capital, with a "×N" badge carrying the
+              exact count — a clean, single connection per province instead
+              of a fan of parallel lines. */}
           {capital &&
             [...roadCountByProvince.entries()].map(([provinceId, count]) => {
               const province = provinces.find((p) => p.id === provinceId);
@@ -320,37 +356,27 @@ export function MapPanel({ nation, placedBuildings, armyStrength, selectedProvin
                 );
               }
 
-              const dx = province.labelX - capital.labelX;
-              const dy = province.labelY - capital.labelY;
-              const length = Math.hypot(dx, dy) || 1;
-              const perpX = -dy / length;
-              const perpY = dx / length;
+              const width = roadLineWidth(count);
 
               return (
                 <g key={`road-${provinceId}`}>
-                  {getLaneOffsets(count).map((offset, laneIndex) => {
-                    const ox = perpX * offset;
-                    const oy = perpY * offset;
-                    return (
-                      <g key={laneIndex}>
-                        <line
-                          x1={capital.labelX + ox}
-                          y1={capital.labelY + oy}
-                          x2={province.labelX + ox}
-                          y2={province.labelY + oy}
-                          className="map-panel__road-line-base"
-                        />
-                        <line
-                          x1={capital.labelX + ox}
-                          y1={capital.labelY + oy}
-                          x2={province.labelX + ox}
-                          y2={province.labelY + oy}
-                          className="map-panel__road-line-top"
-                        />
-                      </g>
-                    );
-                  })}
-                  {count > MAX_ROAD_LANES && (
+                  <line
+                    x1={capital.labelX}
+                    y1={capital.labelY}
+                    x2={province.labelX}
+                    y2={province.labelY}
+                    className="map-panel__road-line-base"
+                    style={{ strokeWidth: width }}
+                  />
+                  <line
+                    x1={capital.labelX}
+                    y1={capital.labelY}
+                    x2={province.labelX}
+                    y2={province.labelY}
+                    className="map-panel__road-line-top"
+                    style={{ strokeWidth: width * 0.4 }}
+                  />
+                  {count > 1 && (
                     <text
                       x={(capital.labelX + province.labelX) / 2}
                       y={(capital.labelY + province.labelY) / 2 - 8}
@@ -395,29 +421,53 @@ export function MapPanel({ nation, placedBuildings, armyStrength, selectedProvin
             </text>
           ))}
 
-          {provinces.flatMap((province) => {
-            const buildings = buildingsByProvince.get(province.id) ?? [];
-            return buildings.map((building, index) => {
-              const col = index % 4;
-              const row = Math.floor(index / 4);
-              const x = province.labelX - 24 + col * 16;
-              const y = province.labelY + 18 + row * 16;
-              return <BuildingIcon key={building.id} type={building.type} x={x} y={y} size={7} />;
-            });
-          })}
-
-          {/* Resource badge: what each of your provinces produces, echoing the
-              terrain texture underneath — Catan-style "this hex makes wood". */}
+          {/* Province info bar: one compact strip per owned province, on its
+              own translucent backing so it reads clearly no matter what
+              terrain or nation color sits underneath — what it produces,
+              then what's built there (one icon + a "×N" count per building
+              type, not one icon per building), instead of scattering icons
+              loose across the map. */}
           {provinces.map((province) => {
             if (!nation.provinceIds.includes(province.id)) return null;
+
+            const buildings = buildingsByProvince.get(province.id) ?? [];
+            const counts = new Map<ProjectType, number>();
+            for (const building of buildings) {
+              counts.set(building.type, (counts.get(building.type) ?? 0) + 1);
+            }
+            const buildingTypes = [...counts.keys()];
+
+            const itemWidth = 20;
+            const itemCount = 1 + buildingTypes.length; // resource + one slot per building type present
+            const barWidth = itemCount * itemWidth + 6;
+            const barX = province.labelX - barWidth / 2;
+            const barY = province.labelY + 10;
+            const itemCenterY = barY + 11;
+
             return (
-              <ResourceIcon
-                key={`${province.id}-resource`}
-                type={RESOURCE_BY_TERRAIN[province.terrain]}
-                x={province.labelX + 38}
-                y={province.labelY - 18}
-                size={8}
-              />
+              <g key={`${province.id}-info`} pointerEvents="none">
+                <rect x={barX} y={barY} width={barWidth} height={22} rx={5} className="map-panel__info-bar" />
+                <ResourceIcon
+                  type={RESOURCE_BY_TERRAIN[province.terrain]}
+                  x={barX + itemWidth / 2 + 3}
+                  y={itemCenterY}
+                  size={7}
+                />
+                {buildingTypes.map((type, index) => {
+                  const cx = barX + itemWidth * (index + 1) + itemWidth / 2 + 3;
+                  const count = counts.get(type)!;
+                  return (
+                    <g key={type}>
+                      <BuildingIcon type={type} x={cx - 3} y={itemCenterY} size={5.5} />
+                      {count > 1 && (
+                        <text x={cx + 7} y={itemCenterY + 3} className="map-panel__info-count">
+                          {count}
+                        </text>
+                      )}
+                    </g>
+                  );
+                })}
+              </g>
             );
           })}
         </svg>

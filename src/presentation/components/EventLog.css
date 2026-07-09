@@ -1,0 +1,33 @@
+.event-log__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 24rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.35rem;
+}
+
+.event-log__item {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.15);
+  border-left: 3px solid var(--info);
+}
+
+.event-log__item--warning {
+  border-left-color: var(--warning);
+}
+
+.event-log__item--danger {
+  border-left-color: var(--danger);
+}
+
+.event-log__date {
+  color: var(--text-muted);
+  white-space: nowrap;
+}

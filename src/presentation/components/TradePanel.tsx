@@ -1,6 +1,7 @@
+import "./TradePanel.css";
 import { useState } from "react";
-import { canTrade, tradeResources } from "../../application/actions";
-import { TRADE_BATCH_SIZE } from "../../domain/constants";
+import { canImportFood, canTrade, getFoodImportCost, importFood, tradeResources } from "../../application/actions";
+import { CURRENCY_SYMBOL, FOOD_IMPORT_BATCH_SIZE, TRADE_BATCH_SIZE } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getNation } from "../../domain/nations/nationRules";
 import { nationHasPort, getTradeRate } from "../../domain/resources/tradeRules";
@@ -65,6 +66,20 @@ export function TradePanel({ state, dispatch }: TradePanelProps) {
         onClick={() => dispatch((s) => tradeResources(s, give, receive))}
       >
         Trade {giveAmount} {RESOURCE_LABELS[give]} → {TRADE_BATCH_SIZE} {RESOURCE_LABELS[receive]}
+      </button>
+
+      <div className="trade-panel__divider" />
+
+      <p className="resources-panel__hint">
+        No farmland to spare? Import food from the continental market instead of growing it all yourself
+        {hasPort ? " — your port keeps the price down." : "."}
+      </p>
+      <button
+        className="trade-panel__button"
+        disabled={!canImportFood(state)}
+        onClick={() => dispatch((s) => importFood(s))}
+      >
+        Import {FOOD_IMPORT_BATCH_SIZE} Food ({Math.round(getFoodImportCost(state))} {CURRENCY_SYMBOL})
       </button>
     </section>
   );

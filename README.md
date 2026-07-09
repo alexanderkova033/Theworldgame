@@ -12,7 +12,7 @@ This project is an **MVP (minimum viable product)** — a small, working foundat
 
 ## What the game is
 
-You govern one nation, made up of two or three provinces on an eight-province continent (the rest belongs to the other two nations, shown in their own colors but not yet playable — plus a few unclaimed islands further out, purely decorative for now). Every in-game day, the simulation updates your stats automatically:
+You govern one nation, made up of four to six provinces on a sixteen-province continent (the rest belongs to the other two nations, shown in their own colors but not yet playable — plus a few unclaimed islands further out, purely decorative for now). Every in-game day, the simulation updates your stats automatically:
 
 - Farms grow food (each person eats 1 food/day — build enough farms to keep up), factories grow industry and income, roads improve efficiency and visibly connect your provinces to your capital.
 - Every province also produces a raw resource based on its terrain — forest → Wood, hills → Ore, plains → Grain, coast → Fish (*Catan*-inspired) — and buildings cost that resource as well as Crowns. No nation has every terrain, so you'll need to trade with the continental market (better rates if you own a coastal "port" province) to build everything you want.
@@ -55,7 +55,7 @@ npm run lint      # Run the linter
 - Monthly reports summarizing income, expenses, and stat changes.
 - An event log that records important happenings (buildings finished, low food, low stability, etc).
 - A stylized SVG map: your nation's territory is colored and clickable (with a star on your capital), the other two nations render in their own colors (dimmed, non-interactive), and a few decorative islands sit further out. Click a province to select it, then build there; completed buildings show up as small pictorial icons, and roads render as an actual dashed road network fanning out from your capital.
-- Player actions: build farms, build factories, build roads. (Taxes/education/research/military are temporarily hidden — see "What the game is" above.)
+- Player actions: build farms, build factories, build roads — each capped per province (3 farms / 2 factories / 5 roads), so growth means spreading out across your territory, not piling everything into one spot. (Taxes/education/research/military are temporarily hidden — see "What the game is" above.)
 - Construction projects that take in-game time and show live progress.
 - A single-nation simulation with core stats: treasury, population, food, industry, and stability — each with its own pictorial icon in the stats panel.
 - Raw resources (Wood, Ore, Grain, Fish) produced daily by your provinces' terrain, spent on building, and tradeable with the continental market — with a better rate if your nation has a coastal port.

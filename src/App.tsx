@@ -1,11 +1,14 @@
 // App.tsx is the seam between the presentation layer and the rest of the
 // app: it owns the live GameState (via useGameClock) and wires it into the
 // UI panels. It never computes simulation values itself.
+import "./App.css";
 import { useState } from "react";
 import { getNation } from "./domain/nations/nationRules";
 import { NATIONS } from "./domain/nations/nationData";
 import { ActionsPanel } from "./presentation/components/ActionsPanel";
 import { EventLog } from "./presentation/components/EventLog";
+import { ExpeditionPanel } from "./presentation/components/ExpeditionPanel";
+import { LawsPanel } from "./presentation/components/LawsPanel";
 import { MapPanel } from "./presentation/components/MapPanel";
 import { ProjectsPanel } from "./presentation/components/ProjectsPanel";
 import { ReportsPanel } from "./presentation/components/ReportsPanel";
@@ -22,6 +25,10 @@ function App() {
   // Which province new construction goes into. This is a UI selection, not
   // simulation truth — it never touches GameState directly.
   const [selectedProvinceId, setSelectedProvinceId] = useState<string | null>(null);
+
+  // Which unclaimed island the Scouting panel is showing. Same idea as
+  // selectedProvinceId — a UI selection, not simulation truth.
+  const [selectedIslandId, setSelectedIslandId] = useState<string | null>(null);
 
   // No game yet: show the start screen. Picking a nation here is permanent —
   // there is no "change nation" control anywhere in the game UI below.
@@ -58,6 +65,7 @@ function App() {
           <ResourcesPanel resources={state.resources} />
           <ActionsPanel state={state} selectedProvinceId={currentProvinceId} dispatch={dispatch} />
           <TradePanel state={state} dispatch={dispatch} />
+          <LawsPanel state={state} dispatch={dispatch} />
         </aside>
 
         <div className="game-layout__map-stage">
@@ -67,11 +75,16 @@ function App() {
             armyStrength={state.stats.armyStrength}
             selectedProvinceId={currentProvinceId}
             onSelectProvince={setSelectedProvinceId}
+            scoutedIslandIds={state.scoutedIslandIds}
+            expeditionIslandIds={state.expeditions.map((e) => e.islandId)}
+            selectedIslandId={selectedIslandId}
+            onSelectIsland={setSelectedIslandId}
           />
         </div>
 
         <aside className="game-layout__sidebar game-layout__sidebar--right">
           <ProjectsPanel projects={state.projects} />
+          <ExpeditionPanel state={state} selectedIslandId={selectedIslandId} dispatch={dispatch} />
           <ReportsPanel reports={state.monthlyReports} />
           <EventLog events={state.events} />
         </aside>

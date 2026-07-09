@@ -1,3 +1,4 @@
+import "./StatsPanel.css";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { CountryStats } from "../../domain/country/types";
 import { StatIcon, type StatIconType } from "./StatIcon";

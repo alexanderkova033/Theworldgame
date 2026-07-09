@@ -1,4 +1,4 @@
-import { FARM_BUILD_DAYS, FARM_COST, FARM_WOOD_COST } from "../../domain/constants";
+import { FARM_BUILD_DAYS, FARM_COST, FARM_WOOD_COST, MAX_FARMS_PER_PROVINCE } from "../../domain/constants";
 import { createBuildAction } from "./createBuildAction";
 
 export const buildFarm = createBuildAction({
@@ -8,4 +8,5 @@ export const buildFarm = createBuildAction({
   buildDays: FARM_BUILD_DAYS,
   resourceType: "wood",
   resourceCost: FARM_WOOD_COST,
+  maxPerProvince: MAX_FARMS_PER_PROVINCE,
 });

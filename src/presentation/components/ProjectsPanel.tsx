@@ -1,3 +1,4 @@
+import "./ProjectsPanel.css";
 import { projectProgress } from "../../domain/construction/constructionRules";
 import type { Project } from "../../domain/construction/types";
 import { getProvinceName } from "../../domain/provinces/provinceRules";

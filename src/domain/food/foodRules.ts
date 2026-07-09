@@ -1,7 +1,11 @@
 // Food production and consumption. Population eats every day; farms are the
-// only source of new food in the MVP.
+// only source of new food in the MVP. A nation short on farms can also import
+// food directly from the continental market (see importFood.ts) — cheaper
+// with a coastal port, same idea as raw-resource trading.
 import type { CountryStats } from "../country/types";
-import { FOOD_PER_FARM, FOOD_PER_POP_CONSUMPTION } from "../constants";
+import type { Nation } from "../nations/types";
+import { FOOD_IMPORT_COST_PER_UNIT, FOOD_IMPORT_PORT_DISCOUNT, FOOD_PER_FARM, FOOD_PER_POP_CONSUMPTION } from "../constants";
+import { nationHasPort } from "../resources/tradeRules";
 
 export function produceFood(farmCount: number): number {
   return farmCount * FOOD_PER_FARM;
@@ -24,4 +28,8 @@ export function updateFood(stats: CountryStats, farmCount: number): FoodUpdateRe
     newFoodStock: Math.max(0, rawStock),
     isShortage: rawStock < 0,
   };
+}
+
+export function getFoodImportCostPerUnit(nation: Nation): number {
+  return nationHasPort(nation) ? FOOD_IMPORT_COST_PER_UNIT * FOOD_IMPORT_PORT_DISCOUNT : FOOD_IMPORT_COST_PER_UNIT;
 }

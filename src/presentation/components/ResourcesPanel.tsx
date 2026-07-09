@@ -1,3 +1,4 @@
+import "./ResourcesPanel.css";
 import { RESOURCE_TYPES, type ResourceBundle } from "../../domain/resources/types";
 import { ResourceIcon } from "./ResourceIcon";
 

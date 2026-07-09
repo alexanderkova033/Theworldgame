@@ -1,4 +1,4 @@
-import { ROAD_BUILD_DAYS, ROAD_COST, ROAD_ORE_COST } from "../../domain/constants";
+import { ROAD_BUILD_DAYS, ROAD_COST, ROAD_ORE_COST, MAX_ROADS_PER_PROVINCE } from "../../domain/constants";
 import { createBuildAction } from "./createBuildAction";
 
 export const buildRoad = createBuildAction({
@@ -8,4 +8,5 @@ export const buildRoad = createBuildAction({
   buildDays: ROAD_BUILD_DAYS,
   resourceType: "ore",
   resourceCost: ROAD_ORE_COST,
+  maxPerProvince: MAX_ROADS_PER_PROVINCE,
 });

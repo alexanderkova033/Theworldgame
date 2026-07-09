@@ -6,10 +6,16 @@ export const DAYS_PER_MONTH = 30;
 export const MONTHS_PER_YEAR = 12;
 
 // --- Food ---
-export const FOOD_PER_FARM = 10000; // food produced per farm per in-game day
+export const FOOD_PER_FARM = 6000; // food produced per farm per in-game day
 export const FOOD_PER_POP_CONSUMPTION = 1; // food eaten per person per in-game day
 export const FARM_COST = 500;
 export const FARM_BUILD_DAYS = 60;
+export const MAX_FARMS_PER_PROVINCE = 3;
+
+// --- Food imports (for nations without enough farmland) ---
+export const FOOD_IMPORT_BATCH_SIZE = 2000; // food received per import click
+export const FOOD_IMPORT_COST_PER_UNIT = 0.5; // Crowns per unit of food, without a port
+export const FOOD_IMPORT_PORT_DISCOUNT = 0.6; // multiplier on cost-per-unit with a coastal port (i.e. 40% cheaper)
 
 // --- Resources (Catan-inspired: terrain produces, provinces trade) ---
 export const RESOURCE_PER_PROVINCE = 1; // units of matching resource produced per owned province per day
@@ -26,11 +32,13 @@ export const INDUSTRY_PER_FACTORY = 5;
 export const INCOME_PER_INDUSTRY = 1.5;
 export const FACTORY_COST = 1000;
 export const FACTORY_BUILD_DAYS = 120;
+export const MAX_FACTORIES_PER_PROVINCE = 2;
 
 // --- Roads (economic efficiency) ---
 export const ROAD_EFFICIENCY_BONUS = 0.02; // +2% income & construction speed per road
 export const ROAD_COST = 300;
 export const ROAD_BUILD_DAYS = 45;
+export const MAX_ROADS_PER_PROVINCE = 5;
 
 // --- Education & research ---
 export const EDUCATION_COST = 400;
@@ -69,6 +77,10 @@ export const STABILITY_COLLAPSE_THRESHOLD = 15;
 
 // --- Random world events ---
 export const RANDOM_EVENT_INTERVAL_MONTHS = 6; // a random event fires every N in-game months
+
+// --- Scouting expeditions (unclaimed islands) ---
+export const EXPEDITION_COST = 800;
+export const EXPEDITION_DAYS = 40;
 
 // --- Misc ---
 export const MAX_EVENT_LOG_LENGTH = 100;

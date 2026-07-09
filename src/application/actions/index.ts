@@ -1,8 +1,12 @@
 export { buildFarm } from "./buildFarm";
 export { buildFactory } from "./buildFactory";
 export { buildRoad } from "./buildRoad";
+export { countBuildingsInProvince } from "./createBuildAction";
 export { investEducation } from "./investEducation";
 export { canStartResearch, startResearch } from "./startResearch";
 export { recruitSoldiers } from "./recruitSoldiers";
 export { raiseTaxes, lowerTaxes } from "./taxActions";
 export { canTrade, tradeResources } from "./tradeResources";
+export { canImportFood, getFoodImportCost, importFood } from "./importFood";
+export { canSendExpedition, sendExpedition } from "./sendExpedition";
+export { canEnactLaw, enactLaw } from "./enactLaw";

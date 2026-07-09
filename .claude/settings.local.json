@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk '{print $2}')",
+      "Bash(xargs -I{} sh -c 'cat \"{}\" 2>/dev/null')",
+      "Bash(node -e ' *)"
+    ]
+  }
+}

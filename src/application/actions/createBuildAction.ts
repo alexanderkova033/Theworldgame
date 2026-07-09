@@ -1,7 +1,7 @@
 // Every build action (buildFarm, buildFactory, buildRoad, ...) shares the
-// same shape: spend treasury, spend a matching resource, queue a project.
-// This factory captures that shape once so each action file is just its
-// numbers, not a repeated implementation.
+// same shape: spend treasury, spend a matching resource, respect a
+// per-province cap, queue a project. This factory captures that shape once
+// so each action file is just its numbers, not a repeated implementation.
 import { canAfford } from "../../domain/economy/economyRules";
 import { generateId } from "../../domain/country/id";
 import { canAffordResource, deductResource } from "../../domain/resources/resourceRules";
@@ -16,12 +16,39 @@ interface BuildActionConfig {
   buildDays: number;
   resourceType: ResourceType;
   resourceCost: number;
+  maxPerProvince: number;
 }
 
-export function createBuildAction(config: BuildActionConfig) {
-  return function build(state: GameState, provinceId: string): GameState {
-    if (!canAfford(state.stats, config.cost)) return state;
-    if (!canAffordResource(state.resources, config.resourceType, config.resourceCost)) return state;
+// A build action is a function, but also carries its own affordability
+// check and cap so the UI can ask "would this work?" without duplicating
+// the rules — see ActionsPanel.tsx.
+export interface BuildAction {
+  (state: GameState, provinceId: string): GameState;
+  canBuild: (state: GameState, provinceId: string) => boolean;
+  maxPerProvince: number;
+}
+
+// Completed buildings of this type in the province, plus any already queued
+// — queuing a 4th farm when 3 are already built-or-building is blocked the
+// same as if all 3 were finished, so treasury/resources never get spent on
+// a project that could never legally complete.
+export function countBuildingsInProvince(state: GameState, type: ProjectType, provinceId: string): number {
+  const completed = state.placedBuildings.filter((b) => b.type === type && b.provinceId === provinceId).length;
+  const inProgress = state.projects.filter((p) => p.type === type && p.provinceId === provinceId).length;
+  return completed + inProgress;
+}
+
+export function createBuildAction(config: BuildActionConfig): BuildAction {
+  function canBuild(state: GameState, provinceId: string): boolean {
+    return (
+      canAfford(state.stats, config.cost) &&
+      canAffordResource(state.resources, config.resourceType, config.resourceCost) &&
+      countBuildingsInProvince(state, config.type, provinceId) < config.maxPerProvince
+    );
+  }
+
+  function build(state: GameState, provinceId: string): GameState {
+    if (!canBuild(state, provinceId)) return state;
 
     const project: Project = {
       id: generateId("project"),
@@ -38,5 +65,10 @@ export function createBuildAction(config: BuildActionConfig) {
       resources: deductResource(state.resources, config.resourceType, config.resourceCost),
       projects: [...state.projects, project],
     };
-  };
+  }
+
+  const action = build as BuildAction;
+  action.canBuild = canBuild;
+  action.maxPerProvince = config.maxPerProvince;
+  return action;
 }

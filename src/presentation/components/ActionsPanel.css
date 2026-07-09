@@ -1,0 +1,44 @@
+.actions-panel__target {
+  font-size: 0.85rem;
+  margin: 0 0 0.75rem 0;
+  color: var(--text-muted);
+  background: var(--accent-soft);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+}
+
+.actions-panel__target strong {
+  color: var(--accent-active);
+}
+
+.actions-panel__hint {
+  font-size: 0.75rem;
+}
+
+.actions-panel__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.actions-panel__group button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.actions-panel__cap {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.actions-panel__description {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: -0.1rem 0 0.3rem;
+  line-height: 1.4;
+}

@@ -8,24 +8,35 @@ export const NATIONS: Nation[] = [
     id: "astravia",
     name: "Astravia",
     color: "#2f6b4f",
-    capitalProvinceId: "province-7", // Redgate
-    provinceIds: ["province-7", "province-8", "province-2"], // Redgate, Thornwick, Marrow Coast
+    capitalProvinceId: "province-7-north", // North Redgate
+    provinceIds: [
+      "province-7-north", "province-7-south", // Redgate
+      "province-8-north", "province-8-south", // Thornwick
+      "province-2-west", "province-2-east", // Marrow Coast
+    ],
     blurb: "A young republic in the continent's heartland, balancing farmland and ambition.",
   },
   {
     id: "caldenreich",
     name: "Caldenreich",
     color: "#3f5f8a",
-    capitalProvinceId: "province-5", // Caldermoor
-    provinceIds: ["province-5", "province-3", "province-6"], // Caldermoor, Ashford, Duskhaven
+    capitalProvinceId: "province-5-west", // West Caldermoor
+    provinceIds: [
+      "province-5-west", "province-5-east", // Caldermoor
+      "province-3-west", "province-3-east", // Ashford
+      "province-6-west", "province-6-east", // Duskhaven
+    ],
     blurb: "A disciplined northern kingdom, proud of its schools and its steady administration.",
   },
   {
     id: "veldoria",
     name: "Veldoria",
     color: "#8a3f4a",
-    capitalProvinceId: "province-1", // Veldshire
-    provinceIds: ["province-1", "province-4"], // Veldshire, Brindlewood
+    capitalProvinceId: "province-1-south", // South Veldshire
+    provinceIds: [
+      "province-1-north", "province-1-south", // Veldshire
+      "province-4-west", "province-4-east", // Brindlewood
+    ],
     blurb: "A compact eastern power built on early industry — smaller, but sharp-edged.",
   },
 ];

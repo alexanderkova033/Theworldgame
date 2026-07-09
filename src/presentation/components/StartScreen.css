@@ -1,0 +1,137 @@
+.start-screen {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(201, 162, 74, 0.1), transparent 65%),
+    var(--bg-deep);
+}
+
+.start-screen__content {
+  max-width: 62rem;
+  width: 100%;
+  text-align: center;
+}
+
+.start-screen__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.75rem;
+  color: var(--accent);
+  margin: 0 0 0.5rem;
+}
+
+.start-screen__title {
+  font-size: 3rem;
+  color: var(--text);
+  margin: 0 0 0.75rem;
+}
+
+.start-screen__subtitle {
+  color: var(--text-muted);
+  max-width: 38rem;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+}
+
+.start-screen__map {
+  width: 100%;
+  max-width: 34rem;
+  height: auto;
+  margin: 0 auto 2.25rem;
+  display: block;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  background: #10161f;
+}
+
+.start-screen__coast {
+  fill: none;
+  stroke: #06090d;
+  stroke-width: 5;
+}
+
+.start-screen__unclaimed-land {
+  fill: #5c5138;
+  stroke: #06090d;
+  stroke-width: 3;
+  opacity: 0.7;
+}
+
+.start-screen__province {
+  fill: var(--nation-color, #414a58);
+  stroke: #0b111a;
+  stroke-width: 2.5;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.start-screen__province:hover {
+  filter: brightness(1.25);
+}
+
+.start-screen__nations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1.25rem;
+}
+
+.nation-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem 1.25rem;
+  background: linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg));
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.nation-card:hover:not(:disabled) {
+  border-color: var(--nation-color);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.nation-card__crest {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--nation-color);
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.35);
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nation-card__crest-hole {
+  fill: var(--nation-color);
+}
+
+.nation-card__name {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.nation-card__blurb {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.nation-card__cta {
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--nation-color);
+  font-weight: 700;
+}
