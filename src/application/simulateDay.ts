@@ -55,12 +55,12 @@ export function simulateDay(state: GameState): GameState {
   working = { ...working, expeditions: remainingExpeditions };
   for (const expedition of completedExpeditions) {
     working = applyExpeditionCompletion(working, expedition);
-    const islandName = getIslandExpeditionData(expedition.islandId)?.islandName ?? "The expedition";
+    const islandName = getIslandExpeditionData(expedition.islandId)?.islandName ?? "The venture";
     const flavor = getIslandExpeditionData(expedition.islandId)?.reward.flavor ?? "";
     events.unshift({
       id: generateId("event"),
       date: state.date,
-      message: `Expedition to ${islandName} complete. ${flavor}`,
+      message: `Venture to ${islandName} complete. ${flavor}`,
       severity: "info",
     });
   }

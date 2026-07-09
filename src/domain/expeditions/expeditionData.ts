@@ -1,14 +1,14 @@
 import type { IslandExpeditionData } from "./types";
 
 // Keyed by the island ids already defined in provinceData.ts's
-// otherLandmasses. Each island gives a different, fixed reward, so scouting
-// all three is worth doing once rather than a repeatable grind.
+// otherLandmasses. Each island gives a different, fixed reward, so chartering
+// a venture to all three is worth doing once rather than a repeatable grind.
 export const ISLAND_EXPEDITIONS: IslandExpeditionData[] = [
   {
     islandId: "island-1",
     islandName: "Kestrel Isles",
     reward: {
-      flavor: "Merchants there proved eager to trade — a windfall for the treasury.",
+      flavor: "The chartered company struck a fast bargain with the locals — a windfall for the treasury.",
       treasuryDelta: 2500,
     },
   },
@@ -16,7 +16,7 @@ export const ISLAND_EXPEDITIONS: IslandExpeditionData[] = [
     islandId: "island-2",
     islandName: "Solmere",
     reward: {
-      flavor: "A rich ore seam, easily worked — shipped straight home.",
+      flavor: "The venture's surveyors found a rich ore seam and shipped a load of it home.",
       resourceType: "ore",
       resourceDelta: 40,
     },
@@ -25,7 +25,7 @@ export const ISLAND_EXPEDITIONS: IslandExpeditionData[] = [
     islandId: "island-3",
     islandName: "Vashtel Cay",
     reward: {
-      flavor: "Word of a hopeful new frontier lifts spirits back home.",
+      flavor: "News of the venture's safe return lifts spirits back home.",
       stabilityDelta: 10,
     },
   },

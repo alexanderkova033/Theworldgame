@@ -40,6 +40,7 @@ Removed from the UI on purpose while the basics get solid — the domain/applica
 - [ ] More granular construction: build queue/limits, cancel a project, multiple farms/factories with independent progress.
 - [ ] Better balancing pass with data-driven constants (a single tunable config file, sanity-checked against long simulated playtests).
 - [ ] Basic settings: difficulty, starting country size.
+- [ ] Population with distinct jobs/occupations (farmers, factory workers, etc.) instead of one undifferentiated population number — likely depends on the per-province economy split above.
 
 ## Version 0.3 — Depth in existing systems
 

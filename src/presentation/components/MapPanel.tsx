@@ -253,13 +253,13 @@ export function MapPanel({
 
           <rect x={BASE_VIEW.x} y={BASE_VIEW.y} width={BASE_VIEW.width} height={BASE_VIEW.height} fill="url(#ocean-gradient)" />
 
-          {/* Other landmasses: unowned, but scoutable via expeditions. */}
+          {/* Other landmasses: unowned, but chartable via ventures. */}
           <g filter="url(#coast-shadow)">
             {otherLandmasses.map((land) => {
               const isScouted = scoutedIslandIds.includes(land.id);
               const isExpeditionActive = expeditionIslandIds.includes(land.id);
               const isSelected = land.id === selectedIslandId;
-              const status = isScouted ? "scouted" : isExpeditionActive ? "expedition under way" : "unexplored — click to scout";
+              const status = isScouted ? "charted" : isExpeditionActive ? "venture under way" : "uncharted — click to charter a venture";
               return (
                 <path
                   key={land.id}
