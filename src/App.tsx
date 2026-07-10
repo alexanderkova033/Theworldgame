@@ -133,7 +133,13 @@ function App() {
   const unseenEventCount = Math.max(0, state.events.length - seenEventCount);
 
   function openPanel(panel: PanelKey) {
-    setOpenModal((prev) => (prev === panel ? null : panel));
+    // Always opens/switches to the tab — never toggles it closed. An
+    // earlier version closed the panel when you clicked its already-active
+    // tab again, but that made an accidental double-click (easy to trigger
+    // for real) immediately re-close whatever you just opened. Closing has
+    // its own unambiguous affordances: the modal's X, Escape, or clicking
+    // the backdrop.
+    setOpenModal(panel);
     if (panel === "reports" && state) setSeenEventCount(state.events.length);
   }
 
@@ -203,7 +209,7 @@ function App() {
       )}
 
       {openModal === "laws" && (
-        <Modal title="Laws" onClose={() => setOpenModal(null)}>
+        <Modal title="Laws" onClose={() => setOpenModal(null)} wide>
           <LawsPanel state={state} dispatch={dispatch} />
         </Modal>
       )}

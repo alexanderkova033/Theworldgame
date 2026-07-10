@@ -1,99 +1,318 @@
-.laws-panel__category {
-  margin-bottom: 1rem;
+.law-tree__columns {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
 }
 
-.laws-panel__category:last-child {
-  margin-bottom: 0;
+.law-tree__column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.laws-panel__category-title {
-  margin-top: 0;
+.law-tree__column-title {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  margin: 0 0 0.6rem;
 }
 
-.laws-panel__category-title svg {
+.law-tree__column-title svg {
   flex-shrink: 0;
 }
 
-.laws-panel__options {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.6rem;
-}
-
-.laws-panel__option {
+.law-tree__tier {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.65rem 0.7rem;
-  border: 1px solid var(--panel-border);
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.15);
-}
-
-.laws-panel__option h4 {
-  margin: 0;
-  font-size: 0.88rem;
-  color: var(--text);
-}
-
-.laws-panel__description {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin: 0;
-  line-height: 1.4;
-}
-
-.laws-panel__benefit {
-  display: flex;
   align-items: center;
-  gap: 0.3rem;
-  font-size: 0.75rem;
-  color: var(--success);
-  margin: 0;
-  font-weight: 600;
-}
-
-.laws-panel__cost {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.75rem;
-  color: var(--danger);
-  margin: 0 0 0.2rem;
-  font-weight: 600;
-}
-
-.laws-panel__effect-icons {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15rem;
-  flex-shrink: 0;
-}
-
-.laws-panel__effect-icons svg {
-  display: block;
-}
-
-.laws-panel__option button {
   width: 100%;
 }
 
-.laws-panel__option.is-enacted {
-  border-color: var(--accent-active);
+.law-tree__row {
+  display: flex;
+  justify-content: center;
+  gap: 1.1rem;
+  width: 100%;
+}
+
+.law-tree__row--fork {
+  justify-content: space-evenly;
+}
+
+/* --- Connectors: a stem dropping from the tier above, forking into two
+   legs when the row below has two mutually-exclusive options. Positioned
+   with simple percentages rather than measured pixels — approximate, but
+   close enough at this fixed 1-or-2-node layout. --- */
+.law-tree__connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.law-tree__connector-stem {
+  width: 2px;
+  height: 0.9rem;
+  background: var(--panel-border);
+}
+
+.law-tree__connector-fork {
+  position: relative;
+  width: 100%;
+  height: 0.9rem;
+}
+
+.law-tree__connector-bar {
+  position: absolute;
+  top: 0;
+  left: 22%;
+  right: 22%;
+  height: 2px;
+  background: var(--panel-border);
+}
+
+.law-tree__connector-leg {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--panel-border);
+}
+
+.law-tree__connector-leg:first-child {
+  left: 22%;
+}
+
+.law-tree__connector-leg:last-child {
+  right: 22%;
+}
+
+/* --- Node badges --- */
+.law-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: 5.2rem;
+  padding: 0.5rem 0.3rem 0.6rem;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 8px;
+}
+
+.law-node:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border: none;
+  box-shadow: none;
+}
+
+.law-node.is-selected {
   background: var(--accent-soft);
 }
 
-.laws-panel__option.is-locked {
-  opacity: 0.45;
+.law-node__icon {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.1), transparent 65%), var(--panel-bg-raised);
+  border: 2px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.laws-panel__status {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.law-node--available .law-node__icon {
+  border-color: var(--accent-active);
+  box-shadow: 0 0 10px rgba(240, 200, 105, 0.4);
+}
+
+.law-node--enacted .law-node__icon {
+  border-color: var(--success);
+  box-shadow: 0 0 8px rgba(111, 174, 124, 0.4);
+}
+
+.law-node--locked-prerequisite .law-node__icon,
+.law-node--locked-quota .law-node__icon {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
+.law-node--foreclosed .law-node__icon {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.law-node__badge {
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--bg-deep);
+}
+
+.law-node__badge--enacted {
+  background: var(--success);
+}
+
+.law-node__badge--foreclosed {
+  background: var(--danger);
+  color: var(--text);
+}
+
+.law-node__badge--locked {
+  background: var(--panel-bg-raised);
+  color: var(--text-muted);
+}
+
+.law-node__name {
+  font-size: 0.68rem;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.law-node--available .law-node__name,
+.law-node--enacted .law-node__name {
+  color: var(--text);
+}
+
+.law-node.is-selected .law-node__name {
   color: var(--accent-active);
   font-weight: 700;
+}
+
+/* --- Inspector --- */
+.law-inspector {
+  border-top: 2px solid var(--panel-border);
+  padding-top: 1rem;
+}
+
+.law-inspector__header {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.law-inspector__icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.1), transparent 65%), var(--panel-bg-raised);
+  border: 2px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.law-inspector__heading {
+  min-width: 0;
+}
+
+.law-inspector__name {
+  margin: 0 0 0.2rem;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.law-inspector__description {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.law-inspector__effects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.law-inspector__benefit,
+.law-inspector__cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.law-inspector__benefit {
+  color: var(--success);
+}
+
+.law-inspector__cost {
+  color: var(--danger);
+}
+
+.law-effect-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.law-effect-icons svg {
+  display: block;
+}
+
+.law-inspector__status {
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.law-inspector__status.is-enacted {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.law-inspector__status.is-foreclosed,
+.law-inspector__status.is-locked {
+  color: var(--text-muted);
+}
+
+.law-inspector__quota-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+
+.law-inspector__vote {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.law-inspector__chance {
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+}
+
+.law-inspector__chance.is-safe {
+  color: var(--success);
+  background: rgba(111, 174, 124, 0.14);
+}
+
+.law-inspector__chance.is-risky {
+  color: var(--warning);
+  background: rgba(217, 162, 79, 0.14);
+}
+
+.law-inspector__chance.is-dangerous {
+  color: var(--danger);
+  background: rgba(194, 64, 47, 0.14);
 }
