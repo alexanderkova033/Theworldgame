@@ -16,11 +16,12 @@ export type StatIconType =
 
 interface StatIconProps {
   type: StatIconType;
+  size?: number;
 }
 
-export function StatIcon({ type }: StatIconProps) {
+export function StatIcon({ type, size = 30 }: StatIconProps) {
   return (
-    <svg width={30} height={30} viewBox="-10 -10 20 20" className="stats-panel__icon">
+    <svg width={size} height={size} viewBox="-10 -10 20 20" className="stats-panel__icon">
       {renderShape(type)}
     </svg>
   );

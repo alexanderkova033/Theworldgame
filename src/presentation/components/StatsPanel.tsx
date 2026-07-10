@@ -26,17 +26,19 @@ export function StatsPanel({ stats }: StatsPanelProps) {
   return (
     <section className="panel stats-panel">
       <h2>Country Stats</h2>
-      <dl className="stats-panel__grid">
+      <div className="icon-tile-list">
         {rows.map(([icon, label, value]) => (
-          <div className="stats-panel__row" key={label}>
-            <dt>
+          <div className="icon-tile" key={label}>
+            <div className="icon-tile__icon">
               <StatIcon type={icon} />
-              {label}
-            </dt>
-            <dd>{value}</dd>
+            </div>
+            <div className="icon-tile__body">
+              <span className="icon-tile__label">{label}</span>
+              <span className="icon-tile__value">{value}</span>
+            </div>
           </div>
         ))}
-      </dl>
+      </div>
     </section>
   );
 }

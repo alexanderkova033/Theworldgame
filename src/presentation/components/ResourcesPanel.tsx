@@ -18,19 +18,21 @@ export function ResourcesPanel({ resources }: ResourcesPanelProps) {
     <section className="panel resources-panel">
       <h2>Raw Resources</h2>
       <p className="resources-panel__hint">Produced by your provinces' terrain — spent on building, or traded.</p>
-      <dl className="stats-panel__grid">
+      <div className="icon-tile-list">
         {RESOURCE_TYPES.map((type) => (
-          <div className="stats-panel__row" key={type}>
-            <dt>
-              <svg width={30} height={30} viewBox="-10 -10 20 20" className="stats-panel__icon">
+          <div className="icon-tile" key={type}>
+            <div className="icon-tile__icon">
+              <svg viewBox="-10 -10 20 20">
                 <ResourceIcon type={type} size={8} />
               </svg>
-              {RESOURCE_LABELS[type]}
-            </dt>
-            <dd>{Math.round(resources[type]).toLocaleString()}</dd>
+            </div>
+            <div className="icon-tile__body">
+              <span className="icon-tile__label">{RESOURCE_LABELS[type]}</span>
+              <span className="icon-tile__value">{Math.round(resources[type]).toLocaleString()}</span>
+            </div>
           </div>
         ))}
-      </dl>
+      </div>
     </section>
   );
 }

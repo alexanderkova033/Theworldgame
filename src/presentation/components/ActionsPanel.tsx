@@ -18,8 +18,10 @@ import {
   ROAD_EFFICIENCY_BONUS,
   ROAD_ORE_COST,
 } from "../../domain/constants";
+import type { ProjectType } from "../../domain/construction/types";
 import type { GameState } from "../../domain/country/types";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
+import { BuildingIcon } from "./BuildingIcon";
 
 interface ActionsPanelProps {
   state: GameState;
@@ -29,9 +31,48 @@ interface ActionsPanelProps {
 
 export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPanelProps) {
   const provinceName = getProvinceName(selectedProvinceId);
-  const farmCount = countBuildingsInProvince(state, "farm", selectedProvinceId);
-  const factoryCount = countBuildingsInProvince(state, "factory", selectedProvinceId);
-  const roadCount = countBuildingsInProvince(state, "road", selectedProvinceId);
+
+  const buildItems: Array<{
+    type: Exclude<ProjectType, "education" | "research">;
+    name: string;
+    cost: string;
+    description: string;
+    count: number;
+    max: number;
+    canBuild: boolean;
+    onBuild: () => void;
+  }> = [
+    {
+      type: "farm",
+      name: "Farm",
+      cost: `${FARM_COST} ${CURRENCY_SYMBOL} + ${FARM_WOOD_COST} Wood`,
+      description: `Produces ${FOOD_PER_FARM.toLocaleString()} food/day.`,
+      count: countBuildingsInProvince(state, "farm", selectedProvinceId),
+      max: buildFarm.maxPerProvince,
+      canBuild: buildFarm.canBuild(state, selectedProvinceId),
+      onBuild: () => dispatch((s) => buildFarm(s, selectedProvinceId)),
+    },
+    {
+      type: "factory",
+      name: "Factory",
+      cost: `${FACTORY_COST} ${CURRENCY_SYMBOL} + ${FACTORY_ORE_COST} Ore`,
+      description: `Produces ${INDUSTRY_PER_FACTORY} industry/day (~${INDUSTRY_PER_FACTORY * INCOME_PER_INDUSTRY} ${CURRENCY_SYMBOL}/day in income).`,
+      count: countBuildingsInProvince(state, "factory", selectedProvinceId),
+      max: buildFactory.maxPerProvince,
+      canBuild: buildFactory.canBuild(state, selectedProvinceId),
+      onBuild: () => dispatch((s) => buildFactory(s, selectedProvinceId)),
+    },
+    {
+      type: "road",
+      name: "Road",
+      cost: `${ROAD_COST} ${CURRENCY_SYMBOL} + ${ROAD_ORE_COST} Ore`,
+      description: `+${ROAD_EFFICIENCY_BONUS * 100}% income & construction speed nationwide, per road (stacks).`,
+      count: countBuildingsInProvince(state, "road", selectedProvinceId),
+      max: buildRoad.maxPerProvince,
+      canBuild: buildRoad.canBuild(state, selectedProvinceId),
+      onBuild: () => dispatch((s) => buildRoad(s, selectedProvinceId)),
+    },
+  ];
 
   return (
     <section className="panel actions-panel">
@@ -42,36 +83,28 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
 
       <div className="actions-panel__group">
         <h3>Build</h3>
-        <button disabled={!buildFarm.canBuild(state, selectedProvinceId)} onClick={() => dispatch((s) => buildFarm(s, selectedProvinceId))}>
-          Build Farm ({FARM_COST} {CURRENCY_SYMBOL} + {FARM_WOOD_COST} Wood)
-          <span className="actions-panel__cap">
-            {farmCount}/{buildFarm.maxPerProvince} here
-          </span>
-        </button>
-        <p className="actions-panel__description">Produces {FOOD_PER_FARM.toLocaleString()} food/day.</p>
-
-        <button
-          disabled={!buildFactory.canBuild(state, selectedProvinceId)}
-          onClick={() => dispatch((s) => buildFactory(s, selectedProvinceId))}
-        >
-          Build Factory ({FACTORY_COST} {CURRENCY_SYMBOL} + {FACTORY_ORE_COST} Ore)
-          <span className="actions-panel__cap">
-            {factoryCount}/{buildFactory.maxPerProvince} here
-          </span>
-        </button>
-        <p className="actions-panel__description">
-          Produces {INDUSTRY_PER_FACTORY} industry/day (~{INDUSTRY_PER_FACTORY * INCOME_PER_INDUSTRY} {CURRENCY_SYMBOL}/day in income).
-        </p>
-
-        <button disabled={!buildRoad.canBuild(state, selectedProvinceId)} onClick={() => dispatch((s) => buildRoad(s, selectedProvinceId))}>
-          Build Road ({ROAD_COST} {CURRENCY_SYMBOL} + {ROAD_ORE_COST} Ore)
-          <span className="actions-panel__cap">
-            {roadCount}/{buildRoad.maxPerProvince} here
-          </span>
-        </button>
-        <p className="actions-panel__description">
-          +{ROAD_EFFICIENCY_BONUS * 100}% income &amp; construction speed nationwide, per road (stacks).
-        </p>
+        {buildItems.map((item) => (
+          <div className={`build-card ${!item.canBuild ? "is-disabled" : ""}`} key={item.type}>
+            <div className="build-card__icon">
+              <svg viewBox="-12 -16 24 24">
+                <BuildingIcon type={item.type} x={0} y={0} size={7} />
+              </svg>
+            </div>
+            <div className="build-card__body">
+              <div className="build-card__top">
+                <span className="build-card__name">{item.name}</span>
+                <span className="build-card__cap">
+                  {item.count}/{item.max} here
+                </span>
+              </div>
+              <div className="build-card__cost">{item.cost}</div>
+              <p className="build-card__description">{item.description}</p>
+              <button className="build-card__button" disabled={!item.canBuild} onClick={item.onBuild}>
+                Build {item.name}
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );

@@ -23,9 +23,16 @@
 
 .reports-panel__item-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+.reports-panel__row-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 .reports-panel__empty {

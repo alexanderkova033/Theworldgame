@@ -2,6 +2,7 @@ import "./ReportsPanel.css";
 import { formatMonthYear } from "../../domain/country/calendar";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { MonthlyReport } from "../../domain/country/types";
+import { StatIcon } from "./StatIcon";
 
 interface ReportsPanelProps {
   reports: MonthlyReport[];
@@ -24,23 +25,33 @@ export function ReportsPanel({ reports }: ReportsPanelProps) {
           <li key={report.id} className="reports-panel__item">
             <div className="reports-panel__item-header">{formatMonthYear(report.date)}</div>
             <div className="reports-panel__item-row">
-              <span>Income</span>
+              <span className="reports-panel__row-label">
+                <StatIcon type="treasury" size={18} /> Income
+              </span>
               <span>+{Math.round(report.totalIncome)} {CURRENCY_SYMBOL}</span>
             </div>
             <div className="reports-panel__item-row">
-              <span>Expenses</span>
+              <span className="reports-panel__row-label">
+                <StatIcon type="treasury" size={18} /> Expenses
+              </span>
               <span>-{Math.round(report.totalExpenses)} {CURRENCY_SYMBOL}</span>
             </div>
             <div className="reports-panel__item-row">
-              <span>Net Treasury</span>
+              <span className="reports-panel__row-label">
+                <StatIcon type="treasury" size={18} /> Net Treasury
+              </span>
               <span>{formatSigned(report.netTreasuryChange)}</span>
             </div>
             <div className="reports-panel__item-row">
-              <span>Population</span>
+              <span className="reports-panel__row-label">
+                <StatIcon type="population" size={18} /> Population
+              </span>
               <span>{formatSigned(report.populationChange)}</span>
             </div>
             <div className="reports-panel__item-row">
-              <span>Stability</span>
+              <span className="reports-panel__row-label">
+                <StatIcon type="stability" size={18} /> Stability
+              </span>
               <span>{formatSigned(report.stabilityChange)}</span>
             </div>
           </li>

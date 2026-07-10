@@ -72,8 +72,17 @@ export function BuildingIcon({ type, x, y, size = 5 }: BuildingIconProps) {
         </g>
       );
     case "road":
-      // Legend-only: a short dashed road segment.
-      return <line x1={x - size} y1={y} x2={x + size} y2={y} stroke={color} strokeWidth={2} strokeDasharray="2.5 2" />;
+      // A paved strip with a dashed centerline and hub dots at each end —
+      // reads as an actual road, not just a legend swatch, when drawn big.
+      return (
+        <g>
+          <line x1={x - size * 1.15} y1={y} x2={x + size * 1.15} y2={y} stroke="#3a2f1e" strokeWidth={size * 0.62} strokeLinecap="round" />
+          <line x1={x - size * 1.15} y1={y} x2={x + size * 1.15} y2={y} stroke={color} strokeWidth={size * 0.62} strokeLinecap="round" opacity={0.28} />
+          <line x1={x - size * 0.85} y1={y} x2={x + size * 0.85} y2={y} stroke={color} strokeWidth={size * 0.18} strokeLinecap="round" strokeDasharray={`${size * 0.4} ${size * 0.32}`} />
+          <circle cx={x - size * 1.15} cy={y} r={size * 0.26} fill={color} stroke="#3a2f1e" strokeWidth={0.4} />
+          <circle cx={x + size * 1.15} cy={y} r={size * 0.26} fill={color} stroke="#3a2f1e" strokeWidth={0.4} />
+        </g>
+      );
     default:
       return null;
   }
