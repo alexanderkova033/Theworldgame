@@ -8,6 +8,13 @@
 
 .laws-panel__category-title {
   margin-top: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.laws-panel__category-title svg {
+  flex-shrink: 0;
 }
 
 .laws-panel__options {
@@ -40,6 +47,9 @@
 }
 
 .laws-panel__benefit {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
   font-size: 0.75rem;
   color: var(--success);
   margin: 0;
@@ -47,10 +57,24 @@
 }
 
 .laws-panel__cost {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
   font-size: 0.75rem;
   color: var(--danger);
   margin: 0 0 0.2rem;
   font-weight: 600;
+}
+
+.laws-panel__effect-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex-shrink: 0;
+}
+
+.laws-panel__effect-icons svg {
+  display: block;
 }
 
 .laws-panel__option button {

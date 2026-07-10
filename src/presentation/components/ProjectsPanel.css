@@ -7,6 +7,35 @@
   gap: 0.75rem;
 }
 
+.projects-panel__item {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.projects-panel__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.1), transparent 65%), var(--panel-bg-raised);
+  border: 2px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.projects-panel__icon svg {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+.projects-panel__body {
+  flex: 1;
+  min-width: 0;
+}
+
 .projects-panel__item-header {
   display: flex;
   justify-content: space-between;

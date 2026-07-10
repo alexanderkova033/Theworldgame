@@ -16,6 +16,33 @@ const TABS: Array<{ key: PanelKey; label: string; icon: NavIconType }> = [
   { key: "ventures", label: "Ventures", icon: "ventures" },
 ];
 
+// A small hourglass in place of a bare date string.
+function DateIcon() {
+  return (
+    <svg width={16} height={16} viewBox="-10 -10 20 20">
+      <path d="M-6,-8 L6,-8 L6,-6 L1.5,0 L6,6 L6,8 L-6,8 L-6,6 L-1.5,0 L-6,-6 Z" fill="#e6c56a" stroke="#93731f" strokeWidth={0.7} />
+      <path d="M-4,-6.3 L4,-6.3 L1,-0.4 L-1,-0.4 Z" fill="#c9a24a" opacity={0.85} />
+    </svg>
+  );
+}
+
+function PlayIcon() {
+  return (
+    <svg width={14} height={14} viewBox="-10 -10 20 20">
+      <polygon points="-5,-8 8,0 -5,8" fill="currentColor" />
+    </svg>
+  );
+}
+
+function PauseIcon() {
+  return (
+    <svg width={14} height={14} viewBox="-10 -10 20 20">
+      <rect x={-6} y={-8} width={4.5} height={16} fill="currentColor" />
+      <rect x={1.5} y={-8} width={4.5} height={16} fill="currentColor" />
+    </svg>
+  );
+}
+
 interface TopBarProps {
   nationName: string;
   date: GameDate;
@@ -52,9 +79,13 @@ export function TopBar({
 
         <div className="top-bar__spacer" />
 
-        <span className="top-bar__date">{formatDate(date)}</span>
+        <span className="top-bar__date">
+          <DateIcon />
+          {formatDate(date)}
+        </span>
 
         <button className="top-bar__pause-button" onClick={isPaused ? onResume : onPause}>
+          {isPaused ? <PlayIcon /> : <PauseIcon />}
           {isPaused ? "Resume" : "Pause"}
         </button>
 

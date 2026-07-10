@@ -205,3 +205,11 @@ h3 {
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
+
+/* Shared muted helper/explainer line under a panel heading. */
+.panel-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0 0 0.6rem;
+  line-height: 1.4;
+}

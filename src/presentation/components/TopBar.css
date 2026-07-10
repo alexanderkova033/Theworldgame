@@ -35,9 +35,18 @@
 }
 
 .top-bar__date {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   font-weight: 600;
   white-space: nowrap;
   color: var(--text-muted);
+}
+
+.top-bar__pause-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .top-bar__speeds {
