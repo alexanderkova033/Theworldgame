@@ -1,0 +1,33 @@
+.resource-ticker {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.resource-ticker__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  padding: 0.22rem 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.resource-ticker__chip svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.resource-ticker__divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--panel-border);
+  margin: 0 0.15rem;
+}

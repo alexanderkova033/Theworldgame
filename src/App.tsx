@@ -13,10 +13,8 @@ import { MapPanel } from "./presentation/components/MapPanel";
 import { Modal } from "./presentation/components/Modal";
 import { ProjectsPanel } from "./presentation/components/ProjectsPanel";
 import { ReportsPanel } from "./presentation/components/ReportsPanel";
-import { ResourcesPanel } from "./presentation/components/ResourcesPanel";
 import { StartScreen } from "./presentation/components/StartScreen";
-import { StatsPanel } from "./presentation/components/StatsPanel";
-import { TopBar } from "./presentation/components/TopBar";
+import { TopBar, type PanelKey } from "./presentation/components/TopBar";
 import { TradePanel } from "./presentation/components/TradePanel";
 import { useGameClock } from "./presentation/hooks/useGameClock";
 
@@ -31,10 +29,11 @@ function App() {
   // selectedProvinceId — a UI selection, not simulation truth.
   const [selectedIslandId, setSelectedIslandId] = useState<string | null>(null);
 
-  // Laws and Ventures are occasional decisions, not always-on dashboards, so
-  // they live in an on-demand overlay instead of a permanently-visible
-  // sidebar panel — see Modal.tsx.
-  const [openModal, setOpenModal] = useState<"laws" | "ventures" | null>(null);
+  // Every panel but the map and the always-visible resource ticker is an
+  // occasional lookup, not an always-on dashboard, so it lives in an
+  // on-demand overlay (HOI4-style tabs) instead of a permanent sidebar —
+  // see Modal.tsx and TopBar.tsx.
+  const [openModal, setOpenModal] = useState<PanelKey | null>(null);
 
   // No game yet: show the start screen. Picking a nation here is permanent —
   // there is no "change nation" control anywhere in the game UI below.
@@ -60,21 +59,16 @@ function App() {
         date={state.date}
         isPaused={state.isPaused}
         speed={state.speed}
+        stats={state.stats}
+        resources={state.resources}
+        activePanel={openModal}
         onPause={pause}
         onResume={resume}
         onSetSpeed={setSpeed}
-        onOpenLaws={() => setOpenModal("laws")}
-        onOpenVentures={() => setOpenModal("ventures")}
+        onOpenPanel={(panel) => setOpenModal(panel)}
       />
 
       <main className="game-layout__main">
-        <aside className="game-layout__sidebar game-layout__sidebar--left">
-          <StatsPanel stats={state.stats} />
-          <ResourcesPanel resources={state.resources} />
-          <ActionsPanel state={state} selectedProvinceId={currentProvinceId} dispatch={dispatch} />
-          <TradePanel state={state} dispatch={dispatch} />
-        </aside>
-
         <div className="game-layout__map-stage">
           <MapPanel
             nation={nation}
@@ -91,13 +85,28 @@ function App() {
             }}
           />
         </div>
-
-        <aside className="game-layout__sidebar game-layout__sidebar--right">
-          <ProjectsPanel projects={state.projects} />
-          <ReportsPanel reports={state.monthlyReports} />
-          <EventLog events={state.events} />
-        </aside>
       </main>
+
+      {openModal === "economy" && (
+        <Modal title="Economy" onClose={() => setOpenModal(null)} wide>
+          <div className="economy-modal">
+            <ActionsPanel state={state} selectedProvinceId={currentProvinceId} dispatch={dispatch} />
+            <TradePanel state={state} dispatch={dispatch} />
+          </div>
+        </Modal>
+      )}
+
+      {openModal === "reports" && (
+        <Modal title="Reports" onClose={() => setOpenModal(null)} wide>
+          <div className="reports-modal">
+            <div className="reports-modal__column">
+              <ProjectsPanel projects={state.projects} />
+              <ReportsPanel reports={state.monthlyReports} />
+            </div>
+            <EventLog events={state.events} />
+          </div>
+        </Modal>
+      )}
 
       {openModal === "laws" && (
         <Modal title="Laws" onClose={() => setOpenModal(null)}>

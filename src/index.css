@@ -1,26 +1,32 @@
 /* Design tokens, resets, and the handful of base element/utility styles
    shared by every component. Anything specific to one component lives in
    that component's own <ComponentName>.css instead — see e.g.
-   presentation/components/MapPanel.css. */
+   presentation/components/MapPanel.css.
+
+   Palette/theme is a Warcraft-3-inspired "carved wood & gold" command UI:
+   dark oak panels, brass/gold bevelled borders, rivets at panel corners,
+   engraved gold headers. */
 
 :root {
   color-scheme: dark;
-  --bg: #0e131a;
-  --bg-deep: #090c11;
-  --panel-bg: #171d27;
-  --panel-bg-raised: #1c2330;
-  --panel-border: #2b3444;
-  --text: #e9e6db;
-  --text-muted: #8d94a3;
-  --accent: #c9a24a;
-  --accent-soft: rgba(201, 162, 74, 0.16);
-  --accent-active: #e0bd6c;
-  --danger: #d9605f;
+  --bg: #140d08;
+  --bg-deep: #0b0704;
+  --panel-bg: #241708;
+  --panel-bg-raised: #34220f;
+  --panel-border: #7a531f;
+  --wood-dark: #1a1006;
+  --wood-light: #4a2f15;
+  --text: #f1e2bf;
+  --text-muted: #b3987a;
+  --accent: #caa036;
+  --accent-soft: rgba(202, 160, 54, 0.16);
+  --accent-active: #f0c869;
+  --danger: #c2402f;
   --warning: #d9a24f;
   --info: #5b9bd6;
   --success: #6fae7c;
 
-  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-display: "Cinzel", "Playfair Display", Georgia, "Times New Roman", serif;
   --font-body: system-ui, "Segoe UI", Roboto, sans-serif;
 
   font-family: var(--font-body);
@@ -38,42 +44,49 @@ html, body, #root {
 
 body {
   background:
-    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(201, 162, 74, 0.07), transparent 60%),
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(202, 160, 54, 0.08), transparent 60%),
+    repeating-linear-gradient(115deg, rgba(0, 0, 0, 0.12) 0px, transparent 2px, transparent 5px),
     var(--bg);
   color: var(--text);
 }
 
 button {
-  font-family: inherit;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  border: 1px solid var(--panel-border);
-  background: var(--panel-bg-raised);
+  border: 2px solid var(--panel-border);
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--wood-light), var(--wood-dark));
   color: var(--text);
-  border-radius: 6px;
   padding: 0.5rem 0.75rem;
-  font-size: 0.9rem;
-  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  font-size: 0.85rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -3px 5px rgba(0, 0, 0, 0.45), 0 2px 3px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
 
 button:hover:not(:disabled) {
-  background: #232c3c;
-  border-color: var(--accent);
+  border-color: var(--accent-active);
+  box-shadow: 0 0 9px rgba(240, 200, 105, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -3px 5px rgba(0, 0, 0, 0.45);
 }
 
 button:active:not(:disabled) {
   transform: translateY(1px);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
 button:disabled {
-  opacity: 0.4;
+  opacity: 0.42;
   cursor: not-allowed;
 }
 
 button.is-active {
-  background: var(--accent);
-  border-color: var(--accent-active);
-  color: #1a1406;
-  font-weight: 600;
+  background: linear-gradient(180deg, var(--accent-active), var(--accent));
+  border-color: #fff0c2;
+  color: #241505;
+  text-shadow: none;
+  font-weight: 700;
 }
 
 h1, h2, h3 {
@@ -82,12 +95,27 @@ h1, h2, h3 {
 }
 
 h2 {
-  font-size: 1.05rem;
-  letter-spacing: 0.02em;
+  position: relative;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
   color: var(--accent-active);
   font-weight: 700;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--panel-border);
+  text-align: center;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.7), 0 0 10px rgba(240, 200, 105, 0.2);
+  padding-bottom: 0.7rem;
+  border-bottom: none;
+}
+
+h2::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 65%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent) 15%, var(--accent-active) 50%, var(--accent) 85%, transparent);
 }
 
 h3 {
@@ -99,13 +127,24 @@ h3 {
   margin-top: 0.9rem;
 }
 
+/* Carved-wood panel: brass double border, corner rivets, subtle grain. */
 .panel {
-  background: linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg));
-  border: 1px solid var(--panel-border);
-  border-radius: 10px;
+  position: relative;
+  background:
+    radial-gradient(circle 3px at 11px 11px, var(--accent-active) 92%, transparent 100%),
+    radial-gradient(circle 3px at calc(100% - 11px) 11px, var(--accent-active) 92%, transparent 100%),
+    radial-gradient(circle 3px at 11px calc(100% - 11px), var(--accent-active) 92%, transparent 100%),
+    radial-gradient(circle 3px at calc(100% - 11px) calc(100% - 11px), var(--accent-active) 92%, transparent 100%),
+    linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg));
+  background-repeat: no-repeat;
+  border: 2px solid var(--panel-border);
+  border-radius: 6px;
   padding: 1.1rem;
   margin-bottom: 1rem;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(240, 200, 105, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* Shared "icon tile" layout: a portrait glyph in a round frame beside a
@@ -121,9 +160,9 @@ h3 {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(0, 0, 0, 0.24);
   border: 1px solid var(--panel-border);
-  border-radius: 10px;
+  border-radius: 6px;
   padding: 0.45rem 0.7rem;
 }
 
@@ -131,8 +170,9 @@ h3 {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.1), transparent 65%), var(--panel-bg-raised);
-  border: 1px solid var(--panel-border);
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.12), transparent 65%), var(--panel-bg-raised);
+  border: 2px solid var(--panel-border);
+  box-shadow: 0 0 0 1px rgba(240, 200, 105, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
