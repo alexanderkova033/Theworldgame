@@ -7,6 +7,7 @@ import { advanceProject, isProjectComplete } from "../domain/construction/constr
 import { advanceDay, isEveryNMonths, isFirstDayOfMonth } from "../domain/country/calendar";
 import { generateId } from "../domain/country/id";
 import type { CountryStats, DailyDelta, GameEvent, GameState } from "../domain/country/types";
+import { pickRandomDecision } from "../domain/decisions/decisionRules";
 import { getIslandExpeditionData } from "../domain/expeditions/expeditionData";
 import { advanceExpedition, isExpeditionComplete } from "../domain/expeditions/expeditionRules";
 import { updateFood } from "../domain/food/foodRules";
@@ -27,6 +28,7 @@ import { applyExpeditionCompletion } from "./applyExpeditionCompletion";
 import { applyProjectCompletion } from "./applyProjectCompletion";
 import { generateMonthlyReport } from "./generateMonthlyReport";
 import {
+  DECISION_CHANCE_PER_MONTH,
   ELECTIONS_TO_WIN_GAME,
   ELECTION_INTERVAL_MONTHS,
   ELECTION_WIN_STABILITY_BONUS,
@@ -57,7 +59,29 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
-  // 1b. Advance every active expedition; apply completed ones the same way.
+  // 1b. Every still-active project drains the rest of its cost a little
+  // today — see Project.treasuryCostPerDay/resourceCostPerDay and
+  // createBuildAction.ts for the 50/50 split this pays down. Uses
+  // state.projects (before today's advancement/completion) so a project
+  // finishing today still pays its final day's installment.
+  let treasuryAfterConstruction = working.stats.treasury;
+  let resourcesAfterConstruction = working.resources;
+  for (const project of state.projects) {
+    treasuryAfterConstruction -= project.treasuryCostPerDay;
+    if (project.resourceType) {
+      resourcesAfterConstruction = {
+        ...resourcesAfterConstruction,
+        [project.resourceType]: resourcesAfterConstruction[project.resourceType] - project.resourceCostPerDay,
+      };
+    }
+  }
+  working = {
+    ...working,
+    stats: { ...working.stats, treasury: treasuryAfterConstruction },
+    resources: resourcesAfterConstruction,
+  };
+
+  // 1c. Advance every active expedition; apply completed ones the same way.
   const advancedExpeditions = working.expeditions.map(advanceExpedition);
   const completedExpeditions = advancedExpeditions.filter(isExpeditionComplete);
   const remainingExpeditions = advancedExpeditions.filter((e) => !isExpeditionComplete(e));
@@ -235,14 +259,24 @@ export function simulateDay(state: GameState): GameState {
     }
   }
 
+  // 14. A political decision, unpredictably — see domain/decisions. Rolled
+  // on the first day of every month; skipped if one is already pending or
+  // the game just ended some other way. Popping up pauses the game (see the
+  // isPaused line below) until the player picks an option.
+  let pendingDecisionId = working.pendingDecisionId;
+  if (!isGameOver && !pendingDecisionId && isFirstDayOfMonth(date) && Math.random() < DECISION_CHANCE_PER_MONTH) {
+    pendingDecisionId = pickRandomDecision().id;
+  }
+
   return {
     ...working,
     date,
-    isPaused: isGameOver ? true : working.isPaused,
+    isPaused: isGameOver || pendingDecisionId ? true : working.isPaused,
     isGameOver,
     outcome,
     gameOverReason,
     electionsWon,
+    pendingDecisionId,
     stats: finalStats,
     resources: finalResources,
     events: events.slice(0, MAX_EVENT_LOG_LENGTH),

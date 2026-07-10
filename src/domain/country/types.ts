@@ -1,6 +1,7 @@
 // The shape of a country and its game state. This is the aggregate root of the
 // whole simulation: every other domain module reads from and writes pieces of it.
 import type { Project } from "../construction/types";
+import type { DecisionHistoryEntry } from "../decisions/types";
 import type { Expedition } from "../expeditions/types";
 import type { PlacedBuilding } from "../provinces/types";
 import type { ResourceBundle } from "../resources/types";
@@ -88,4 +89,7 @@ export interface GameState {
   events: GameEvent[];
   monthlyReports: MonthlyReport[];
   history: DailyDelta[]; // daily deltas since the last monthly report
+
+  pendingDecisionId: string | null; // a decision popup waiting on the player — see domain/decisions
+  decisionHistory: DecisionHistoryEntry[];
 }

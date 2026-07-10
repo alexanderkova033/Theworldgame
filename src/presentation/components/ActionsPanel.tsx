@@ -7,13 +7,16 @@ import "./ActionsPanel.css";
 import { buildFactory, buildFarm, buildRoad, countBuildingsInProvince } from "../../application/actions";
 import {
   CURRENCY_SYMBOL,
+  FACTORY_BUILD_DAYS,
   FACTORY_COST,
   FACTORY_ORE_COST,
+  FARM_BUILD_DAYS,
   FARM_COST,
   FARM_WOOD_COST,
   FOOD_PER_FARM,
   INCOME_PER_INDUSTRY,
   INDUSTRY_PER_FACTORY,
+  ROAD_BUILD_DAYS,
   ROAD_COST,
   ROAD_EFFICIENCY_BONUS,
   ROAD_ORE_COST,
@@ -30,13 +33,23 @@ interface ActionsPanelProps {
   dispatch: (action: (state: GameState) => GameState) => void;
 }
 
+// Half the cost is due now, half is drained daily over the build (see
+// createBuildAction.ts) — split the display to match instead of quoting one
+// combined number that isn't actually what gets charged up front.
+function half(value: number): number {
+  return Math.round(value / 2);
+}
+
 export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPanelProps) {
   const provinceName = getProvinceName(selectedProvinceId);
 
   const buildItems: Array<{
     type: Exclude<ProjectType, "education" | "research">;
     name: string;
-    cost: string;
+    cost: number;
+    resourceCost: number;
+    resourceLabel: string;
+    buildDays: number;
     description: string;
     count: number;
     max: number;
@@ -46,7 +59,10 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
     {
       type: "farm",
       name: "Farm",
-      cost: `${FARM_COST} ${CURRENCY_SYMBOL} + ${FARM_WOOD_COST} Wood`,
+      cost: FARM_COST,
+      resourceCost: FARM_WOOD_COST,
+      resourceLabel: "Wood",
+      buildDays: FARM_BUILD_DAYS,
       description: `Produces ${FOOD_PER_FARM.toLocaleString()} food/day.`,
       count: countBuildingsInProvince(state, "farm", selectedProvinceId),
       max: buildFarm.maxPerProvince,
@@ -56,7 +72,10 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
     {
       type: "factory",
       name: "Factory",
-      cost: `${FACTORY_COST} ${CURRENCY_SYMBOL} + ${FACTORY_ORE_COST} Ore`,
+      cost: FACTORY_COST,
+      resourceCost: FACTORY_ORE_COST,
+      resourceLabel: "Ore",
+      buildDays: FACTORY_BUILD_DAYS,
       description: `Produces ${INDUSTRY_PER_FACTORY} industry/day (~${INDUSTRY_PER_FACTORY * INCOME_PER_INDUSTRY} ${CURRENCY_SYMBOL}/day in income).`,
       count: countBuildingsInProvince(state, "factory", selectedProvinceId),
       max: buildFactory.maxPerProvince,
@@ -66,7 +85,10 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
     {
       type: "road",
       name: "Road",
-      cost: `${ROAD_COST} ${CURRENCY_SYMBOL} + ${ROAD_ORE_COST} Ore`,
+      cost: ROAD_COST,
+      resourceCost: ROAD_ORE_COST,
+      resourceLabel: "Ore",
+      buildDays: ROAD_BUILD_DAYS,
       description: `+${ROAD_EFFICIENCY_BONUS * 100}% income & construction speed nationwide, per road (stacks).`,
       count: countBuildingsInProvince(state, "road", selectedProvinceId),
       max: buildRoad.maxPerProvince,
@@ -84,35 +106,49 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
 
       <div className="actions-panel__group">
         <h3>Build</h3>
-        {buildItems.map((item) => (
-          <div className={`build-card ${!item.canBuild ? "is-disabled" : ""}`} key={item.type}>
-            <div className="build-card__icon" aria-hidden="true">
-              <svg viewBox="-12 -16 24 24">
-                <BuildingIcon type={item.type} x={0} y={0} size={7} />
-              </svg>
-            </div>
-            <div className="build-card__body">
-              <div className="build-card__top">
-                <span className="build-card__name">{item.name}</span>
-                <span className="build-card__cap">
-                  {item.count}/{item.max} here
-                </span>
+        {buildItems.map((item) => {
+          const upfrontCost = half(item.cost);
+          const upfrontResource = half(item.resourceCost);
+          const laterCost = item.cost - upfrontCost;
+          const laterResource = item.resourceCost - upfrontResource;
+
+          return (
+            <div className={`build-card ${!item.canBuild ? "is-disabled" : ""}`} key={item.type}>
+              <div className="build-card__icon" aria-hidden="true">
+                <svg viewBox="-12 -16 24 24">
+                  <BuildingIcon type={item.type} x={0} y={0} size={7} />
+                </svg>
               </div>
-              <div className="build-card__cost">{item.cost}</div>
-              <p className="build-card__description">{item.description}</p>
-              <button
-                className="build-card__button"
-                disabled={!item.canBuild}
-                onClick={() => {
-                  playConfirm();
-                  item.onBuild();
-                }}
-              >
-                Build {item.name}
-              </button>
+              <div className="build-card__body">
+                <div className="build-card__top">
+                  <span className="build-card__name">{item.name}</span>
+                  <span className="build-card__cap">
+                    {item.count}/{item.max} here
+                  </span>
+                </div>
+                <div className="build-card__cost">
+                  {upfrontCost} {CURRENCY_SYMBOL} + {upfrontResource} {item.resourceLabel}
+                  <span className="build-card__cost-tag">now</span>
+                </div>
+                <div className="build-card__cost build-card__cost--later">
+                  +{laterCost} {CURRENCY_SYMBOL} + {laterResource} {item.resourceLabel}
+                  <span className="build-card__cost-tag">over {item.buildDays}d</span>
+                </div>
+                <p className="build-card__description">{item.description}</p>
+                <button
+                  className="build-card__button"
+                  disabled={!item.canBuild}
+                  onClick={() => {
+                    playConfirm();
+                    item.onBuild();
+                  }}
+                >
+                  Build {item.name}
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

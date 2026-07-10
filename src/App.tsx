@@ -7,8 +7,10 @@ import { getNation } from "./domain/nations/nationRules";
 import { NATIONS } from "./domain/nations/nationData";
 import type { GameSpeed } from "./domain/country/types";
 import { getPartiesForNation, getParty } from "./domain/parties/partyRules";
+import { dismissDecision, resolveDecision } from "./application/actions";
 import { playDanger, playGameOver } from "./presentation/audio/sound";
 import { ActionsPanel } from "./presentation/components/ActionsPanel";
+import { DecisionModal } from "./presentation/components/DecisionModal";
 import { EventLog } from "./presentation/components/EventLog";
 import { ExpeditionPanel } from "./presentation/components/ExpeditionPanel";
 import { GameEndScreen } from "./presentation/components/GameEndScreen";
@@ -98,6 +100,12 @@ function App() {
     if (state?.isGameOver && !wasGameOver.current) playGameOver();
     wasGameOver.current = state?.isGameOver ?? false;
   }, [state?.isGameOver]);
+
+  // A decision popped up (see simulateDay.ts step 14) — close whatever tab
+  // is open so it isn't competing with the popup for attention.
+  useEffect(() => {
+    if (state?.pendingDecisionId) setOpenModal(null);
+  }, [state?.pendingDecisionId]);
 
   // No game yet: nation, then party, then the game itself starts. Both
   // choices are permanent — there is no "change nation/party" control
@@ -219,6 +227,18 @@ function App() {
           <ExpeditionPanel state={state} selectedIslandId={selectedIslandId} dispatch={dispatch} />
         </Modal>
       )}
+
+      <DecisionModal
+        state={state}
+        onResolve={(decisionId, optionId) => {
+          dispatch((s) => resolveDecision(s, decisionId, optionId));
+          resume();
+        }}
+        onDismiss={() => {
+          dispatch(dismissDecision);
+          resume();
+        }}
+      />
     </div>
   );
 }

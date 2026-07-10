@@ -38,17 +38,30 @@ export function countBuildingsInProvince(state: GameState, type: ProjectType, pr
   return completed + inProgress;
 }
 
+// Cost is split 50/50: half is charged the moment construction starts, half
+// is drained in equal daily installments for the rest of the build (see
+// Project.treasuryCostPerDay/resourceCostPerDay and simulateDay.ts step 1).
+// canBuild only has to check the upfront half — that's genuinely all that's
+// due right now — but that also means starting a project commits you to an
+// ongoing cost you might not be able to fully afford if you overbuild.
+function upfrontCost(cost: number): number {
+  return Math.round(cost / 2);
+}
+
 export function createBuildAction(config: BuildActionConfig): BuildAction {
   function canBuild(state: GameState, provinceId: string): boolean {
     return (
-      canAfford(state.stats, config.cost) &&
-      canAffordResource(state.resources, config.resourceType, config.resourceCost) &&
+      canAfford(state.stats, upfrontCost(config.cost)) &&
+      canAffordResource(state.resources, config.resourceType, upfrontCost(config.resourceCost)) &&
       countBuildingsInProvince(state, config.type, provinceId) < config.maxPerProvince
     );
   }
 
   function build(state: GameState, provinceId: string): GameState {
     if (!canBuild(state, provinceId)) return state;
+
+    const treasuryUpfront = upfrontCost(config.cost);
+    const resourceUpfront = upfrontCost(config.resourceCost);
 
     const project: Project = {
       id: generateId("project"),
@@ -57,12 +70,15 @@ export function createBuildAction(config: BuildActionConfig): BuildAction {
       totalDays: config.buildDays,
       daysRemaining: config.buildDays,
       provinceId,
+      treasuryCostPerDay: (config.cost - treasuryUpfront) / config.buildDays,
+      resourceType: config.resourceType,
+      resourceCostPerDay: (config.resourceCost - resourceUpfront) / config.buildDays,
     };
 
     return {
       ...state,
-      stats: { ...state.stats, treasury: state.stats.treasury - config.cost },
-      resources: deductResource(state.resources, config.resourceType, config.resourceCost),
+      stats: { ...state.stats, treasury: state.stats.treasury - treasuryUpfront },
+      resources: deductResource(state.resources, config.resourceType, resourceUpfront),
       projects: [...state.projects, project],
     };
   }

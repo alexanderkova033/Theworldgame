@@ -14,6 +14,9 @@ export function investEducation(state: GameState, provinceId: string): GameState
     totalDays: EDUCATION_BUILD_DAYS,
     daysRemaining: EDUCATION_BUILD_DAYS,
     provinceId,
+    treasuryCostPerDay: 0,
+    resourceType: null,
+    resourceCostPerDay: 0,
   };
 
   return {

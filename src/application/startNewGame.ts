@@ -16,6 +16,11 @@ const STARTING_DATE = { year: 1, month: 1, day: 1 };
 const EXTRA_STARTING_FARM_NATIONS = ["astravia"]; // "balancing farmland and ambition"
 const STARTING_STABILITY_BONUS: Record<string, number> = { caldenreich: 10 }; // "steady administration"
 
+// Lean, but not starved: two farms keep food production close to what a
+// 10,000-strong population actually eats (FOOD_PER_FARM × 2 ≈ consumption)
+// — cutting to one farm looked like "less free stuff" but was actually a
+// guaranteed early famine, which isn't the same thing as "costs more to
+// build." No free road, though — that bonus is easy to live without.
 function buildStartingBuildings(nationId: string, farmCount: number): PlacedBuilding[] {
   const nation = getNation(nationId);
   const capital = nation.capitalProvinceId;
@@ -26,7 +31,6 @@ function buildStartingBuildings(nationId: string, farmCount: number): PlacedBuil
 
   const buildings: PlacedBuilding[] = [
     { id: "starting-farm-1", provinceId: capital, type: "farm" },
-    { id: "starting-road-1", provinceId: capital, type: "road" },
     { id: "starting-farm-2", provinceId: secondProvince, type: "farm" },
     { id: "starting-factory-1", provinceId: thirdProvince, type: "factory" },
   ];
@@ -40,7 +44,7 @@ export function startNewGame(nationId: string, partyId: string): GameState {
   const nation = getNation(nationId);
   const farmCount = EXTRA_STARTING_FARM_NATIONS.includes(nationId) ? 3 : 2;
   const factoryCount = 1;
-  const roadCount = 1;
+  const roadCount = 0;
   const stability = 60 + (STARTING_STABILITY_BONUS[nationId] ?? 0);
 
   return {
@@ -62,7 +66,7 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     researchLevel: 0,
 
     stats: {
-      treasury: 5000,
+      treasury: 3000,
       population: 10000,
       food: 8000,
       industry: calculateIndustryOutput(factoryCount, 0),
@@ -93,5 +97,7 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     ],
     monthlyReports: [],
     history: [],
+    pendingDecisionId: null,
+    decisionHistory: [],
   };
 }

@@ -24,6 +24,9 @@ export function startResearch(state: GameState, provinceId: string): GameState {
     totalDays: RESEARCH_PROJECT_DAYS,
     daysRemaining: RESEARCH_PROJECT_DAYS,
     provinceId,
+    treasuryCostPerDay: 0,
+    resourceType: null,
+    resourceCostPerDay: 0,
   };
 
   return {

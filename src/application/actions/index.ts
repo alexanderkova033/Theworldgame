@@ -10,3 +10,4 @@ export { canTrade, tradeResources } from "./tradeResources";
 export { canImportFood, getFoodImportCost, importFood } from "./importFood";
 export { canSendExpedition, sendExpedition } from "./sendExpedition";
 export { canEnactLaw, enactLaw } from "./enactLaw";
+export { resolveDecision, dismissDecision } from "./resolveDecision";

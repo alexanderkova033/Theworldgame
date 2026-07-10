@@ -81,9 +81,24 @@
 }
 
 .build-card__cost {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
   font-size: 0.78rem;
   color: var(--accent-active);
   margin-top: 0.1rem;
+}
+
+.build-card__cost--later {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.build-card__cost-tag {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
 }
 
 .build-card__description {
