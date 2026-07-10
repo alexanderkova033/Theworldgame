@@ -19,7 +19,9 @@ export function EventLog({ events }: EventLogProps) {
       <ul className="event-log__list">
         {events.map((event) => (
           <li key={event.id} className={`event-log__item event-log__item--${event.severity}`}>
-            <span className={`event-log__badge event-log__badge--${event.severity}`}>{SEVERITY_GLYPH[event.severity] ?? "i"}</span>
+            <span className={`event-log__badge event-log__badge--${event.severity}`} aria-hidden="true">
+              {SEVERITY_GLYPH[event.severity] ?? "i"}
+            </span>
             <span className="event-log__body">
               <span className="event-log__date">{formatDate(event.date)}</span>
               <span>{event.message}</span>

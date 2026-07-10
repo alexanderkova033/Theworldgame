@@ -36,6 +36,21 @@
   line-height: 1.6;
 }
 
+.start-screen__continue {
+  margin: 0 0 2rem;
+}
+
+.start-screen__continue-button {
+  font-size: 0.95rem;
+  padding: 0.65rem 1.25rem;
+}
+
+.start-screen__continue-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0.5rem 0 0;
+}
+
 .start-screen__map {
   width: 100%;
   max-width: 34rem;
@@ -125,6 +140,12 @@
   font-size: 0.85rem;
   color: var(--text-muted);
   line-height: 1.5;
+}
+
+.nation-card__bonus {
+  font-size: 0.75rem;
+  color: var(--accent-active);
+  font-weight: 600;
 }
 
 .nation-card__cta {

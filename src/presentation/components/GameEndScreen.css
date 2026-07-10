@@ -1,0 +1,86 @@
+.game-end-screen {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(194, 64, 47, 0.14), transparent 65%),
+    var(--bg-deep);
+}
+
+.game-end-screen.is-victory {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(240, 200, 105, 0.18), transparent 65%),
+    var(--bg-deep);
+}
+
+.game-end-screen__content {
+  max-width: 34rem;
+  width: 100%;
+  text-align: center;
+}
+
+.game-end-screen__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.75rem;
+  color: var(--danger);
+  margin: 0 0 0.5rem;
+}
+
+.is-victory .game-end-screen__eyebrow {
+  color: var(--accent-active);
+}
+
+.game-end-screen__title {
+  font-size: 2.4rem;
+  color: var(--text);
+  margin: 0 0 0.9rem;
+}
+
+.game-end-screen__party {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--party-color);
+  color: var(--party-color);
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.game-end-screen__party-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--party-color);
+}
+
+.game-end-screen__reason {
+  color: var(--text-muted);
+  max-width: 30rem;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+}
+
+.game-end-screen__stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+  margin-bottom: 2rem;
+}
+
+.game-end-screen__button {
+  font-size: 1rem;
+  padding: 0.75rem 1.5rem;
+}
+
+.is-victory .game-end-screen__button {
+  background: linear-gradient(180deg, var(--accent-active), var(--accent));
+  border-color: #fff0c2;
+  color: #241505;
+}

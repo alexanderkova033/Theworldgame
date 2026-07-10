@@ -10,6 +10,28 @@ import { RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
 import { BUILDING_COLORS, BuildingIcon } from "./BuildingIcon";
 import { ResourceIcon } from "./ResourceIcon";
 
+const TERRAIN_LABELS: Record<Terrain, string> = {
+  hills: "Hills",
+  forest: "Forest",
+  coast: "Coast",
+  plains: "Plains",
+};
+
+const RESOURCE_LABELS: Record<string, string> = {
+  wood: "Wood",
+  ore: "Ore",
+  grain: "Grain",
+  fish: "Fish",
+};
+
+const BUILDING_LABELS: Record<ProjectType, string> = {
+  farm: "Farm",
+  factory: "Factory",
+  road: "Road",
+  education: "Education",
+  research: "Research",
+};
+
 interface MapPanelProps {
   nation: Nation;
   placedBuildings: PlacedBuilding[];
@@ -136,10 +158,24 @@ export function MapPanel({
   const capital = provinces.find((p) => p.id === nation.capitalProvinceId);
 
   const svgRef = useRef<SVGSVGElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<ViewBox>(BASE_VIEW);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const suppressNextClick = useRef(false);
   const [isPanning, setIsPanning] = useState(false);
+
+  // A custom hover tooltip for owned provinces — richer than the browser's
+  // native <title> (name/owner only): terrain, produced resource, and every
+  // building actually standing there, in one place instead of only as
+  // small icons on the map itself.
+  const [hoveredProvinceId, setHoveredProvinceId] = useState<string | null>(null);
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+
+  function handleStageMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    const rect = stageRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }
 
   // Wheel-to-zoom, centered on the cursor. Attached as a native (non-passive)
   // listener so we can preventDefault and stop the page itself from
@@ -174,6 +210,7 @@ export function MapPanel({
   function handlePointerDown(e: React.PointerEvent<SVGSVGElement>) {
     dragStart.current = { x: e.clientX, y: e.clientY };
     svgRef.current?.setPointerCapture(e.pointerId);
+    setHoveredProvinceId(null);
   }
 
   function handlePointerMove(e: React.PointerEvent<SVGSVGElement>) {
@@ -243,7 +280,7 @@ export function MapPanel({
   return (
     <section className="panel map-panel">
       <h2 className="map-panel__title">Map of {nation.name}</h2>
-      <div className="map-panel__stage">
+      <div className="map-panel__stage" ref={stageRef} onMouseMove={handleStageMouseMove}>
         <svg
           ref={svgRef}
           viewBox={`${view.x} ${view.y} ${view.width} ${view.height}`}
@@ -379,6 +416,8 @@ export function MapPanel({
                   ].join(" ")}
                   style={!isOwned ? { fill: owner?.color ?? "#414a58" } : undefined}
                   onClick={isOwned ? () => handleProvinceClick(province.id) : undefined}
+                  onMouseEnter={isOwned ? () => setHoveredProvinceId(province.id) : undefined}
+                  onMouseLeave={isOwned ? () => setHoveredProvinceId((prev) => (prev === province.id ? null : prev)) : undefined}
                 >
                   <title>
                     {province.name}
@@ -579,6 +618,57 @@ export function MapPanel({
             −
           </button>
         </div>
+
+        {hoveredProvinceId &&
+          tooltipPos &&
+          !isPanning &&
+          (() => {
+            const province = provinces.find((p) => p.id === hoveredProvinceId);
+            if (!province) return null;
+            const buildings = buildingsByProvince.get(province.id) ?? [];
+            const roads = roadCountByProvince.get(province.id) ?? 0;
+            const counts = new Map<ProjectType, number>();
+            for (const b of buildings) counts.set(b.type, (counts.get(b.type) ?? 0) + 1);
+            const resourceType = RESOURCE_BY_TERRAIN[province.terrain];
+
+            return (
+              <div className="map-panel__tooltip" style={{ left: tooltipPos.x + 18, top: tooltipPos.y + 18 }}>
+                <div className="map-panel__tooltip-title">
+                  {province.id === nation.capitalProvinceId ? "★ " : ""}
+                  {province.name}
+                </div>
+                <div className="map-panel__tooltip-row">
+                  <svg viewBox="-10 -10 20 20" width={18} height={18}>
+                    <ResourceIcon type={resourceType} size={8} />
+                  </svg>
+                  <span>
+                    {TERRAIN_LABELS[province.terrain]} — produces {RESOURCE_LABELS[resourceType]}
+                  </span>
+                </div>
+                {[...counts.entries()].map(([type, count]) => (
+                  <div className="map-panel__tooltip-row" key={type}>
+                    <svg viewBox="-12 -16 24 24" width={18} height={18}>
+                      <BuildingIcon type={type} x={0} y={0} size={7} />
+                    </svg>
+                    <span>
+                      {count}× {BUILDING_LABELS[type]}
+                    </span>
+                  </div>
+                ))}
+                {roads > 0 && (
+                  <div className="map-panel__tooltip-row">
+                    <svg viewBox="-12 -16 24 24" width={18} height={18}>
+                      <BuildingIcon type="road" x={0} y={0} size={7} />
+                    </svg>
+                    <span>
+                      {roads}× {BUILDING_LABELS.road}
+                    </span>
+                  </div>
+                )}
+                {buildings.length === 0 && roads === 0 && <div className="map-panel__tooltip-empty">No buildings yet.</div>}
+              </div>
+            );
+          })()}
       </div>
 
       <div className="map-panel__legend">

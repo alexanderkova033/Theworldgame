@@ -6,6 +6,7 @@ import type { GameState } from "../../domain/country/types";
 import { getNation } from "../../domain/nations/nationRules";
 import { nationHasPort, getTradeRate } from "../../domain/resources/tradeRules";
 import { RESOURCE_TYPES, type ResourceType } from "../../domain/resources/types";
+import { playConfirm } from "../audio/sound";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 
@@ -80,7 +81,10 @@ export function TradePanel({ state, dispatch }: TradePanelProps) {
       <button
         className="trade-panel__button"
         disabled={!enabled}
-        onClick={() => dispatch((s) => tradeResources(s, give, receive))}
+        onClick={() => {
+          playConfirm();
+          dispatch((s) => tradeResources(s, give, receive));
+        }}
       >
         Trade {giveAmount} {RESOURCE_LABELS[give]} → {TRADE_BATCH_SIZE} {RESOURCE_LABELS[receive]}
       </button>
@@ -94,7 +98,10 @@ export function TradePanel({ state, dispatch }: TradePanelProps) {
       <button
         className="trade-panel__button trade-panel__import-button"
         disabled={!canImportFood(state)}
-        onClick={() => dispatch((s) => importFood(s))}
+        onClick={() => {
+          playConfirm();
+          dispatch((s) => importFood(s));
+        }}
       >
         <StatIcon type="food" size={22} />
         Import {FOOD_IMPORT_BATCH_SIZE} Food ({Math.round(getFoodImportCost(state))} {CURRENCY_SYMBOL})

@@ -26,6 +26,12 @@ export interface CountryStats {
 
 export type EventSeverity = "info" | "warning" | "danger";
 
+// How the game ended, for GameState.outcome — null while still playing.
+// "collapsed": stability hit zero (a coup/breakdown, not an election).
+// "voted-out": lost a general election to the rival party.
+// "victory": won enough elections in a row to cement outright rule.
+export type GameOutcome = "collapsed" | "voted-out" | "victory";
+
 export interface GameEvent {
   id: string;
   date: GameDate;
@@ -53,9 +59,14 @@ export interface MonthlyReport {
 
 export interface GameState {
   nationId: string; // chosen at the start screen; fixed for the rest of the game
+  partyId: string; // chosen right after the nation, on the same screen flow — see PartySelectScreen
+  electionsWon: number; // consecutive wins by construction: a single loss ends the game (see simulateDay.ts)
   date: GameDate;
   isPaused: boolean;
   speed: GameSpeed;
+  isGameOver: boolean;
+  outcome: GameOutcome | null;
+  gameOverReason: string | null;
   stats: CountryStats;
   resources: ResourceBundle; // wood/ore/grain/fish, produced by terrain, spent on building or traded
   taxRate: number; // 0..1

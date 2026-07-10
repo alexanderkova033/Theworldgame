@@ -4,6 +4,7 @@ import { canEnactLaw, enactLaw } from "../../application/actions";
 import type { GameState } from "../../domain/country/types";
 import { LAW_DEFINITIONS } from "../../domain/laws/lawData";
 import type { LawCategory, LawDefinition, LawEffects } from "../../domain/laws/types";
+import { playConfirm } from "../audio/sound";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
 interface LawsPanelProps {
@@ -99,6 +100,7 @@ export function LawsPanel({ state, dispatch }: LawsPanelProps) {
                         disabled={isLocked || !canEnactLaw(state, law.id)}
                         onClick={() => {
                           if (isArmed) {
+                            playConfirm();
                             dispatch((s) => enactLaw(s, law.id));
                             setArmedLawId(null);
                           } else {

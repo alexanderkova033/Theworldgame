@@ -1,7 +1,7 @@
 // Small pictorial glyphs for the top-bar tab buttons — same hand-drawn-shape
 // approach as StatIcon/ResourceIcon/BuildingIcon, so the tab row reads as
 // imagery rather than plain text labels.
-export type NavIconType = "economy" | "reports" | "laws" | "ventures";
+export type NavIconType = "economy" | "reports" | "laws" | "ventures" | "politics";
 
 interface NavIconProps {
   type: NavIconType;
@@ -69,6 +69,23 @@ function renderShape(type: NavIconType) {
           <polygon points="0,-5.5 1.6,0 0,1 -1.6,0" fill="#c2402f" />
           <polygon points="0,5.5 1.6,0 0,-1 -1.6,0" fill="#e6d9ab" />
           <circle cx={0} cy={0} r={1.1} fill="#c9a24a" />
+        </g>
+      );
+    case "politics":
+      // A ballot box: a slotted wooden box with a checked ballot peeking out.
+      return (
+        <g>
+          <path d="M-7,-2 L7,-2 L6,7 L-6,7 Z" fill="#5a4326" stroke="#2e2011" strokeWidth={0.7} />
+          <rect x={-7.5} y={-3.2} width={15} height={1.6} rx={0.6} fill="#3a2a15" stroke="#1c1409" strokeWidth={0.4} />
+          <rect x={-2.3} y={-6.5} width={4.6} height={4.6} fill="#e6d9ab" stroke="#93731f" strokeWidth={0.5} />
+          <polyline
+            points="-1.1,-4.3 -0.2,-3.3 1.4,-5.6"
+            fill="none"
+            stroke="#3f6b3f"
+            strokeWidth={0.7}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </g>
       );
     default:

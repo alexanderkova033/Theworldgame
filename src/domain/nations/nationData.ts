@@ -15,6 +15,7 @@ export const NATIONS: Nation[] = [
       "province-2-west", "province-2-east", // Marrow Coast
     ],
     blurb: "A young republic in the continent's heartland, balancing farmland and ambition.",
+    startingBonus: "Starts with an extra farm.",
   },
   {
     id: "caldenreich",
@@ -27,6 +28,7 @@ export const NATIONS: Nation[] = [
       "province-6-west", "province-6-east", // Duskhaven
     ],
     blurb: "A disciplined northern kingdom, proud of its schools and its steady administration.",
+    startingBonus: "Starts with higher stability.",
   },
   {
     id: "veldoria",
@@ -38,5 +40,6 @@ export const NATIONS: Nation[] = [
       "province-4-west", "province-4-east", // Brindlewood
     ],
     blurb: "A compact eastern power built on early industry — smaller, but sharp-edged.",
+    startingBonus: "+15% industry output.",
   },
 ];

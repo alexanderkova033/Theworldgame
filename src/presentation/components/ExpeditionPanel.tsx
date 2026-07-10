@@ -6,6 +6,7 @@ import { getIslandExpeditionData } from "../../domain/expeditions/expeditionData
 import { expeditionProgress } from "../../domain/expeditions/expeditionRules";
 import type { ExpeditionReward } from "../../domain/expeditions/types";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
+import { playConfirm } from "../audio/sound";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 
@@ -56,7 +57,7 @@ export function ExpeditionPanel({ state, selectedIslandId, dispatch }: Expeditio
 
         return (
           <div className={["expedition-panel__island-card", isFocused ? "is-focused" : ""].join(" ")} key={island.id}>
-            <div className="expedition-panel__icon">
+            <div className="expedition-panel__icon" aria-hidden="true">
               {isScouted && data ? (
                 <svg viewBox="-10 -10 20 20">
                   <RewardIcon reward={data.reward} />
@@ -84,7 +85,10 @@ export function ExpeditionPanel({ state, selectedIslandId, dispatch }: Expeditio
                   <p className="expedition-panel__hint">Uncharted. Chartering a venture there takes {EXPEDITION_DAYS} days.</p>
                   <button
                     disabled={!canSendExpedition(state, island.id)}
-                    onClick={() => dispatch((s) => sendExpedition(s, island.id))}
+                    onClick={() => {
+                      playConfirm();
+                      dispatch((s) => sendExpedition(s, island.id));
+                    }}
                   >
                     Charter Venture ({EXPEDITION_COST} {CURRENCY_SYMBOL})
                   </button>

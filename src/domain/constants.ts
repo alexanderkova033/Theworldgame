@@ -78,6 +78,12 @@ export const STABILITY_COLLAPSE_THRESHOLD = 15;
 // --- Random world events ---
 export const RANDOM_EVENT_INTERVAL_MONTHS = 6; // a random event fires every N in-game months
 
+// --- Politics: parties & elections ---
+export const ELECTION_INTERVAL_MONTHS = 24; // a general election is held every N in-game months
+export const ELECTION_WIN_THRESHOLD = 50; // popularity % needed to win an election
+export const ELECTIONS_TO_WIN_GAME = 3; // election wins needed for outright victory (a single loss ends the game, so these are inherently consecutive)
+export const ELECTION_WIN_STABILITY_BONUS = 5; // a mandate bump to stability on winning
+
 // --- Scouting expeditions (unclaimed islands) ---
 export const EXPEDITION_COST = 800;
 export const EXPEDITION_DAYS = 40;

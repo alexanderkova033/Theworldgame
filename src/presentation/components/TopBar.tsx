@@ -1,15 +1,18 @@
 import "./TopBar.css";
+import { useState, type CSSProperties } from "react";
 import { formatDate } from "../../domain/country/calendar";
 import type { CountryStats, GameDate, GameSpeed } from "../../domain/country/types";
 import type { ResourceBundle } from "../../domain/resources/types";
+import { isMuted, setMuted } from "../audio/sound";
 import { NavIcon, type NavIconType } from "./NavIcon";
 import { ResourceTicker } from "./ResourceTicker";
 
 const SPEEDS: GameSpeed[] = [1, 2, 3, 5];
 
-export type PanelKey = "economy" | "reports" | "laws" | "ventures";
+export type PanelKey = "politics" | "economy" | "reports" | "laws" | "ventures";
 
 const TABS: Array<{ key: PanelKey; label: string; icon: NavIconType }> = [
+  { key: "politics", label: "Politics", icon: "politics" },
   { key: "economy", label: "Economy", icon: "economy" },
   { key: "reports", label: "Reports", icon: "reports" },
   { key: "laws", label: "Laws", icon: "laws" },
@@ -43,14 +46,37 @@ function PauseIcon() {
   );
 }
 
+function SpeakerIcon({ muted }: { muted: boolean }) {
+  return (
+    <svg width={16} height={16} viewBox="-10 -10 20 20">
+      <polygon points="-8,-3 -3,-3 3,-9 3,9 -3,3 -8,3" fill="currentColor" />
+      {!muted && (
+        <g stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" fill="none">
+          <path d="M6,-3.5 Q9,0 6,3.5" />
+          <path d="M8,-6 Q13,0 8,6" opacity={0.7} />
+        </g>
+      )}
+      {muted && (
+        <g stroke="currentColor" strokeWidth={1.6} strokeLinecap="round">
+          <line x1={5.5} y1={-4.5} x2={12} y2={4.5} />
+          <line x1={12} y1={-4.5} x2={5.5} y2={4.5} />
+        </g>
+      )}
+    </svg>
+  );
+}
+
 interface TopBarProps {
   nationName: string;
+  partyName: string;
+  partyColor: string;
   date: GameDate;
   isPaused: boolean;
   speed: GameSpeed;
   stats: CountryStats;
   resources: ResourceBundle;
   activePanel: PanelKey | null;
+  reportsBadgeCount: number;
   onPause: () => void;
   onResume: () => void;
   onSetSpeed: (speed: GameSpeed) => void;
@@ -59,32 +85,55 @@ interface TopBarProps {
 
 export function TopBar({
   nationName,
+  partyName,
+  partyColor,
   date,
   isPaused,
   speed,
   stats,
   resources,
   activePanel,
+  reportsBadgeCount,
   onPause,
   onResume,
   onSetSpeed,
   onOpenPanel,
 }: TopBarProps) {
+  const [muted, setMutedState] = useState(() => isMuted());
+
   return (
     <header className="top-bar">
       <div className="top-bar__row top-bar__row--ticker">
-        <span className="top-bar__nation">{nationName}</span>
+        <span className="top-bar__nation">
+          {nationName}
+          <span className="top-bar__party" style={{ "--party-color": partyColor } as CSSProperties}>
+            {partyName}
+          </span>
+        </span>
 
         <ResourceTicker stats={stats} resources={resources} />
 
         <div className="top-bar__spacer" />
+
+        <button
+          className="top-bar__mute-button"
+          onClick={() => {
+            const next = !muted;
+            setMuted(next);
+            setMutedState(next);
+          }}
+          aria-label={muted ? "Unmute sound" : "Mute sound"}
+          aria-pressed={muted}
+        >
+          <SpeakerIcon muted={muted} />
+        </button>
 
         <span className="top-bar__date">
           <DateIcon />
           {formatDate(date)}
         </span>
 
-        <button className="top-bar__pause-button" onClick={isPaused ? onResume : onPause}>
+        <button className="top-bar__pause-button" onClick={isPaused ? onResume : onPause} title="Space">
           {isPaused ? <PlayIcon /> : <PauseIcon />}
           {isPaused ? "Resume" : "Pause"}
         </button>
@@ -108,8 +157,16 @@ export function TopBar({
             key={tab.key}
             className={`top-bar__tab ${activePanel === tab.key ? "is-active" : ""}`}
             onClick={() => onOpenPanel(tab.key)}
+            aria-label={tab.key === "reports" && reportsBadgeCount > 0 ? `${tab.label}, ${reportsBadgeCount} unread` : tab.label}
           >
-            <NavIcon type={tab.icon} />
+            <span className="top-bar__tab-icon">
+              <NavIcon type={tab.icon} />
+              {tab.key === "reports" && reportsBadgeCount > 0 && (
+                <span className="top-bar__tab-badge" aria-hidden="true">
+                  {reportsBadgeCount > 9 ? "9+" : reportsBadgeCount}
+                </span>
+              )}
+            </span>
             <span>{tab.label}</span>
           </button>
         ))}

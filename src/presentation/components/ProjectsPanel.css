@@ -61,6 +61,22 @@
 }
 
 .projects-panel__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem 0;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.projects-panel__empty svg {
+  width: 34px;
+  height: 34px;
+  opacity: 0.4;
+}
+
+.projects-panel__empty p {
+  margin: 0;
 }

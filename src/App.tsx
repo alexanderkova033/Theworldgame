@@ -2,15 +2,21 @@
 // app: it owns the live GameState (via useGameClock) and wires it into the
 // UI panels. It never computes simulation values itself.
 import "./App.css";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getNation } from "./domain/nations/nationRules";
 import { NATIONS } from "./domain/nations/nationData";
+import type { GameSpeed } from "./domain/country/types";
+import { getPartiesForNation, getParty } from "./domain/parties/partyRules";
+import { playDanger, playGameOver } from "./presentation/audio/sound";
 import { ActionsPanel } from "./presentation/components/ActionsPanel";
 import { EventLog } from "./presentation/components/EventLog";
 import { ExpeditionPanel } from "./presentation/components/ExpeditionPanel";
+import { GameEndScreen } from "./presentation/components/GameEndScreen";
 import { LawsPanel } from "./presentation/components/LawsPanel";
 import { MapPanel } from "./presentation/components/MapPanel";
 import { Modal } from "./presentation/components/Modal";
+import { PartySelectScreen } from "./presentation/components/PartySelectScreen";
+import { PoliticsPanel } from "./presentation/components/PoliticsPanel";
 import { ProjectsPanel } from "./presentation/components/ProjectsPanel";
 import { ReportsPanel } from "./presentation/components/ReportsPanel";
 import { StartScreen } from "./presentation/components/StartScreen";
@@ -18,8 +24,15 @@ import { TopBar, type PanelKey } from "./presentation/components/TopBar";
 import { TradePanel } from "./presentation/components/TradePanel";
 import { useGameClock } from "./presentation/hooks/useGameClock";
 
+const SPEED_KEYS: Record<string, GameSpeed> = { "1": 1, "2": 2, "3": 3, "5": 5 };
+
 function App() {
-  const { state, startGame, pause, resume, setSpeed, dispatch } = useGameClock();
+  const { state, savedGame, startGame, continueGame, resetGame, pause, resume, setSpeed, dispatch } = useGameClock();
+
+  // Nation picked on the Start Screen but not yet confirmed with a party —
+  // the game doesn't actually start (no GameState exists) until a party is
+  // chosen too, on the follow-up PartySelectScreen.
+  const [pendingNationId, setPendingNationId] = useState<string | null>(null);
 
   // Which province new construction goes into. This is a UI selection, not
   // simulation truth — it never touches GameState directly.
@@ -35,37 +48,112 @@ function App() {
   // see Modal.tsx and TopBar.tsx.
   const [openModal, setOpenModal] = useState<PanelKey | null>(null);
 
-  // No game yet: show the start screen. Picking a nation here is permanent —
-  // there is no "change nation" control anywhere in the game UI below.
+  // How many of state.events the player has actually seen — everything past
+  // that count shows up as an unread badge on the Reports tab, since the
+  // event log now lives behind a closed-by-default panel instead of an
+  // always-visible sidebar.
+  const [seenEventCount, setSeenEventCount] = useState(0);
+
+  // Keyboard shortcuts: Space toggles pause, 1/2/3/5 set speed. Scoped to
+  // "nothing else has focus" so they never double-fire alongside a focused
+  // button's own Space/Enter handling.
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (!state || state.isGameOver || e.target !== document.body) return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        if (state.isPaused) resume();
+        else pause();
+      } else if (e.key in SPEED_KEYS) {
+        setSpeed(SPEED_KEYS[e.key]);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [state, pause, resume, setSpeed]);
+
+  // A danger-severity event just landed in the log — play an alert, but no
+  // more than once every few seconds, since "stability critically low" can
+  // repeat daily while it stays that way (see simulateDay.ts) and would
+  // otherwise turn into an alarm siren at high game speed.
+  const lastEventIdRef = useRef<string | null>(null);
+  const lastDangerSoundAt = useRef(0);
+  useEffect(() => {
+    if (!state || state.events.length === 0) return;
+    const newest = state.events[0];
+    if (newest.id === lastEventIdRef.current) return;
+    lastEventIdRef.current = newest.id;
+    if (newest.severity === "danger") {
+      const now = Date.now();
+      if (now - lastDangerSoundAt.current > 4000) {
+        playDanger();
+        lastDangerSoundAt.current = now;
+      }
+    }
+  }, [state]);
+
+  // The reign just ended — a distinct sting, once.
+  const wasGameOver = useRef(false);
+  useEffect(() => {
+    if (state?.isGameOver && !wasGameOver.current) playGameOver();
+    wasGameOver.current = state?.isGameOver ?? false;
+  }, [state?.isGameOver]);
+
+  // No game yet: nation, then party, then the game itself starts. Both
+  // choices are permanent — there is no "change nation/party" control
+  // anywhere in the game UI below.
   if (!state) {
+    if (!pendingNationId) {
+      return (
+        <StartScreen nations={NATIONS} savedGame={savedGame} onContinue={continueGame} onSelectNation={setPendingNationId} />
+      );
+    }
+
+    const pendingNation = getNation(pendingNationId);
     return (
-      <StartScreen
-        nations={NATIONS}
-        onSelectNation={(nationId) => {
-          startGame(nationId);
-          setSelectedProvinceId(getNation(nationId).capitalProvinceId);
+      <PartySelectScreen
+        nation={pendingNation}
+        parties={getPartiesForNation(pendingNationId)}
+        onBack={() => setPendingNationId(null)}
+        onSelectParty={(partyId) => {
+          startGame(pendingNationId, partyId);
+          setSelectedProvinceId(pendingNation.capitalProvinceId);
         }}
       />
     );
   }
 
+  if (state.isGameOver) {
+    return <GameEndScreen state={state} onNewGame={resetGame} />;
+  }
+
   const nation = getNation(state.nationId);
+  const party = getParty(state.partyId);
   const currentProvinceId = selectedProvinceId ?? nation.capitalProvinceId;
+  const unseenEventCount = Math.max(0, state.events.length - seenEventCount);
+
+  function openPanel(panel: PanelKey) {
+    setOpenModal((prev) => (prev === panel ? null : panel));
+    if (panel === "reports" && state) setSeenEventCount(state.events.length);
+  }
 
   return (
     <div className="game-layout">
       <TopBar
         nationName={nation.name}
+        partyName={party.name}
+        partyColor={party.color}
         date={state.date}
         isPaused={state.isPaused}
         speed={state.speed}
         stats={state.stats}
         resources={state.resources}
         activePanel={openModal}
+        reportsBadgeCount={unseenEventCount}
         onPause={pause}
         onResume={resume}
         onSetSpeed={setSpeed}
-        onOpenPanel={(panel) => setOpenModal(panel)}
+        onOpenPanel={openPanel}
       />
 
       <main className="game-layout__main">
@@ -86,6 +174,12 @@ function App() {
           />
         </div>
       </main>
+
+      {openModal === "politics" && (
+        <Modal title="Politics" onClose={() => setOpenModal(null)}>
+          <PoliticsPanel state={state} />
+        </Modal>
+      )}
 
       {openModal === "economy" && (
         <Modal title="Economy" onClose={() => setOpenModal(null)} wide>

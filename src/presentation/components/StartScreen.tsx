@@ -1,16 +1,21 @@
 import "./StartScreen.css";
 import type { CSSProperties } from "react";
-import { getNationForProvince } from "../../domain/nations/nationRules";
+import { formatDate } from "../../domain/country/calendar";
+import { getNation, getNationForProvince } from "../../domain/nations/nationRules";
 import type { Nation } from "../../domain/nations/types";
+import { getParty } from "../../domain/parties/partyRules";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
+import type { SavedGamePreview } from "../hooks/useGameClock";
 import { cogPoints, starPoints } from "./iconShapes";
 
 interface StartScreenProps {
   nations: Nation[];
+  savedGame: SavedGamePreview | null;
+  onContinue: () => void;
   onSelectNation: (nationId: string) => void;
 }
 
-export function StartScreen({ nations, onSelectNation }: StartScreenProps) {
+export function StartScreen({ nations, savedGame, onContinue, onSelectNation }: StartScreenProps) {
   const { width, height, coastPath, provinces, otherLandmasses } = MAP_GEOMETRY;
 
   return (
@@ -22,6 +27,16 @@ export function StartScreen({ nations, onSelectNation }: StartScreenProps) {
           The continent enters a new century. Choose the nation you'll carry forward — this choice
           cannot be undone once the clock starts.
         </p>
+
+        {savedGame && (
+          <div className="start-screen__continue">
+            <button className="start-screen__continue-button" onClick={onContinue}>
+              Continue as the {getParty(savedGame.partyId).name} of {getNation(savedGame.nationId).name} —{" "}
+              {formatDate(savedGame.date)}
+            </button>
+            <p className="start-screen__continue-hint">Picking a nation below starts a new game and overwrites this save.</p>
+          </div>
+        )}
 
         <svg viewBox={`0 0 ${width} ${height}`} className="start-screen__map" aria-hidden="true">
           {otherLandmasses.map((land) => (
@@ -57,6 +72,7 @@ export function StartScreen({ nations, onSelectNation }: StartScreenProps) {
               </span>
               <span className="nation-card__name">{nation.name}</span>
               <span className="nation-card__blurb">{nation.blurb}</span>
+              <span className="nation-card__bonus">{nation.startingBonus}</span>
               <span className="nation-card__cta">Play as {nation.name}</span>
             </button>
           ))}

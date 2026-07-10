@@ -1,0 +1,131 @@
+.politics-panel__meter {
+  position: relative;
+  display: flex;
+  height: 1.4rem;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--panel-border);
+  background: var(--bg-deep);
+  margin-bottom: 0.5rem;
+}
+
+.politics-panel__meter-fill {
+  height: 100%;
+  background: var(--party-color);
+  transition: width 0.3s ease;
+}
+
+.politics-panel__meter-fill--you {
+  border-right: 2px solid rgba(0, 0, 0, 0.4);
+}
+
+.politics-panel__meter-threshold {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--text);
+  opacity: 0.6;
+}
+
+.politics-panel__meter-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 0.9rem;
+}
+
+.politics-panel__status {
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.5rem;
+  border-radius: 6px;
+  margin: 0 0 1.1rem;
+}
+
+.politics-panel__status.is-winning {
+  color: var(--success);
+  background: rgba(111, 174, 124, 0.14);
+}
+
+.politics-panel__status.is-losing {
+  color: var(--danger);
+  background: rgba(194, 64, 47, 0.14);
+}
+
+.politics-panel__cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.1rem;
+}
+
+.politics-panel__card {
+  border: 1px solid var(--party-color);
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  background: rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.politics-panel__card-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.politics-panel__card-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--party-color);
+}
+
+.politics-panel__card-ideology {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+
+.politics-panel__card-description {
+  font-size: 0.78rem;
+  color: var(--text);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.politics-panel__progress {
+  text-align: center;
+}
+
+.politics-panel__progress-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.politics-panel__pips {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.politics-panel__pip {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 2px solid var(--party-color);
+  background: transparent;
+}
+
+.politics-panel__pip.is-won {
+  background: var(--party-color);
+  box-shadow: 0 0 6px var(--party-color);
+}

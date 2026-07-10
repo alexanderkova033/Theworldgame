@@ -10,32 +10,49 @@ import type { PlacedBuilding } from "../domain/provinces/types";
 
 const STARTING_DATE = { year: 1, month: 1, day: 1 };
 
-function buildStartingBuildings(nationId: string): PlacedBuilding[] {
+// One-time starting-stat nudges that back up each nation's Nation.startingBonus
+// blurb (nationData.ts) — keep the two in sync when tuning. Veldoria's bonus
+// is an ongoing multiplier instead; see nationEffects.ts.
+const EXTRA_STARTING_FARM_NATIONS = ["astravia"]; // "balancing farmland and ambition"
+const STARTING_STABILITY_BONUS: Record<string, number> = { caldenreich: 10 }; // "steady administration"
+
+function buildStartingBuildings(nationId: string, farmCount: number): PlacedBuilding[] {
   const nation = getNation(nationId);
   const capital = nation.capitalProvinceId;
   const otherProvinces = nation.provinceIds.filter((id) => id !== capital);
   const secondProvince = otherProvinces[0] ?? capital;
   const thirdProvince = otherProvinces[1] ?? secondProvince;
+  const fourthProvince = otherProvinces[2] ?? thirdProvince;
 
-  return [
+  const buildings: PlacedBuilding[] = [
     { id: "starting-farm-1", provinceId: capital, type: "farm" },
     { id: "starting-road-1", provinceId: capital, type: "road" },
     { id: "starting-farm-2", provinceId: secondProvince, type: "farm" },
     { id: "starting-factory-1", provinceId: thirdProvince, type: "factory" },
   ];
+  if (farmCount >= 3) {
+    buildings.push({ id: "starting-farm-3", provinceId: fourthProvince, type: "farm" });
+  }
+  return buildings;
 }
 
-export function startNewGame(nationId: string): GameState {
+export function startNewGame(nationId: string, partyId: string): GameState {
   const nation = getNation(nationId);
-  const farmCount = 2;
+  const farmCount = EXTRA_STARTING_FARM_NATIONS.includes(nationId) ? 3 : 2;
   const factoryCount = 1;
   const roadCount = 1;
+  const stability = 60 + (STARTING_STABILITY_BONUS[nationId] ?? 0);
 
   return {
     nationId,
+    partyId,
+    electionsWon: 0,
     date: STARTING_DATE,
     isPaused: true,
     speed: 1,
+    isGameOver: false,
+    outcome: null,
+    gameOverReason: null,
     taxRate: 0.15,
 
     farmCount,
@@ -49,7 +66,7 @@ export function startNewGame(nationId: string): GameState {
       population: 10000,
       food: 8000,
       industry: calculateIndustryOutput(factoryCount, 0),
-      stability: 60,
+      stability,
       armyStrength: 0,
       researchPoints: 0,
       popularity: 55,
@@ -62,7 +79,7 @@ export function startNewGame(nationId: string): GameState {
     },
 
     projects: [],
-    placedBuildings: buildStartingBuildings(nationId),
+    placedBuildings: buildStartingBuildings(nationId, farmCount),
     enactedLawIds: [],
     expeditions: [],
     scoutedIslandIds: [],

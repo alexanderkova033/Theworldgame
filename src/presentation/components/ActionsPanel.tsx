@@ -21,6 +21,7 @@ import {
 import type { ProjectType } from "../../domain/construction/types";
 import type { GameState } from "../../domain/country/types";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
+import { playConfirm } from "../audio/sound";
 import { BuildingIcon } from "./BuildingIcon";
 
 interface ActionsPanelProps {
@@ -85,7 +86,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
         <h3>Build</h3>
         {buildItems.map((item) => (
           <div className={`build-card ${!item.canBuild ? "is-disabled" : ""}`} key={item.type}>
-            <div className="build-card__icon">
+            <div className="build-card__icon" aria-hidden="true">
               <svg viewBox="-12 -16 24 24">
                 <BuildingIcon type={item.type} x={0} y={0} size={7} />
               </svg>
@@ -99,7 +100,14 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
               </div>
               <div className="build-card__cost">{item.cost}</div>
               <p className="build-card__description">{item.description}</p>
-              <button className="build-card__button" disabled={!item.canBuild} onClick={item.onBuild}>
+              <button
+                className="build-card__button"
+                disabled={!item.canBuild}
+                onClick={() => {
+                  playConfirm();
+                  item.onBuild();
+                }}
+              >
                 Build {item.name}
               </button>
             </div>

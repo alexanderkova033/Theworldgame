@@ -32,19 +32,25 @@ export function ResourceTicker({ stats, resources }: ResourceTickerProps) {
     ["food", "Food", formatNumber(stats.food)],
     ["industry", "Industry", formatNumber(stats.industry)],
     ["stability", "Stability", `${formatNumber(stats.stability)}/100`],
+    ["popularity", "Popularity", `${formatNumber(stats.popularity)}%`],
   ];
 
   return (
     <div className="resource-ticker">
       {statItems.map(([icon, label, value]) => (
-        <div className="resource-ticker__chip" key={label} title={label}>
+        <div className="resource-ticker__chip" key={label} title={label} aria-label={`${label}: ${value}`}>
           <StatIcon type={icon} size={20} />
           <span>{value}</span>
         </div>
       ))}
       <div className="resource-ticker__divider" />
       {RESOURCE_TYPES.map((type) => (
-        <div className="resource-ticker__chip" key={type} title={RESOURCE_LABELS[type]}>
+        <div
+          className="resource-ticker__chip"
+          key={type}
+          title={RESOURCE_LABELS[type]}
+          aria-label={`${RESOURCE_LABELS[type]}: ${formatNumber(resources[type])}`}
+        >
           <svg width={20} height={20} viewBox="-10 -10 20 20">
             <ResourceIcon type={type} size={8} />
           </svg>

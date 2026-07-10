@@ -12,7 +12,9 @@ import { advanceExpedition, isExpeditionComplete } from "../domain/expeditions/e
 import { updateFood } from "../domain/food/foodRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getActiveLawEffects } from "../domain/laws/lawsRules";
+import { getNationEffects } from "../domain/nations/nationEffects";
 import { getNation } from "../domain/nations/nationRules";
+import { getParty } from "../domain/parties/partyRules";
 import { updatePopularity } from "../domain/politics/politicsRules";
 import { updatePopulation } from "../domain/population/populationRules";
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
@@ -24,11 +26,19 @@ import { isCollapseRisk, updateStability } from "../domain/stability/stabilityRu
 import { applyExpeditionCompletion } from "./applyExpeditionCompletion";
 import { applyProjectCompletion } from "./applyProjectCompletion";
 import { generateMonthlyReport } from "./generateMonthlyReport";
-import { MAX_EVENT_LOG_LENGTH, RANDOM_EVENT_INTERVAL_MONTHS } from "../domain/constants";
+import {
+  ELECTIONS_TO_WIN_GAME,
+  ELECTION_INTERVAL_MONTHS,
+  ELECTION_WIN_STABILITY_BONUS,
+  ELECTION_WIN_THRESHOLD,
+  MAX_EVENT_LOG_LENGTH,
+  RANDOM_EVENT_INTERVAL_MONTHS,
+} from "../domain/constants";
 
 export function simulateDay(state: GameState): GameState {
   const efficiencyMultiplier = calculateEfficiencyMultiplier(state.roadCount);
   const lawEffects = getActiveLawEffects(state.enactedLawIds);
+  const nationEffects = getNationEffects(state.nationId);
   const events: GameEvent[] = [...state.events];
 
   // 1. Advance every active project; apply completed ones.
@@ -73,7 +83,11 @@ export function simulateDay(state: GameState): GameState {
   const resources = addResources(working.resources, calculateDailyProduction(ownedTerrains));
 
   // 3. Economy: income and expenses.
-  const income = calculateDailyIncome(working.stats, working.taxRate, efficiencyMultiplier * lawEffects.incomeMultiplier);
+  const income = calculateDailyIncome(
+    working.stats,
+    working.taxRate,
+    efficiencyMultiplier * lawEffects.incomeMultiplier * nationEffects.incomeMultiplier,
+  );
   const expenses = calculateDailyExpenses(working.stats);
   const treasury = working.stats.treasury + income - expenses;
 
@@ -89,7 +103,8 @@ export function simulateDay(state: GameState): GameState {
   }
 
   // 5. Industry output (derived from factories + research bonus + laws).
-  const industry = calculateIndustryOutput(working.factoryCount, working.researchLevel) * lawEffects.industryMultiplier;
+  const industry =
+    calculateIndustryOutput(working.factoryCount, working.researchLevel) * lawEffects.industryMultiplier * nationEffects.industryMultiplier;
 
   // 6. Research points accumulate passively.
   const researchPoints = working.stats.researchPoints + calculateDailyResearch(working.educationLevel);
@@ -102,6 +117,24 @@ export function simulateDay(state: GameState): GameState {
       id: generateId("event"),
       date: state.date,
       message: "Stability is critically low — the government risks collapse!",
+      severity: "danger",
+    });
+  }
+
+  // 7b. Stability bottoming out at zero is a hard loss, not just a risk
+  // warning — the "collapse risk" event above can repeat every day while
+  // things are merely bad; this only fires once, when they've fully failed.
+  let isGameOver = working.isGameOver;
+  let outcome = working.outcome;
+  let gameOverReason = working.gameOverReason;
+  if (!isGameOver && stability <= 0) {
+    isGameOver = true;
+    outcome = "collapsed";
+    gameOverReason = "Stability collapsed entirely. Order broke down, and the government fell.";
+    events.unshift({
+      id: generateId("event"),
+      date: state.date,
+      message: "The government has collapsed. Your reign ends here.",
       severity: "danger",
     });
   }
@@ -158,9 +191,58 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
+  // 13. A general election, roughly every ELECTION_INTERVAL_MONTHS — the
+  // actual win/lose condition of the game. Below the threshold, the rival
+  // party takes power and the game ends; at or above it, the player's party
+  // keeps governing (with a small mandate bump), and enough wins in a row
+  // is outright victory. Skipped once the game has already ended some other
+  // way (e.g. a stability collapse on the very same day).
+  let electionsWon = working.electionsWon;
+  if (!isGameOver && isEveryNMonths(date, ELECTION_INTERVAL_MONTHS)) {
+    const party = getParty(working.partyId);
+    const popularity = finalStats.popularity;
+    if (popularity >= ELECTION_WIN_THRESHOLD) {
+      electionsWon += 1;
+      finalStats = { ...finalStats, stability: Math.min(100, finalStats.stability + ELECTION_WIN_STABILITY_BONUS) };
+      if (electionsWon >= ELECTIONS_TO_WIN_GAME) {
+        isGameOver = true;
+        outcome = "victory";
+        gameOverReason = `${party.name} has won the people's trust for good — a mandate no rival can challenge.`;
+        events.unshift({
+          id: generateId("event"),
+          date,
+          message: `${party.name} wins the general election outright — ${electionsWon} elections running. Victory!`,
+          severity: "info",
+        });
+      } else {
+        events.unshift({
+          id: generateId("event"),
+          date,
+          message: `${party.name} wins the general election with ${Math.round(popularity)}% support (${electionsWon}/${ELECTIONS_TO_WIN_GAME} for outright victory).`,
+          severity: "info",
+        });
+      }
+    } else {
+      isGameOver = true;
+      outcome = "voted-out";
+      gameOverReason = `${party.name} lost the general election with only ${Math.round(popularity)}% support. The opposition takes power.`;
+      events.unshift({
+        id: generateId("event"),
+        date,
+        message: `${party.name} loses the general election. You are voted out of office.`,
+        severity: "danger",
+      });
+    }
+  }
+
   return {
     ...working,
     date,
+    isPaused: isGameOver ? true : working.isPaused,
+    isGameOver,
+    outcome,
+    gameOverReason,
+    electionsWon,
     stats: finalStats,
     resources: finalResources,
     events: events.slice(0, MAX_EVENT_LOG_LENGTH),

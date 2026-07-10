@@ -36,6 +36,55 @@
 }
 
 .reports-panel__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem 0;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.reports-panel__empty svg {
+  opacity: 0.4;
+}
+
+.reports-panel__empty p {
+  margin: 0;
+}
+
+.reports-panel__trends {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.reports-panel__sparkline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.reports-panel__sparkline-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.reports-panel__sparkline-baseline {
+  stroke: var(--panel-border);
+  stroke-width: 1;
+}
+
+.reports-panel__sparkline-bar--gain {
+  fill: var(--success);
+}
+
+.reports-panel__sparkline-bar--loss {
+  fill: var(--danger);
 }

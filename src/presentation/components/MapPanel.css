@@ -242,3 +242,42 @@
   display: inline-block;
   flex-shrink: 0;
 }
+
+.map-panel__tooltip {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  min-width: 11rem;
+  max-width: 15rem;
+  background: linear-gradient(180deg, var(--wood-light), var(--panel-bg));
+  border: 2px solid var(--panel-border);
+  border-radius: 6px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(240, 200, 105, 0.18);
+  padding: 0.55rem 0.7rem;
+}
+
+.map-panel__tooltip-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--accent-active);
+  margin-bottom: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.map-panel__tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text);
+  padding: 0.15rem 0;
+}
+
+.map-panel__tooltip-row svg {
+  flex-shrink: 0;
+}
+
+.map-panel__tooltip-empty {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
