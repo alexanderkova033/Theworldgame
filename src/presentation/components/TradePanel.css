@@ -28,6 +28,7 @@
 }
 
 .trade-panel__picker-option {
+  position: relative;
   width: 2.6rem;
   height: 2.6rem;
   padding: 0;
@@ -41,6 +42,26 @@
   width: 26px;
   height: 26px;
   display: block;
+}
+
+/* A small dot marking a resource as currently dear (high demand) or cheap
+   (surplus) under the dynamic market — see tradeRules.ts. */
+.trade-panel__demand-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--bg-deep);
+}
+
+.trade-panel__demand-dot.is-high {
+  background: var(--danger);
+}
+
+.trade-panel__demand-dot.is-low {
+  background: var(--success);
 }
 
 .trade-panel__arrow {

@@ -21,15 +21,23 @@ import { PartySelectScreen } from "./presentation/components/PartySelectScreen";
 import { PoliticsPanel } from "./presentation/components/PoliticsPanel";
 import { ProjectsPanel } from "./presentation/components/ProjectsPanel";
 import { ReportsPanel } from "./presentation/components/ReportsPanel";
+import { ResearchPanel } from "./presentation/components/ResearchPanel";
 import { StartScreen } from "./presentation/components/StartScreen";
 import { TopBar, type PanelKey } from "./presentation/components/TopBar";
 import { TradePanel } from "./presentation/components/TradePanel";
+import { TUTORIAL_STEPS, TutorialOverlay } from "./presentation/components/TutorialOverlay";
 import { useGameClock } from "./presentation/hooks/useGameClock";
 
 const SPEED_KEYS: Record<string, GameSpeed> = { "1": 1, "2": 2, "3": 3, "5": 5 };
 
 function App() {
-  const { state, savedGame, startGame, continueGame, resetGame, pause, resume, setSpeed, dispatch } = useGameClock();
+  const { state, saveSlots, startGame, continueGame, resetGame, deleteSlot, renameSlot, pause, resume, setSpeed, dispatch } =
+    useGameClock();
+
+  // Which save slot a new game will be written into — chosen on the Start
+  // Screen before nation/party, so overwriting an occupied slot is always an
+  // explicit, labeled choice (see StartScreen's SaveSlotCard).
+  const [pendingSlotId, setPendingSlotId] = useState<number | null>(null);
 
   // Nation picked on the Start Screen but not yet confirmed with a party —
   // the game doesn't actually start (no GameState exists) until a party is
@@ -107,13 +115,36 @@ function App() {
     if (state?.pendingDecisionId) setOpenModal(null);
   }, [state?.pendingDecisionId]);
 
-  // No game yet: nation, then party, then the game itself starts. Both
-  // choices are permanent — there is no "change nation/party" control
-  // anywhere in the game UI below.
+  // The first-run spotlight tour (see TutorialOverlay.tsx) drives which
+  // panel is open for any step that targets a tab — so e.g. the "Laws" step
+  // actually shows the Laws panel behind the spotlight, not just points at
+  // a closed tab. A decision popup takes priority: the tour never fights it
+  // for the screen (see the guard on TutorialOverlay's `step` prop below).
+  useEffect(() => {
+    const tutorialStep = state?.tutorialStep;
+    if (typeof tutorialStep !== "number") return;
+    const step = TUTORIAL_STEPS[tutorialStep];
+    if (!step) return;
+    setOpenModal(step.panel);
+  }, [state?.tutorialStep]);
+
+  // No game yet: pick a save slot, then a nation, then a party, then the
+  // game itself starts. Nation/party are permanent — there is no
+  // "change nation/party" control anywhere in the game UI below.
   if (!state) {
     if (!pendingNationId) {
       return (
-        <StartScreen nations={NATIONS} savedGame={savedGame} onContinue={continueGame} onSelectNation={setPendingNationId} />
+        <StartScreen
+          nations={NATIONS}
+          saveSlots={saveSlots}
+          pendingSlotId={pendingSlotId}
+          onSelectSlot={setPendingSlotId}
+          onBackToSlots={() => setPendingSlotId(null)}
+          onContinueSlot={continueGame}
+          onRenameSlot={renameSlot}
+          onDeleteSlot={deleteSlot}
+          onSelectNation={setPendingNationId}
+        />
       );
     }
 
@@ -124,7 +155,7 @@ function App() {
         parties={getPartiesForNation(pendingNationId)}
         onBack={() => setPendingNationId(null)}
         onSelectParty={(partyId) => {
-          startGame(pendingNationId, partyId);
+          startGame(pendingNationId, partyId, pendingSlotId ?? 0);
           setSelectedProvinceId(pendingNation.capitalProvinceId);
         }}
       />
@@ -132,7 +163,16 @@ function App() {
   }
 
   if (state.isGameOver) {
-    return <GameEndScreen state={state} onNewGame={resetGame} />;
+    return (
+      <GameEndScreen
+        state={state}
+        onNewGame={() => {
+          resetGame();
+          setPendingNationId(null);
+          setPendingSlotId(null);
+        }}
+      />
+    );
   }
 
   const nation = getNation(state.nationId);
@@ -168,10 +208,11 @@ function App() {
         onResume={resume}
         onSetSpeed={setSpeed}
         onOpenPanel={openPanel}
+        onReplayTutorial={() => dispatch((s) => ({ ...s, tutorialStep: 0 }))}
       />
 
       <main className="game-layout__main">
-        <div className="game-layout__map-stage">
+        <div className="game-layout__map-stage" data-tutorial="map">
           <MapPanel
             nation={nation}
             placedBuildings={state.placedBuildings}
@@ -222,6 +263,12 @@ function App() {
         </Modal>
       )}
 
+      {openModal === "research" && (
+        <Modal title="Research" onClose={() => setOpenModal(null)} wide>
+          <ResearchPanel state={state} dispatch={dispatch} />
+        </Modal>
+      )}
+
       {openModal === "ventures" && (
         <Modal title="Ventures" onClose={() => setOpenModal(null)}>
           <ExpeditionPanel state={state} selectedIslandId={selectedIslandId} dispatch={dispatch} />
@@ -237,6 +284,15 @@ function App() {
         onDismiss={() => {
           dispatch(dismissDecision);
           resume();
+        }}
+      />
+
+      <TutorialOverlay
+        step={state.pendingDecisionId ? null : state.tutorialStep}
+        onAdvance={(nextStep) => dispatch((s) => ({ ...s, tutorialStep: nextStep }))}
+        onSkip={() => {
+          dispatch((s) => ({ ...s, tutorialStep: null }));
+          setOpenModal(null);
         }}
       />
     </div>

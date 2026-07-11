@@ -27,6 +27,12 @@ export const BASE_TRADE_RATE = 4; // units given per unit received, without a po
 export const PORT_TRADE_RATE = 2; // units given per unit received, with a coastal province
 export const TRADE_BATCH_SIZE = 5; // units received per trade click (avoids one-at-a-time clicking)
 
+// --- Dynamic market (see domain/resources/tradeRules.ts) ---
+export const DEMAND_CAP = 5; // demand index per resource is clamped to +/- this
+export const DEMAND_PRICE_SENSITIVITY = 0.08; // price swing per point of demand index (at the cap: +/-40%)
+export const DEMAND_STEP = 0.4; // demand index moved per trade (give cheapens, receive dearens)
+export const DEMAND_DECAY_PER_DAY = 0.03; // fraction of the demand index that reverts toward 0 each day
+
 // --- Industry ---
 export const INDUSTRY_PER_FACTORY = 5;
 export const INCOME_PER_INDUSTRY = 1.5;
@@ -52,6 +58,17 @@ export const RESEARCH_PROJECT_COST = 800;
 export const RESEARCH_PROJECT_DAYS = 150;
 export const RESEARCH_POINTS_REQUIRED = 50; // accumulated research points needed to start a research project
 export const RESEARCH_INDUSTRY_BONUS = 0.1; // +10% industry output per completed research project
+
+// --- Research tree (see domain/research) ---
+export const FAILED_RESEARCH_VOTE_POPULARITY_PENALTY = 2; // smaller than a failed law vote — a research setback is less politically charged
+export const EDUCATION_PASS_CHANCE_PER_LEVEL = 0.03; // +3% research pass chance per education level...
+export const EDUCATION_PASS_CHANCE_CAP = 0.2; // ...capped at +20%
+
+// --- Rival party stances (see domain/parties/rivalRules.ts) ---
+export const RIVAL_OPPOSE_PASS_CHANCE_PENALTY = 0.08; // a law/research vote the rival opposes is harder to pass
+export const RIVAL_SUPPORT_PASS_CHANCE_BONUS = 0.04; // ...and easier if the rival happens to agree
+export const RIVAL_CAMPAIGN_CHANCE_PER_MONTH = 0.3; // rolled on the first day of every month, alongside decisions
+export const RIVAL_CAMPAIGN_POPULARITY_SWING = 4; // base popularity swing from a rival campaign move
 
 // --- Army ---
 export const SOLDIER_RECRUIT_COST = 200;

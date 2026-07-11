@@ -36,7 +36,7 @@ export function ResourceTicker({ stats, resources }: ResourceTickerProps) {
   ];
 
   return (
-    <div className="resource-ticker">
+    <div className="resource-ticker" data-tutorial="ticker">
       {statItems.map(([icon, label, value]) => (
         <div className="resource-ticker__chip" key={label} title={label} aria-label={`${label}: ${value}`}>
           <StatIcon type={icon} size={20} />

@@ -29,6 +29,12 @@
   --font-display: "Cinzel", "Playfair Display", Georgia, "Times New Roman", serif;
   --font-body: system-ui, "Segoe UI", Roboto, sans-serif;
 
+  /* TopBar's rendered height (ticker row + tabs row), with a little slack —
+     Modal.css uses this so a tall panel's header can never end up rendered
+     underneath the top bar (which deliberately sits above Modal's overlay
+     in z-index, so its tabs stay clickable while a panel is open). */
+  --top-bar-height: 8.9rem;
+
   font-family: var(--font-body);
   line-height: 1.4;
 }

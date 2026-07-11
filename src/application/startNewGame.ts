@@ -7,6 +7,7 @@ import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getNation } from "../domain/nations/nationRules";
 import type { GameState } from "../domain/country/types";
 import type { PlacedBuilding } from "../domain/provinces/types";
+import { emptyResourceBundle } from "../domain/resources/resourceRules";
 
 const STARTING_DATE = { year: 1, month: 1, day: 1 };
 
@@ -85,6 +86,8 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     projects: [],
     placedBuildings: buildStartingBuildings(nationId, farmCount),
     enactedLawIds: [],
+    enactedResearchIds: [],
+    resourceDemand: emptyResourceBundle(),
     expeditions: [],
     scoutedIslandIds: [],
     events: [
@@ -99,5 +102,6 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     history: [],
     pendingDecisionId: null,
     decisionHistory: [],
+    tutorialStep: 0,
   };
 }

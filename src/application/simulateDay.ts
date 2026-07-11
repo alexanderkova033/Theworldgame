@@ -20,13 +20,15 @@ import { updatePopularity } from "../domain/politics/politicsRules";
 import { updatePopulation } from "../domain/population/populationRules";
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
 import { applyRandomEventEffect, pickRandomEvent } from "../domain/randomEvents/randomEventRules";
-import { calculateDailyResearch } from "../domain/research/researchRules";
+import { getActiveResearchEffects, calculateDailyResearch } from "../domain/research/researchRules";
 import { addResources, calculateDailyProduction } from "../domain/resources/resourceRules";
+import { decayDemand } from "../domain/resources/tradeRules";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
 import { isCollapseRisk, updateStability } from "../domain/stability/stabilityRules";
 import { applyExpeditionCompletion } from "./applyExpeditionCompletion";
 import { applyProjectCompletion } from "./applyProjectCompletion";
 import { generateMonthlyReport } from "./generateMonthlyReport";
+import { pickRivalCampaignMove } from "./rivalCampaignMove";
 import {
   DECISION_CHANCE_PER_MONTH,
   ELECTIONS_TO_WIN_GAME,
@@ -35,11 +37,13 @@ import {
   ELECTION_WIN_THRESHOLD,
   MAX_EVENT_LOG_LENGTH,
   RANDOM_EVENT_INTERVAL_MONTHS,
+  RIVAL_CAMPAIGN_CHANCE_PER_MONTH,
 } from "../domain/constants";
 
 export function simulateDay(state: GameState): GameState {
   const efficiencyMultiplier = calculateEfficiencyMultiplier(state.roadCount);
   const lawEffects = getActiveLawEffects(state.enactedLawIds);
+  const researchEffects = getActiveResearchEffects(state.enactedResearchIds);
   const nationEffects = getNationEffects(state.nationId);
   const events: GameEvent[] = [...state.events];
 
@@ -126,12 +130,13 @@ export function simulateDay(state: GameState): GameState {
     (provinceId) => MAP_GEOMETRY.provinces.find((p) => p.id === provinceId)!.terrain,
   );
   const resources = addResources(working.resources, calculateDailyProduction(ownedTerrains));
+  const resourceDemand = decayDemand(working.resourceDemand);
 
   // 3. Economy: income and expenses.
   const income = calculateDailyIncome(
     working.stats,
     working.taxRate,
-    efficiencyMultiplier * lawEffects.incomeMultiplier * nationEffects.incomeMultiplier,
+    efficiencyMultiplier * lawEffects.incomeMultiplier * nationEffects.incomeMultiplier * researchEffects.incomeMultiplier,
   );
   const expenses = calculateDailyExpenses(working.stats);
   const treasury = working.stats.treasury + income - expenses;
@@ -147,9 +152,12 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
-  // 5. Industry output (derived from factories + research bonus + laws).
+  // 5. Industry output (derived from factories + research bonus + laws + the research tree).
   const industry =
-    calculateIndustryOutput(working.factoryCount, working.researchLevel) * lawEffects.industryMultiplier * nationEffects.industryMultiplier;
+    calculateIndustryOutput(working.factoryCount, working.researchLevel) *
+    lawEffects.industryMultiplier *
+    nationEffects.industryMultiplier *
+    researchEffects.industryMultiplier;
 
   // 6. Research points accumulate passively.
   const researchPoints = working.stats.researchPoints + calculateDailyResearch(working.educationLevel);
@@ -236,6 +244,24 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
+  // 12b. The rival party makes a campaign move roughly once a month — an
+  // event-log-visible, mildly random popularity nudge that reacts to your
+  // own enacted laws/research when the rival has a strong opinion on one of
+  // them (see rivalCampaignMove.ts), so the opposition feels like it's
+  // actually doing something rather than just being 100 - your popularity.
+  // Runs before the election check below so a well-timed (or badly-timed)
+  // campaign move can actually swing an election that lands the same month.
+  if (!isGameOver && isFirstDayOfMonth(date) && Math.random() < RIVAL_CAMPAIGN_CHANCE_PER_MONTH) {
+    const move = pickRivalCampaignMove(working);
+    finalStats = { ...finalStats, popularity: Math.min(100, Math.max(0, finalStats.popularity + move.popularityDelta)) };
+    events.unshift({
+      id: generateId("event"),
+      date,
+      message: move.message,
+      severity: move.popularityDelta < 0 ? "warning" : "info",
+    });
+  }
+
   // 13. A general election, roughly every ELECTION_INTERVAL_MONTHS — the
   // actual win/lose condition of the game. Below the threshold, the rival
   // party takes power and the game ends; at or above it, the player's party
@@ -300,6 +326,7 @@ export function simulateDay(state: GameState): GameState {
     pendingDecisionId,
     stats: finalStats,
     resources: finalResources,
+    resourceDemand,
     events: events.slice(0, MAX_EVENT_LOG_LENGTH),
     history: finalHistory,
     monthlyReports,

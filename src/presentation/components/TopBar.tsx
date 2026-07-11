@@ -9,13 +9,14 @@ import { ResourceTicker } from "./ResourceTicker";
 
 const SPEEDS: GameSpeed[] = [1, 2, 3, 5];
 
-export type PanelKey = "politics" | "economy" | "reports" | "laws" | "ventures";
+export type PanelKey = "politics" | "economy" | "reports" | "laws" | "research" | "ventures";
 
 const TABS: Array<{ key: PanelKey; label: string; icon: NavIconType }> = [
   { key: "politics", label: "Politics", icon: "politics" },
   { key: "economy", label: "Economy", icon: "economy" },
   { key: "reports", label: "Reports", icon: "reports" },
   { key: "laws", label: "Laws", icon: "laws" },
+  { key: "research", label: "Research", icon: "research" },
   { key: "ventures", label: "Ventures", icon: "ventures" },
 ];
 
@@ -81,6 +82,19 @@ interface TopBarProps {
   onResume: () => void;
   onSetSpeed: (speed: GameSpeed) => void;
   onOpenPanel: (panel: PanelKey) => void;
+  onReplayTutorial: () => void;
+}
+
+// A small "?" for relaunching the first-run spotlight tour on demand — see
+// TutorialOverlay.tsx.
+function HelpIcon() {
+  return (
+    <svg width={14} height={14} viewBox="-10 -10 20 20">
+      <circle cx={0} cy={0} r={8.5} fill="none" stroke="currentColor" strokeWidth={1.4} />
+      <path d="M-2.6,-3 Q-2.6,-6 0,-6 Q2.8,-6 2.8,-3.2 Q2.8,-1 0,0.4 L0,2" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+      <circle cx={0} cy={5.2} r={1.1} fill="currentColor" />
+    </svg>
+  );
 }
 
 export function TopBar({
@@ -98,6 +112,7 @@ export function TopBar({
   onResume,
   onSetSpeed,
   onOpenPanel,
+  onReplayTutorial,
 }: TopBarProps) {
   const [muted, setMutedState] = useState(() => isMuted());
 
@@ -114,6 +129,10 @@ export function TopBar({
         <ResourceTicker stats={stats} resources={resources} />
 
         <div className="top-bar__spacer" />
+
+        <button className="top-bar__mute-button" onClick={onReplayTutorial} aria-label="Replay tutorial" title="Replay tutorial">
+          <HelpIcon />
+        </button>
 
         <button
           className="top-bar__mute-button"
@@ -133,22 +152,24 @@ export function TopBar({
           {formatDate(date)}
         </span>
 
-        <button className="top-bar__pause-button" onClick={isPaused ? onResume : onPause} title="Space">
-          {isPaused ? <PlayIcon /> : <PauseIcon />}
-          {isPaused ? "Resume" : "Pause"}
-        </button>
+        <span className="top-bar__pause-speed" data-tutorial="pause-speed">
+          <button className="top-bar__pause-button" onClick={isPaused ? onResume : onPause} title="Space">
+            {isPaused ? <PlayIcon /> : <PauseIcon />}
+            {isPaused ? "Resume" : "Pause"}
+          </button>
 
-        <div className="top-bar__speeds">
-          {SPEEDS.map((s) => (
-            <button
-              key={s}
-              className={`top-bar__speed-button ${speed === s && !isPaused ? "is-active" : ""}`}
-              onClick={() => onSetSpeed(s)}
-            >
-              {s}x
-            </button>
-          ))}
-        </div>
+          <div className="top-bar__speeds">
+            {SPEEDS.map((s) => (
+              <button
+                key={s}
+                className={`top-bar__speed-button ${speed === s && !isPaused ? "is-active" : ""}`}
+                onClick={() => onSetSpeed(s)}
+              >
+                {s}x
+              </button>
+            ))}
+          </div>
+        </span>
       </div>
 
       <div className="top-bar__row top-bar__row--tabs">
@@ -157,6 +178,7 @@ export function TopBar({
             key={tab.key}
             className={`top-bar__tab ${activePanel === tab.key ? "is-active" : ""}`}
             onClick={() => onOpenPanel(tab.key)}
+            data-tutorial={`tab-${tab.key}`}
             aria-label={tab.key === "reports" && reportsBadgeCount > 0 ? `${tab.label}, ${reportsBadgeCount} unread` : tab.label}
           >
             <span className="top-bar__tab-icon">

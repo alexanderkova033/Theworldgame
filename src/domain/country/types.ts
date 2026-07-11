@@ -84,6 +84,8 @@ export interface GameState {
   projects: Project[];
   placedBuildings: PlacedBuilding[]; // completed buildings, for the map
   enactedLawIds: string[]; // permanent policy choices, one per category — see domain/laws
+  enactedResearchIds: string[]; // permanent tech choices, one per category — see domain/research
+  resourceDemand: ResourceBundle; // dynamic-market demand index per resource, drifts toward 0 — see domain/resources/tradeRules.ts
   expeditions: Expedition[]; // in-progress scouting trips to unclaimed islands
   scoutedIslandIds: string[]; // islands a completed expedition has already visited
   events: GameEvent[];
@@ -92,4 +94,8 @@ export interface GameState {
 
   pendingDecisionId: string | null; // a decision popup waiting on the player — see domain/decisions
   decisionHistory: DecisionHistoryEntry[];
+
+  // The first-run spotlight tour's current step; null once finished/skipped
+  // (or for any save from before this field existed — see TutorialOverlay).
+  tutorialStep: number | null;
 }

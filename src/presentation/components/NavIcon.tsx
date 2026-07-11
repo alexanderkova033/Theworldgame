@@ -1,7 +1,7 @@
 // Small pictorial glyphs for the top-bar tab buttons — same hand-drawn-shape
 // approach as StatIcon/ResourceIcon/BuildingIcon, so the tab row reads as
 // imagery rather than plain text labels.
-export type NavIconType = "economy" | "reports" | "laws" | "ventures" | "politics";
+export type NavIconType = "economy" | "reports" | "laws" | "ventures" | "politics" | "research";
 
 interface NavIconProps {
   type: NavIconType;
@@ -69,6 +69,16 @@ function renderShape(type: NavIconType) {
           <polygon points="0,-5.5 1.6,0 0,1 -1.6,0" fill="#c2402f" />
           <polygon points="0,5.5 1.6,0 0,-1 -1.6,0" fill="#e6d9ab" />
           <circle cx={0} cy={0} r={1.1} fill="#c9a24a" />
+        </g>
+      );
+    case "research":
+      // A small flask, echoing StatIcon's research glyph at nav scale.
+      return (
+        <g>
+          <rect x={-1.5} y={-7.5} width={3} height={3} fill="none" stroke="#c9ccd1" strokeWidth={0.8} />
+          <polygon points="-1.5,-4.5 1.5,-4.5 4.6,6 -4.6,6" fill="#c58ae0" stroke="#c9ccd1" strokeWidth={0.8} />
+          <path d="M-2.6,0.8 Q0,-0.8 2.6,0.8 L3.8,6 L-3.8,6 Z" fill="#a862c9" />
+          <circle cx={-1} cy={2.8} r={0.9} fill="#e6c8f5" opacity={0.85} />
         </g>
       );
     case "politics":

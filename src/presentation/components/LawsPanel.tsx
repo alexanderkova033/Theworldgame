@@ -4,8 +4,9 @@ import { enactLaw } from "../../application/actions";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { LAW_NODES } from "../../domain/laws/lawData";
-import { getEffectivePassChance, getLawNodeStatus, getQuotaProgress, type LawNodeStatus } from "../../domain/laws/lawsRules";
+import { getEffectivePassChance, getLawNodeStatus, getRivalStance, getQuotaProgress, type LawNodeStatus } from "../../domain/laws/lawsRules";
 import type { LawCategory, LawEffects, LawNode, QuotaStat } from "../../domain/laws/types";
+import { getRivalParty } from "../../domain/parties/partyRules";
 import { playConfirm } from "../audio/sound";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
@@ -162,6 +163,8 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
   const costIcons = entries.filter((e) => !e.positive).map((e) => e.icon);
   const passChance = Math.round(getEffectivePassChance(state, node) * 100);
   const quota = getQuotaProgress(state, node);
+  const rival = getRivalParty(state.partyId);
+  const stance = getRivalStance(state, node);
 
   return (
     <div className="law-inspector">
@@ -185,6 +188,12 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
           {node.cost}
         </span>
       </div>
+
+      {stance !== "neutral" && status !== "enacted" && (
+        <p className={`rival-stance is-${stance}`}>
+          {rival.name} {stance === "opposes" ? "opposes this." : "supports this."}
+        </p>
+      )}
 
       {status === "enacted" && <p className="law-inspector__status is-enacted">Enacted.</p>}
 

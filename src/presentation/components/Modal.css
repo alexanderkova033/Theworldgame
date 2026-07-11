@@ -8,12 +8,17 @@
   justify-content: center;
   z-index: 50;
   padding: 2rem;
+  /* Centers within the space *below* the top bar, not the full viewport —
+     otherwise a tall panel's centered position can push its own header up
+     underneath the top bar, which renders above it (z-index 60 vs 50) and
+     silently swallows clicks on the close button. */
+  padding-top: calc(var(--top-bar-height) + 1.5rem);
 }
 
 .modal {
   width: 100%;
   max-width: 42rem;
-  max-height: 85vh;
+  max-height: calc(100vh - var(--top-bar-height) - 3.5rem);
   overflow-y: auto;
   margin: 0;
   padding-top: 0;

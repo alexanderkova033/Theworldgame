@@ -198,6 +198,22 @@
   padding-top: 1rem;
 }
 
+/* The rival party's simulated stance on the selected node — shared between
+   LawsPanel and ResearchPanel, since both trees vote the same way. */
+.rival-stance {
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+}
+
+.rival-stance.is-opposes {
+  color: var(--danger);
+}
+
+.rival-stance.is-supports {
+  color: var(--success);
+}
+
 .law-inspector__header {
   display: flex;
   gap: 0.75rem;
