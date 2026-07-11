@@ -248,10 +248,17 @@ function App() {
             <ActionsPanel state={state} selectedProvinceId={currentProvinceId} dispatch={dispatch} />
             <div className="economy-modal__side">
               <ProjectsPanel state={state} />
-              <TradePanel state={state} dispatch={dispatch} />
-              <DebtPanel state={state} dispatch={dispatch} />
               <ProductionPanel production={production} />
             </div>
+          </div>
+        </Modal>
+      )}
+
+      {openModal === "trade" && (
+        <Modal title="Trade" onClose={() => setOpenModal(null)}>
+          <div className="trade-modal">
+            <TradePanel state={state} dispatch={dispatch} />
+            <DebtPanel state={state} dispatch={dispatch} />
           </div>
         </Modal>
       )}

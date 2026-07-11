@@ -11,6 +11,8 @@ export const BUILDING_COLORS: Record<ProjectType, string> = {
   road: "#e8d9ab",
   education: "#4fa8ff",
   research: "#c58ae0",
+  granary: "#c9a45c",
+  cannery: "#6ea3c9",
 };
 
 interface BuildingIconProps {
@@ -79,6 +81,32 @@ export function BuildingIcon({ type, x, y, size = 5 }: BuildingIconProps) {
           />
           <circle cx={x - size * 0.35} cy={y + size * 0.5} r={size * 0.22} fill="#ffffff" opacity={0.5} />
           <line x1={x - size * 0.7} y1={y - size * 0.3} x2={x - size * 0.35} y2={y - size * 0.65} stroke="#ffffff" strokeWidth={size * 0.1} opacity={0.4} strokeLinecap="round" />
+        </g>
+      );
+    case "granary":
+      // A grain silo: a domed roof over a ribbed cylindrical body, with a
+      // small hatch door.
+      return (
+        <g>
+          <rect x={x - size * 0.8} y={y - size * 0.15} width={size * 1.6} height={size * 1.45} rx={size * 0.15} fill={color} stroke="#6e4a1e" strokeWidth={0.6} />
+          <ellipse cx={x} cy={y - size * 0.15} rx={size * 0.8} ry={size * 0.55} fill={color} stroke="#6e4a1e" strokeWidth={0.6} />
+          <ellipse cx={x - size * 0.22} cy={y - size * 0.32} rx={size * 0.3} ry={size * 0.18} fill="#ffffff" opacity={0.22} />
+          <line x1={x - size * 0.8} y1={y + size * 0.35} x2={x + size * 0.8} y2={y + size * 0.35} stroke="#6e4a1e" strokeWidth={0.5} opacity={0.5} />
+          <rect x={x - size * 0.22} y={y + size * 0.55} width={size * 0.44} height={size * 0.75} fill="#6e4a1e" />
+        </g>
+      );
+    case "cannery":
+      // A dockside cannery: a gabled warehouse with a pale fish emblem over
+      // the door.
+      return (
+        <g>
+          <rect x={x - size * 1.05} y={y - size * 0.25} width={size * 2.1} height={size * 1.5} fill={color} stroke="#1c4a63" strokeWidth={0.6} />
+          <polygon points={`${x - size * 1.05},${y - size * 0.25} ${x},${y - size * 1.05} ${x + size * 1.05},${y - size * 0.25}`} fill="#1c4a63" opacity={0.55} />
+          <rect x={x - size * 0.25} y={y + size * 0.45} width={size * 0.5} height={size * 0.8} fill="#1c4a63" />
+          <g fill="#e8f2fa" opacity={0.85}>
+            <ellipse cx={x} cy={y + size * 0.05} rx={size * 0.32} ry={size * 0.16} />
+            <polygon points={`${x + size * 0.28},${y + size * 0.05} ${x + size * 0.44},${y - size * 0.06} ${x + size * 0.44},${y + size * 0.16}`} />
+          </g>
         </g>
       );
     case "road":

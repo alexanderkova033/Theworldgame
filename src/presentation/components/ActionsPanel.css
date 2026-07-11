@@ -36,6 +36,23 @@
   opacity: 0.6;
 }
 
+.build-card.is-locked {
+  opacity: 0.75;
+}
+
+.build-card__locked {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px dashed var(--panel-border);
+  border-radius: 6px;
+  padding: 0.35rem 0.55rem;
+  margin: 0.1rem 0 0.4rem;
+}
+
 .build-card__icon {
   width: 44px;
   height: 44px;

@@ -1,6 +1,7 @@
 import { generateId } from "../../domain/country/id";
 import type { GameState } from "../../domain/country/types";
 import { canEnactLaw, getEffectivePassChance, getLawNode } from "../../domain/laws/lawsRules";
+import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../../domain/parties/factionRules";
 
 export { canEnactLaw };
 
@@ -20,14 +21,14 @@ export function enactLaw(state: GameState, lawId: string): GameState {
 
   const passChance = getEffectivePassChance(state, law);
   const passed = Math.random() < passChance;
+  const weights = getFactionWeights(state.nationId);
 
   if (!passed) {
+    const { factionApproval, popularity } = applyUniformDelta(state.factionApproval, weights, -FAILED_VOTE_POPULARITY_PENALTY);
     return {
       ...state,
-      stats: {
-        ...state.stats,
-        popularity: Math.min(100, Math.max(0, state.stats.popularity - FAILED_VOTE_POPULARITY_PENALTY)),
-      },
+      factionApproval,
+      stats: { ...state.stats, popularity },
       events: [
         {
           id: generateId("event"),
@@ -41,16 +42,18 @@ export function enactLaw(state: GameState, lawId: string): GameState {
   }
 
   const { effects } = law;
+  const { factionApproval, popularity } = applyFactionEffects(state.factionApproval, weights, effects, effects.popularityDelta ?? 0);
   return {
     ...state,
     enactedLawIds: [...state.enactedLawIds, lawId],
+    factionApproval,
     stats: {
       ...state.stats,
       treasury: state.stats.treasury + (effects.treasuryDelta ?? 0),
       food: Math.max(0, state.stats.food + (effects.foodDelta ?? 0)),
       stability: Math.min(100, Math.max(0, state.stats.stability + (effects.stabilityDelta ?? 0))),
       population: Math.max(0, state.stats.population + (effects.populationDelta ?? 0)),
-      popularity: Math.min(100, Math.max(0, state.stats.popularity + (effects.popularityDelta ?? 0))),
+      popularity,
     },
     events: [
       {

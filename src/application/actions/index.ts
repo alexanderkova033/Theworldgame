@@ -2,6 +2,8 @@ export { buildFarm } from "./buildFarm";
 export { buildFactory } from "./buildFactory";
 export { buildRoad } from "./buildRoad";
 export { buildEducation } from "./buildEducation";
+export { buildGranary } from "./buildGranary";
+export { buildCannery } from "./buildCannery";
 export { countBuildingsInProvince } from "./createBuildAction";
 export { canStartResearch, startResearch } from "./startResearch";
 export { recruitSoldiers } from "./recruitSoldiers";

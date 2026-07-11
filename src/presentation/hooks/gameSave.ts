@@ -5,6 +5,8 @@
 // still a straight stringify/parse round trip, plus hydrateGameState below
 // filling in any fields an older save predates.
 import type { CountryStats, GameDate, GameState } from "../../domain/country/types";
+import { FACTIONS } from "../../domain/parties/factionData";
+import type { Ideology } from "../../domain/parties/types";
 import { emptyResourceBundle } from "../../domain/resources/resourceRules";
 
 // GameState has grown fields release over release (debt, researchOutcomes,
@@ -30,6 +32,7 @@ function hydrateStats(stats: Partial<CountryStats> | undefined): CountryStats {
 }
 
 function hydrateGameState(raw: Partial<GameState>): GameState {
+  const stats = hydrateStats(raw.stats);
   return {
     nationId: raw.nationId!,
     partyId: raw.partyId!,
@@ -40,13 +43,15 @@ function hydrateGameState(raw: Partial<GameState>): GameState {
     isGameOver: raw.isGameOver ?? false,
     outcome: raw.outcome ?? null,
     gameOverReason: raw.gameOverReason ?? null,
-    stats: hydrateStats(raw.stats),
+    stats,
     resources: raw.resources ?? emptyResourceBundle(),
     taxRate: raw.taxRate ?? 0.15,
     debt: raw.debt ?? 0,
     farmCount: raw.farmCount ?? 0,
     factoryCount: raw.factoryCount ?? 0,
     roadCount: raw.roadCount ?? 0,
+    granaryCount: raw.granaryCount ?? 0,
+    canneryCount: raw.canneryCount ?? 0,
     educationLevel: raw.educationLevel ?? 0,
     researchLevel: raw.researchLevel ?? 0,
     projects: raw.projects ?? [],
@@ -55,6 +60,10 @@ function hydrateGameState(raw: Partial<GameState>): GameState {
     enactedResearchIds: raw.enactedResearchIds ?? [],
     researchOutcomes: raw.researchOutcomes ?? {},
     resourceDemand: raw.resourceDemand ?? emptyResourceBundle(),
+    // Pre-coalition saves have no per-faction breakdown — start every faction
+    // exactly where the old flat popularity number already was, so resuming
+    // doesn't jar the player with a sudden shift.
+    factionApproval: raw.factionApproval ?? (Object.fromEntries(FACTIONS.map((f) => [f, stats.popularity])) as Record<Ideology, number>),
     expeditions: raw.expeditions ?? [],
     scoutedIslandIds: raw.scoutedIslandIds ?? [],
     events: raw.events ?? [],

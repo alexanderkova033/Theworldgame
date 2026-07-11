@@ -1,6 +1,7 @@
 import { FAILED_RESEARCH_VOTE_POPULARITY_PENALTY } from "../../domain/constants";
 import { generateId } from "../../domain/country/id";
 import type { GameState } from "../../domain/country/types";
+import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../../domain/parties/factionRules";
 import { canEnactResearch, getEffectivePassChance, getResearchNode, rollResearchOutcome, scaleResearchEffects } from "../../domain/research/researchRules";
 
 export { canEnactResearch };
@@ -16,14 +17,14 @@ export function enactResearch(state: GameState, researchId: string): GameState {
 
   const passChance = getEffectivePassChance(state, node);
   const passed = Math.random() < passChance;
+  const weights = getFactionWeights(state.nationId);
 
   if (!passed) {
+    const { factionApproval, popularity } = applyUniformDelta(state.factionApproval, weights, -FAILED_RESEARCH_VOTE_POPULARITY_PENALTY);
     return {
       ...state,
-      stats: {
-        ...state.stats,
-        popularity: Math.min(100, Math.max(0, state.stats.popularity - FAILED_RESEARCH_VOTE_POPULARITY_PENALTY)),
-      },
+      factionApproval,
+      stats: { ...state.stats, popularity },
       events: [
         {
           id: generateId("event"),
@@ -42,18 +43,20 @@ export function enactResearch(state: GameState, researchId: string): GameState {
   // getActiveResearchEffects uses every day after, not just today.
   const outcome = rollResearchOutcome();
   const effects = scaleResearchEffects(node.effects, outcome.factor);
+  const { factionApproval, popularity } = applyFactionEffects(state.factionApproval, weights, effects, effects.popularityDelta ?? 0);
 
   return {
     ...state,
     enactedResearchIds: [...state.enactedResearchIds, researchId],
     researchOutcomes: { ...state.researchOutcomes, [researchId]: outcome.tier },
+    factionApproval,
     stats: {
       ...state.stats,
       treasury: state.stats.treasury + (effects.treasuryDelta ?? 0),
       food: Math.max(0, state.stats.food + (effects.foodDelta ?? 0)),
       stability: Math.min(100, Math.max(0, state.stats.stability + (effects.stabilityDelta ?? 0))),
       population: Math.max(0, state.stats.population + (effects.populationDelta ?? 0)),
-      popularity: Math.min(100, Math.max(0, state.stats.popularity + (effects.popularityDelta ?? 0))),
+      popularity,
     },
     events: [
       {

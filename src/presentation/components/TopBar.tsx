@@ -10,11 +10,12 @@ import { ResourceTicker } from "./ResourceTicker";
 
 const SPEEDS: GameSpeed[] = [1, 2, 3, 5];
 
-export type PanelKey = "politics" | "economy" | "reports" | "laws" | "research" | "ventures";
+export type PanelKey = "politics" | "economy" | "trade" | "reports" | "laws" | "research" | "ventures";
 
 const TABS: Array<{ key: PanelKey; label: string; icon: NavIconType }> = [
   { key: "politics", label: "Politics", icon: "politics" },
   { key: "economy", label: "Economy", icon: "economy" },
+  { key: "trade", label: "Trade", icon: "trade" },
   { key: "reports", label: "Reports", icon: "reports" },
   { key: "laws", label: "Laws", icon: "laws" },
   { key: "research", label: "Research", icon: "research" },

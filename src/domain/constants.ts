@@ -60,6 +60,26 @@ export const RESOURCE_MARKET_PORT_DISCOUNT = 0.6; // buying is 40% cheaper with 
 export const FOOD_EXPORT_BATCH_SIZE = 2000; // food given up per export click
 export const FOOD_EXPORT_PRICE_PER_UNIT = 0.3; // Crowns received per unit of food exported
 
+// --- Food processing (Granary/Cannery — research-gated, see domain/research)
+// Grain/fish trickle in at ~1/province/day (see RESOURCE_PER_PROVINCE above),
+// so these buildings convert whatever small surplus you actually have into a
+// meaningful chunk of food — a supplement to farms, not a replacement, since
+// a nation's grain/fish income is capped by how many plains/coast provinces
+// it owns, not by how many granaries/canneries it builds.
+export const GRANARY_COST = 900;
+export const GRANARY_WOOD_COST = 14;
+export const GRANARY_BUILD_DAYS = 55;
+export const MAX_GRANARIES_PER_PROVINCE = 2;
+export const GRAIN_PROCESSED_PER_GRANARY = 3; // max grain one granary can process per day
+export const FOOD_PER_GRAIN = 500; // food produced per unit of grain processed
+
+export const CANNERY_COST = 1100;
+export const CANNERY_ORE_COST = 16;
+export const CANNERY_BUILD_DAYS = 65;
+export const MAX_CANNERIES_PER_PROVINCE = 2;
+export const FISH_PROCESSED_PER_CANNERY = 3; // max fish one cannery can process per day
+export const FOOD_PER_FISH = 500; // food produced per unit of fish processed
+
 // --- Industry ---
 export const INDUSTRY_PER_FACTORY = 5;
 export const INCOME_PER_INDUSTRY = 1.5;
@@ -98,6 +118,15 @@ export const RIVAL_OPPOSE_PASS_CHANCE_PENALTY = 0.08; // a law/research vote the
 export const RIVAL_SUPPORT_PASS_CHANCE_BONUS = 0.04; // ...and easier if the rival happens to agree
 export const RIVAL_CAMPAIGN_CHANCE_PER_MONTH = 0.3; // rolled on the first day of every month, alongside decisions
 export const RIVAL_CAMPAIGN_POPULARITY_SWING = 4; // base popularity swing from a rival campaign move
+
+// --- Coalition / factions (see domain/parties/factionRules.ts) ---
+// Extra approval swing, per faction, per point of that faction's ideological
+// alignment score (typically -3..+3 for a real law/research node) — layered
+// on top of whatever flat popularityDelta the policy already carries, so an
+// industry-boosting law doesn't just cost "5 popularity," it costs the
+// Agrarian/Labor wings specifically while the Commercial/Nationalist wings
+// may gain.
+export const FACTION_SENSITIVITY = 3;
 
 // --- Army ---
 export const SOLDIER_RECRUIT_COST = 200;

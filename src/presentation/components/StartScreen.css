@@ -1,9 +1,11 @@
 .start-screen {
+  position: relative;
   min-height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem 1.5rem;
+  overflow: hidden;
   /* Echoes body's own gradient+texture treatment (see index.css) instead of
      a flat void — a wide top glow, a faint second glow low-left for depth,
      and the same fine diagonal hatching used everywhere else in the game. */
@@ -14,7 +16,23 @@
     var(--bg-deep);
 }
 
+.start-screen__watermark {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 50%;
+  width: 90rem;
+  max-width: none;
+  transform: translate(-50%, -50%);
+  fill: rgba(240, 200, 105, 0.05);
+  stroke: rgba(240, 200, 105, 0.07);
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+
 .start-screen__content {
+  position: relative;
+  z-index: 1;
   max-width: 62rem;
   width: 100%;
   text-align: center;
@@ -29,9 +47,22 @@
 }
 
 .start-screen__title {
+  position: relative;
   font-size: 2.7rem;
   color: var(--text);
-  margin: 0 0 0.6rem;
+  margin: 0 0 0.9rem;
+  padding-bottom: 0.7rem;
+}
+
+.start-screen__title::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 12rem;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent) 15%, var(--accent-active) 50%, var(--accent) 85%, transparent);
 }
 
 .start-screen__subtitle {
@@ -49,15 +80,24 @@
 }
 
 .save-slot-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
   padding: 1.25rem 1.1rem;
-  background: linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg));
+  background:
+    radial-gradient(circle 2.5px at 10px 10px, var(--accent-active) 92%, transparent 100%),
+    radial-gradient(circle 2.5px at calc(100% - 10px) 10px, var(--accent-active) 92%, transparent 100%),
+    radial-gradient(circle 2.5px at 10px calc(100% - 10px), var(--accent-active) 92%, transparent 100%),
+    radial-gradient(circle 2.5px at calc(100% - 10px) calc(100% - 10px), var(--accent-active) 92%, transparent 100%),
+    linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg));
+  background-repeat: no-repeat;
   border: 1px solid var(--panel-border);
   border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px rgba(240, 200, 105, 0.14);
   text-align: center;
 }
 
@@ -198,15 +238,24 @@
 }
 
 .nation-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
   padding: 1.1rem 1.25rem;
-  background: linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg));
+  background:
+    radial-gradient(circle 2.5px at 10px 10px, var(--accent-active) 92%, transparent 100%),
+    radial-gradient(circle 2.5px at calc(100% - 10px) 10px, var(--accent-active) 92%, transparent 100%),
+    radial-gradient(circle 2.5px at 10px calc(100% - 10px), var(--accent-active) 92%, transparent 100%),
+    radial-gradient(circle 2.5px at calc(100% - 10px) calc(100% - 10px), var(--accent-active) 92%, transparent 100%),
+    linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg));
+  background-repeat: no-repeat;
   border: 1px solid var(--panel-border);
   border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px rgba(240, 200, 105, 0.14);
   text-align: center;
 }
 

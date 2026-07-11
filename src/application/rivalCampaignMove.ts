@@ -8,12 +8,13 @@ import { RIVAL_CAMPAIGN_POPULARITY_SWING } from "../domain/constants";
 import type { GameState } from "../domain/country/types";
 import { LAW_NODES } from "../domain/laws/lawData";
 import { getRivalParty } from "../domain/parties/partyRules";
-import { CAMPAIGN_FLAVOR, getPartyStance } from "../domain/parties/rivalRules";
+import { CAMPAIGN_FLAVOR, getPartyStance, type StanceEffects } from "../domain/parties/rivalRules";
 import { RESEARCH_NODES } from "../domain/research/researchData";
 
 export interface RivalCampaignMove {
   message: string;
   popularityDelta: number; // applied to the player's own popularity
+  effects?: StanceEffects; // the specific node's effects, when this move reacted to one — shapes which factions actually feel it (see factionRules.ts); undefined for a generic flavor-line swing
 }
 
 // Reacts to something you've already enacted if the rival has a strong
@@ -35,11 +36,13 @@ export function pickRivalCampaignMove(state: GameState): RivalCampaignMove {
       return {
         message: `${rival.name} campaigns hard against ${node.name}, calling it a mistake the country will regret.`,
         popularityDelta: -RIVAL_CAMPAIGN_POPULARITY_SWING,
+        effects: node.effects,
       };
     }
     return {
       message: `${rival.name} grudgingly credits the government for ${node.name} — a rare moment of agreement.`,
       popularityDelta: RIVAL_CAMPAIGN_POPULARITY_SWING * 0.4,
+      effects: node.effects,
     };
   }
 

@@ -1,33 +1,56 @@
-.production-panel h3:first-of-type {
-  margin-top: 0.4rem;
-}
-
-.production-panel__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  padding: 0.28rem 0;
-}
-
-.production-panel__row-label {
-  display: inline-flex;
-  align-items: center;
+/* A dense grid of small icon+value tiles instead of a long labeled list —
+   the same itemized breakdown, in a fraction of the vertical space. */
+.production-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.4rem, 1fr));
   gap: 0.4rem;
 }
 
-.production-panel__row-value {
+.production-panel__tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.4rem 0.25rem 0.35rem;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.production-panel__tile.is-emphasized {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: var(--accent-active);
+}
+
+.production-panel__tile-icon {
+  display: flex;
+  line-height: 0;
+}
+
+.production-panel__tile-icon svg {
+  display: block;
+}
+
+.production-panel__tile-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.production-panel__tile-value {
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 0.78rem;
   color: var(--text);
 }
 
-.production-panel__row-value.is-gain {
+.production-panel__tile-value.is-gain {
   color: var(--success);
 }
 
-.production-panel__row-value.is-loss {
+.production-panel__tile-value.is-loss {
   color: var(--danger);
 }

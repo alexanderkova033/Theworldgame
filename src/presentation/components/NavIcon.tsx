@@ -1,7 +1,7 @@
 // Small pictorial glyphs for the top-bar tab buttons — same hand-drawn-shape
 // approach as StatIcon/ResourceIcon/BuildingIcon, so the tab row reads as
 // imagery rather than plain text labels.
-export type NavIconType = "economy" | "reports" | "laws" | "ventures" | "politics" | "research";
+export type NavIconType = "economy" | "trade" | "reports" | "laws" | "ventures" | "politics" | "research";
 
 interface NavIconProps {
   type: NavIconType;
@@ -28,6 +28,18 @@ function renderShape(type: NavIconType) {
             <line x1={-4.2} y1={-3.8} x2={3.2} y2={4.6} stroke="#5a616c" strokeWidth={1.6} />
             <line x1={-4.2} y1={4.6} x2={3.2} y2={-3.8} stroke="#8c93a0" strokeWidth={1.6} />
           </g>
+        </g>
+      );
+    case "trade":
+      // An exchange loop — two arced arrows chasing each other, gold and
+      // blue, around a small coin — coins and goods swapping hands.
+      return (
+        <g>
+          <path d="M-6.5,-1.6 A6.7,6.7 0 0 1 4.6,-6.5" fill="none" stroke="#c9a24a" strokeWidth={1.6} strokeLinecap="round" />
+          <polygon points="4.6,-6.5 1.5,-7.5 3.4,-4.3" fill="#c9a24a" />
+          <path d="M6.5,1.6 A6.7,6.7 0 0 1 -4.6,6.5" fill="none" stroke="#5b9bd6" strokeWidth={1.6} strokeLinecap="round" />
+          <polygon points="-4.6,6.5 -1.5,7.5 -3.4,4.3" fill="#5b9bd6" />
+          <circle cx={0} cy={0} r={2.7} fill="#e6c56a" stroke="#93731f" strokeWidth={0.5} />
         </g>
       );
     case "reports":

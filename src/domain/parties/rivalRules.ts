@@ -1,8 +1,12 @@
+import type { Ideology } from "./types";
+
 // How strongly a party's ideology aligns with a policy's actual direction of
 // effect — used to derive a simulated "stance" (supports/opposes/neutral) on
 // any specific Law or Research node, rather than treating the rival as just
 // 100 - your popularity. Four axes cover every numeric effect a Law/Research
-// node can have (see LawEffects/ResearchEffects).
+// node can have (see LawEffects/ResearchEffects). Also the engine behind the
+// per-faction coalition system — see getAlignmentScore below and
+// domain/parties/factionRules.ts.
 interface Alignment {
   industry: number;
   stability: number;
@@ -10,7 +14,7 @@ interface Alignment {
   treasury: number;
 }
 
-const IDEOLOGY_ALIGNMENT: Record<string, Alignment> = {
+const IDEOLOGY_ALIGNMENT: Record<Ideology, Alignment> = {
   Agrarian: { industry: -1, stability: 1, popularity: 1, treasury: 0 },
   Commercial: { industry: 1, stability: 0, popularity: -1, treasury: 1 },
   Traditionalist: { industry: 0, stability: 1, popularity: -1, treasury: 0 },
@@ -34,10 +38,13 @@ export interface StanceEffects {
 // A signed dot product between a party's ideology and a policy's direction:
 // positive means the policy pushes the stats this ideology already cares
 // about the "right" way (by that party's lights), negative the "wrong" way.
-// Ties (e.g. a policy the ideology has no opinion on) fall to neutral.
-export function getPartyStance(ideology: string, effects: StanceEffects): PartyStance {
+// Unbucketed, so it also doubles as the per-faction coalition delta engine
+// (see domain/parties/factionRules.ts) — a policy that scores +2 for
+// Commercial doesn't just "support," it moves the Commercial wing's approval
+// more than a neutral policy of the same flat popularityDelta would.
+export function getAlignmentScore(ideology: Ideology, effects: StanceEffects): number {
   const alignment = IDEOLOGY_ALIGNMENT[ideology];
-  if (!alignment) return "neutral";
+  if (!alignment) return 0;
 
   let score = 0;
   if (effects.industryMultiplier !== undefined) score += alignment.industry * Math.sign(effects.industryMultiplier - 1);
@@ -45,7 +52,12 @@ export function getPartyStance(ideology: string, effects: StanceEffects): PartyS
   if (effects.treasuryDelta) score += alignment.treasury * Math.sign(effects.treasuryDelta);
   if (effects.stabilityDelta) score += alignment.stability * Math.sign(effects.stabilityDelta);
   if (effects.popularityDelta) score += alignment.popularity * Math.sign(effects.popularityDelta);
+  return score;
+}
 
+// Ties (e.g. a policy the ideology has no opinion on) fall to neutral.
+export function getPartyStance(ideology: Ideology, effects: StanceEffects): PartyStance {
+  const score = getAlignmentScore(ideology, effects);
   if (score > 0) return "supports";
   if (score < 0) return "opposes";
   return "neutral";
@@ -54,7 +66,7 @@ export function getPartyStance(ideology: string, effects: StanceEffects): PartyS
 // Generic campaign-trail flavor lines, used when the rival has nothing
 // enacted yet worth reacting to (see application/rivalCampaignMove.ts) — one
 // set per ideology so a campaign move always sounds like *this* rival.
-export const CAMPAIGN_FLAVOR: Record<string, string[]> = {
+export const CAMPAIGN_FLAVOR: Record<Ideology, string[]> = {
   Agrarian: [
     "tours the grain markets, promising to put smallholders first.",
     "warns that the cities have forgotten who feeds them.",

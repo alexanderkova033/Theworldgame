@@ -10,14 +10,15 @@ import type { CountryStats, DailyDelta, GameEvent, GameState } from "../domain/c
 import { pickRandomDecision } from "../domain/decisions/decisionRules";
 import { getIslandExpeditionData } from "../domain/expeditions/expeditionData";
 import { advanceExpedition, isExpeditionComplete } from "../domain/expeditions/expeditionRules";
-import { updateFood } from "../domain/food/foodRules";
+import { produceProcessedFood, updateFood } from "../domain/food/foodRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getActiveLawEffects } from "../domain/laws/lawsRules";
 import { accrueInterest, getDebtPopularityPenalty, getDebtStabilityPenalty, isDebtDangerous } from "../domain/loans/loanRules";
 import { getNationEffects } from "../domain/nations/nationEffects";
 import { getNation } from "../domain/nations/nationRules";
+import { applyFactionEffects, getFactionWeights } from "../domain/parties/factionRules";
 import { getParty } from "../domain/parties/partyRules";
-import { updatePopularity } from "../domain/politics/politicsRules";
+import { updateFactionPopularity } from "../domain/politics/politicsRules";
 import { updatePopulation } from "../domain/population/populationRules";
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
 import { applyRandomEventEffect, pickRandomEvent } from "../domain/randomEvents/randomEventRules";
@@ -130,10 +131,26 @@ export function simulateDay(state: GameState): GameState {
   const ownedTerrains = nation.provinceIds.map(
     (provinceId) => MAP_GEOMETRY.provinces.find((p) => p.id === provinceId)!.terrain,
   );
-  const resources = addResources(working.resources, calculateDailyProduction(ownedTerrains));
+  const producedResources = addResources(working.resources, calculateDailyProduction(ownedTerrains));
   const resourceDemand = decayDemand(working.resourceDemand);
 
-  // 2b. Debt compounds daily, whether or not it's touched — see
+  // 2b. Granaries/Canneries (research-gated — see domain/research) turn
+  // today's Grain/Fish stock into Food, capped by both building count and
+  // what's actually in stock. Runs after raw production lands (so a
+  // province's own grain/fish that same day is available to process) but
+  // before step 4 folds the result into the food stock.
+  const { foodProduced: processedFood, grainConsumed, fishConsumed } = produceProcessedFood(
+    working.granaryCount,
+    working.canneryCount,
+    producedResources,
+  );
+  const resources: typeof producedResources = {
+    ...producedResources,
+    grain: producedResources.grain - grainConsumed,
+    fish: producedResources.fish - fishConsumed,
+  };
+
+  // 2c. Debt compounds daily, whether or not it's touched — see
   // domain/loans/loanRules.ts. Crossing into "dangerous" territory (and only
   // that crossing, not every day it stays there) gets its own warning.
   const debt = accrueInterest(working.debt);
@@ -155,8 +172,8 @@ export function simulateDay(state: GameState): GameState {
   const expenses = calculateDailyExpenses(working.stats);
   const treasury = working.stats.treasury + income - expenses;
 
-  // 4. Food: production vs consumption.
-  const { newFoodStock, isShortage } = updateFood(working.stats, working.farmCount);
+  // 4. Food: production (farms + processed Grain/Fish) vs consumption.
+  const { newFoodStock, isShortage } = updateFood(working.stats, working.farmCount, processedFood);
   if (isShortage) {
     events.unshift({
       id: generateId("event"),
@@ -206,8 +223,11 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
-  // 8. Popularity drifts based on the current tax rate, and takes a hit too if debt is heavy.
-  const popularity = updatePopularity(working.stats, working.taxRate, getDebtPopularityPenalty(debt));
+  // 8. Popularity drifts based on the current tax rate, and takes a hit too
+  // if debt is heavy — applied per-faction (see factionRules.ts), then
+  // re-aggregated into the single number everything else below still reads.
+  const factionWeights = getFactionWeights(working.nationId);
+  const { factionApproval, popularity } = updateFactionPopularity(working.factionApproval, factionWeights, working.taxRate, getDebtPopularityPenalty(debt));
 
   // 9. Population grows or shrinks based on food and stability.
   const population = updatePopulation({ ...statsWithFood, stability }, isShortage);
@@ -245,6 +265,7 @@ export function simulateDay(state: GameState): GameState {
   // 12. A random world event, roughly every RANDOM_EVENT_INTERVAL_MONTHS.
   let finalStats = updatedStats;
   let finalResources = resources;
+  let finalFactionApproval = factionApproval;
   if (isEveryNMonths(date, RANDOM_EVENT_INTERVAL_MONTHS)) {
     const randomEvent = pickRandomEvent();
     const applied = applyRandomEventEffect(finalStats, finalResources, randomEvent.effect);
@@ -267,7 +288,9 @@ export function simulateDay(state: GameState): GameState {
   // campaign move can actually swing an election that lands the same month.
   if (!isGameOver && isFirstDayOfMonth(date) && Math.random() < RIVAL_CAMPAIGN_CHANCE_PER_MONTH) {
     const move = pickRivalCampaignMove(working);
-    finalStats = { ...finalStats, popularity: Math.min(100, Math.max(0, finalStats.popularity + move.popularityDelta)) };
+    const applied = applyFactionEffects(finalFactionApproval, factionWeights, move.effects ?? {}, move.popularityDelta);
+    finalFactionApproval = applied.factionApproval;
+    finalStats = { ...finalStats, popularity: applied.popularity };
     events.unshift({
       id: generateId("event"),
       date,
@@ -341,6 +364,7 @@ export function simulateDay(state: GameState): GameState {
     stats: finalStats,
     resources: finalResources,
     resourceDemand,
+    factionApproval: finalFactionApproval,
     debt,
     events: events.slice(0, MAX_EVENT_LOG_LENGTH),
     history: finalHistory,

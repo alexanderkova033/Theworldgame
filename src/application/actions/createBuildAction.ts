@@ -7,6 +7,7 @@ import { generateId } from "../../domain/country/id";
 import { canAffordResource, deductResource } from "../../domain/resources/resourceRules";
 import type { GameState } from "../../domain/country/types";
 import type { Project, ProjectType } from "../../domain/construction/types";
+import { isBuildingUnlocked } from "../../domain/research/researchRules";
 import type { ResourceType } from "../../domain/resources/types";
 
 interface BuildActionConfig {
@@ -17,6 +18,11 @@ interface BuildActionConfig {
   resourceType: ResourceType;
   resourceCost: number;
   maxPerProvince: number;
+  // Most buildings are available from turn one; a few (Granary, Cannery) are
+  // gated behind a research node naming them in unlocksBuildingType — see
+  // domain/research/researchRules.ts. Checked here, not just in the UI, so
+  // the rule holds even if a caller skips ActionsPanel's own gating.
+  requiresResearch?: boolean;
 }
 
 // A build action is a function, but also carries its own affordability
@@ -51,6 +57,7 @@ function upfrontCost(cost: number): number {
 export function createBuildAction(config: BuildActionConfig): BuildAction {
   function canBuild(state: GameState, provinceId: string): boolean {
     return (
+      (!config.requiresResearch || isBuildingUnlocked(state.enactedResearchIds, config.type)) &&
       canAfford(state.stats, upfrontCost(config.cost)) &&
       canAffordResource(state.resources, config.resourceType, upfrontCost(config.resourceCost)) &&
       countBuildingsInProvince(state, config.type, provinceId) < config.maxPerProvince

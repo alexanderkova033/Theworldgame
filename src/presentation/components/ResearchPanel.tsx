@@ -108,15 +108,25 @@ function XBadge() {
   );
 }
 
-function TierConnector({ isFork }: { isFork: boolean }) {
+// LawsPanel's tree is always a 2-way fork, so its own TierConnector (and the
+// :first-child/:last-child CSS it relies on) is left alone — this one takes
+// a leg count instead of a boolean because Agriculture now has 3-way forks
+// (Granary/Cannery joined the existing options), and positions each leg
+// inline rather than via CSS pseudo-selectors so it isn't stuck at exactly
+// two. Legs are spread evenly between the same 22%/78% bounds the original
+// 2-leg version used, so a 2-way fork here still looks pixel-identical.
+function TierConnector({ legCount }: { legCount: number }) {
+  const legPositions =
+    legCount === 1 ? [50] : Array.from({ length: legCount }, (_, i) => 22 + i * (56 / (legCount - 1)));
   return (
     <div className="law-tree__connector">
       <div className="law-tree__connector-stem" />
-      {isFork && (
+      {legCount > 1 && (
         <div className="law-tree__connector-fork">
           <div className="law-tree__connector-bar" />
-          <div className="law-tree__connector-leg" />
-          <div className="law-tree__connector-leg" />
+          {legPositions.map((left, i) => (
+            <div className="law-tree__connector-leg" style={{ left: `${left}%` }} key={i} />
+          ))}
         </div>
       )}
     </div>
@@ -282,7 +292,7 @@ export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
               const nodes = nodesFor(category, tier);
               return (
                 <div className="law-tree__tier" key={tier}>
-                  {tierIndex > 0 && <TierConnector isFork={nodes.length > 1} />}
+                  {tierIndex > 0 && <TierConnector legCount={nodes.length} />}
                   <div className={`law-tree__row ${nodes.length > 1 ? "law-tree__row--fork" : ""}`}>
                     {nodes.map((node) => (
                       <ResearchNodeBadge

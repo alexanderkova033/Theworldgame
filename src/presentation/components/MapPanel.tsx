@@ -8,6 +8,7 @@ import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
 import type { PlacedBuilding, Terrain } from "../../domain/provinces/types";
 import { RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
 import { BUILDING_COLORS, BuildingIcon } from "./BuildingIcon";
+import { starPoints } from "./iconShapes";
 import { ResourceIcon } from "./ResourceIcon";
 
 const TERRAIN_LABELS: Record<Terrain, string> = {
@@ -30,6 +31,8 @@ const BUILDING_LABELS: Record<ProjectType, string> = {
   road: "Road",
   education: "Education",
   research: "Research",
+  granary: "Granary",
+  cannery: "Cannery",
 };
 
 interface MapPanelProps {
@@ -78,6 +81,18 @@ function roadLineWidth(count: number): number {
   return Math.min(ROAD_BASE_WIDTH + count * ROAD_WIDTH_PER_ROAD, ROAD_MAX_WIDTH);
 }
 
+// The capital marker: a drawn five-point star (not the "★" glyph — that
+// renders as a flat, font-dependent blob at the small sizes the map uses),
+// using the same star math as BuildingIcon/StatIcon/StartScreen's crests.
+function CapitalBadge({ x, y }: { x: number; y: number }) {
+  return (
+    <g pointerEvents="none">
+      <circle cx={x} cy={y} r={6.4} fill="#2a1f10" stroke="#f0c869" strokeWidth={0.9} opacity={0.92} />
+      <polygon points={starPoints(x, y, 4.4, 1.9)} fill="#f0c869" stroke="#7a5a1e" strokeWidth={0.5} strokeLinejoin="round" />
+    </g>
+  );
+}
+
 // --- Zoom & pan --------------------------------------------------------
 // The "camera" is just the SVG viewBox. Zooming/panning never touches the
 // map's actual coordinates — it only changes which rectangle of that fixed
@@ -110,6 +125,7 @@ const WORLD_VIEW: ViewBox = {
 const MIN_ZOOM = BASE_VIEW.width / WORLD_VIEW.width; // zooming out this far shows the whole surrounding sea
 const MAX_ZOOM = 6;
 const DRAG_CLICK_THRESHOLD = 6; // total pixels of movement from the initial press before a drag stops counting as a click
+const LABEL_ZOOM_THRESHOLD = 1.5; // zoomRatio past which every province gets its name label, not just the focused one
 
 function clampViewBox(vb: ViewBox): ViewBox {
   const minWidth = BASE_VIEW.width / MAX_ZOOM;
@@ -162,6 +178,7 @@ export function MapPanel({
   const svgRef = useRef<SVGSVGElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<ViewBox>(BASE_VIEW);
+  const zoomRatio = BASE_VIEW.width / view.width;
   // dragOrigin is the original pointerdown position, used only to decide
   // "was this whole gesture a click or a drag" — dragStart is the *last*
   // move position, used for incremental pan deltas. Keeping these separate
@@ -590,18 +607,31 @@ export function MapPanel({
             </text>
           )}
 
-          {provinces.map((province) => (
-            <text
-              key={`${province.id}-label`}
-              x={province.labelX}
-              y={province.labelY}
-              className={`map-panel__label ${nation.provinceIds.includes(province.id) ? "" : "is-foreign"}`}
-              pointerEvents="none"
-            >
-              {province.id === nation.capitalProvinceId ? "★ " : ""}
-              {province.name}
-            </text>
-          ))}
+          {provinces.map((province) => {
+            const isCapital = province.id === nation.capitalProvinceId;
+            // The continent packs a lot of small provinces close together —
+            // at the fully-zoomed-out default view, every name label at full
+            // size collides with its neighbors into unreadable clutter,
+            // so only the province the player's attention is already on
+            // (selected/hovered) stays labeled until they zoom in past
+            // LABEL_ZOOM_THRESHOLD, same as EU4/HOI4-style province maps.
+            const isFocused = province.id === selectedProvinceId || province.id === hoveredProvinceId;
+            const showLabel = isCapital || isFocused || zoomRatio > LABEL_ZOOM_THRESHOLD;
+            if (!showLabel) return null;
+            return (
+              <g key={`${province.id}-label`}>
+                {isCapital && <CapitalBadge x={province.labelX} y={province.labelY - 13} />}
+                <text
+                  x={province.labelX}
+                  y={province.labelY}
+                  className={`map-panel__label ${nation.provinceIds.includes(province.id) ? "" : "is-foreign"}`}
+                  pointerEvents="none"
+                >
+                  {province.name}
+                </text>
+              </g>
+            );
+          })}
 
           {/* Province info bar: one compact strip per owned province, on its
               own translucent backing so it reads clearly no matter what

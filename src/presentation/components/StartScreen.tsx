@@ -148,6 +148,7 @@ export function StartScreen({
   if (pendingSlotId === null) {
     return (
       <div className="start-screen">
+        <MapWatermark />
         <div className="start-screen__content">
           <p className="start-screen__eyebrow">A nation-building chronicle</p>
           <h1 className="start-screen__title">The World Game</h1>
@@ -175,6 +176,7 @@ export function StartScreen({
 
   return (
     <div className="start-screen">
+      <MapWatermark />
       <div className="start-screen__content">
         <button className="party-select-screen__back" onClick={onBackToSlots}>
           ← Back to saves
@@ -229,6 +231,21 @@ export function StartScreen({
         </div>
       </div>
     </div>
+  );
+}
+
+// A huge, quiet silhouette of the continent sitting behind the start screen's
+// content — the actual world the player is about to inherit, instead of a
+// plain gradient void. Faint enough to never compete with the cards on top.
+export function MapWatermark() {
+  const { width, height, coastPath, otherLandmasses } = MAP_GEOMETRY;
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="start-screen__watermark" aria-hidden="true">
+      {otherLandmasses.map((land) => (
+        <path key={land.id} d={land.path} />
+      ))}
+      <path d={coastPath} />
+    </svg>
   );
 }
 

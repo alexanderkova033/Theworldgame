@@ -2,6 +2,7 @@ import { generateId } from "../../domain/country/id";
 import type { GameState } from "../../domain/country/types";
 import { MAX_DECISION_HISTORY } from "../../domain/constants";
 import { getDecision } from "../../domain/decisions/decisionRules";
+import { applyFactionEffects, getFactionWeights } from "../../domain/parties/factionRules";
 
 // Picking an option resolves the popup: applies that option's one-time
 // deltas, logs it to history (for the Politics panel) and the event log,
@@ -14,6 +15,12 @@ export function resolveDecision(state: GameState, decisionId: string, optionId: 
   if (!option) return state;
 
   const { effects } = option;
+  const { factionApproval, popularity } = applyFactionEffects(
+    state.factionApproval,
+    getFactionWeights(state.nationId),
+    effects,
+    effects.popularityDelta ?? 0,
+  );
   return {
     ...state,
     pendingDecisionId: null,
@@ -21,13 +28,14 @@ export function resolveDecision(state: GameState, decisionId: string, optionId: 
       { id: generateId("decision"), decisionId, optionId, date: state.date },
       ...state.decisionHistory,
     ].slice(0, MAX_DECISION_HISTORY),
+    factionApproval,
     stats: {
       ...state.stats,
       treasury: state.stats.treasury + (effects.treasuryDelta ?? 0),
       food: Math.max(0, state.stats.food + (effects.foodDelta ?? 0)),
       stability: Math.min(100, Math.max(0, state.stats.stability + (effects.stabilityDelta ?? 0))),
       population: Math.max(0, state.stats.population + (effects.populationDelta ?? 0)),
-      popularity: Math.min(100, Math.max(0, state.stats.popularity + (effects.popularityDelta ?? 0))),
+      popularity,
     },
     events: [
       {

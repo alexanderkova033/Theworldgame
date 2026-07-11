@@ -6,6 +6,8 @@ import { STARTING_RESOURCE_STOCK } from "../domain/constants";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getNation } from "../domain/nations/nationRules";
 import type { GameState } from "../domain/country/types";
+import { FACTIONS } from "../domain/parties/factionData";
+import type { Ideology } from "../domain/parties/types";
 import type { PlacedBuilding } from "../domain/provinces/types";
 import { emptyResourceBundle } from "../domain/resources/resourceRules";
 
@@ -64,6 +66,8 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     farmCount,
     factoryCount,
     roadCount,
+    granaryCount: 0,
+    canneryCount: 0,
     educationLevel: 0,
     researchLevel: 0,
 
@@ -83,6 +87,7 @@ export function startNewGame(nationId: string, partyId: string): GameState {
       grain: STARTING_RESOURCE_STOCK,
       fish: STARTING_RESOURCE_STOCK,
     },
+    factionApproval: Object.fromEntries(FACTIONS.map((f) => [f, 55])) as Record<Ideology, number>,
 
     projects: [],
     placedBuildings: buildStartingBuildings(nationId, farmCount),

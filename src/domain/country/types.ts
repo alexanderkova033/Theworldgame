@@ -3,6 +3,7 @@
 import type { Project } from "../construction/types";
 import type { DecisionHistoryEntry } from "../decisions/types";
 import type { Expedition } from "../expeditions/types";
+import type { Ideology } from "../parties/types";
 import type { PlacedBuilding } from "../provinces/types";
 import type { ResearchOutcomeTier } from "../research/types";
 import type { ResourceBundle } from "../resources/types";
@@ -80,6 +81,8 @@ export interface GameState {
   farmCount: number;
   factoryCount: number;
   roadCount: number;
+  granaryCount: number; // research-gated — see domain/research; turns Grain into Food
+  canneryCount: number; // research-gated — see domain/research; turns Fish into Food
   educationLevel: number;
   researchLevel: number;
 
@@ -89,6 +92,7 @@ export interface GameState {
   enactedResearchIds: string[]; // permanent tech choices, one per category — see domain/research
   researchOutcomes: Record<string, ResearchOutcomeTier>; // rolled once per enacted node — see researchRules.ts
   resourceDemand: ResourceBundle; // dynamic-market demand index per resource, drifts toward 0 — see domain/resources/tradeRules.ts
+  factionApproval: Record<Ideology, number>; // per-ideology approval (0-100); stats.popularity is their electorate-weighted average — see domain/parties/factionRules.ts
   expeditions: Expedition[]; // in-progress scouting trips to unclaimed islands
   scoutedIslandIds: string[]; // islands a completed expedition has already visited
   events: GameEvent[];

@@ -20,6 +20,10 @@ export function applyProjectCompletion(state: GameState, project: Project): Game
       return { ...state, factoryCount: state.factoryCount + 1, placedBuildings };
     case "road":
       return { ...state, roadCount: state.roadCount + 1, placedBuildings };
+    case "granary":
+      return { ...state, granaryCount: state.granaryCount + 1, placedBuildings };
+    case "cannery":
+      return { ...state, canneryCount: state.canneryCount + 1, placedBuildings };
     case "education":
       return { ...state, educationLevel: state.educationLevel + 1, placedBuildings };
     case "research":

@@ -9,7 +9,7 @@ import { getNationEffects } from "../domain/nations/nationEffects";
 import { getNation } from "../domain/nations/nationRules";
 import { calculateDailyIncome, calculateDailyExpenses } from "../domain/economy/economyRules";
 import type { GameState } from "../domain/country/types";
-import { consumeFood, produceFood } from "../domain/food/foodRules";
+import { consumeFood, produceFood, produceProcessedFood } from "../domain/food/foodRules";
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
 import { getActiveResearchEffects, calculateDailyResearch } from "../domain/research/researchRules";
 import { calculateDailyProduction } from "../domain/resources/resourceRules";
@@ -41,7 +41,8 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const totalIncome = calculateDailyIncome(state.stats, state.taxRate, incomeMultiplier);
   const expenses = calculateDailyExpenses(state.stats);
 
-  const foodProduced = produceFood(state.farmCount);
+  const { foodProduced: processedFood } = produceProcessedFood(state.granaryCount, state.canneryCount, state.resources);
+  const foodProduced = produceFood(state.farmCount) + processedFood;
   const foodConsumed = consumeFood(state.stats);
 
   const nation = getNation(state.nationId);

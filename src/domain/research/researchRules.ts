@@ -2,6 +2,7 @@
 // investment. They gate starting research projects (see domain/construction)
 // and every node in the research tree below.
 import { EDUCATION_PASS_CHANCE_CAP, EDUCATION_PASS_CHANCE_PER_LEVEL, RESEARCH_BASE_RATE, RESEARCH_PER_EDUCATION_LEVEL, RIVAL_OPPOSE_PASS_CHANCE_PENALTY, RIVAL_SUPPORT_PASS_CHANCE_BONUS } from "../constants";
+import type { ProjectType } from "../construction/types";
 import type { GameState } from "../country/types";
 import { getRivalParty } from "../parties/partyRules";
 import { getPartyStance } from "../parties/rivalRules";
@@ -14,6 +15,13 @@ export function calculateDailyResearch(educationLevel: number): number {
 
 export function getResearchNode(id: string): ResearchNode | undefined {
   return RESEARCH_NODES.find((n) => n.id === id);
+}
+
+// Granary/Cannery (and any future research-gated building) are buildable
+// once the node that names them in unlocksBuildingType has actually passed
+// its vote — see ActionsPanel.tsx.
+export function isBuildingUnlocked(enactedResearchIds: string[], type: ProjectType): boolean {
+  return RESEARCH_NODES.some((n) => n.unlocksBuildingType === type && enactedResearchIds.includes(n.id));
 }
 
 // "You don't know if the scientist will actually make something good" — a

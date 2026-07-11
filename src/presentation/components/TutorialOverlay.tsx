@@ -47,9 +47,15 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     title: "Economy",
-    body: "Build farms, factories, and roads, and trade raw resources on the open market — rates move with supply and demand.",
+    body: "Build farms, factories, and roads on your provinces, and keep an eye on today's production, itemized.",
     target: "tab-economy",
     panel: "economy",
+  },
+  {
+    title: "Trade",
+    body: "Barter resources on the open market, buy or sell them outright for Crowns, or take out a loan when the treasury runs short — rates move with supply and demand.",
+    target: "tab-trade",
+    panel: "trade",
   },
   {
     title: "Laws",

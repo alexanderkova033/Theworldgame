@@ -5,7 +5,9 @@ import { ELECTIONS_TO_WIN_GAME, ELECTION_WIN_THRESHOLD } from "../../domain/cons
 import type { GameState } from "../../domain/country/types";
 import { getDecision } from "../../domain/decisions/decisionRules";
 import { monthsUntilNextElection } from "../../domain/parties/electionRules";
+import { FACTIONS, getFactionWeights } from "../../domain/parties/factionData";
 import { getParty, getRivalParty } from "../../domain/parties/partyRules";
+import type { Ideology } from "../../domain/parties/types";
 import { NavIcon } from "./NavIcon";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
@@ -13,7 +15,7 @@ interface PoliticsPanelProps {
   state: GameState;
 }
 
-const IDEOLOGY_ICONS: Record<string, StatIconType> = {
+const IDEOLOGY_ICONS: Record<Ideology, StatIconType> = {
   Agrarian: "food",
   Commercial: "treasury",
   Traditionalist: "stability",
@@ -22,9 +24,47 @@ const IDEOLOGY_ICONS: Record<string, StatIconType> = {
   Nationalist: "population",
 };
 
+interface CoalitionRowProps {
+  ideology: Ideology;
+  weight: number; // 0-1, share of the electorate
+  approval: number; // 0-100
+  tag: string | null; // "Your Base" / "Rival Base" / null
+  color: string | undefined; // party color when tagged, else the row falls back to a neutral style
+}
+
+// One faction's row in the coalition breakdown: icon, "X Wing" label (+ a
+// "Your Base"/"Rival Base" tag when it's the player's or rival's own
+// ideology), a mini approval meter, and its share of the electorate — the
+// same law/research/decision that used to move one flat number now visibly
+// moves these different amounts, sometimes in different directions.
+function CoalitionRow({ ideology, weight, approval, tag, color }: CoalitionRowProps) {
+  const rounded = Math.round(approval);
+  return (
+    <div className="politics-panel__faction-row" style={color ? ({ "--party-color": color } as CSSProperties) : undefined}>
+      <span className="politics-panel__faction-icon">
+        <StatIcon type={IDEOLOGY_ICONS[ideology]} size={22} />
+      </span>
+      <div className="politics-panel__faction-main">
+        <div className="politics-panel__faction-header">
+          <span className="politics-panel__faction-name">
+            {ideology} Wing
+            {tag && <span className="politics-panel__faction-tag">{tag}</span>}
+          </span>
+          <span className="politics-panel__faction-approval">{rounded}%</span>
+        </div>
+        <div className="politics-panel__faction-bar">
+          <div className="politics-panel__faction-bar-fill" style={{ width: `${rounded}%` }} />
+        </div>
+      </div>
+      <span className="politics-panel__faction-weight">~{Math.round(weight * 100)}% of electorate</span>
+    </div>
+  );
+}
+
 export function PoliticsPanel({ state }: PoliticsPanelProps) {
   const party = getParty(state.partyId);
   const rival = getRivalParty(state.partyId);
+  const weights = getFactionWeights(state.nationId);
   const popularity = Math.round(state.stats.popularity);
   const rivalPopularity = 100 - popularity;
   const monthsLeft = monthsUntilNextElection(state.date);
@@ -78,6 +118,26 @@ export function PoliticsPanel({ state }: PoliticsPanelProps) {
           <span className="politics-panel__card-name">{rival.name}</span>
           <span className="politics-panel__card-ideology">{rival.ideology}</span>
         </div>
+      </div>
+
+      <div className="politics-panel__coalition">
+        <h3>Coalition</h3>
+        <p className="panel-hint">
+          Your electorate isn't just you vs. them — six currents, in different strengths. A law or decision rarely
+          moves them all the same way.
+        </p>
+        {[...FACTIONS]
+          .sort((a, b) => weights[b] - weights[a])
+          .map((ideology) => (
+            <CoalitionRow
+              key={ideology}
+              ideology={ideology}
+              weight={weights[ideology]}
+              approval={state.factionApproval[ideology]}
+              tag={ideology === party.ideology ? "Your Base" : ideology === rival.ideology ? "Rival Base" : null}
+              color={ideology === party.ideology ? party.color : ideology === rival.ideology ? rival.color : undefined}
+            />
+          ))}
       </div>
 
       <div className="politics-panel__progress">
