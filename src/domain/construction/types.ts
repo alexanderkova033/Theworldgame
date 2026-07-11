@@ -17,4 +17,9 @@ export interface Project {
   treasuryCostPerDay: number;
   resourceType: ResourceType | null;
   resourceCostPerDay: number;
+
+  // True on any day the treasury/stockpile couldn't cover the installment
+  // above — the project doesn't just wait, it slips slightly backward (see
+  // constructionRules.ts) until funding catches up.
+  isStalled: boolean;
 }

@@ -27,6 +27,7 @@ export function startResearch(state: GameState, provinceId: string): GameState {
     treasuryCostPerDay: 0,
     resourceType: null,
     resourceCostPerDay: 0,
+    isStalled: false,
   };
 
   return {

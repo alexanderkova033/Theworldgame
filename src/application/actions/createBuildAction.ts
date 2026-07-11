@@ -73,6 +73,7 @@ export function createBuildAction(config: BuildActionConfig): BuildAction {
       treasuryCostPerDay: (config.cost - treasuryUpfront) / config.buildDays,
       resourceType: config.resourceType,
       resourceCostPerDay: (config.resourceCost - resourceUpfront) / config.buildDays,
+      isStalled: false,
     };
 
     return {

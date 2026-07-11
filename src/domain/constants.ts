@@ -34,6 +34,9 @@ export const FACTORY_COST = 1600;
 export const FACTORY_BUILD_DAYS = 120;
 export const MAX_FACTORIES_PER_PROVINCE = 2;
 
+// --- Construction stalls (see simulateDay.ts step 1) ---
+export const STALLED_PROJECT_REGRESS_FACTOR = 0.5; // a stalled project slips backward at this fraction of its normal daily pace
+
 // --- Roads (economic efficiency) ---
 export const ROAD_EFFICIENCY_BONUS = 0.02; // +2% income & construction speed per road
 export const ROAD_COST = 450;

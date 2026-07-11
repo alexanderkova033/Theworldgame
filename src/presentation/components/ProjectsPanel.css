@@ -60,6 +60,27 @@
   background: linear-gradient(90deg, var(--accent), var(--accent-active));
 }
 
+.projects-panel__item.is-stalled .projects-panel__icon {
+  border-color: var(--danger);
+  filter: grayscale(0.5);
+}
+
+.projects-panel__item.is-stalled .progress-bar__fill {
+  background: var(--danger);
+  animation: projects-panel-stalled-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes projects-panel-stalled-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+.projects-panel__stalled-tag {
+  color: var(--danger);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .projects-panel__empty {
   display: flex;
   flex-direction: column;

@@ -43,12 +43,55 @@ export function simulateDay(state: GameState): GameState {
   const nationEffects = getNationEffects(state.nationId);
   const events: GameEvent[] = [...state.events];
 
-  // 1. Advance every active project; apply completed ones.
-  const advancedProjects = state.projects.map((p) => advanceProject(p, efficiencyMultiplier));
+  // 1. Advance every active project. Each one pays its daily installment if
+  // the treasury/stockpile can cover it (checked against a running balance,
+  // so earlier-started projects get first claim on a tight budget); if it
+  // can't, the project doesn't just wait — it stalls and slips slightly
+  // backward (see constructionRules.ts) until funding recovers enough to
+  // pay for another day's work. A stall/resume only logs once, on the day
+  // it actually changes, not every day it stays that way.
+  let runningTreasury = state.stats.treasury;
+  let runningResources = state.resources;
+  const advancedProjects = state.projects.map((project) => {
+    const canAffordTreasury = runningTreasury >= project.treasuryCostPerDay;
+    const canAffordResource = !project.resourceType || runningResources[project.resourceType] >= project.resourceCostPerDay;
+    const canAffordToday = canAffordTreasury && canAffordResource;
+
+    if (canAffordToday) {
+      runningTreasury -= project.treasuryCostPerDay;
+      if (project.resourceType) {
+        runningResources = { ...runningResources, [project.resourceType]: runningResources[project.resourceType] - project.resourceCostPerDay };
+      }
+    }
+
+    const advanced = advanceProject(project, efficiencyMultiplier, canAffordToday);
+    if (advanced.isStalled && !project.isStalled) {
+      events.unshift({
+        id: generateId("event"),
+        date: state.date,
+        message: `${project.label} construction has stalled — not enough to pay for it.`,
+        severity: "warning",
+      });
+    } else if (!advanced.isStalled && project.isStalled) {
+      events.unshift({
+        id: generateId("event"),
+        date: state.date,
+        message: `${project.label} construction resumes.`,
+        severity: "info",
+      });
+    }
+    return advanced;
+  });
+
   const completedProjects = advancedProjects.filter(isProjectComplete);
   const remainingProjects = advancedProjects.filter((p) => !isProjectComplete(p));
 
-  let working: GameState = { ...state, projects: remainingProjects };
+  let working: GameState = {
+    ...state,
+    projects: remainingProjects,
+    stats: { ...state.stats, treasury: runningTreasury },
+    resources: runningResources,
+  };
   for (const project of completedProjects) {
     working = applyProjectCompletion(working, project);
     events.unshift({
@@ -59,29 +102,7 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
-  // 1b. Every still-active project drains the rest of its cost a little
-  // today — see Project.treasuryCostPerDay/resourceCostPerDay and
-  // createBuildAction.ts for the 50/50 split this pays down. Uses
-  // state.projects (before today's advancement/completion) so a project
-  // finishing today still pays its final day's installment.
-  let treasuryAfterConstruction = working.stats.treasury;
-  let resourcesAfterConstruction = working.resources;
-  for (const project of state.projects) {
-    treasuryAfterConstruction -= project.treasuryCostPerDay;
-    if (project.resourceType) {
-      resourcesAfterConstruction = {
-        ...resourcesAfterConstruction,
-        [project.resourceType]: resourcesAfterConstruction[project.resourceType] - project.resourceCostPerDay,
-      };
-    }
-  }
-  working = {
-    ...working,
-    stats: { ...working.stats, treasury: treasuryAfterConstruction },
-    resources: resourcesAfterConstruction,
-  };
-
-  // 1c. Advance every active expedition; apply completed ones the same way.
+  // 1b. Advance every active expedition; apply completed ones the same way.
   const advancedExpeditions = working.expeditions.map(advanceExpedition);
   const completedExpeditions = advancedExpeditions.filter(isExpeditionComplete);
   const remainingExpeditions = advancedExpeditions.filter((e) => !isExpeditionComplete(e));
