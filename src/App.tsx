@@ -11,6 +11,7 @@ import { dismissDecision, resolveDecision } from "./application/actions";
 import { getDailyProductionSummary } from "./application/getDailyProductionSummary";
 import { playDanger, playGameOver } from "./presentation/audio/sound";
 import { ActionsPanel } from "./presentation/components/ActionsPanel";
+import { DebtPanel } from "./presentation/components/DebtPanel";
 import { DecisionModal } from "./presentation/components/DecisionModal";
 import { EventLog } from "./presentation/components/EventLog";
 import { ExpeditionPanel } from "./presentation/components/ExpeditionPanel";
@@ -206,6 +207,7 @@ function App() {
         stats={state.stats}
         resources={state.resources}
         production={production}
+        debt={state.debt}
         activePanel={openModal}
         reportsBadgeCount={unseenEventCount}
         onPause={pause}
@@ -245,7 +247,9 @@ function App() {
           <div className="economy-modal">
             <ActionsPanel state={state} selectedProvinceId={currentProvinceId} dispatch={dispatch} />
             <div className="economy-modal__side">
+              <ProjectsPanel state={state} />
               <TradePanel state={state} dispatch={dispatch} />
+              <DebtPanel state={state} dispatch={dispatch} />
               <ProductionPanel production={production} />
             </div>
           </div>
@@ -256,7 +260,7 @@ function App() {
         <Modal title="Reports" onClose={() => setOpenModal(null)} wide>
           <div className="reports-modal">
             <div className="reports-modal__column">
-              <ProjectsPanel projects={state.projects} />
+              <ProjectsPanel state={state} />
               <ReportsPanel reports={state.monthlyReports} />
             </div>
             <EventLog events={state.events} />

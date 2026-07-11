@@ -1,13 +1,14 @@
 export { buildFarm } from "./buildFarm";
 export { buildFactory } from "./buildFactory";
 export { buildRoad } from "./buildRoad";
+export { buildEducation } from "./buildEducation";
 export { countBuildingsInProvince } from "./createBuildAction";
-export { investEducation } from "./investEducation";
 export { canStartResearch, startResearch } from "./startResearch";
 export { recruitSoldiers } from "./recruitSoldiers";
 export { raiseTaxes, lowerTaxes } from "./taxActions";
-export { canTrade, getGiveAmount, tradeResources } from "./tradeResources";
+export { canTrade, getGiveAmount, tradeResources, type TradeableType } from "./tradeResources";
 export { canImportFood, getFoodImportCost, importFood } from "./importFood";
+export { canTakeLoan, canRepayLoan, getRepayAmount, repayLoan, takeLoan } from "./loanActions";
 export { canSendExpedition, sendExpedition } from "./sendExpedition";
 export { canEnactLaw, enactLaw } from "./enactLaw";
 export { canEnactResearch, enactResearch } from "./enactResearch";

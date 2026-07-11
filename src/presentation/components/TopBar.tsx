@@ -78,6 +78,7 @@ interface TopBarProps {
   stats: CountryStats;
   resources: ResourceBundle;
   production: DailyProductionSummary;
+  debt: number;
   activePanel: PanelKey | null;
   reportsBadgeCount: number;
   onPause: () => void;
@@ -109,6 +110,7 @@ export function TopBar({
   stats,
   resources,
   production,
+  debt,
   activePanel,
   reportsBadgeCount,
   onPause,
@@ -129,7 +131,7 @@ export function TopBar({
           </span>
         </span>
 
-        <ResourceTicker stats={stats} resources={resources} production={production} />
+        <ResourceTicker stats={stats} resources={resources} production={production} debt={debt} />
 
         <div className="top-bar__spacer" />
 

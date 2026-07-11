@@ -39,3 +39,10 @@ export interface ResearchNode {
   passChance: number; // 0..1 base chance before the education/rival nudges — see researchRules.ts
   icon: string; // a StatIconType name — kept as a plain string here so domain/ doesn't depend on presentation/
 }
+
+// A research node passing its vote doesn't guarantee the listed effects
+// happen exactly as written — the scientist might get lucky or might not.
+// Rolled once when a node passes and stored (see GameState.researchOutcomes)
+// so the same scaled result applies every day after, not just on the day it
+// was adopted.
+export type ResearchOutcomeTier = "breakthrough" | "expected" | "underwhelming";

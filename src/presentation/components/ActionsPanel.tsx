@@ -1,12 +1,15 @@
-// Development, Military, and Taxes actions are temporarily removed from the
-// UI while the core build/economy/food loop is being nailed down — the
-// underlying domain/application code for them still exists (see
-// application/actions/), so bringing them back later is just re-adding a
-// couple of button groups here.
+// Military and Taxes actions are temporarily removed from the UI while the
+// core build/economy/food loop is being nailed down — the underlying
+// domain/application code for them still exists (see application/actions/),
+// so bringing them back later is just re-adding a couple of button groups
+// here.
 import "./ActionsPanel.css";
-import { buildFactory, buildFarm, buildRoad, countBuildingsInProvince } from "../../application/actions";
+import { buildEducation, buildFactory, buildFarm, buildRoad, countBuildingsInProvince } from "../../application/actions";
 import {
   CURRENCY_SYMBOL,
+  EDUCATION_BUILD_DAYS,
+  EDUCATION_COST,
+  EDUCATION_WOOD_COST,
   FACTORY_BUILD_DAYS,
   FACTORY_COST,
   FACTORY_ORE_COST,
@@ -40,11 +43,18 @@ function half(value: number): number {
   return Math.round(value / 2);
 }
 
+// Rounded to one decimal — most of these per-day rates are well under 1
+// unit/day (e.g. a 60-day farm's remaining 7 wood is 0.1/day), and rounding
+// to a whole number would show "0" for a cost that's very much still real.
+function perDay(value: number, days: number): number {
+  return Math.round((value / days) * 10) / 10;
+}
+
 export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPanelProps) {
   const provinceName = getProvinceName(selectedProvinceId);
 
   const buildItems: Array<{
-    type: Exclude<ProjectType, "education" | "research">;
+    type: Exclude<ProjectType, "research">;
     name: string;
     cost: number;
     resourceCost: number;
@@ -95,6 +105,19 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
       canBuild: buildRoad.canBuild(state, selectedProvinceId),
       onBuild: () => dispatch((s) => buildRoad(s, selectedProvinceId)),
     },
+    {
+      type: "education",
+      name: "School",
+      cost: EDUCATION_COST,
+      resourceCost: EDUCATION_WOOD_COST,
+      resourceLabel: "Wood",
+      buildDays: EDUCATION_BUILD_DAYS,
+      description: "Raises your education level — improves research pass chance and unlocks the research tree faster.",
+      count: countBuildingsInProvince(state, "education", selectedProvinceId),
+      max: buildEducation.maxPerProvince,
+      canBuild: buildEducation.canBuild(state, selectedProvinceId),
+      onBuild: () => dispatch((s) => buildEducation(s, selectedProvinceId)),
+    },
   ];
 
   return (
@@ -111,6 +134,8 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
           const upfrontResource = half(item.resourceCost);
           const laterCost = item.cost - upfrontCost;
           const laterResource = item.resourceCost - upfrontResource;
+          const dailyCost = perDay(laterCost, item.buildDays);
+          const dailyResource = perDay(laterResource, item.buildDays);
 
           return (
             <div className={`build-card ${!item.canBuild ? "is-disabled" : ""}`} key={item.type}>
@@ -127,12 +152,12 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
                   </span>
                 </div>
                 <div className="build-card__cost">
+                  <span className="build-card__cost-tag">Now</span>
                   {upfrontCost} {CURRENCY_SYMBOL} + {upfrontResource} {item.resourceLabel}
-                  <span className="build-card__cost-tag">now</span>
                 </div>
                 <div className="build-card__cost build-card__cost--later">
-                  +{laterCost} {CURRENCY_SYMBOL} + {laterResource} {item.resourceLabel}
-                  <span className="build-card__cost-tag">over {item.buildDays}d</span>
+                  <span className="build-card__cost-tag">Then</span>
+                  {dailyCost} {CURRENCY_SYMBOL}/day + {dailyResource} {item.resourceLabel}/day, for {item.buildDays} days
                 </div>
                 <p className="build-card__description">{item.description}</p>
                 <button

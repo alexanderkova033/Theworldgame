@@ -107,7 +107,7 @@ const WORLD_VIEW: ViewBox = {
 
 const MIN_ZOOM = BASE_VIEW.width / WORLD_VIEW.width; // zooming out this far shows the whole surrounding sea
 const MAX_ZOOM = 6;
-const DRAG_CLICK_THRESHOLD = 4; // pixels of movement before a drag stops counting as a click
+const DRAG_CLICK_THRESHOLD = 6; // total pixels of movement from the initial press before a drag stops counting as a click
 
 function clampViewBox(vb: ViewBox): ViewBox {
   const minWidth = BASE_VIEW.width / MAX_ZOOM;
@@ -160,6 +160,15 @@ export function MapPanel({
   const svgRef = useRef<SVGSVGElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<ViewBox>(BASE_VIEW);
+  // dragOrigin is the original pointerdown position, used only to decide
+  // "was this whole gesture a click or a drag" — dragStart is the *last*
+  // move position, used for incremental pan deltas. Keeping these separate
+  // matters: comparing each move only to the previous move (as this used to
+  // do) means ordinary hand jitter during a plain click — a couple of
+  // pixels this way, a couple back — can cross the threshold on a single
+  // small step and silently swallow the click, even though the pointer
+  // never actually traveled far from where it went down.
+  const dragOrigin = useRef<{ x: number; y: number } | null>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const suppressNextClick = useRef(false);
   const [isPanning, setIsPanning] = useState(false);
@@ -208,6 +217,7 @@ export function MapPanel({
   }, []);
 
   function handlePointerDown(e: React.PointerEvent<SVGSVGElement>) {
+    dragOrigin.current = { x: e.clientX, y: e.clientY };
     dragStart.current = { x: e.clientX, y: e.clientY };
     svgRef.current?.setPointerCapture(e.pointerId);
     setHoveredProvinceId(null);
@@ -217,9 +227,14 @@ export function MapPanel({
     if (!dragStart.current) return;
     const dxPixels = e.clientX - dragStart.current.x;
     const dyPixels = e.clientY - dragStart.current.y;
-    if (Math.hypot(dxPixels, dyPixels) > DRAG_CLICK_THRESHOLD) {
-      suppressNextClick.current = true;
-      setIsPanning(true);
+
+    if (dragOrigin.current) {
+      const totalDx = e.clientX - dragOrigin.current.x;
+      const totalDy = e.clientY - dragOrigin.current.y;
+      if (Math.hypot(totalDx, totalDy) > DRAG_CLICK_THRESHOLD) {
+        suppressNextClick.current = true;
+        setIsPanning(true);
+      }
     }
 
     const rect = svgRef.current?.getBoundingClientRect();
@@ -235,6 +250,7 @@ export function MapPanel({
   }
 
   function handlePointerUp() {
+    dragOrigin.current = null;
     dragStart.current = null;
     setIsPanning(false);
   }

@@ -9,6 +9,7 @@ import {
   calculateDailyResearch,
   getEffectivePassChance,
   getResearchNodeStatus,
+  getResearchOutcomeFlavor,
   getRivalStance,
   getQuotaProgress,
   type ResearchNodeStatus,
@@ -202,7 +203,11 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
         </p>
       )}
 
-      {status === "enacted" && <p className="law-inspector__status is-enacted">Adopted.</p>}
+      {status === "enacted" && (
+        <p className="law-inspector__status is-enacted">
+          Adopted — {getResearchOutcomeFlavor(state.researchOutcomes[node.id]) ?? "as projected"}.
+        </p>
+      )}
 
       {status === "foreclosed" && (
         <p className="law-inspector__status is-foreclosed">Foreclosed — a rival technology took this branch instead.</p>
@@ -261,7 +266,8 @@ export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
         Every branch is gated by accumulated research points ({state.stats.researchPoints.toFixed(1)} so far, +
         {calculateDailyResearch(state.educationLevel).toFixed(2)}/day at your current education level). Adopting a
         technology is a vote, not a guarantee — education helps your odds, and the opposition has its own opinion on
-        each one.
+        each one. Even a passed vote is a roll of the dice: the listed benefit is what a solid result looks like, not
+        a promise — a lucky trial can beat it, an unlucky one can fall well short.
       </p>
 
       <div className="law-tree__columns">

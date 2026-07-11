@@ -4,6 +4,7 @@ import type { Project } from "../construction/types";
 import type { DecisionHistoryEntry } from "../decisions/types";
 import type { Expedition } from "../expeditions/types";
 import type { PlacedBuilding } from "../provinces/types";
+import type { ResearchOutcomeTier } from "../research/types";
 import type { ResourceBundle } from "../resources/types";
 
 export interface GameDate {
@@ -71,6 +72,7 @@ export interface GameState {
   stats: CountryStats;
   resources: ResourceBundle; // wood/ore/grain/fish, produced by terrain, spent on building or traded
   taxRate: number; // 0..1
+  debt: number; // outstanding loan balance, compounds daily — see domain/loans/loanRules.ts
 
   // Infrastructure counts. Each is owned conceptually by its matching domain
   // module (farmCount -> domain/food, factoryCount -> domain/industry, etc.)
@@ -85,6 +87,7 @@ export interface GameState {
   placedBuildings: PlacedBuilding[]; // completed buildings, for the map
   enactedLawIds: string[]; // permanent policy choices, one per category — see domain/laws
   enactedResearchIds: string[]; // permanent tech choices, one per category — see domain/research
+  researchOutcomes: Record<string, ResearchOutcomeTier>; // rolled once per enacted node — see researchRules.ts
   resourceDemand: ResourceBundle; // dynamic-market demand index per resource, drifts toward 0 — see domain/resources/tradeRules.ts
   expeditions: Expedition[]; // in-progress scouting trips to unclaimed islands
   scoutedIslandIds: string[]; // islands a completed expedition has already visited

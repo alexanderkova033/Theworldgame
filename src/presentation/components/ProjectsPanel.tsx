@@ -1,14 +1,46 @@
 import "./ProjectsPanel.css";
-import { BuildingIcon } from "./BuildingIcon";
+import { getProjectAffordabilities } from "../../application/getProjectAffordability";
+import { CURRENCY_SYMBOL } from "../../domain/constants";
 import { projectProgress } from "../../domain/construction/constructionRules";
-import type { Project } from "../../domain/construction/types";
+import type { GameState } from "../../domain/country/types";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
+import { BuildingIcon } from "./BuildingIcon";
+import { ResourceIcon } from "./ResourceIcon";
 
 interface ProjectsPanelProps {
-  projects: Project[];
+  state: GameState;
 }
 
-export function ProjectsPanel({ projects }: ProjectsPanelProps) {
+// The ongoing daily installment a project is drawing — see
+// createBuildAction.ts (half the cost up front, the rest drained daily) and
+// simulateDay.ts step 1 (earlier-started projects claim funds first on a
+// tight budget, which is exactly what getProjectAffordabilities mirrors).
+function DailyCost({ treasuryPerDay, resourceType, resourcePerDay }: { treasuryPerDay: number; resourceType: string | null; resourcePerDay: number }) {
+  const treasuryRounded = Math.round(treasuryPerDay * 10) / 10;
+  const resourceRounded = Math.round(resourcePerDay * 10) / 10;
+  return (
+    <span className="projects-panel__cost">
+      {treasuryRounded > 0 && (
+        <span className="projects-panel__cost-item">
+          {treasuryRounded} {CURRENCY_SYMBOL}/day
+        </span>
+      )}
+      {resourceType && resourceRounded > 0 && (
+        <span className="projects-panel__cost-item">
+          <svg viewBox="-10 -10 20 20" width={13} height={13}>
+            <ResourceIcon type={resourceType as never} size={8} />
+          </svg>
+          {resourceRounded}/day
+        </span>
+      )}
+    </span>
+  );
+}
+
+export function ProjectsPanel({ state }: ProjectsPanelProps) {
+  const { projects } = state;
+  const affordabilities = getProjectAffordabilities(state);
+
   return (
     <section className="panel projects-panel">
       <h2>Active Projects</h2>
@@ -23,6 +55,7 @@ export function ProjectsPanel({ projects }: ProjectsPanelProps) {
       <ul className="projects-panel__list">
         {projects.map((project) => {
           const progress = Math.round(projectProgress(project) * 100);
+          const willAffordTomorrow = affordabilities.get(project.id) ?? true;
           return (
             <li key={project.id} className={`projects-panel__item ${project.isStalled ? "is-stalled" : ""}`}>
               <div className="projects-panel__icon" aria-hidden="true">
@@ -43,6 +76,12 @@ export function ProjectsPanel({ projects }: ProjectsPanelProps) {
                 </div>
                 <div className="progress-bar">
                   <div className="progress-bar__fill" style={{ width: `${progress}%` }} />
+                </div>
+                <div className="projects-panel__footer">
+                  <DailyCost treasuryPerDay={project.treasuryCostPerDay} resourceType={project.resourceType} resourcePerDay={project.resourceCostPerDay} />
+                  {!project.isStalled && !willAffordTomorrow && (
+                    <span className="projects-panel__warning-tag">Will stall tomorrow — not enough to cover it</span>
+                  )}
                 </div>
               </div>
             </li>

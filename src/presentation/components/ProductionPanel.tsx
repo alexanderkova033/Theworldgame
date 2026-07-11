@@ -2,6 +2,7 @@ import "./ProductionPanel.css";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import { RESOURCE_TYPES } from "../../domain/resources/types";
+import { formatCompact } from "../formatNumber";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 
@@ -21,7 +22,7 @@ function formatSigned(value: number, suffix = ""): string {
   // reads as "positive" for the sign prefix and prints its own literal
   // minus sign, producing a stray "+-0".
   const rounded = Math.round(value) || 0;
-  return `${rounded >= 0 ? "+" : ""}${rounded.toLocaleString()}${suffix}`;
+  return `${rounded >= 0 ? "+" : ""}${formatCompact(rounded)}${suffix}`;
 }
 
 function Row({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone?: "gain" | "loss" }) {

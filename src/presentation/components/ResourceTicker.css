@@ -41,6 +41,12 @@
   color: var(--danger);
 }
 
+/* The debt chip only appears once you've taken a loan — see DebtPanel.tsx. */
+.resource-ticker__chip.is-danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
 .resource-ticker__divider {
   width: 1px;
   align-self: stretch;

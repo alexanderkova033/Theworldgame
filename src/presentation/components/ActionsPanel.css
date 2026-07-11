@@ -82,11 +82,11 @@
 
 .build-card__cost {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.4rem;
   font-size: 0.78rem;
   color: var(--accent-active);
-  margin-top: 0.1rem;
+  margin-top: 0.2rem;
 }
 
 .build-card__cost--later {
@@ -95,10 +95,17 @@
 }
 
 .build-card__cost-tag {
-  font-size: 0.62rem;
+  flex-shrink: 0;
+  min-width: 2.6rem;
+  text-align: center;
+  font-size: 0.6rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--text-muted);
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  padding: 0.1rem 0.4rem;
 }
 
 .build-card__description {

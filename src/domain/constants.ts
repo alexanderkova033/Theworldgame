@@ -33,6 +33,16 @@ export const DEMAND_PRICE_SENSITIVITY = 0.08; // price swing per point of demand
 export const DEMAND_STEP = 0.4; // demand index moved per trade (give cheapens, receive dearens)
 export const DEMAND_DECAY_PER_DAY = 0.03; // fraction of the demand index that reverts toward 0 each day
 
+// --- Food trading (see application/actions/tradeResources.ts) ---
+// Food is abundant compared to the 4 crafted resources (farms can produce
+// thousands/day vs. ~1/province/day), so it trades at its own much larger
+// scale rather than joining the small-integer wood/ore/grain/fish batches —
+// 100 food is treated as worth about 1 crafted-resource unit, and it sits
+// outside the dynamic-demand system entirely (it isn't scarce the way the
+// terrain-based resources are).
+export const FOOD_TRADE_UNIT = 100; // food-per-crafted-resource-unit value ratio
+export const FOOD_TRADE_BATCH_SIZE = 500; // food received per trade click when food is the "receive" side
+
 // --- Industry ---
 export const INDUSTRY_PER_FACTORY = 5;
 export const INCOME_PER_INDUSTRY = 1.5;
@@ -51,7 +61,9 @@ export const MAX_ROADS_PER_PROVINCE = 5;
 
 // --- Education & research ---
 export const EDUCATION_COST = 400;
+export const EDUCATION_WOOD_COST = 10; // books, desks, building materials
 export const EDUCATION_BUILD_DAYS = 90;
+export const MAX_EDUCATION_PER_PROVINCE = 2;
 export const RESEARCH_BASE_RATE = 0.5; // research points/day, even with no education
 export const RESEARCH_PER_EDUCATION_LEVEL = 0.05; // extra research points/day per education level
 export const RESEARCH_PROJECT_COST = 800;
@@ -111,6 +123,15 @@ export const ELECTION_WIN_STABILITY_BONUS = 5; // a mandate bump to stability on
 // --- Scouting expeditions (unclaimed islands) ---
 export const EXPEDITION_COST = 800;
 export const EXPEDITION_DAYS = 40;
+
+// --- Loans (see domain/loans/loanRules.ts) ---
+export const LOAN_BATCH_SIZE = 2000; // treasury received (and added to debt) per "Take Loan" click
+export const LOAN_REPAY_BATCH_SIZE = 1000; // debt paid down per "Repay" click, capped by treasury and remaining debt
+export const LOAN_MAX_DEBT = 12000; // hard cap on outstanding debt
+export const LOAN_INTEREST_RATE_PER_DAY = 0.002; // compounds daily — roughly 6%/month if left untouched
+export const DEBT_DANGER_THRESHOLD = 8000; // beyond this, debt itself starts costing stability/popularity every day
+export const DEBT_STABILITY_PENALTY_PER_DAY = 0.15;
+export const DEBT_POPULARITY_PENALTY_PER_DAY = 0.1;
 
 // --- Misc ---
 export const MAX_EVENT_LOG_LENGTH = 100;

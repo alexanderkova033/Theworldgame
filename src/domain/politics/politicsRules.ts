@@ -21,9 +21,9 @@ export function lowerTaxRate(currentRate: number): number {
   return clampTaxRate(currentRate - TAX_RATE_STEP);
 }
 
-export function updatePopularity(stats: CountryStats, taxRate: number): number {
+export function updatePopularity(stats: CountryStats, taxRate: number, debtPenalty = 0): number {
   const excessTax = Math.max(0, taxRate - COMFORTABLE_TAX_RATE);
   const targetPopularity = 70 - excessTax * 100;
   const drift = (targetPopularity - stats.popularity) * POPULARITY_DRIFT_RATE;
-  return Math.min(100, Math.max(0, stats.popularity + drift));
+  return Math.min(100, Math.max(0, stats.popularity + drift - debtPenalty));
 }

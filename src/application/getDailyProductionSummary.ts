@@ -32,7 +32,7 @@ export interface DailyProductionSummary {
 export function getDailyProductionSummary(state: GameState): DailyProductionSummary {
   const efficiencyMultiplier = calculateEfficiencyMultiplier(state.roadCount);
   const lawEffects = getActiveLawEffects(state.enactedLawIds);
-  const researchEffects = getActiveResearchEffects(state.enactedResearchIds);
+  const researchEffects = getActiveResearchEffects(state.enactedResearchIds, state.researchOutcomes);
   const nationEffects = getNationEffects(state.nationId);
   const incomeMultiplier = efficiencyMultiplier * lawEffects.incomeMultiplier * nationEffects.incomeMultiplier * researchEffects.incomeMultiplier;
 

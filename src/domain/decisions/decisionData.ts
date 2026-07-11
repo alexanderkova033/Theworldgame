@@ -94,4 +94,48 @@ export const DECISIONS: DecisionDefinition[] = [
       { id: "simple", label: "Keep it simple", effects: { popularityDelta: 2 } },
     ],
   },
+
+  // --- Genuinely rough ones: unlike everything above, neither option here
+  // is a real win — both cost you something, and the choice is which cost
+  // you'd rather carry.
+  {
+    id: "epidemic-outbreak",
+    title: "Epidemic Outbreak",
+    prompt: "A fever spreads through the crowded districts.",
+    icon: "population",
+    options: [
+      { id: "quarantine", label: "Quarantine the districts", effects: { treasuryDelta: -900, stabilityDelta: -4 } },
+      { id: "let-it-pass", label: "Let it run its course", effects: { populationDelta: -400, popularityDelta: -6 } },
+    ],
+  },
+  {
+    id: "bridge-collapse",
+    title: "Bridge Collapse",
+    prompt: "A key river crossing gives way under its own age.",
+    icon: "industry",
+    options: [
+      { id: "rebuild", label: "Rebuild it properly", effects: { treasuryDelta: -1000 } },
+      { id: "patch", label: "Patch it and move on", effects: { stabilityDelta: -6, popularityDelta: -3 } },
+    ],
+  },
+  {
+    id: "corruption-scandal",
+    title: "Corruption Scandal",
+    prompt: "A minister close to you is caught skimming public funds.",
+    icon: "popularity",
+    options: [
+      { id: "cover-up", label: "Cover it up", effects: { popularityDelta: -5, stabilityDelta: -3 } },
+      { id: "prosecute", label: "Prosecute publicly", effects: { treasuryDelta: -300, stabilityDelta: -6, popularityDelta: 2 } },
+    ],
+  },
+  {
+    id: "harsh-winter",
+    title: "Harsh Winter",
+    prompt: "An early frost catches the granaries half-stocked.",
+    icon: "stability",
+    options: [
+      { id: "subsidize", label: "Emergency heating subsidies", effects: { treasuryDelta: -700, stabilityDelta: 2 } },
+      { id: "ration", label: "Ration fuel and endure it", effects: { stabilityDelta: -5, popularityDelta: -4 } },
+    ],
+  },
 ];

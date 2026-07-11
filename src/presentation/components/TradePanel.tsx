@@ -1,7 +1,7 @@
 import "./TradePanel.css";
 import { useState } from "react";
-import { canImportFood, canTrade, getFoodImportCost, getGiveAmount, importFood, tradeResources } from "../../application/actions";
-import { CURRENCY_SYMBOL, FOOD_IMPORT_BATCH_SIZE, TRADE_BATCH_SIZE } from "../../domain/constants";
+import { canImportFood, canTrade, getFoodImportCost, getGiveAmount, importFood, tradeResources, type TradeableType } from "../../application/actions";
+import { CURRENCY_SYMBOL, FOOD_IMPORT_BATCH_SIZE, FOOD_TRADE_BATCH_SIZE, TRADE_BATCH_SIZE } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getNation } from "../../domain/nations/nationRules";
 import { getPriceIndex, nationHasPort } from "../../domain/resources/tradeRules";
@@ -15,50 +15,64 @@ interface TradePanelProps {
   dispatch: (action: (state: GameState) => GameState) => void;
 }
 
-const RESOURCE_LABELS: Record<ResourceType, string> = {
+const TRADEABLE_TYPES: TradeableType[] = [...RESOURCE_TYPES, "food"];
+
+const TRADEABLE_LABELS: Record<TradeableType, string> = {
   wood: "Wood",
   ore: "Ore",
   grain: "Grain",
   fish: "Fish",
+  food: "Food",
 };
+
+function receiveBatchSize(type: TradeableType): number {
+  return type === "food" ? FOOD_TRADE_BATCH_SIZE : TRADE_BATCH_SIZE;
+}
 
 interface ResourcePickerProps {
   label: string;
-  value: ResourceType;
+  value: TradeableType;
   demand: GameState["resourceDemand"];
-  onChange: (type: ResourceType) => void;
+  onChange: (type: TradeableType) => void;
 }
 
 // A small dot showing whether a resource is currently in demand (dearer —
 // bought a lot recently) or in surplus (cheaper — sold a lot recently), so
-// the dynamic market has a visible tell before you even pick a trade.
-function DemandDot({ demand, type }: { demand: GameState["resourceDemand"]; type: ResourceType }) {
-  const index = getPriceIndex(demand, type);
+// the dynamic market has a visible tell before you even pick a trade. Food
+// doesn't participate in that demand tracking (see tradeResources.ts), so
+// it never shows a dot.
+function DemandDot({ demand, type }: { demand: GameState["resourceDemand"]; type: TradeableType }) {
+  if (type === "food") return null;
+  const index = getPriceIndex(demand, type as ResourceType);
   if (index > 1.03) return <span className="trade-panel__demand-dot is-high" title="In demand — dearer than usual" />;
   if (index < 0.97) return <span className="trade-panel__demand-dot is-low" title="In surplus — cheaper than usual" />;
   return null;
 }
 
 // A row of icon buttons standing in for a native <select> — picking a
-// resource is now a visual choice (tap the log/rock/wheat/fish glyph)
+// resource is now a visual choice (tap the log/rock/wheat/fish/food glyph)
 // instead of reading names out of a text dropdown.
 function ResourcePicker({ label, value, demand, onChange }: ResourcePickerProps) {
   return (
     <div className="trade-panel__field">
       <span className="trade-panel__field-label">{label}</span>
       <div className="trade-panel__picker">
-        {RESOURCE_TYPES.map((type) => (
+        {TRADEABLE_TYPES.map((type) => (
           <button
             key={type}
             type="button"
             className={`trade-panel__picker-option ${value === type ? "is-active" : ""}`}
             onClick={() => onChange(type)}
-            title={RESOURCE_LABELS[type]}
-            aria-label={RESOURCE_LABELS[type]}
+            title={TRADEABLE_LABELS[type]}
+            aria-label={TRADEABLE_LABELS[type]}
           >
-            <svg viewBox="-10 -10 20 20">
-              <ResourceIcon type={type} size={8} />
-            </svg>
+            {type === "food" ? (
+              <StatIcon type="food" size={20} />
+            ) : (
+              <svg viewBox="-10 -10 20 20">
+                <ResourceIcon type={type} size={8} />
+              </svg>
+            )}
             <DemandDot demand={demand} type={type} />
           </button>
         ))}
@@ -68,8 +82,8 @@ function ResourcePicker({ label, value, demand, onChange }: ResourcePickerProps)
 }
 
 export function TradePanel({ state, dispatch }: TradePanelProps) {
-  const [give, setGive] = useState<ResourceType>("grain");
-  const [receive, setReceive] = useState<ResourceType>("wood");
+  const [give, setGive] = useState<TradeableType>("grain");
+  const [receive, setReceive] = useState<TradeableType>("wood");
 
   const nation = getNation(state.nationId);
   const hasPort = nationHasPort(nation);
@@ -81,7 +95,8 @@ export function TradePanel({ state, dispatch }: TradePanelProps) {
       <h2>Trade</h2>
       <p className="panel-hint">
         Trade with the continental market{hasPort ? " — your port keeps the base rate down" : ""}. Rates move with
-        supply and demand: buying a resource repeatedly makes it dearer, selling it repeatedly makes it cheaper.
+        supply and demand: buying a resource repeatedly makes it dearer, selling it repeatedly makes it cheaper. Food
+        trades too, at its own scale, so a surplus is never dead weight.
       </p>
 
       <div className="trade-panel__row">
@@ -98,7 +113,7 @@ export function TradePanel({ state, dispatch }: TradePanelProps) {
           dispatch((s) => tradeResources(s, give, receive));
         }}
       >
-        Trade {giveAmount} {RESOURCE_LABELS[give]} → {TRADE_BATCH_SIZE} {RESOURCE_LABELS[receive]}
+        Trade {giveAmount} {TRADEABLE_LABELS[give]} → {receiveBatchSize(receive)} {TRADEABLE_LABELS[receive]}
       </button>
 
       <div className="trade-panel__divider" />

@@ -81,6 +81,35 @@
   white-space: nowrap;
 }
 
+.projects-panel__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+.projects-panel__cost {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.projects-panel__cost-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.projects-panel__warning-tag {
+  color: var(--warning);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 .projects-panel__empty {
   display: flex;
   flex-direction: column;

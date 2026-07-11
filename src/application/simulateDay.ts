@@ -13,6 +13,7 @@ import { advanceExpedition, isExpeditionComplete } from "../domain/expeditions/e
 import { updateFood } from "../domain/food/foodRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getActiveLawEffects } from "../domain/laws/lawsRules";
+import { accrueInterest, getDebtPopularityPenalty, getDebtStabilityPenalty, isDebtDangerous } from "../domain/loans/loanRules";
 import { getNationEffects } from "../domain/nations/nationEffects";
 import { getNation } from "../domain/nations/nationRules";
 import { getParty } from "../domain/parties/partyRules";
@@ -43,7 +44,7 @@ import {
 export function simulateDay(state: GameState): GameState {
   const efficiencyMultiplier = calculateEfficiencyMultiplier(state.roadCount);
   const lawEffects = getActiveLawEffects(state.enactedLawIds);
-  const researchEffects = getActiveResearchEffects(state.enactedResearchIds);
+  const researchEffects = getActiveResearchEffects(state.enactedResearchIds, state.researchOutcomes);
   const nationEffects = getNationEffects(state.nationId);
   const events: GameEvent[] = [...state.events];
 
@@ -132,6 +133,19 @@ export function simulateDay(state: GameState): GameState {
   const resources = addResources(working.resources, calculateDailyProduction(ownedTerrains));
   const resourceDemand = decayDemand(working.resourceDemand);
 
+  // 2b. Debt compounds daily, whether or not it's touched — see
+  // domain/loans/loanRules.ts. Crossing into "dangerous" territory (and only
+  // that crossing, not every day it stays there) gets its own warning.
+  const debt = accrueInterest(working.debt);
+  if (!working.isGameOver && isDebtDangerous(debt) && !isDebtDangerous(working.debt)) {
+    events.unshift({
+      id: generateId("event"),
+      date: state.date,
+      message: "Debt has grown dangerous — the interest alone is now dragging down stability and popularity.",
+      severity: "warning",
+    });
+  }
+
   // 3. Economy: income and expenses.
   const income = calculateDailyIncome(
     working.stats,
@@ -162,9 +176,9 @@ export function simulateDay(state: GameState): GameState {
   // 6. Research points accumulate passively.
   const researchPoints = working.stats.researchPoints + calculateDailyResearch(working.educationLevel);
 
-  // 7. Stability reacts to food shortages and popularity.
+  // 7. Stability reacts to food shortages, popularity, and heavy debt.
   const statsWithFood: CountryStats = { ...working.stats, food: newFoodStock };
-  const stability = updateStability(statsWithFood, isShortage);
+  const stability = updateStability(statsWithFood, isShortage, getDebtStabilityPenalty(debt));
   if (isCollapseRisk({ ...statsWithFood, stability })) {
     events.unshift({
       id: generateId("event"),
@@ -192,8 +206,8 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
-  // 8. Popularity drifts based on the current tax rate.
-  const popularity = updatePopularity(working.stats, working.taxRate);
+  // 8. Popularity drifts based on the current tax rate, and takes a hit too if debt is heavy.
+  const popularity = updatePopularity(working.stats, working.taxRate, getDebtPopularityPenalty(debt));
 
   // 9. Population grows or shrinks based on food and stability.
   const population = updatePopulation({ ...statsWithFood, stability }, isShortage);
@@ -327,6 +341,7 @@ export function simulateDay(state: GameState): GameState {
     stats: finalStats,
     resources: finalResources,
     resourceDemand,
+    debt,
     events: events.slice(0, MAX_EVENT_LOG_LENGTH),
     history: finalHistory,
     monthlyReports,

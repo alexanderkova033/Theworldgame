@@ -10,7 +10,7 @@ import {
   STABILITY_RECOVERY_RATE,
 } from "../constants";
 
-export function updateStability(stats: CountryStats, isFoodShortage: boolean): number {
+export function updateStability(stats: CountryStats, isFoodShortage: boolean, debtPenalty = 0): number {
   let change = 0;
 
   if (isFoodShortage) {
@@ -22,6 +22,7 @@ export function updateStability(stats: CountryStats, isFoodShortage: boolean): n
   if (!isFoodShortage && stats.popularity >= STABILITY_GOOD_POPULARITY_THRESHOLD) {
     change += STABILITY_RECOVERY_RATE;
   }
+  change -= debtPenalty;
 
   return Math.min(100, Math.max(0, stats.stability + change));
 }

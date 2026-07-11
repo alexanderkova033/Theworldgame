@@ -59,6 +59,7 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     outcome: null,
     gameOverReason: null,
     taxRate: 0.15,
+    debt: 0,
 
     farmCount,
     factoryCount,
@@ -87,6 +88,7 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     placedBuildings: buildStartingBuildings(nationId, farmCount),
     enactedLawIds: [],
     enactedResearchIds: [],
+    researchOutcomes: {},
     resourceDemand: emptyResourceBundle(),
     expeditions: [],
     scoutedIslandIds: [],

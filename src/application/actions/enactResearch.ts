@@ -1,7 +1,7 @@
 import { FAILED_RESEARCH_VOTE_POPULARITY_PENALTY } from "../../domain/constants";
 import { generateId } from "../../domain/country/id";
 import type { GameState } from "../../domain/country/types";
-import { canEnactResearch, getEffectivePassChance, getResearchNode } from "../../domain/research/researchRules";
+import { canEnactResearch, getEffectivePassChance, getResearchNode, rollResearchOutcome, scaleResearchEffects } from "../../domain/research/researchRules";
 
 export { canEnactResearch };
 
@@ -36,10 +36,17 @@ export function enactResearch(state: GameState, researchId: string): GameState {
     };
   }
 
-  const { effects } = node;
+  // The vote passing only means the funding and the mandate are there — how
+  // well it actually turns out is still down to chance. Rolled once and
+  // stored (GameState.researchOutcomes) so the scaled effect is what
+  // getActiveResearchEffects uses every day after, not just today.
+  const outcome = rollResearchOutcome();
+  const effects = scaleResearchEffects(node.effects, outcome.factor);
+
   return {
     ...state,
     enactedResearchIds: [...state.enactedResearchIds, researchId],
+    researchOutcomes: { ...state.researchOutcomes, [researchId]: outcome.tier },
     stats: {
       ...state.stats,
       treasury: state.stats.treasury + (effects.treasuryDelta ?? 0),
@@ -52,7 +59,7 @@ export function enactResearch(state: GameState, researchId: string): GameState {
       {
         id: generateId("event"),
         date: state.date,
-        message: `${node.name} is adopted: ${node.description}`,
+        message: `${node.name} is adopted: ${outcome.flavor}.`,
         severity: "info",
       },
       ...state.events,
