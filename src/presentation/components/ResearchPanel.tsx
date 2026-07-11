@@ -6,6 +6,7 @@ import type { GameState } from "../../domain/country/types";
 import { getRivalParty } from "../../domain/parties/partyRules";
 import { RESEARCH_NODES } from "../../domain/research/researchData";
 import {
+  calculateDailyResearch,
   getEffectivePassChance,
   getResearchNodeStatus,
   getRivalStance,
@@ -258,8 +259,9 @@ export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
     <div className="law-tree research-tree">
       <p className="panel-hint">
         Every branch is gated by accumulated research points ({state.stats.researchPoints.toFixed(1)} so far, +
-        {state.educationLevel > 0 ? "faster with education invested" : "0.5/day base"}). Adopting a technology is a
-        vote, not a guarantee — education helps your odds, and the opposition has its own opinion on each one.
+        {calculateDailyResearch(state.educationLevel).toFixed(2)}/day at your current education level). Adopting a
+        technology is a vote, not a guarantee — education helps your odds, and the opposition has its own opinion on
+        each one.
       </p>
 
       <div className="law-tree__columns">

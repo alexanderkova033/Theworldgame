@@ -25,6 +25,22 @@
   flex-shrink: 0;
 }
 
+/* A per-day rate riding alongside a chip's current total — see
+   getDailyProductionSummary.ts. */
+.resource-ticker__delta {
+  font-size: 0.68rem;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.resource-ticker__delta.is-positive {
+  color: var(--success);
+}
+
+.resource-ticker__delta.is-negative {
+  color: var(--danger);
+}
+
 .resource-ticker__divider {
   width: 1px;
   align-self: stretch;

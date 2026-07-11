@@ -32,8 +32,7 @@ export function PoliticsPanel({ state }: PoliticsPanelProps) {
   const recentDecisions = state.decisionHistory.slice(0, 3);
 
   return (
-    <section className="panel politics-panel">
-      <h2>Politics</h2>
+    <section className="politics-panel">
       <p className="panel-hint">
         Election in {monthsLeft} mo. — stay ≥{ELECTION_WIN_THRESHOLD}%.
       </p>

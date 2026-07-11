@@ -8,6 +8,7 @@ import { NATIONS } from "./domain/nations/nationData";
 import type { GameSpeed } from "./domain/country/types";
 import { getPartiesForNation, getParty } from "./domain/parties/partyRules";
 import { dismissDecision, resolveDecision } from "./application/actions";
+import { getDailyProductionSummary } from "./application/getDailyProductionSummary";
 import { playDanger, playGameOver } from "./presentation/audio/sound";
 import { ActionsPanel } from "./presentation/components/ActionsPanel";
 import { DecisionModal } from "./presentation/components/DecisionModal";
@@ -19,6 +20,7 @@ import { MapPanel } from "./presentation/components/MapPanel";
 import { Modal } from "./presentation/components/Modal";
 import { PartySelectScreen } from "./presentation/components/PartySelectScreen";
 import { PoliticsPanel } from "./presentation/components/PoliticsPanel";
+import { ProductionPanel } from "./presentation/components/ProductionPanel";
 import { ProjectsPanel } from "./presentation/components/ProjectsPanel";
 import { ReportsPanel } from "./presentation/components/ReportsPanel";
 import { ResearchPanel } from "./presentation/components/ResearchPanel";
@@ -179,6 +181,7 @@ function App() {
   const party = getParty(state.partyId);
   const currentProvinceId = selectedProvinceId ?? nation.capitalProvinceId;
   const unseenEventCount = Math.max(0, state.events.length - seenEventCount);
+  const production = getDailyProductionSummary(state);
 
   function openPanel(panel: PanelKey) {
     // Always opens/switches to the tab — never toggles it closed. An
@@ -202,6 +205,7 @@ function App() {
         speed={state.speed}
         stats={state.stats}
         resources={state.resources}
+        production={production}
         activePanel={openModal}
         reportsBadgeCount={unseenEventCount}
         onPause={pause}
@@ -240,7 +244,10 @@ function App() {
         <Modal title="Economy" onClose={() => setOpenModal(null)} wide>
           <div className="economy-modal">
             <ActionsPanel state={state} selectedProvinceId={currentProvinceId} dispatch={dispatch} />
-            <TradePanel state={state} dispatch={dispatch} />
+            <div className="economy-modal__side">
+              <TradePanel state={state} dispatch={dispatch} />
+              <ProductionPanel production={production} />
+            </div>
           </div>
         </Modal>
       )}

@@ -2,6 +2,7 @@ import "./TopBar.css";
 import { useState, type CSSProperties } from "react";
 import { formatDate } from "../../domain/country/calendar";
 import type { CountryStats, GameDate, GameSpeed } from "../../domain/country/types";
+import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import type { ResourceBundle } from "../../domain/resources/types";
 import { isMuted, setMuted } from "../audio/sound";
 import { NavIcon, type NavIconType } from "./NavIcon";
@@ -76,6 +77,7 @@ interface TopBarProps {
   speed: GameSpeed;
   stats: CountryStats;
   resources: ResourceBundle;
+  production: DailyProductionSummary;
   activePanel: PanelKey | null;
   reportsBadgeCount: number;
   onPause: () => void;
@@ -106,6 +108,7 @@ export function TopBar({
   speed,
   stats,
   resources,
+  production,
   activePanel,
   reportsBadgeCount,
   onPause,
@@ -126,7 +129,7 @@ export function TopBar({
           </span>
         </span>
 
-        <ResourceTicker stats={stats} resources={resources} />
+        <ResourceTicker stats={stats} resources={resources} production={production} />
 
         <div className="top-bar__spacer" />
 

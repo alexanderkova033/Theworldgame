@@ -30,6 +30,16 @@
   align-items: start;
 }
 
+.economy-modal__side {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.economy-modal__side .panel {
+  margin-bottom: 0;
+}
+
 /* Reports modal: projects+monthly reports in one column, the event log in
    its own scrollable column. */
 .reports-modal {

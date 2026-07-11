@@ -1,0 +1,33 @@
+.production-panel h3:first-of-type {
+  margin-top: 0.4rem;
+}
+
+.production-panel__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: 0.28rem 0;
+}
+
+.production-panel__row-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.production-panel__row-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.production-panel__row-value.is-gain {
+  color: var(--success);
+}
+
+.production-panel__row-value.is-loss {
+  color: var(--danger);
+}
