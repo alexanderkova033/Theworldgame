@@ -3,7 +3,17 @@
 // top of that base rate, a dynamic market: buying a resource repeatedly
 // makes it dearer, selling it repeatedly makes it cheaper, drifting back to
 // baseline the longer it's left alone. See getDynamicTradeRate/applyTradeDemand/decayDemand.
-import { BASE_TRADE_RATE, DEMAND_CAP, DEMAND_DECAY_PER_DAY, DEMAND_PRICE_SENSITIVITY, DEMAND_STEP, PORT_TRADE_RATE } from "../constants";
+import {
+  BASE_TRADE_RATE,
+  DEMAND_CAP,
+  DEMAND_DECAY_PER_DAY,
+  DEMAND_PRICE_SENSITIVITY,
+  DEMAND_STEP,
+  PORT_TRADE_RATE,
+  RESOURCE_MARKET_BUY_PRICE_PER_UNIT,
+  RESOURCE_MARKET_PORT_DISCOUNT,
+  RESOURCE_MARKET_SELL_PRICE_PER_UNIT,
+} from "../constants";
 import type { Nation } from "../nations/types";
 import { MAP_GEOMETRY } from "../provinces/provinceData";
 import { RESOURCE_TYPES, type ResourceBundle, type ResourceType } from "./types";
@@ -44,6 +54,21 @@ export function applyTradeDemand(demand: ResourceBundle, give: ResourceType, rec
     [give]: demand[give] - DEMAND_STEP,
     [receive]: demand[receive] + DEMAND_STEP,
   };
+}
+
+// The treasury's price to buy one unit of a resource outright (the "money
+// market", as opposed to the resource<->resource barter above): the base
+// price, cheaper with a port, scaled by the same live demand index so buying
+// heavily still gets dearer over time.
+export function getResourceBuyPrice(nation: Nation, demand: ResourceBundle, type: ResourceType): number {
+  const base = nationHasPort(nation) ? RESOURCE_MARKET_BUY_PRICE_PER_UNIT * RESOURCE_MARKET_PORT_DISCOUNT : RESOURCE_MARKET_BUY_PRICE_PER_UNIT;
+  return base * getPriceIndex(demand, type);
+}
+
+// The treasury's payout for selling one unit of a resource outright — no
+// port bonus (mirrors food imports, where a port only helps buying).
+export function getResourceSellPrice(demand: ResourceBundle, type: ResourceType): number {
+  return RESOURCE_MARKET_SELL_PRICE_PER_UNIT * getPriceIndex(demand, type);
 }
 
 // Daily mean-reversion — a market you stop trading in cools back to

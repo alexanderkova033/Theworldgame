@@ -43,6 +43,23 @@ export const DEMAND_DECAY_PER_DAY = 0.03; // fraction of the demand index that r
 export const FOOD_TRADE_UNIT = 100; // food-per-crafted-resource-unit value ratio
 export const FOOD_TRADE_BATCH_SIZE = 500; // food received per trade click when food is the "receive" side
 
+// --- Money market (see application/actions/marketActions.ts) ---
+// A direct treasury <-> resource exchange, separate from the resource<->resource
+// barter above: spend Crowns to buy raw resources outright, or sell them for
+// Crowns. Price per unit floats with the same dynamic demand index as barter
+// (buying nudges demand up, selling nudges it down), and buying is cheaper with
+// a coastal port, mirroring food imports. The sell price is kept well below the
+// buy price so buying then immediately selling always loses money.
+export const RESOURCE_MARKET_BATCH_SIZE = 5; // units bought/sold per click
+export const RESOURCE_MARKET_BUY_PRICE_PER_UNIT = 30; // Crowns to buy one unit, at neutral demand, without a port
+export const RESOURCE_MARKET_SELL_PRICE_PER_UNIT = 15; // Crowns received selling one unit, at neutral demand
+export const RESOURCE_MARKET_PORT_DISCOUNT = 0.6; // buying is 40% cheaper with a coastal port
+
+// Selling food for cash, the reverse of importing it above. Priced below the
+// import cost per unit for the same anti-arbitrage reason as the resource market.
+export const FOOD_EXPORT_BATCH_SIZE = 2000; // food given up per export click
+export const FOOD_EXPORT_PRICE_PER_UNIT = 0.3; // Crowns received per unit of food exported
+
 // --- Industry ---
 export const INDUSTRY_PER_FACTORY = 5;
 export const INCOME_PER_INDUSTRY = 1.5;

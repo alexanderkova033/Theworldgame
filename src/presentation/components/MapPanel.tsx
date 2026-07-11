@@ -54,15 +54,17 @@ const TERRAIN_PATTERN: Record<Terrain, string> = {
   plains: "url(#terrain-plains)",
 };
 
-// A faint terrain-colored wash underneath that texture (blended with
-// multiply, so it darkens/tints rather than washing out the nation's
-// color) — the two together read as an actual colored terrain instead of
-// a flat political fill with a pattern stamped on it.
+// A terrain-colored wash underneath that texture (blended with multiply,
+// so it darkens/tints rather than washing out the nation's color) — the
+// two together read as an actual colored terrain instead of a flat
+// political fill with a pattern stamped on it. Pushed richer/more
+// saturated than a subtle relief hint so the base color itself already
+// reads as forest/hill/plain/coast before the scattered props on top.
 const TERRAIN_TINT: Record<Terrain, string> = {
-  hills: "#5c4a2e",
-  forest: "#173a22",
-  coast: "#28576b",
-  plains: "#8a6f2e",
+  hills: "#63492c",
+  forest: "#123a20",
+  coast: "#256782",
+  plains: "#8f741f",
 };
 
 // Each road built thickens the single line to its province (instead of
@@ -219,7 +221,21 @@ export function MapPanel({
   function handlePointerDown(e: React.PointerEvent<SVGSVGElement>) {
     dragOrigin.current = { x: e.clientX, y: e.clientY };
     dragStart.current = { x: e.clientX, y: e.clientY };
-    svgRef.current?.setPointerCapture(e.pointerId);
+    // A drag that ends over a non-clickable spot (ocean, another island, an
+    // unowned province) never gets its suppression flag consumed by a click
+    // handler, leaving it stuck true and silently swallowing the *next*
+    // gesture's click even though that's an unrelated, deliberate click.
+    // Each new gesture should decide suppression on its own merits.
+    suppressNextClick.current = false;
+    // Deliberately NOT calling setPointerCapture here: capturing on the SVG
+    // root at pointerdown retargets the browser's *click* event to the SVG
+    // element itself instead of whatever <path> is under the cursor (this is
+    // real Chromium/Edge behavior, not a hypothetical), so every province's
+    // onClick would silently stop firing — the map would look normal but no
+    // click would ever select anything. Capture is only needed once a
+    // gesture is confirmed to be a drag (see handlePointerMove), by which
+    // point suppressNextClick already ensures the resulting click is a
+    // no-op regardless of what it's retargeted to.
     setHoveredProvinceId(null);
   }
 
@@ -232,6 +248,9 @@ export function MapPanel({
       const totalDx = e.clientX - dragOrigin.current.x;
       const totalDy = e.clientY - dragOrigin.current.y;
       if (Math.hypot(totalDx, totalDy) > DRAG_CLICK_THRESHOLD) {
+        if (!suppressNextClick.current) {
+          svgRef.current?.setPointerCapture(e.pointerId);
+        }
         suppressNextClick.current = true;
         setIsPanning(true);
       }
@@ -249,7 +268,10 @@ export function MapPanel({
     );
   }
 
-  function handlePointerUp() {
+  function handlePointerUp(e: React.PointerEvent<SVGSVGElement>) {
+    if (svgRef.current?.hasPointerCapture(e.pointerId)) {
+      svgRef.current.releasePointerCapture(e.pointerId);
+    }
     dragOrigin.current = null;
     dragStart.current = null;
     setIsPanning(false);
@@ -329,26 +351,34 @@ export function MapPanel({
               <path d="M15,80 Q50,66 85,80 T155,80" stroke="#3a7093" strokeWidth={1.2} fill="none" opacity={0.1} />
             </pattern>
 
-            {/* Terrain textures — a quiet relief hint (like a HOI4 elevation
-                layer) rather than a competing pattern of their own color, so
-                the nation's political color and the map's icons stay the
-                clearest thing on screen. Neutral dark shading, sparse tiling,
-                low opacity. */}
-            <pattern id="terrain-hills" width={60} height={46} patternUnits="userSpaceOnUse">
-              <path d="M-4,40 Q11,20 26,40 Q41,22 56,40" fill="none" stroke="#000000" strokeWidth={2.5} opacity={0.16} />
-              <path d="M-4,26 Q11,10 26,26 Q41,12 56,26" fill="none" stroke="#000000" strokeWidth={2} opacity={0.12} />
+            {/* Terrain textures — scattered props (pine, boulder, wheat,
+                surf) instead of a flat relief hint, but kept sparse, thin-
+                stroked, and low-opacity so they read as a quiet landscape
+                cue rather than competing with the map's political color and
+                icons. */}
+            <pattern id="terrain-hills" width={100} height={90} patternUnits="userSpaceOnUse">
+              <ellipse cx={20} cy={50} rx={11} ry={5} fill="#4a3a24" opacity={0.35} />
+              <ellipse cx={20} cy={46} rx={13} ry={9} fill="#7a6a52" stroke="#241c10" strokeWidth={0.8} opacity={0.8} />
+              <ellipse cx={16} cy={41} rx={6} ry={3.5} fill="#a89877" opacity={0.4} />
             </pattern>
-            <pattern id="terrain-forest" width={40} height={40} patternUnits="userSpaceOnUse">
-              <polygon points="9,4 13.5,13 4.5,13" fill="#08170d" opacity={0.3} />
-              <rect x={8.3} y={13} width={1.4} height={2} fill="#08170d" opacity={0.3} />
-              <polygon points="29,20 33.5,29 24.5,29" fill="#08170d" opacity={0.24} />
-              <rect x={28.3} y={29} width={1.4} height={2} fill="#08170d" opacity={0.24} />
+            <pattern id="terrain-forest" width={90} height={90} patternUnits="userSpaceOnUse">
+              <rect x={14.5} y={54} width={3} height={4} fill="#4a3320" opacity={0.75} />
+              <polygon points="7,54 25,54 16,42" fill="#2d6b3a" stroke="#12291a" strokeWidth={0.7} opacity={0.75} />
+              <polygon points="9,47 23,47 16,37" fill="#34793f" stroke="#12291a" strokeWidth={0.7} opacity={0.75} />
+              <polygon points="11,41 21,41 16,32" fill="#3d8a48" stroke="#12291a" strokeWidth={0.7} opacity={0.75} />
+              <polygon points="16,34 18,40 15,40" fill="#7ecf86" opacity={0.3} />
             </pattern>
-            <pattern id="terrain-coast" width={30} height={15} patternUnits="userSpaceOnUse">
-              <path d="M0,7 Q7.5,2.5 15,7 T30,7" stroke="#d5eefa" strokeWidth={1.3} fill="none" opacity={0.22} />
+            <pattern id="terrain-coast" width={40} height={22} patternUnits="userSpaceOnUse">
+              <path d="M0,11 Q10,3 20,11 T40,11" stroke="#d8f2fa" strokeWidth={1.6} fill="none" opacity={0.35} strokeLinecap="round" />
+              <path d="M0,18 Q10,12 20,18 T40,18" stroke="#d8f2fa" strokeWidth={1.2} fill="none" opacity={0.2} strokeLinecap="round" />
             </pattern>
-            <pattern id="terrain-plains" width={26} height={26} patternUnits="userSpaceOnUse" patternTransform="rotate(12)">
-              <line x1={0} y1={0} x2={0} y2={26} stroke="#000000" strokeWidth={1.2} opacity={0.12} />
+            <pattern id="terrain-plains" width={50} height={50} patternUnits="userSpaceOnUse">
+              <path d="M10,30 Q7,22 5,14" stroke="#c9a23a" strokeWidth={1} fill="none" strokeLinecap="round" opacity={0.65} />
+              <ellipse cx={5} cy={13} rx={1.4} ry={2.6} fill="#d9b846" opacity={0.65} />
+              <path d="M10,30 Q10,20 9,10" stroke="#d9b846" strokeWidth={1} fill="none" strokeLinecap="round" opacity={0.65} />
+              <ellipse cx={9} cy={9} rx={1.4} ry={2.8} fill="#e8c860" opacity={0.65} />
+              <path d="M10,30 Q13,22 15,14" stroke="#c9a23a" strokeWidth={1} fill="none" strokeLinecap="round" opacity={0.65} />
+              <ellipse cx={15} cy={13} rx={1.4} ry={2.6} fill="#d9b846" opacity={0.65} />
             </pattern>
           </defs>
 
@@ -455,16 +485,17 @@ export function MapPanel({
                   key={`${province.id}-tint`}
                   d={province.path}
                   fill={TERRAIN_TINT[province.terrain]}
-                  opacity={isOwned ? 0.32 : 0.2}
+                  opacity={isOwned ? 0.3 : 0.18}
                   className="map-panel__terrain-tint"
                   pointerEvents="none"
                 />
               );
             })}
 
-            {/* Terrain texture for every province — a quiet relief hint, not
-                a second competing color. Owned provinces get it a little
-                clearer, foreign ones quieter still. */}
+            {/* Terrain props for every province — a quiet landscape cue
+                (sparse trees/rocks/wheat/surf), not a competing pattern.
+                Owned provinces get them a little clearer, foreign ones
+                quieter still. */}
             {provinces.map((province) => {
               const isOwned = nation.provinceIds.includes(province.id);
               return (
@@ -472,7 +503,7 @@ export function MapPanel({
                   key={`${province.id}-terrain`}
                   d={province.path}
                   fill={TERRAIN_PATTERN[province.terrain]}
-                  opacity={isOwned ? 0.85 : 0.4}
+                  opacity={isOwned ? 0.65 : 0.35}
                   pointerEvents="none"
                 />
               );

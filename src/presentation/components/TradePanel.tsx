@@ -1,7 +1,24 @@
 import "./TradePanel.css";
 import { useState } from "react";
-import { canImportFood, canTrade, getFoodImportCost, getGiveAmount, importFood, tradeResources, type TradeableType } from "../../application/actions";
-import { CURRENCY_SYMBOL, FOOD_IMPORT_BATCH_SIZE, FOOD_TRADE_BATCH_SIZE, TRADE_BATCH_SIZE } from "../../domain/constants";
+import {
+  buyResource,
+  canBuyResource,
+  canExportFood,
+  canImportFood,
+  canSellResource,
+  canTrade,
+  exportFood,
+  getBuyResourceCost,
+  getFoodExportRevenue,
+  getFoodImportCost,
+  getGiveAmount,
+  getSellResourceRevenue,
+  importFood,
+  sellResource,
+  tradeResources,
+  type TradeableType,
+} from "../../application/actions";
+import { CURRENCY_SYMBOL, FOOD_EXPORT_BATCH_SIZE, FOOD_IMPORT_BATCH_SIZE, FOOD_TRADE_BATCH_SIZE, RESOURCE_MARKET_BATCH_SIZE, TRADE_BATCH_SIZE } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getNation } from "../../domain/nations/nationRules";
 import { getPriceIndex, nationHasPort } from "../../domain/resources/tradeRules";
@@ -81,6 +98,52 @@ function ResourcePicker({ label, value, demand, onChange }: ResourcePickerProps)
   );
 }
 
+interface MarketRowProps {
+  state: GameState;
+  dispatch: TradePanelProps["dispatch"];
+  type: ResourceType;
+}
+
+// One resource's cash market row: buy a batch outright from the treasury, or
+// sell a batch back to it. Prices float with the same demand index as the
+// barter above (see getResourceBuyPrice/getResourceSellPrice), so heavy
+// buying/selling here also moves barter rates and vice versa.
+function MarketRow({ state, dispatch, type }: MarketRowProps) {
+  const buyCost = getBuyResourceCost(state, type);
+  const sellRevenue = getSellResourceRevenue(state, type);
+
+  return (
+    <div className="trade-panel__market-row">
+      <span className="trade-panel__market-icon">
+        <svg viewBox="-10 -10 20 20">
+          <ResourceIcon type={type} size={8} />
+        </svg>
+        {TRADEABLE_LABELS[type]}
+      </span>
+      <button
+        className="trade-panel__market-button"
+        disabled={!canBuyResource(state, type)}
+        onClick={() => {
+          playConfirm();
+          dispatch((s) => buyResource(s, type));
+        }}
+      >
+        Buy {RESOURCE_MARKET_BATCH_SIZE} ({Math.round(buyCost)} {CURRENCY_SYMBOL})
+      </button>
+      <button
+        className="trade-panel__market-button"
+        disabled={!canSellResource(state, type)}
+        onClick={() => {
+          playConfirm();
+          dispatch((s) => sellResource(s, type));
+        }}
+      >
+        Sell {RESOURCE_MARKET_BATCH_SIZE} (+{Math.round(sellRevenue)} {CURRENCY_SYMBOL})
+      </button>
+    </div>
+  );
+}
+
 export function TradePanel({ state, dispatch }: TradePanelProps) {
   const [give, setGive] = useState<TradeableType>("grain");
   const [receive, setReceive] = useState<TradeableType>("wood");
@@ -132,6 +195,30 @@ export function TradePanel({ state, dispatch }: TradePanelProps) {
       >
         <StatIcon type="food" size={22} />
         Import {FOOD_IMPORT_BATCH_SIZE} Food ({Math.round(getFoodImportCost(state))} {CURRENCY_SYMBOL})
+      </button>
+
+      <div className="trade-panel__divider" />
+
+      <p className="panel-hint">
+        Prefer cash? Buy or sell raw resources directly for {CURRENCY_SYMBOL} — prices float with the same supply and
+        demand as bartering{hasPort ? ", and your port still keeps buying cheaper" : ""}.
+      </p>
+      <div className="trade-panel__market">
+        {RESOURCE_TYPES.map((type) => (
+          <MarketRow key={type} state={state} dispatch={dispatch} type={type} />
+        ))}
+      </div>
+
+      <button
+        className="trade-panel__button trade-panel__import-button"
+        disabled={!canExportFood(state)}
+        onClick={() => {
+          playConfirm();
+          dispatch((s) => exportFood(s));
+        }}
+      >
+        <StatIcon type="food" size={22} />
+        Export {FOOD_EXPORT_BATCH_SIZE} Food (+{Math.round(getFoodExportRevenue())} {CURRENCY_SYMBOL})
       </button>
     </section>
   );

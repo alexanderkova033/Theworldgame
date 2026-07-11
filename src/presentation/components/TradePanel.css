@@ -93,3 +93,39 @@
   background: var(--panel-border);
   margin: 1rem 0;
 }
+
+.trade-panel__market {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.trade-panel__market-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.trade-panel__market-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: 4.2rem;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.trade-panel__market-icon svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.trade-panel__market-button {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.3rem;
+}
