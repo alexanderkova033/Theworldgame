@@ -55,10 +55,13 @@ export const RESOURCE_MARKET_BUY_PRICE_PER_UNIT = 30; // Crowns to buy one unit,
 export const RESOURCE_MARKET_SELL_PRICE_PER_UNIT = 15; // Crowns received selling one unit, at neutral demand
 export const RESOURCE_MARKET_PORT_DISCOUNT = 0.6; // buying is 40% cheaper with a coastal port
 
-// Selling food for cash, the reverse of importing it above. Priced below the
-// import cost per unit for the same anti-arbitrage reason as the resource market.
+// Selling food for cash, the reverse of importing it above. Priced well below
+// the import cost per unit — food is so abundant once a couple of farms are
+// running (thousands/day vs. the population's own consumption) that even a
+// modest per-unit price turned exporting into a primary income source rather
+// than a surplus dump, so this is kept low on purpose.
 export const FOOD_EXPORT_BATCH_SIZE = 2000; // food given up per export click
-export const FOOD_EXPORT_PRICE_PER_UNIT = 0.3; // Crowns received per unit of food exported
+export const FOOD_EXPORT_PRICE_PER_UNIT = 0.1; // Crowns received per unit of food exported
 
 // --- Food processing (Granary/Cannery — research-gated, see domain/research)
 // Grain/fish trickle in at ~1/province/day (see RESOURCE_PER_PROVINCE above),

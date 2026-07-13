@@ -1,16 +1,13 @@
+/* No .panel here on purpose — the map is the one element in the whole UI
+   that isn't a carved-wood card. It fills the entire stage edge-to-edge,
+   HOI4-style, with every control (zoom, legend) floating on top of it
+   instead of sharing a bordered frame with it. */
 .map-panel {
-  padding: 1.1rem 1.1rem 0.9rem;
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   margin-bottom: 0;
-}
-
-.map-panel__title {
-  border-bottom: none;
-  padding-bottom: 0;
-  margin-bottom: 0.6rem;
 }
 
 .map-panel__stage {
@@ -24,8 +21,6 @@
   width: 100%;
   height: 100%;
   display: block;
-  border-radius: 8px;
-  border: 1px solid var(--panel-border);
   cursor: grab;
   touch-action: none;
   user-select: none;
@@ -37,32 +32,39 @@
 
 .map-panel__zoom-controls {
   position: absolute;
-  top: 0.7rem;
-  right: 0.7rem;
+  top: 0.9rem;
+  right: 0.9rem;
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.45rem;
+  align-items: center;
 }
 
+/* Round carved medallions, same language as the top bar's tab icons and the
+   legend toggle, so the map's own floating controls read as part of the
+   same command UI instead of generic square buttons dropped on the map. */
 .map-panel__zoom-controls button {
-  width: 2.1rem;
-  height: 2.1rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 700;
   line-height: 1;
-  background: rgba(9, 12, 17, 0.85);
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.12), transparent 65%), rgba(9, 12, 17, 0.88);
 }
 
 .map-panel__zoom-controls button[aria-label="Reset view"] {
   width: auto;
   height: auto;
-  padding: 0.35rem 0.3rem;
-  font-size: 0.62rem;
+  min-width: 2.4rem;
+  border-radius: 999px;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.6rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -213,16 +215,36 @@
   opacity: 0.75;
 }
 
+.map-panel__legend-toggle {
+  position: absolute;
+  left: 0.9rem;
+  bottom: 0.9rem;
+  z-index: 2;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.68rem;
+  background: rgba(9, 12, 17, 0.85);
+}
+
 .map-panel__legend {
+  position: absolute;
+  left: 0.9rem;
+  right: 0.9rem;
+  bottom: 3.1rem;
+  z-index: 2;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.9rem;
-  margin-top: 0.7rem;
-  padding-top: 0.7rem;
-  border-top: 1px solid var(--panel-border);
+  gap: 0.5rem 1rem;
+  max-height: 40%;
+  overflow-y: auto;
+  padding: 0.7rem 0.9rem;
+  background: linear-gradient(180deg, rgba(36, 23, 8, 0.92), rgba(11, 7, 4, 0.92));
+  border: 2px solid var(--panel-border);
+  border-radius: 6px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(240, 200, 105, 0.14);
   font-size: 0.78rem;
   color: var(--text-muted);
   text-transform: capitalize;
+  animation: modal-pop 0.12s ease-out;
 }
 
 .map-panel__legend-item {

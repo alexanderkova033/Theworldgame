@@ -7,7 +7,7 @@ import type { GameState } from "../country/types";
 import { getRivalParty } from "../parties/partyRules";
 import { getPartyStance } from "../parties/rivalRules";
 import { RESEARCH_NODES } from "./researchData";
-import type { ResearchEffects, ResearchNode, ResearchOutcomeTier } from "./types";
+import type { ResearchEffects, ResearchEnactCost, ResearchNode, ResearchOutcomeTier } from "./types";
 
 export function calculateDailyResearch(educationLevel: number): number {
   return RESEARCH_BASE_RATE + educationLevel * RESEARCH_PER_EDUCATION_LEVEL;
@@ -90,8 +90,9 @@ export type ResearchNodeStatus =
   | "enacted"
   | "foreclosed"
   | "locked-prerequisite"
+  | "locked-cross" // a required node in the Law tree isn't enacted yet
   | "locked-quota"
-  | "available";
+  | "available"; // ready for a vote (may still be unaffordable — see canEnactResearch)
 
 export function getResearchNodeStatus(state: GameState, node: ResearchNode): ResearchNodeStatus {
   if (state.enactedResearchIds.includes(node.id)) return "enacted";
@@ -108,15 +109,23 @@ export function getResearchNodeStatus(state: GameState, node: ResearchNode): Res
     if (!prerequisiteMet) return "locked-prerequisite";
   }
 
+  if (node.crossRequirement && !state.enactedLawIds.includes(node.crossRequirement.nodeId)) return "locked-cross";
+
   if (state.stats[node.quota.stat] < node.quota.threshold) return "locked-quota";
 
   return "available";
 }
 
+export function canAffordResearchEnactCost(state: GameState, cost: ResearchEnactCost): boolean {
+  if (state.stats.treasury < cost.treasury) return false;
+  if (cost.resourceType && (cost.resourceAmount ?? 0) > state.resources[cost.resourceType]) return false;
+  return true;
+}
+
 export function canEnactResearch(state: GameState, id: string): boolean {
   const node = getResearchNode(id);
   if (!node) return false;
-  return getResearchNodeStatus(state, node) === "available";
+  return getResearchNodeStatus(state, node) === "available" && canAffordResearchEnactCost(state, node.enactCost);
 }
 
 // A better-educated population runs more successful trials (a capped bonus,

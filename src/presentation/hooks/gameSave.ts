@@ -64,6 +64,7 @@ function hydrateGameState(raw: Partial<GameState>): GameState {
     // exactly where the old flat popularity number already was, so resuming
     // doesn't jar the player with a sudden shift.
     factionApproval: raw.factionApproval ?? (Object.fromEntries(FACTIONS.map((f) => [f, stats.popularity])) as Record<Ideology, number>),
+    standingOrders: raw.standingOrders ?? [],
     expeditions: raw.expeditions ?? [],
     scoutedIslandIds: raw.scoutedIslandIds ?? [],
     events: raw.events ?? [],

@@ -17,7 +17,6 @@
 .game-layout__map-stage {
   flex: 1;
   min-width: 0;
-  padding: 1.1rem;
   display: flex;
 }
 
@@ -37,19 +36,6 @@
 }
 
 .economy-modal__side .panel {
-  margin-bottom: 0;
-}
-
-/* Trade modal: the barter/cash market and loans, stacked in a single
-   normal-width column now that they're out of the Economy modal's side
-   rail — see App.tsx. */
-.trade-modal {
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-}
-
-.trade-modal .panel {
   margin-bottom: 0;
 }
 

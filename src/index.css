@@ -46,6 +46,12 @@
 html, body, #root {
   height: 100%;
   margin: 0;
+  /* Firefox's scrollbar theming — Chromium/Edge/Safari get the fuller
+     ::-webkit-scrollbar treatment below. Without either, every scrollable
+     panel (Modal body, EventLog, map legend) shows the OS's flat grey/white
+     scrollbar, which reads as an unstyled hole in an otherwise carved-wood
+     UI. */
+  scrollbar-color: var(--panel-border) var(--bg-deep);
 }
 
 body {
@@ -54,6 +60,34 @@ body {
     repeating-linear-gradient(115deg, rgba(0, 0, 0, 0.12) 0px, transparent 2px, transparent 5px),
     var(--bg);
   color: var(--text);
+}
+
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--wood-light), var(--panel-border));
+  border: 2px solid var(--bg-deep);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--accent), var(--panel-border));
+}
+
+/* A themed keyboard-focus ring in place of the browser default's stark blue
+   outline, which clashes hard against the wood/gold palette — kept visible
+   (not suppressed) for accessibility, just recolored and only shown for
+   keyboard/programmatic focus, not every mouse click. */
+:focus-visible {
+  outline: 2px solid var(--accent-active);
+  outline-offset: 2px;
 }
 
 button {

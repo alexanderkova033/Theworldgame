@@ -3,7 +3,7 @@ import type { GameState } from "../country/types";
 import { getRivalParty } from "../parties/partyRules";
 import { getPartyStance } from "../parties/rivalRules";
 import { LAW_NODES } from "./lawData";
-import type { LawNode } from "./types";
+import type { LawEnactCost, LawNode } from "./types";
 
 export function getLawNode(lawId: string): LawNode | undefined {
   return LAW_NODES.find((law) => law.id === lawId);
@@ -27,8 +27,9 @@ export type LawNodeStatus =
   | "enacted" // this exact node was voted through
   | "foreclosed" // a sibling at the same tier was enacted instead — permanent
   | "locked-prerequisite" // the tier above it in this branch isn't enacted yet
+  | "locked-cross" // a required node in the Research tree isn't enacted yet
   | "locked-quota" // prerequisite is met, but the stat quota isn't yet
-  | "available"; // ready for a vote
+  | "available"; // ready for a vote (may still be unaffordable — see canEnactLaw)
 
 export function getLawNodeStatus(state: GameState, node: LawNode): LawNodeStatus {
   if (state.enactedLawIds.includes(node.id)) return "enacted";
@@ -45,15 +46,23 @@ export function getLawNodeStatus(state: GameState, node: LawNode): LawNodeStatus
     if (!prerequisiteMet) return "locked-prerequisite";
   }
 
+  if (node.crossRequirement && !state.enactedResearchIds.includes(node.crossRequirement.nodeId)) return "locked-cross";
+
   if (state.stats[node.quota.stat] < node.quota.threshold) return "locked-quota";
 
   return "available";
 }
 
+export function canAffordLawEnactCost(state: GameState, cost: LawEnactCost): boolean {
+  if (state.stats.treasury < cost.treasury) return false;
+  if (cost.resourceType && (cost.resourceAmount ?? 0) > state.resources[cost.resourceType]) return false;
+  return true;
+}
+
 export function canEnactLaw(state: GameState, lawId: string): boolean {
   const node = getLawNode(lawId);
   if (!node) return false;
-  return getLawNodeStatus(state, node) === "available";
+  return getLawNodeStatus(state, node) === "available" && canAffordLawEnactCost(state, node.enactCost);
 }
 
 // Popular parties get the benefit of the doubt in a vote; unpopular ones

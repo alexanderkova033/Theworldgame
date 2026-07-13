@@ -7,6 +7,7 @@ import type { Ideology } from "../parties/types";
 import type { PlacedBuilding } from "../provinces/types";
 import type { ResearchOutcomeTier } from "../research/types";
 import type { ResourceBundle } from "../resources/types";
+import type { StandingOrder } from "../trade/standingOrderTypes";
 
 export interface GameDate {
   year: number;
@@ -93,6 +94,7 @@ export interface GameState {
   researchOutcomes: Record<string, ResearchOutcomeTier>; // rolled once per enacted node — see researchRules.ts
   resourceDemand: ResourceBundle; // dynamic-market demand index per resource, drifts toward 0 — see domain/resources/tradeRules.ts
   factionApproval: Record<Ideology, number>; // per-ideology approval (0-100); stats.popularity is their electorate-weighted average — see domain/parties/factionRules.ts
+  standingOrders: StandingOrder[]; // automated daily trades, capped at MAX_STANDING_ORDERS — see application/actions/standingOrders.ts
   expeditions: Expedition[]; // in-progress scouting trips to unclaimed islands
   scoutedIslandIds: string[]; // islands a completed expedition has already visited
   events: GameEvent[];

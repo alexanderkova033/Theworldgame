@@ -2,6 +2,7 @@ import { generateId } from "../../domain/country/id";
 import type { GameState } from "../../domain/country/types";
 import { canEnactLaw, getEffectivePassChance, getLawNode } from "../../domain/laws/lawsRules";
 import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../../domain/parties/factionRules";
+import { deductResource } from "../../domain/resources/resourceRules";
 
 export { canEnactLaw };
 
@@ -41,15 +42,19 @@ export function enactLaw(state: GameState, lawId: string): GameState {
     };
   }
 
-  const { effects } = law;
+  const { effects, enactCost } = law;
   const { factionApproval, popularity } = applyFactionEffects(state.factionApproval, weights, effects, effects.popularityDelta ?? 0);
+  const resources = enactCost.resourceType
+    ? deductResource(state.resources, enactCost.resourceType, enactCost.resourceAmount ?? 0)
+    : state.resources;
   return {
     ...state,
     enactedLawIds: [...state.enactedLawIds, lawId],
     factionApproval,
+    resources,
     stats: {
       ...state.stats,
-      treasury: state.stats.treasury + (effects.treasuryDelta ?? 0),
+      treasury: state.stats.treasury - enactCost.treasury + (effects.treasuryDelta ?? 0),
       food: Math.max(0, state.stats.food + (effects.foodDelta ?? 0)),
       stability: Math.min(100, Math.max(0, state.stats.stability + (effects.stabilityDelta ?? 0))),
       population: Math.max(0, state.stats.population + (effects.populationDelta ?? 0)),

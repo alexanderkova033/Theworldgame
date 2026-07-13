@@ -12,6 +12,7 @@ export { canTrade, getGiveAmount, tradeResources, type TradeableType } from "./t
 export { canImportFood, getFoodImportCost, importFood } from "./importFood";
 export { canExportFood, getFoodExportRevenue, exportFood } from "./exportFood";
 export { canBuyResource, getBuyResourceCost, buyResource, canSellResource, getSellResourceRevenue, sellResource } from "./marketActions";
+export { canAddStandingOrder, addStandingOrder, removeStandingOrder } from "./standingOrders";
 export { canTakeLoan, canRepayLoan, getRepayAmount, repayLoan, takeLoan } from "./loanActions";
 export { canSendExpedition, sendExpedition } from "./sendExpedition";
 export { canEnactLaw, enactLaw } from "./enactLaw";

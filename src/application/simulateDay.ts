@@ -30,6 +30,7 @@ import { isCollapseRisk, updateStability } from "../domain/stability/stabilityRu
 import { applyExpeditionCompletion } from "./applyExpeditionCompletion";
 import { applyProjectCompletion } from "./applyProjectCompletion";
 import { generateMonthlyReport } from "./generateMonthlyReport";
+import { runStandingOrders } from "./actions/standingOrders";
 import { pickRivalCampaignMove } from "./rivalCampaignMove";
 import {
   DECISION_CHANCE_PER_MONTH,
@@ -125,6 +126,12 @@ export function simulateDay(state: GameState): GameState {
       severity: "info",
     });
   }
+
+  // 1c. Standing trade orders (see application/actions/standingOrders.ts)
+  // execute automatically, once each, against whatever's in stock at the
+  // start of the day — today's own production (step 2, below) lands
+  // afterward, so nothing is double-counted or skipped, just simply sequenced.
+  working = runStandingOrders(working);
 
   // 2. Raw resources: every owned province produces its terrain's resource.
   const nation = getNation(working.nationId);

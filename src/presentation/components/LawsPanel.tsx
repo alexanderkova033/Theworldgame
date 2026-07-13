@@ -4,9 +4,18 @@ import { enactLaw } from "../../application/actions";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { LAW_NODES } from "../../domain/laws/lawData";
-import { getEffectivePassChance, getLawNodeStatus, getRivalStance, getQuotaProgress, type LawNodeStatus } from "../../domain/laws/lawsRules";
+import {
+  canAffordLawEnactCost,
+  getEffectivePassChance,
+  getLawNodeStatus,
+  getRivalStance,
+  getQuotaProgress,
+  type LawNodeStatus,
+} from "../../domain/laws/lawsRules";
 import type { LawCategory, LawEffects, LawNode, QuotaStat } from "../../domain/laws/types";
 import { getRivalParty } from "../../domain/parties/partyRules";
+import { getResearchNode } from "../../domain/research/researchRules";
+import type { ResourceType } from "../../domain/resources/types";
 import { playConfirm } from "../audio/sound";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
@@ -16,7 +25,7 @@ interface LawsPanelProps {
 }
 
 const CATEGORIES: LawCategory[] = ["labor", "sustenance", "order"];
-const TIERS = [1, 2, 3] as const;
+const TIERS = [1, 2, 3, 4] as const;
 
 const CATEGORY_LABELS: Record<LawCategory, string> = {
   labor: "Labor",
@@ -37,6 +46,13 @@ const QUOTA_LABELS: Record<QuotaStat, string> = {
   industry: "Industry",
   stability: "Stability",
   popularity: "Popularity",
+};
+
+const RESOURCE_LABELS: Record<ResourceType, string> = {
+  wood: "Wood",
+  ore: "Ore",
+  grain: "Grain",
+  fish: "Fish",
 };
 
 function formatQuotaValue(stat: QuotaStat, value: number): string {
@@ -100,15 +116,22 @@ function XBadge() {
   );
 }
 
-function TierConnector({ isFork }: { isFork: boolean }) {
+// Legs are spread evenly between 22%/78% so a 2-way fork still looks
+// pixel-identical to before — this just stops assuming exactly two, since
+// Order tier 2 now has a 3-way fork alongside Agriculture's on the Research
+// tree (see ResearchPanel.tsx, which this was ported from).
+function TierConnector({ legCount }: { legCount: number }) {
+  const legPositions =
+    legCount === 1 ? [50] : Array.from({ length: legCount }, (_, i) => 22 + i * (56 / (legCount - 1)));
   return (
     <div className="law-tree__connector">
       <div className="law-tree__connector-stem" />
-      {isFork && (
+      {legCount > 1 && (
         <div className="law-tree__connector-fork">
           <div className="law-tree__connector-bar" />
-          <div className="law-tree__connector-leg" />
-          <div className="law-tree__connector-leg" />
+          {legPositions.map((left, i) => (
+            <div className="law-tree__connector-leg" style={{ left: `${left}%` }} key={i} />
+          ))}
         </div>
       )}
     </div>
@@ -137,7 +160,7 @@ function LawNodeBadge({ node, status, isSelected, onSelect }: LawNodeBadgeProps)
             <XBadge />
           </span>
         )}
-        {(status === "locked-prerequisite" || status === "locked-quota") && (
+        {(status === "locked-prerequisite" || status === "locked-cross" || status === "locked-quota") && (
           <span className="law-node__badge law-node__badge--locked">
             <LockBadge />
           </span>
@@ -165,6 +188,8 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
   const quota = getQuotaProgress(state, node);
   const rival = getRivalParty(state.partyId);
   const stance = getRivalStance(state, node);
+  const affordable = canAffordLawEnactCost(state, node.enactCost);
+  const crossNodeName = node.crossRequirement ? getResearchNode(node.crossRequirement.nodeId)?.name : undefined;
 
   return (
     <div className="law-inspector">
@@ -189,6 +214,12 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
         </span>
       </div>
 
+      <p className="law-inspector__enact-cost">
+        Costs {node.enactCost.treasury.toLocaleString()} {CURRENCY_SYMBOL}
+        {node.enactCost.resourceType && ` + ${node.enactCost.resourceAmount} ${RESOURCE_LABELS[node.enactCost.resourceType]}`}
+        {" "}to put to a vote
+      </p>
+
       {stance !== "neutral" && status !== "enacted" && (
         <p className={`rival-stance is-${stance}`}>
           {rival.name} {stance === "opposes" ? "opposes this." : "supports this."}
@@ -203,6 +234,10 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
 
       {status === "locked-prerequisite" && (
         <p className="law-inspector__status is-locked">Requires the law above it in this branch to be enacted first.</p>
+      )}
+
+      {status === "locked-cross" && (
+        <p className="law-inspector__status is-locked">Requires {crossNodeName ?? "a Research node"} (Research) enacted first.</p>
       )}
 
       {status === "locked-quota" && (
@@ -225,6 +260,7 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
             {passChance}% chance to pass
           </span>
           <button
+            disabled={!affordable}
             onClick={() => {
               if (isArmed) {
                 playConfirm();
@@ -234,7 +270,7 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
               }
             }}
           >
-            {isArmed ? "Confirm — put it to a vote" : "Propose"}
+            {!affordable ? "Can't afford it" : isArmed ? "Confirm — put it to a vote" : "Propose"}
           </button>
         </div>
       )}
@@ -251,8 +287,8 @@ export function LawsPanel({ state, dispatch }: LawsPanelProps) {
   return (
     <div className="law-tree">
       <p className="panel-hint">
-        Each branch opens as you cross a quota — select a node to see what it needs. Passing a vote isn't guaranteed:
-        your party's popularity swings the odds.
+        Each branch opens as you cross a quota and pay to put it to a vote — select a node to see what it needs.
+        Passing isn't guaranteed: your party's popularity swings the odds.
       </p>
 
       <div className="law-tree__columns">
@@ -265,9 +301,10 @@ export function LawsPanel({ state, dispatch }: LawsPanelProps) {
 
             {TIERS.map((tier, tierIndex) => {
               const nodes = nodesFor(category, tier);
+              if (nodes.length === 0) return null;
               return (
                 <div className="law-tree__tier" key={tier}>
-                  {tierIndex > 0 && <TierConnector isFork={nodes.length > 1} />}
+                  {tierIndex > 0 && <TierConnector legCount={nodes.length} />}
                   <div className={`law-tree__row ${nodes.length > 1 ? "law-tree__row--fork" : ""}`}>
                     {nodes.map((node) => (
                       <LawNodeBadge

@@ -11,7 +11,6 @@ import { dismissDecision, resolveDecision } from "./application/actions";
 import { getDailyProductionSummary } from "./application/getDailyProductionSummary";
 import { playDanger, playGameOver } from "./presentation/audio/sound";
 import { ActionsPanel } from "./presentation/components/ActionsPanel";
-import { DebtPanel } from "./presentation/components/DebtPanel";
 import { DecisionModal } from "./presentation/components/DecisionModal";
 import { EventLog } from "./presentation/components/EventLog";
 import { ExpeditionPanel } from "./presentation/components/ExpeditionPanel";
@@ -256,10 +255,7 @@ function App() {
 
       {openModal === "trade" && (
         <Modal title="Trade" onClose={() => setOpenModal(null)}>
-          <div className="trade-modal">
-            <TradePanel state={state} dispatch={dispatch} />
-            <DebtPanel state={state} dispatch={dispatch} />
-          </div>
+          <TradePanel state={state} dispatch={dispatch} />
         </Modal>
       )}
 

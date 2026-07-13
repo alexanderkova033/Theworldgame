@@ -199,6 +199,12 @@ export function MapPanel({
   const [hoveredProvinceId, setHoveredProvinceId] = useState<string | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
 
+  // The legend is a lot of content (every nation, building type, and raw
+  // resource) — collapsed by default so it doesn't sit permanently on top of
+  // the map, and toggled from a small corner button instead, HOI4-outliner
+  // style.
+  const [showLegend, setShowLegend] = useState(false);
+
   function handleStageMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     const rect = stageRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -333,8 +339,7 @@ export function MapPanel({
   }
 
   return (
-    <section className="panel map-panel">
-      <h2 className="map-panel__title">Map of {nation.name}</h2>
+    <section className="map-panel">
       <div className="map-panel__stage" ref={stageRef} onMouseMove={handleStageMouseMove}>
         <svg
           ref={svgRef}
@@ -746,30 +751,41 @@ export function MapPanel({
               </div>
             );
           })()}
-      </div>
 
-      <div className="map-panel__legend">
-        {NATIONS.map((n) => (
-          <span key={n.id} className="map-panel__legend-item">
-            <span className="map-panel__legend-swatch" style={{ backgroundColor: n.color }} />
-            {n.name}
-            {n.id === nation.id ? " (yours)" : ""}
-          </span>
-        ))}
-        {(Object.keys(BUILDING_COLORS) as ProjectType[]).map((type) => (
-          <span key={type} className="map-panel__legend-item">
-            <BuildingIconSwatch type={type} />
-            {type}
-          </span>
-        ))}
-        {(["wood", "ore", "grain", "fish"] as const).map((type) => (
-          <span key={type} className="map-panel__legend-item">
-            <svg width={20} height={20} viewBox="-9 -9 18 18" className="map-panel__legend-icon">
-              <ResourceIcon type={type} size={7.5} />
-            </svg>
-            {type}
-          </span>
-        ))}
+        <button
+          type="button"
+          className={`map-panel__legend-toggle ${showLegend ? "is-active" : ""}`}
+          onClick={() => setShowLegend((v) => !v)}
+          aria-expanded={showLegend}
+        >
+          Legend
+        </button>
+
+        {showLegend && (
+          <div className="map-panel__legend">
+            {NATIONS.map((n) => (
+              <span key={n.id} className="map-panel__legend-item">
+                <span className="map-panel__legend-swatch" style={{ backgroundColor: n.color }} />
+                {n.name}
+                {n.id === nation.id ? " (yours)" : ""}
+              </span>
+            ))}
+            {(Object.keys(BUILDING_COLORS) as ProjectType[]).map((type) => (
+              <span key={type} className="map-panel__legend-item">
+                <BuildingIconSwatch type={type} />
+                {type}
+              </span>
+            ))}
+            {(["wood", "ore", "grain", "fish"] as const).map((type) => (
+              <span key={type} className="map-panel__legend-item">
+                <svg width={20} height={20} viewBox="-9 -9 18 18" className="map-panel__legend-icon">
+                  <ResourceIcon type={type} size={7.5} />
+                </svg>
+                {type}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

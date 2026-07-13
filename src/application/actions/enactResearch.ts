@@ -2,6 +2,7 @@ import { FAILED_RESEARCH_VOTE_POPULARITY_PENALTY } from "../../domain/constants"
 import { generateId } from "../../domain/country/id";
 import type { GameState } from "../../domain/country/types";
 import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../../domain/parties/factionRules";
+import { deductResource } from "../../domain/resources/resourceRules";
 import { canEnactResearch, getEffectivePassChance, getResearchNode, rollResearchOutcome, scaleResearchEffects } from "../../domain/research/researchRules";
 
 export { canEnactResearch };
@@ -44,15 +45,22 @@ export function enactResearch(state: GameState, researchId: string): GameState {
   const outcome = rollResearchOutcome();
   const effects = scaleResearchEffects(node.effects, outcome.factor);
   const { factionApproval, popularity } = applyFactionEffects(state.factionApproval, weights, effects, effects.popularityDelta ?? 0);
+  // The funding cost is fixed regardless of how the trial turned out — only
+  // the node's own effects scale with the rolled outcome (see scaleResearchEffects).
+  const { enactCost } = node;
+  const resources = enactCost.resourceType
+    ? deductResource(state.resources, enactCost.resourceType, enactCost.resourceAmount ?? 0)
+    : state.resources;
 
   return {
     ...state,
     enactedResearchIds: [...state.enactedResearchIds, researchId],
     researchOutcomes: { ...state.researchOutcomes, [researchId]: outcome.tier },
     factionApproval,
+    resources,
     stats: {
       ...state.stats,
-      treasury: state.stats.treasury + (effects.treasuryDelta ?? 0),
+      treasury: state.stats.treasury - enactCost.treasury + (effects.treasuryDelta ?? 0),
       food: Math.max(0, state.stats.food + (effects.foodDelta ?? 0)),
       stability: Math.min(100, Math.max(0, state.stats.stability + (effects.stabilityDelta ?? 0))),
       population: Math.max(0, state.stats.population + (effects.populationDelta ?? 0)),

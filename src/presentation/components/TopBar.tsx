@@ -125,11 +125,9 @@ export function TopBar({
   return (
     <header className="top-bar">
       <div className="top-bar__row top-bar__row--ticker">
-        <span className="top-bar__nation">
+        <span className="top-bar__nation" style={{ "--party-color": partyColor } as CSSProperties}>
           {nationName}
-          <span className="top-bar__party" style={{ "--party-color": partyColor } as CSSProperties}>
-            {partyName}
-          </span>
+          <span className="top-bar__party">{partyName}</span>
         </span>
 
         <ResourceTicker stats={stats} resources={resources} production={production} debt={debt} />

@@ -95,6 +95,7 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     enactedResearchIds: [],
     researchOutcomes: {},
     resourceDemand: emptyResourceBundle(),
+    standingOrders: [],
     expeditions: [],
     scoutedIslandIds: [],
     events: [

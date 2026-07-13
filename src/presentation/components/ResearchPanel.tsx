@@ -3,10 +3,12 @@ import { useState } from "react";
 import { enactResearch } from "../../application/actions";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
+import { getLawNode } from "../../domain/laws/lawsRules";
 import { getRivalParty } from "../../domain/parties/partyRules";
 import { RESEARCH_NODES } from "../../domain/research/researchData";
 import {
   calculateDailyResearch,
+  canAffordResearchEnactCost,
   getEffectivePassChance,
   getResearchNodeStatus,
   getResearchOutcomeFlavor,
@@ -15,6 +17,7 @@ import {
   type ResearchNodeStatus,
 } from "../../domain/research/researchRules";
 import type { ResearchCategory, ResearchEffects, ResearchNode, ResearchQuotaStat } from "../../domain/research/types";
+import type { ResourceType } from "../../domain/resources/types";
 import { playConfirm } from "../audio/sound";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
@@ -24,7 +27,7 @@ interface ResearchPanelProps {
 }
 
 const CATEGORIES: ResearchCategory[] = ["industry", "agriculture", "administration"];
-const TIERS = [1, 2, 3] as const;
+const TIERS = [1, 2, 3, 4] as const;
 
 const CATEGORY_LABELS: Record<ResearchCategory, string> = {
   industry: "Industry",
@@ -46,6 +49,13 @@ const QUOTA_LABELS: Record<ResearchQuotaStat, string> = {
   stability: "Stability",
   popularity: "Popularity",
   researchPoints: "Research Points",
+};
+
+const RESOURCE_LABELS: Record<ResourceType, string> = {
+  wood: "Wood",
+  ore: "Ore",
+  grain: "Grain",
+  fish: "Fish",
 };
 
 function formatQuotaValue(stat: ResearchQuotaStat, value: number): string {
@@ -108,13 +118,10 @@ function XBadge() {
   );
 }
 
-// LawsPanel's tree is always a 2-way fork, so its own TierConnector (and the
-// :first-child/:last-child CSS it relies on) is left alone — this one takes
-// a leg count instead of a boolean because Agriculture now has 3-way forks
-// (Granary/Cannery joined the existing options), and positions each leg
-// inline rather than via CSS pseudo-selectors so it isn't stuck at exactly
-// two. Legs are spread evenly between the same 22%/78% bounds the original
-// 2-leg version used, so a 2-way fork here still looks pixel-identical.
+// Legs are spread evenly between the same 22%/78% bounds a 2-leg version
+// would use, so a 2-way fork still looks pixel-identical — this just
+// doesn't assume exactly two, since Agriculture and Administration both
+// have 3-way forks now.
 function TierConnector({ legCount }: { legCount: number }) {
   const legPositions =
     legCount === 1 ? [50] : Array.from({ length: legCount }, (_, i) => 22 + i * (56 / (legCount - 1)));
@@ -155,7 +162,7 @@ function ResearchNodeBadge({ node, status, isSelected, onSelect }: ResearchNodeB
             <XBadge />
           </span>
         )}
-        {(status === "locked-prerequisite" || status === "locked-quota") && (
+        {(status === "locked-prerequisite" || status === "locked-cross" || status === "locked-quota") && (
           <span className="law-node__badge law-node__badge--locked">
             <LockBadge />
           </span>
@@ -183,6 +190,8 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
   const quota = getQuotaProgress(state, node);
   const rival = getRivalParty(state.partyId);
   const stance = getRivalStance(state, node);
+  const affordable = canAffordResearchEnactCost(state, node.enactCost);
+  const crossNodeName = node.crossRequirement ? getLawNode(node.crossRequirement.nodeId)?.name : undefined;
 
   return (
     <div className="law-inspector">
@@ -207,6 +216,12 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
         </span>
       </div>
 
+      <p className="law-inspector__enact-cost">
+        Costs {node.enactCost.treasury.toLocaleString()} {CURRENCY_SYMBOL}
+        {node.enactCost.resourceType && ` + ${node.enactCost.resourceAmount} ${RESOURCE_LABELS[node.enactCost.resourceType]}`}
+        {" "}to put to a vote
+      </p>
+
       {stance !== "neutral" && status !== "enacted" && (
         <p className={`rival-stance is-${stance}`}>
           {rival.name} {stance === "opposes" ? "opposes this." : "supports this."}
@@ -225,6 +240,10 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
 
       {status === "locked-prerequisite" && (
         <p className="law-inspector__status is-locked">Requires the technology above it in this branch first.</p>
+      )}
+
+      {status === "locked-cross" && (
+        <p className="law-inspector__status is-locked">Requires {crossNodeName ?? "a Law"} (Law) enacted first.</p>
       )}
 
       {status === "locked-quota" && (
@@ -247,6 +266,7 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
             {passChance}% chance to pass
           </span>
           <button
+            disabled={!affordable}
             onClick={() => {
               if (isArmed) {
                 playConfirm();
@@ -256,7 +276,7 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
               }
             }}
           >
-            {isArmed ? "Confirm — put it to a vote" : "Propose"}
+            {!affordable ? "Can't afford it" : isArmed ? "Confirm — put it to a vote" : "Propose"}
           </button>
         </div>
       )}
@@ -273,11 +293,10 @@ export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
   return (
     <div className="law-tree research-tree">
       <p className="panel-hint">
-        Every branch is gated by accumulated research points ({state.stats.researchPoints.toFixed(1)} so far, +
-        {calculateDailyResearch(state.educationLevel).toFixed(2)}/day at your current education level). Adopting a
-        technology is a vote, not a guarantee — education helps your odds, and the opposition has its own opinion on
-        each one. Even a passed vote is a roll of the dice: the listed benefit is what a solid result looks like, not
-        a promise — a lucky trial can beat it, an unlucky one can fall well short.
+        Gated by accumulated research points ({state.stats.researchPoints.toFixed(1)} so far, +
+        {calculateDailyResearch(state.educationLevel).toFixed(2)}/day) and a treasury cost to fund the trial.
+        Adopting a technology is a vote, not a guarantee, and even a passed vote's result is a roll of the dice — the
+        listed benefit is what a solid trial looks like, not a promise.
       </p>
 
       <div className="law-tree__columns">
@@ -290,6 +309,7 @@ export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
 
             {TIERS.map((tier, tierIndex) => {
               const nodes = nodesFor(category, tier);
+              if (nodes.length === 0) return null;
               return (
                 <div className="law-tree__tier" key={tier}>
                   {tierIndex > 0 && <TierConnector legCount={nodes.length} />}

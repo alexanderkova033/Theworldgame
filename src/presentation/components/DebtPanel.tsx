@@ -10,6 +10,10 @@ import { StatIcon } from "./StatIcon";
 interface DebtPanelProps {
   state: GameState;
   dispatch: (action: (state: GameState) => GameState) => void;
+  // True when embedded inside another panel (e.g. the Trade tab's Loans
+  // sub-tab) — skips the outer .panel wrapper/heading, since the host
+  // already provides that context.
+  bare?: boolean;
 }
 
 // Revolving debt: take it in fixed batches whenever, no term, no forced
@@ -17,18 +21,16 @@ interface DebtPanelProps {
 // down yourself. There's no cap on how long you can carry it, only a cost:
 // past DEBT_DANGER_THRESHOLD it starts dragging stability and popularity
 // down every day, same lever a food shortage already pulls.
-export function DebtPanel({ state, dispatch }: DebtPanelProps) {
+export function DebtPanel({ state, dispatch, bare = false }: DebtPanelProps) {
   const dangerous = isDebtDangerous(state.debt);
   const dailyInterest = Math.round(state.debt * LOAN_INTEREST_RATE_PER_DAY);
   const repayAmount = getRepayAmount(state);
 
-  return (
-    <section className="panel debt-panel">
-      <h2>Loans</h2>
+  const content = (
+    <>
       <p className="panel-hint">
-        Borrow against the future when the treasury runs short. Debt compounds daily and has no fixed term — but
-        carry more than {formatCompact(DEBT_DANGER_THRESHOLD)} {CURRENCY_SYMBOL} of it and the interest alone starts
-        costing you stability and popularity every day, same as a food shortage would.
+        Debt compounds daily, no fixed term — but past {formatCompact(DEBT_DANGER_THRESHOLD)} {CURRENCY_SYMBOL} the
+        interest alone starts costing stability and popularity every day.
       </p>
 
       <div className={`debt-panel__status ${dangerous ? "is-dangerous" : state.debt > 0 ? "is-active" : ""}`}>
@@ -66,6 +68,15 @@ export function DebtPanel({ state, dispatch }: DebtPanelProps) {
         </button>
       </div>
       {!canTakeLoan(state) && <p className="debt-panel__cap-note">Debt is capped at {formatCompact(LOAN_MAX_DEBT)} {CURRENCY_SYMBOL}.</p>}
+    </>
+  );
+
+  if (bare) return <div className="debt-panel">{content}</div>;
+
+  return (
+    <section className="panel debt-panel">
+      <h2>Loans</h2>
+      {content}
     </section>
   );
 }

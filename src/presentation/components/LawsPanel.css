@@ -80,14 +80,9 @@
   width: 2px;
   height: 100%;
   background: var(--panel-border);
-}
-
-.law-tree__connector-leg:first-child {
-  left: 22%;
-}
-
-.law-tree__connector-leg:last-child {
-  right: 22%;
+  /* Horizontal position is set inline per-leg (see TierConnector in
+     LawsPanel.tsx/ResearchPanel.tsx) so any fork width — 2-way or 3-way —
+     spreads evenly instead of assuming exactly two legs. */
 }
 
 /* --- Node badges --- */
@@ -138,6 +133,7 @@
 }
 
 .law-node--locked-prerequisite .law-node__icon,
+.law-node--locked-cross .law-node__icon,
 .law-node--locked-quota .law-node__icon {
   opacity: 0.45;
   filter: grayscale(0.6);
@@ -271,6 +267,12 @@
 
 .law-inspector__cost {
   color: var(--danger);
+}
+
+.law-inspector__enact-cost {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
 }
 
 .law-effect-icons {
