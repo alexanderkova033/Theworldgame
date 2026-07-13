@@ -34,7 +34,9 @@ export function DebtPanel({ state, dispatch, bare = false }: DebtPanelProps) {
       </p>
 
       <div className={`debt-panel__status ${dangerous ? "is-dangerous" : state.debt > 0 ? "is-active" : ""}`}>
-        <StatIcon type="treasury" size={22} />
+        <span className="debt-panel__status-icon">
+          <StatIcon type="treasury" size={22} />
+        </span>
         <div className="debt-panel__status-body">
           <span className="debt-panel__status-value">
             {formatCompact(state.debt)} {CURRENCY_SYMBOL} owed

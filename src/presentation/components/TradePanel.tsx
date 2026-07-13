@@ -260,7 +260,7 @@ export function TradePanel({ state, dispatch }: TradePanelProps) {
 
   return (
     <section className="panel trade-panel">
-      <h2>Trade</h2>
+      <h2>Exchange</h2>
 
       <div className="trade-panel__tabs">
         {TABS.map((t) => (

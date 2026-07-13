@@ -86,12 +86,16 @@ export function getActiveResearchEffects(
   return { incomeMultiplier, industryMultiplier };
 }
 
+// No "locked-quota" here — Research has no stat condition to meet at all
+// (that's what distinguishes it from Laws). Whether you can actually afford
+// a node's researchPoints/treasury/resource cost is a separate, softer
+// question — see canAffordResearchEnactCost — surfaced as a disabled vote
+// button, not a hard lock icon.
 export type ResearchNodeStatus =
   | "enacted"
   | "foreclosed"
   | "locked-prerequisite"
   | "locked-cross" // a required node in the Law tree isn't enacted yet
-  | "locked-quota"
   | "available"; // ready for a vote (may still be unaffordable — see canEnactResearch)
 
 export function getResearchNodeStatus(state: GameState, node: ResearchNode): ResearchNodeStatus {
@@ -111,13 +115,12 @@ export function getResearchNodeStatus(state: GameState, node: ResearchNode): Res
 
   if (node.crossRequirement && !state.enactedLawIds.includes(node.crossRequirement.nodeId)) return "locked-cross";
 
-  if (state.stats[node.quota.stat] < node.quota.threshold) return "locked-quota";
-
   return "available";
 }
 
 export function canAffordResearchEnactCost(state: GameState, cost: ResearchEnactCost): boolean {
   if (state.stats.treasury < cost.treasury) return false;
+  if (state.stats.researchPoints < cost.researchPoints) return false;
   if (cost.resourceType && (cost.resourceAmount ?? 0) > state.resources[cost.resourceType]) return false;
   return true;
 }
@@ -142,10 +145,4 @@ export function getEffectivePassChance(state: GameState, node: ResearchNode): nu
 export function getRivalStance(state: GameState, node: ResearchNode) {
   const rival = getRivalParty(state.partyId);
   return getPartyStance(rival.ideology, node.effects);
-}
-
-export function getQuotaProgress(state: GameState, node: ResearchNode): { current: number; threshold: number; ratio: number } {
-  const current = state.stats[node.quota.stat];
-  const threshold = node.quota.threshold;
-  return { current, threshold, ratio: Math.min(1, Math.max(0, current / threshold)) };
 }

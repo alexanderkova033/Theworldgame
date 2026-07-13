@@ -6,6 +6,7 @@
   border: 1px solid var(--panel-border);
   border-radius: 6px;
   padding: 0.5rem 0.65rem;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 .actions-panel__target strong {
@@ -29,6 +30,7 @@
   border: 1px solid var(--panel-border);
   border-radius: 10px;
   padding: 0.65rem 0.75rem;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.4);
   transition: border-color 0.15s ease;
 }
 
@@ -109,6 +111,17 @@
 .build-card__cost--later {
   color: var(--text-muted);
   font-size: 0.72rem;
+}
+
+.build-card__cost--total {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.build-card__disabled-reason {
+  font-size: 0.72rem;
+  color: var(--danger);
+  margin: 0.2rem 0 0.4rem;
 }
 
 .build-card__cost-tag {

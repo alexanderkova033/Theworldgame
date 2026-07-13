@@ -6,12 +6,16 @@
   overflow: hidden;
   border: 1px solid var(--panel-border);
   background: var(--bg-deep);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.55);
   margin-bottom: 0.5rem;
 }
 
 .politics-panel__meter-fill {
   height: 100%;
-  background: var(--party-color);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.02) 45%, rgba(0, 0, 0, 0.18) 100%),
+    var(--party-color);
+  box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.25);
   transition: width 0.3s ease;
 }
 
@@ -212,20 +216,32 @@
   overflow: hidden;
   background: var(--bg-deep);
   border: 1px solid var(--panel-border);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.55);
 }
 
 .politics-panel__faction-bar-fill {
   height: 100%;
-  background: var(--party-color, var(--accent-active));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent 50%),
+    var(--party-color, var(--accent-active));
   transition: width 0.3s ease;
 }
 
 .politics-panel__faction-weight {
   flex-shrink: 0;
   width: 6.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
   text-align: right;
   font-size: 0.66rem;
   color: var(--text-muted);
+}
+
+.politics-panel__faction-contribution {
+  font-weight: 700;
+  color: var(--accent-active);
 }
 
 .politics-panel__decisions {
@@ -274,6 +290,7 @@
   padding: 0.4rem 0.55rem;
   border-radius: 6px;
   background: rgba(0, 0, 0, 0.15);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
 .politics-panel__decision-icon {

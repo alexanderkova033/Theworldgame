@@ -1,20 +1,15 @@
-// Research: a branching tech tree with the same shape as the Law tree
-// (domain/laws) — three branches, four tiers, prerequisite + quota gating,
-// mutually-exclusive tier 2+ forks, and a vote-style pass chance. The two
-// differences: quotas are always measured in researchPoints (so the tree's
-// own pace is the gate, not the country's condition), and the pass chance is
-// nudged by educationLevel instead of popularity. See researchRules.ts.
+// Research: a branching tech tree with the same branch/tier/fork/vote shape
+// as the Law tree (domain/laws), but a genuinely different gate. Laws are
+// gated by the country's actual condition (a stat quota — see LawQuota) and
+// funded by treasury. Research has no quota at all: every node just costs a
+// chunk of accumulated research points to enact (see enactCost.researchPoints
+// below), spent like a currency the moment the vote passes — the same role
+// treasury plays for Laws, just a different pool. Pass chance is nudged by
+// educationLevel instead of popularity. See researchRules.ts.
 import type { ProjectType } from "../construction/types";
 import type { ResourceType } from "../resources/types";
 
 export type ResearchCategory = "industry" | "agriculture" | "administration";
-
-export type ResearchQuotaStat = "treasury" | "population" | "food" | "industry" | "stability" | "popularity" | "researchPoints";
-
-export interface ResearchQuota {
-  stat: ResearchQuotaStat;
-  threshold: number;
-}
 
 export interface ResearchEffects {
   // Ongoing, folded into the same multiplier composition as law/nation
@@ -31,10 +26,12 @@ export interface ResearchEffects {
 
 // What it actually costs to put a node to a vote in the first place —
 // distinct from `effects.treasuryDelta`, which is the node's own one-time
-// fiscal effect once enacted. Deducted only on a successful vote — see
-// application/actions/enactResearch.ts.
+// fiscal effect once enacted. All three deducted only on a successful vote —
+// see application/actions/enactResearch.ts. `researchPoints` is required
+// (every node spends some), treasury/resource costs scale it further.
 export interface ResearchEnactCost {
   treasury: number;
+  researchPoints: number;
   resourceType?: ResourceType;
   resourceAmount?: number;
 }
@@ -50,7 +47,6 @@ export interface ResearchNode {
   id: string;
   category: ResearchCategory;
   tier: 1 | 2 | 3 | 4; // tier 4 is a capstone, unlocked only after a tier-3 pick in the same branch
-  quota: ResearchQuota;
   name: string;
   description: string;
   benefit: string;

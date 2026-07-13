@@ -27,6 +27,7 @@ import { addResources, calculateDailyProduction } from "../domain/resources/reso
 import { decayDemand } from "../domain/resources/tradeRules";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
 import { isCollapseRisk, updateStability } from "../domain/stability/stabilityRules";
+import { getActiveSynergyEffects } from "../domain/synergy/synergyRules";
 import { applyExpeditionCompletion } from "./applyExpeditionCompletion";
 import { applyProjectCompletion } from "./applyProjectCompletion";
 import { generateMonthlyReport } from "./generateMonthlyReport";
@@ -47,6 +48,9 @@ export function simulateDay(state: GameState): GameState {
   const efficiencyMultiplier = calculateEfficiencyMultiplier(state.roadCount);
   const lawEffects = getActiveLawEffects(state.enactedLawIds);
   const researchEffects = getActiveResearchEffects(state.enactedResearchIds, state.researchOutcomes);
+  // A Law+Research pair that's both enacted layers on an extra bonus, on top
+  // of whatever each already contributes alone — see domain/synergy.
+  const synergyEffects = getActiveSynergyEffects(state.enactedLawIds, state.enactedResearchIds);
   const nationEffects = getNationEffects(state.nationId);
   const events: GameEvent[] = [...state.events];
 
@@ -174,7 +178,7 @@ export function simulateDay(state: GameState): GameState {
   const income = calculateDailyIncome(
     working.stats,
     working.taxRate,
-    efficiencyMultiplier * lawEffects.incomeMultiplier * nationEffects.incomeMultiplier * researchEffects.incomeMultiplier,
+    efficiencyMultiplier * lawEffects.incomeMultiplier * nationEffects.incomeMultiplier * researchEffects.incomeMultiplier * synergyEffects.incomeMultiplier,
   );
   const expenses = calculateDailyExpenses(working.stats);
   const treasury = working.stats.treasury + income - expenses;
@@ -195,7 +199,8 @@ export function simulateDay(state: GameState): GameState {
     calculateIndustryOutput(working.factoryCount, working.researchLevel) *
     lawEffects.industryMultiplier *
     nationEffects.industryMultiplier *
-    researchEffects.industryMultiplier;
+    researchEffects.industryMultiplier *
+    synergyEffects.industryMultiplier;
 
   // 6. Research points accumulate passively.
   const researchPoints = working.stats.researchPoints + calculateDailyResearch(working.educationLevel);

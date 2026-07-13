@@ -61,6 +61,7 @@ export function enactResearch(state: GameState, researchId: string): GameState {
     stats: {
       ...state.stats,
       treasury: state.stats.treasury - enactCost.treasury + (effects.treasuryDelta ?? 0),
+      researchPoints: Math.max(0, state.stats.researchPoints - enactCost.researchPoints),
       food: Math.max(0, state.stats.food + (effects.foodDelta ?? 0)),
       stability: Math.min(100, Math.max(0, state.stats.stability + (effects.stabilityDelta ?? 0))),
       population: Math.max(0, state.stats.population + (effects.populationDelta ?? 0)),

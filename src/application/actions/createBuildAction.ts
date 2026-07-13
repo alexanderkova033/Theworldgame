@@ -44,14 +44,16 @@ export function countBuildingsInProvince(state: GameState, type: ProjectType, pr
   return completed + inProgress;
 }
 
-// Cost is split 50/50: half is charged the moment construction starts, half
-// is drained in equal daily installments for the rest of the build (see
+// Cost is split 60/40: 60% is charged the moment construction starts, the
+// rest is drained in equal daily installments for the rest of the build (see
 // Project.treasuryCostPerDay/resourceCostPerDay and simulateDay.ts step 1).
-// canBuild only has to check the upfront half — that's genuinely all that's
-// due right now — but that also means starting a project commits you to an
-// ongoing cost you might not be able to fully afford if you overbuild.
+// Weighted toward the upfront share (rather than an even split) so starting
+// a project is a real commitment you feel immediately, not a rounding error
+// against a comfortable treasury — canBuild only has to check this upfront
+// share, but that also means starting a project commits you to an ongoing
+// cost you might not be able to fully afford if you overbuild.
 function upfrontCost(cost: number): number {
-  return Math.round(cost / 2);
+  return Math.round(cost * 0.6);
 }
 
 export function createBuildAction(config: BuildActionConfig): BuildAction {

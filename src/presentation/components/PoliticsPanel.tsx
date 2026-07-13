@@ -36,9 +36,13 @@ interface CoalitionRowProps {
 // "Your Base"/"Rival Base" tag when it's the player's or rival's own
 // ideology), a mini approval meter, and its share of the electorate — the
 // same law/research/decision that used to move one flat number now visibly
-// moves these different amounts, sometimes in different directions.
+// moves these different amounts, sometimes in different directions. The
+// weight × approval "contribution" figure is what actually sums (across all
+// six rows) to the single popularity number in the meter above — spelling
+// that arithmetic out here instead of leaving it implied.
 function CoalitionRow({ ideology, weight, approval, tag, color }: CoalitionRowProps) {
   const rounded = Math.round(approval);
+  const contribution = (weight * approval).toFixed(1);
   return (
     <div className="politics-panel__faction-row" style={color ? ({ "--party-color": color } as CSSProperties) : undefined}>
       <span className="politics-panel__faction-icon">
@@ -56,7 +60,10 @@ function CoalitionRow({ ideology, weight, approval, tag, color }: CoalitionRowPr
           <div className="politics-panel__faction-bar-fill" style={{ width: `${rounded}%` }} />
         </div>
       </div>
-      <span className="politics-panel__faction-weight">~{Math.round(weight * 100)}% of electorate</span>
+      <span className="politics-panel__faction-weight">
+        ~{Math.round(weight * 100)}% of electorate
+        <span className="politics-panel__faction-contribution">→ {contribution} pts</span>
+      </span>
     </div>
   );
 }
@@ -123,8 +130,9 @@ export function PoliticsPanel({ state }: PoliticsPanelProps) {
       <div className="politics-panel__coalition">
         <h3>Coalition</h3>
         <p className="panel-hint">
-          Your electorate isn't just you vs. them — six currents, in different strengths. A law or decision rarely
-          moves them all the same way.
+          The {popularity}% above is just these six rows added up (each one's "→ pts" figure, weight × approval).
+          A law that helps industry, say, usually raises Commercial and Nationalist approval while costing Agrarian
+          and Labor — pass it and your headline number can rise even as part of your own coalition sours on you.
         </p>
         {[...FACTIONS]
           .sort((a, b) => weights[b] - weights[a])

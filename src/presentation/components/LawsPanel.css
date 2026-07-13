@@ -1,8 +1,21 @@
+/* The tree used to sit directly on the modal's own flat background — a
+   sea of empty brown around a handful of small circles. Sinking it into
+   its own recessed, textured tablet (same diagonal hatch as the page body,
+   plus an inner vignette) gives the empty space between nodes something to
+   look at instead of reading as unfinished. */
 .law-tree__columns {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.25rem;
+  margin: 0 0 1.25rem;
+  padding: 1.5rem 1.25rem 1.75rem;
+  border-radius: 8px;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(202, 160, 54, 0.06), transparent 65%),
+    repeating-linear-gradient(115deg, rgba(0, 0, 0, 0.14) 0px, transparent 2px, transparent 6px),
+    var(--bg-deep);
+  border: 1px solid var(--wood-dark);
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(240, 200, 105, 0.06);
 }
 
 .law-tree__column {
@@ -13,11 +26,32 @@
   align-items: center;
 }
 
+.law-tree__column + .law-tree__column {
+  border-left: 1px dashed rgba(240, 200, 105, 0.14);
+}
+
 .law-tree__column-title {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  margin: 0 0 0.6rem;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  position: relative;
+  color: var(--accent-active);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+}
+
+.law-tree__column-title::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 2.4rem;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent) 20%, var(--accent-active) 50%, var(--accent) 80%, transparent);
 }
 
 .law-tree__column-title svg {
@@ -56,7 +90,8 @@
 .law-tree__connector-stem {
   width: 2px;
   height: 0.9rem;
-  background: var(--panel-border);
+  background: linear-gradient(180deg, var(--panel-border), var(--accent) 130%);
+  box-shadow: 0 0 4px rgba(202, 160, 54, 0.25);
 }
 
 .law-tree__connector-fork {
@@ -72,6 +107,7 @@
   right: 22%;
   height: 2px;
   background: var(--panel-border);
+  box-shadow: 0 0 4px rgba(202, 160, 54, 0.2);
 }
 
 .law-tree__connector-leg {
@@ -80,6 +116,7 @@
   width: 2px;
   height: 100%;
   background: var(--panel-border);
+  box-shadow: 0 0 4px rgba(202, 160, 54, 0.2);
   /* Horizontal position is set inline per-leg (see TierConnector in
      LawsPanel.tsx/ResearchPanel.tsx) so any fork width — 2-way or 3-way —
      spreads evenly instead of assuming exactly two legs. */
@@ -97,12 +134,14 @@
   border: none;
   box-shadow: none;
   border-radius: 8px;
+  transition: transform 0.12s ease;
 }
 
 .law-node:hover {
   background: rgba(255, 255, 255, 0.04);
   border: none;
   box-shadow: none;
+  transform: translateY(-2px);
 }
 
 .law-node.is-selected {
@@ -111,25 +150,37 @@
 
 .law-node__icon {
   position: relative;
-  width: 46px;
-  height: 46px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.1), transparent 65%), var(--panel-bg-raised);
   border: 2px solid var(--panel-border);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -2px 5px rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
 .law-node--available .law-node__icon {
   border-color: var(--accent-active);
-  box-shadow: 0 0 10px rgba(240, 200, 105, 0.4);
+  box-shadow: 0 0 12px rgba(240, 200, 105, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -2px 5px rgba(0, 0, 0, 0.35);
+  animation: law-node-pulse 2.6s ease-in-out infinite;
 }
 
 .law-node--enacted .law-node__icon {
   border-color: var(--success);
-  box-shadow: 0 0 8px rgba(111, 174, 124, 0.4);
+  box-shadow: 0 0 10px rgba(111, 174, 124, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -2px 5px rgba(0, 0, 0, 0.35);
+}
+
+@keyframes law-node-pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(240, 200, 105, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -2px 5px rgba(0, 0, 0, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(240, 200, 105, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -2px 5px rgba(0, 0, 0, 0.35);
+  }
 }
 
 .law-node--locked-prerequisite .law-node__icon,
@@ -273,6 +324,22 @@
   font-size: 0.78rem;
   color: var(--text-muted);
   margin: 0 0 0.75rem;
+}
+
+.law-inspector__synergy {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0 0 0.5rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 6px;
+  border: 1px dashed var(--panel-border);
+}
+
+.law-inspector__synergy.is-active {
+  color: var(--success);
+  border: 1px solid var(--success);
+  border-style: solid;
+  background: rgba(111, 174, 124, 0.1);
 }
 
 .law-effect-icons {

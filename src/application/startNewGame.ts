@@ -72,7 +72,7 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     researchLevel: 0,
 
     stats: {
-      treasury: 3000,
+      treasury: 1500,
       population: 10000,
       food: 8000,
       industry: calculateIndustryOutput(factoryCount, 0),

@@ -13,11 +13,12 @@ import {
   getResearchNodeStatus,
   getResearchOutcomeFlavor,
   getRivalStance,
-  getQuotaProgress,
   type ResearchNodeStatus,
 } from "../../domain/research/researchRules";
-import type { ResearchCategory, ResearchEffects, ResearchNode, ResearchQuotaStat } from "../../domain/research/types";
+import type { ResearchCategory, ResearchEffects, ResearchNode } from "../../domain/research/types";
 import type { ResourceType } from "../../domain/resources/types";
+import { getSynergiesForResearch } from "../../domain/synergy/synergyRules";
+import type { Synergy } from "../../domain/synergy/synergyData";
 import { playConfirm } from "../audio/sound";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
@@ -41,16 +42,6 @@ const CATEGORY_ICONS: Record<ResearchCategory, StatIconType> = {
   administration: "stability",
 };
 
-const QUOTA_LABELS: Record<ResearchQuotaStat, string> = {
-  treasury: "Treasury",
-  population: "Population",
-  food: "Food",
-  industry: "Industry",
-  stability: "Stability",
-  popularity: "Popularity",
-  researchPoints: "Research Points",
-};
-
 const RESOURCE_LABELS: Record<ResourceType, string> = {
   wood: "Wood",
   ore: "Ore",
@@ -58,15 +49,16 @@ const RESOURCE_LABELS: Record<ResourceType, string> = {
   fish: "Fish",
 };
 
-function formatQuotaValue(stat: ResearchQuotaStat, value: number): string {
-  if (stat === "treasury") return `${Math.round(value).toLocaleString()} ${CURRENCY_SYMBOL}`;
-  if (stat === "stability" || stat === "popularity") return `${Math.round(value)}`;
-  if (stat === "researchPoints") return value.toFixed(1);
-  return Math.round(value).toLocaleString();
-}
-
 function nodesFor(category: ResearchCategory, tier: number): ResearchNode[] {
   return RESEARCH_NODES.filter((n) => n.category === category && n.tier === tier);
+}
+
+// "+5% industry, +5% income" from a synergy's multiplier-only effects.
+function formatSynergyEffect(effects: Synergy["effects"]): string {
+  const parts: string[] = [];
+  if (effects.industryMultiplier) parts.push(`+${Math.round((effects.industryMultiplier - 1) * 100)}% industry`);
+  if (effects.incomeMultiplier) parts.push(`+${Math.round((effects.incomeMultiplier - 1) * 100)}% income`);
+  return parts.join(", ");
 }
 
 function effectEntries(effects: ResearchEffects): Array<{ icon: StatIconType; positive: boolean }> {
@@ -162,7 +154,7 @@ function ResearchNodeBadge({ node, status, isSelected, onSelect }: ResearchNodeB
             <XBadge />
           </span>
         )}
-        {(status === "locked-prerequisite" || status === "locked-cross" || status === "locked-quota") && (
+        {(status === "locked-prerequisite" || status === "locked-cross") && (
           <span className="law-node__badge law-node__badge--locked">
             <LockBadge />
           </span>
@@ -187,11 +179,11 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
   const benefitIcons = entries.filter((e) => e.positive).map((e) => e.icon);
   const costIcons = entries.filter((e) => !e.positive).map((e) => e.icon);
   const passChance = Math.round(getEffectivePassChance(state, node) * 100);
-  const quota = getQuotaProgress(state, node);
   const rival = getRivalParty(state.partyId);
   const stance = getRivalStance(state, node);
   const affordable = canAffordResearchEnactCost(state, node.enactCost);
   const crossNodeName = node.crossRequirement ? getLawNode(node.crossRequirement.nodeId)?.name : undefined;
+  const synergies = getSynergiesForResearch(node.id);
 
   return (
     <div className="law-inspector">
@@ -217,10 +209,21 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
       </div>
 
       <p className="law-inspector__enact-cost">
-        Costs {node.enactCost.treasury.toLocaleString()} {CURRENCY_SYMBOL}
+        Costs {node.enactCost.researchPoints} Research Points + {node.enactCost.treasury.toLocaleString()} {CURRENCY_SYMBOL}
         {node.enactCost.resourceType && ` + ${node.enactCost.resourceAmount} ${RESOURCE_LABELS[node.enactCost.resourceType]}`}
-        {" "}to put to a vote
+        {" "}to put to a vote — you have {state.stats.researchPoints.toFixed(1)} points banked.
       </p>
+
+      {synergies.map((synergy) => {
+        const lawNode = getLawNode(synergy.lawId);
+        const isActive = status === "enacted" && state.enactedLawIds.includes(synergy.lawId);
+        return (
+          <p key={synergy.id} className={`law-inspector__synergy ${isActive ? "is-active" : ""}`}>
+            {isActive ? "Synergy active — " : "Synergy: pair with "}
+            {lawNode?.name ?? "a Law"} (Law) for {formatSynergyEffect(synergy.effects)}.
+          </p>
+        );
+      })}
 
       {stance !== "neutral" && status !== "enacted" && (
         <p className={`rival-stance is-${stance}`}>
@@ -244,18 +247,6 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
 
       {status === "locked-cross" && (
         <p className="law-inspector__status is-locked">Requires {crossNodeName ?? "a Law"} (Law) enacted first.</p>
-      )}
-
-      {status === "locked-quota" && (
-        <div className="law-inspector__quota">
-          <span className="law-inspector__quota-label">
-            Needs {QUOTA_LABELS[node.quota.stat]} ≥ {formatQuotaValue(node.quota.stat, node.quota.threshold)} — currently{" "}
-            {formatQuotaValue(node.quota.stat, quota.current)}
-          </span>
-          <div className="progress-bar">
-            <div className="progress-bar__fill" style={{ width: `${Math.round(quota.ratio * 100)}%` }} />
-          </div>
-        </div>
       )}
 
       {status === "available" && (
@@ -293,10 +284,11 @@ export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
   return (
     <div className="law-tree research-tree">
       <p className="panel-hint">
-        Gated by accumulated research points ({state.stats.researchPoints.toFixed(1)} so far, +
-        {calculateDailyResearch(state.educationLevel).toFixed(2)}/day) and a treasury cost to fund the trial.
-        Adopting a technology is a vote, not a guarantee, and even a passed vote's result is a roll of the dice — the
-        listed benefit is what a solid trial looks like, not a promise.
+        Research points are a currency, not a threshold: you have {state.stats.researchPoints.toFixed(1)} banked (+
+        {calculateDailyResearch(state.educationLevel).toFixed(2)}/day), and every node spends some of that pool plus
+        treasury when its vote passes — no country-condition quota to clear first, unlike Laws. Adopting a technology
+        is still a vote, not a guarantee, and even a passed vote's result is a roll of the dice — the listed benefit
+        is what a solid trial looks like, not a promise.
       </p>
 
       <div className="law-tree__columns">

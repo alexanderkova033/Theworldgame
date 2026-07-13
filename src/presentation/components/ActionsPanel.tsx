@@ -36,8 +36,11 @@ import {
 } from "../../domain/constants";
 import type { ProjectType } from "../../domain/construction/types";
 import type { GameState } from "../../domain/country/types";
+import { canAfford } from "../../domain/economy/economyRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { getResearchNode, isBuildingUnlocked } from "../../domain/research/researchRules";
+import { canAffordResource } from "../../domain/resources/resourceRules";
+import type { ResourceType } from "../../domain/resources/types";
 import { playConfirm } from "../audio/sound";
 import { BuildingIcon } from "./BuildingIcon";
 
@@ -47,16 +50,19 @@ interface ActionsPanelProps {
   dispatch: (action: (state: GameState) => GameState) => void;
 }
 
-// Half the cost is due now, half is drained daily over the build (see
-// createBuildAction.ts) — split the display to match instead of quoting one
-// combined number that isn't actually what gets charged up front.
-function half(value: number): number {
-  return Math.round(value / 2);
+// 60% of the cost is due now, the rest is drained daily over the build (see
+// createBuildAction.ts's own upfrontCost) — mirrored here so the display
+// matches what's actually charged, not a stale 50/50 assumption.
+const UPFRONT_SHARE = 0.6;
+
+function upfront(value: number): number {
+  return Math.round(value * UPFRONT_SHARE);
 }
 
 // Rounded to one decimal — most of these per-day rates are well under 1
-// unit/day (e.g. a 60-day farm's remaining 7 wood is 0.1/day), and rounding
-// to a whole number would show "0" for a cost that's very much still real.
+// unit/day (e.g. a 60-day farm's remaining wood share is a fraction/day),
+// and rounding to a whole number would show "0" for a cost that's very much
+// still real.
 function perDay(value: number, days: number): number {
   return Math.round((value / days) * 10) / 10;
 }
@@ -72,6 +78,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
     name: string;
     cost: number;
     resourceCost: number;
+    resourceType: ResourceType;
     resourceLabel: string;
     buildDays: number;
     description: string;
@@ -80,12 +87,14 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
     canBuild: boolean;
     onBuild: () => void;
     lockedReason?: string;
+    paybackDays?: number;
   }> = [
     {
       type: "farm",
       name: "Farm",
       cost: FARM_COST,
       resourceCost: FARM_WOOD_COST,
+      resourceType: "wood",
       resourceLabel: "Wood",
       buildDays: FARM_BUILD_DAYS,
       description: `Produces ${FOOD_PER_FARM.toLocaleString()} food/day.`,
@@ -99,6 +108,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
       name: "Factory",
       cost: FACTORY_COST,
       resourceCost: FACTORY_ORE_COST,
+      resourceType: "ore",
       resourceLabel: "Ore",
       buildDays: FACTORY_BUILD_DAYS,
       description: `Produces ${INDUSTRY_PER_FACTORY} industry/day (~${INDUSTRY_PER_FACTORY * INCOME_PER_INDUSTRY} ${CURRENCY_SYMBOL}/day in income).`,
@@ -106,12 +116,17 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
       max: buildFactory.maxPerProvince,
       canBuild: buildFactory.canBuild(state, selectedProvinceId),
       onBuild: () => dispatch((s) => buildFactory(s, selectedProvinceId)),
+      // The only building with a direct Cr/day return — Farm/Granary/Cannery
+      // produce food (not Cr) and Road is a %, not a fixed rate, so neither
+      // gets a payback number here (a misleading estimate is worse than none).
+      paybackDays: Math.round(FACTORY_COST / (INDUSTRY_PER_FACTORY * INCOME_PER_INDUSTRY)),
     },
     {
       type: "road",
       name: "Road",
       cost: ROAD_COST,
       resourceCost: ROAD_ORE_COST,
+      resourceType: "ore",
       resourceLabel: "Ore",
       buildDays: ROAD_BUILD_DAYS,
       description: `+${ROAD_EFFICIENCY_BONUS * 100}% income & construction speed nationwide, per road (stacks).`,
@@ -125,6 +140,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
       name: "School",
       cost: EDUCATION_COST,
       resourceCost: EDUCATION_WOOD_COST,
+      resourceType: "wood",
       resourceLabel: "Wood",
       buildDays: EDUCATION_BUILD_DAYS,
       description: "Raises your education level — improves research pass chance and unlocks the research tree faster.",
@@ -138,6 +154,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
       name: "Granary",
       cost: GRANARY_COST,
       resourceCost: GRANARY_WOOD_COST,
+      resourceType: "wood",
       resourceLabel: "Wood",
       buildDays: GRANARY_BUILD_DAYS,
       description: `Processes up to ${GRAIN_PROCESSED_PER_GRANARY} Grain/day into ${(GRAIN_PROCESSED_PER_GRANARY * FOOD_PER_GRAIN).toLocaleString()} food/day, stock permitting.`,
@@ -152,6 +169,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
       name: "Cannery",
       cost: CANNERY_COST,
       resourceCost: CANNERY_ORE_COST,
+      resourceType: "ore",
       resourceLabel: "Ore",
       buildDays: CANNERY_BUILD_DAYS,
       description: `Processes up to ${FISH_PROCESSED_PER_CANNERY} Fish/day into ${(FISH_PROCESSED_PER_CANNERY * FOOD_PER_FISH).toLocaleString()} food/day, stock permitting.`,
@@ -163,6 +181,22 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
     },
   ];
 
+  // Why a card's button is disabled, when it isn't a research lock — only
+  // computed for unlocked cards, so it never overrides/duplicates lockedReason.
+  function getDisabledReason(item: (typeof buildItems)[number]): string | undefined {
+    if (item.canBuild) return undefined;
+    if (item.count >= item.max) return `At the cap for this province (${item.max}).`;
+    if (!canAfford(state.stats, upfront(item.cost))) {
+      const short = upfront(item.cost) - state.stats.treasury;
+      return `Needs ${Math.ceil(short).toLocaleString()} more ${CURRENCY_SYMBOL}.`;
+    }
+    if (!canAffordResource(state.resources, item.resourceType, upfront(item.resourceCost))) {
+      const short = upfront(item.resourceCost) - state.resources[item.resourceType];
+      return `Needs ${Math.ceil(short)} more ${item.resourceLabel}.`;
+    }
+    return undefined;
+  }
+
   return (
     <section className="panel actions-panel">
       <h2>Actions</h2>
@@ -173,14 +207,15 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
       <div className="actions-panel__group">
         <h3>Build</h3>
         {buildItems.map((item) => {
-          const upfrontCost = half(item.cost);
-          const upfrontResource = half(item.resourceCost);
+          const upfrontCost = upfront(item.cost);
+          const upfrontResource = upfront(item.resourceCost);
           const laterCost = item.cost - upfrontCost;
           const laterResource = item.resourceCost - upfrontResource;
           const dailyCost = perDay(laterCost, item.buildDays);
           const dailyResource = perDay(laterResource, item.buildDays);
 
           const isLocked = Boolean(item.lockedReason);
+          const disabledReason = isLocked ? undefined : getDisabledReason(item);
 
           return (
             <div className={`build-card ${!item.canBuild ? "is-disabled" : ""} ${isLocked ? "is-locked" : ""}`} key={item.type}>
@@ -202,6 +237,10 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
                   <p className="build-card__locked">{item.lockedReason}</p>
                 ) : (
                   <>
+                    <div className="build-card__cost build-card__cost--total">
+                      <span className="build-card__cost-tag">Total</span>
+                      {item.cost.toLocaleString()} {CURRENCY_SYMBOL} + {item.resourceCost} {item.resourceLabel}
+                    </div>
                     <div className="build-card__cost">
                       <span className="build-card__cost-tag">Now</span>
                       {upfrontCost} {CURRENCY_SYMBOL} + {upfrontResource} {item.resourceLabel}
@@ -212,7 +251,11 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
                     </div>
                   </>
                 )}
-                <p className="build-card__description">{item.description}</p>
+                <p className="build-card__description">
+                  {item.description}
+                  {item.paybackDays !== undefined && ` ≈ pays for itself in ${item.paybackDays.toLocaleString()} days after completion.`}
+                </p>
+                {!isLocked && disabledReason && <p className="build-card__disabled-reason">{disabledReason}</p>}
                 {!isLocked && (
                   <button
                     className="build-card__button"

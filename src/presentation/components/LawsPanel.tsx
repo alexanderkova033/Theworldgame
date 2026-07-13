@@ -16,6 +16,8 @@ import type { LawCategory, LawEffects, LawNode, QuotaStat } from "../../domain/l
 import { getRivalParty } from "../../domain/parties/partyRules";
 import { getResearchNode } from "../../domain/research/researchRules";
 import type { ResourceType } from "../../domain/resources/types";
+import { getSynergiesForLaw } from "../../domain/synergy/synergyRules";
+import type { Synergy } from "../../domain/synergy/synergyData";
 import { playConfirm } from "../audio/sound";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
@@ -63,6 +65,14 @@ function formatQuotaValue(stat: QuotaStat, value: number): string {
 
 function nodesFor(category: LawCategory, tier: number): LawNode[] {
   return LAW_NODES.filter((n) => n.category === category && n.tier === tier);
+}
+
+// "+5% industry, +5% income" from a synergy's multiplier-only effects.
+function formatSynergyEffect(effects: Synergy["effects"]): string {
+  const parts: string[] = [];
+  if (effects.industryMultiplier) parts.push(`+${Math.round((effects.industryMultiplier - 1) * 100)}% industry`);
+  if (effects.incomeMultiplier) parts.push(`+${Math.round((effects.incomeMultiplier - 1) * 100)}% income`);
+  return parts.join(", ");
 }
 
 // Turns a law's numeric effects into (icon, is-it-a-benefit) pairs so the
@@ -190,6 +200,7 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
   const stance = getRivalStance(state, node);
   const affordable = canAffordLawEnactCost(state, node.enactCost);
   const crossNodeName = node.crossRequirement ? getResearchNode(node.crossRequirement.nodeId)?.name : undefined;
+  const synergies = getSynergiesForLaw(node.id);
 
   return (
     <div className="law-inspector">
@@ -219,6 +230,17 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
         {node.enactCost.resourceType && ` + ${node.enactCost.resourceAmount} ${RESOURCE_LABELS[node.enactCost.resourceType]}`}
         {" "}to put to a vote
       </p>
+
+      {synergies.map((synergy) => {
+        const researchNode = getResearchNode(synergy.researchId);
+        const isActive = status === "enacted" && state.enactedResearchIds.includes(synergy.researchId);
+        return (
+          <p key={synergy.id} className={`law-inspector__synergy ${isActive ? "is-active" : ""}`}>
+            {isActive ? "Synergy active — " : "Synergy: pair with "}
+            {researchNode?.name ?? "a Research node"} (Research) for {formatSynergyEffect(synergy.effects)}.
+          </p>
+        );
+      })}
 
       {stance !== "neutral" && status !== "enacted" && (
         <p className={`rival-stance is-${stance}`}>
