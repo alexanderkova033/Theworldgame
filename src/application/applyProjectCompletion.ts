@@ -26,8 +26,6 @@ export function applyProjectCompletion(state: GameState, project: Project): Game
       return { ...state, canneryCount: state.canneryCount + 1, placedBuildings };
     case "education":
       return { ...state, educationLevel: state.educationLevel + 1, placedBuildings };
-    case "research":
-      return { ...state, researchLevel: state.researchLevel + 1, placedBuildings };
     default:
       return state;
   }

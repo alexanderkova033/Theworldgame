@@ -129,6 +129,34 @@ button.is-active {
   font-weight: 700;
 }
 
+/* Primary: the one action a panel actually wants you to take (Build, Propose,
+   Trade, Repay...) — struck in gold so it reads as "the button" at a glance
+   instead of every action in the UI looking like the same wood rectangle. */
+button.btn-primary {
+  background: linear-gradient(180deg, var(--accent-active), var(--accent));
+  border-color: #fff0c2;
+  color: #241505;
+  text-shadow: none;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(240, 200, 105, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 0 -3px 5px rgba(0, 0, 0, 0.25), 0 2px 3px rgba(0, 0, 0, 0.4);
+}
+
+button.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 0 16px rgba(240, 200, 105, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -3px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Danger: destructive/reversing actions (cancel an order, etc.) — the same
+   red already used for the modal close button, formalized as a variant. */
+button.btn-danger {
+  background: linear-gradient(180deg, #a63a2b, #6a1f16);
+  border-color: #d97a63;
+}
+
+button.btn-danger:hover:not(:disabled) {
+  border-color: #f0a894;
+  box-shadow: 0 0 10px rgba(194, 64, 47, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -3px 5px rgba(0, 0, 0, 0.45);
+}
+
 h1, h2, h3 {
   margin: 0 0 0.5rem 0;
   font-family: var(--font-display);

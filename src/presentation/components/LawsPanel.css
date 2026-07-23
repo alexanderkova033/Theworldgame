@@ -321,9 +321,28 @@
 }
 
 .law-inspector__enact-cost {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   font-size: 0.78rem;
   color: var(--text-muted);
   margin: 0 0 0.75rem;
+}
+
+.law-inspector__enact-cost-label {
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.68rem;
+}
+
+.law-inspector__enact-cost .cost-chip {
+  color: var(--text);
+}
+
+.law-inspector__enact-cost-note {
+  font-size: 0.7rem;
+  opacity: 0.8;
 }
 
 .law-inspector__synergy {
@@ -378,6 +397,12 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.law-inspector__vote-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .law-inspector__chance {

@@ -1,0 +1,24 @@
+.cost-chips {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.cost-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  /* Inherits color from context (e.g. .build-card__cost--total is bright,
+     --later is muted) so the chips keep the same visual hierarchy the old
+     sentence-based costs had, instead of flattening every row to one color. */
+  color: inherit;
+  white-space: nowrap;
+}
+
+.cost-chip svg {
+  display: block;
+  flex-shrink: 0;
+}

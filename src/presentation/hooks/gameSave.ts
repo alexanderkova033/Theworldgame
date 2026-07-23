@@ -53,7 +53,6 @@ function hydrateGameState(raw: Partial<GameState>): GameState {
     granaryCount: raw.granaryCount ?? 0,
     canneryCount: raw.canneryCount ?? 0,
     educationLevel: raw.educationLevel ?? 0,
-    researchLevel: raw.researchLevel ?? 0,
     projects: raw.projects ?? [],
     placedBuildings: raw.placedBuildings ?? [],
     enactedLawIds: raw.enactedLawIds ?? [],

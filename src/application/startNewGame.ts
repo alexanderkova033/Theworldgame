@@ -69,13 +69,12 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     granaryCount: 0,
     canneryCount: 0,
     educationLevel: 0,
-    researchLevel: 0,
 
     stats: {
       treasury: 1500,
       population: 10000,
       food: 8000,
-      industry: calculateIndustryOutput(factoryCount, 0),
+      industry: calculateIndustryOutput(factoryCount),
       stability,
       armyStrength: 0,
       researchPoints: 0,

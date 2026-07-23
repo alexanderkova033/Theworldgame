@@ -18,6 +18,7 @@ import { GameEndScreen } from "./presentation/components/GameEndScreen";
 import { LawsPanel } from "./presentation/components/LawsPanel";
 import { MapPanel } from "./presentation/components/MapPanel";
 import { Modal } from "./presentation/components/Modal";
+import { NavIcon } from "./presentation/components/NavIcon";
 import { PartySelectScreen } from "./presentation/components/PartySelectScreen";
 import { PoliticsPanel } from "./presentation/components/PoliticsPanel";
 import { ProductionPanel } from "./presentation/components/ProductionPanel";
@@ -236,13 +237,13 @@ function App() {
       </main>
 
       {openModal === "politics" && (
-        <Modal title="Politics" onClose={() => setOpenModal(null)}>
+        <Modal title="Politics" icon={<NavIcon type="politics" size={22} />} onClose={() => setOpenModal(null)}>
           <PoliticsPanel state={state} />
         </Modal>
       )}
 
       {openModal === "economy" && (
-        <Modal title="Economy" onClose={() => setOpenModal(null)} wide>
+        <Modal title="Economy" icon={<NavIcon type="economy" size={22} />} onClose={() => setOpenModal(null)} wide>
           <div className="economy-modal">
             <ActionsPanel state={state} selectedProvinceId={currentProvinceId} dispatch={dispatch} />
             <div className="economy-modal__side">
@@ -254,13 +255,13 @@ function App() {
       )}
 
       {openModal === "trade" && (
-        <Modal title="Trade" onClose={() => setOpenModal(null)}>
+        <Modal title="Trade" icon={<NavIcon type="trade" size={22} />} onClose={() => setOpenModal(null)}>
           <TradePanel state={state} dispatch={dispatch} />
         </Modal>
       )}
 
       {openModal === "reports" && (
-        <Modal title="Reports" onClose={() => setOpenModal(null)} wide>
+        <Modal title="Reports" icon={<NavIcon type="reports" size={22} />} onClose={() => setOpenModal(null)} wide>
           <div className="reports-modal">
             <div className="reports-modal__column">
               <ProjectsPanel state={state} />
@@ -272,19 +273,19 @@ function App() {
       )}
 
       {openModal === "laws" && (
-        <Modal title="Laws" onClose={() => setOpenModal(null)} wide>
+        <Modal title="Laws" icon={<NavIcon type="laws" size={22} />} onClose={() => setOpenModal(null)} wide>
           <LawsPanel state={state} dispatch={dispatch} />
         </Modal>
       )}
 
       {openModal === "research" && (
-        <Modal title="Research" onClose={() => setOpenModal(null)} wide>
+        <Modal title="Research" icon={<NavIcon type="research" size={22} />} onClose={() => setOpenModal(null)} wide>
           <ResearchPanel state={state} dispatch={dispatch} />
         </Modal>
       )}
 
       {openModal === "ventures" && (
-        <Modal title="Ventures" onClose={() => setOpenModal(null)}>
+        <Modal title="Ventures" icon={<NavIcon type="ventures" size={22} />} onClose={() => setOpenModal(null)}>
           <ExpeditionPanel state={state} selectedIslandId={selectedIslandId} dispatch={dispatch} />
         </Modal>
       )}

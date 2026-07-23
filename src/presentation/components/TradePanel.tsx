@@ -176,7 +176,7 @@ function MarketRow({ state, dispatch, type, multiplier }: MarketRowProps) {
         {TRADEABLE_LABELS[type]}
       </span>
       <button
-        className="trade-panel__market-button"
+        className="trade-panel__market-button btn-primary"
         disabled={!canBuyResource(state, type, multiplier)}
         onClick={() => {
           playConfirm();
@@ -186,7 +186,7 @@ function MarketRow({ state, dispatch, type, multiplier }: MarketRowProps) {
         Buy {amount} ({Math.round(buyCost)} {CURRENCY_SYMBOL})
       </button>
       <button
-        className="trade-panel__market-button"
+        className="trade-panel__market-button btn-primary"
         disabled={!canSellResource(state, type, multiplier)}
         onClick={() => {
           playConfirm();
@@ -286,7 +286,7 @@ export function TradePanel({ state, dispatch }: TradePanelProps) {
             <ResourcePicker label="Receive" value={receive} demand={state.resourceDemand} onChange={setReceive} />
           </div>
           <button
-            className="trade-panel__button"
+            className="trade-panel__button btn-primary"
             disabled={!barterEnabled}
             onClick={() => {
               playConfirm();
@@ -308,7 +308,7 @@ export function TradePanel({ state, dispatch }: TradePanelProps) {
           </div>
           <div className="trade-panel__row trade-panel__row--food">
             <button
-              className="trade-panel__button trade-panel__food-button"
+              className="trade-panel__button trade-panel__food-button btn-primary"
               disabled={!canImportFood(state, multiplier)}
               onClick={() => {
                 playConfirm();
@@ -319,7 +319,7 @@ export function TradePanel({ state, dispatch }: TradePanelProps) {
               Import {FOOD_IMPORT_BATCH_SIZE * multiplier} ({Math.round(getFoodImportCost(state, multiplier))} {CURRENCY_SYMBOL})
             </button>
             <button
-              className="trade-panel__button trade-panel__food-button"
+              className="trade-panel__button trade-panel__food-button btn-primary"
               disabled={!canExportFood(state, multiplier)}
               onClick={() => {
                 playConfirm();
@@ -345,7 +345,7 @@ export function TradePanel({ state, dispatch }: TradePanelProps) {
                 <li key={order.id} className="trade-panel__order-row">
                   <span>{describeOrder(state, order)}</span>
                   <button
-                    className="trade-panel__order-cancel"
+                    className="trade-panel__order-cancel btn-danger"
                     onClick={() => {
                       playConfirm();
                       dispatch((s) => removeStandingOrder(s, order.id));
@@ -390,7 +390,7 @@ export function TradePanel({ state, dispatch }: TradePanelProps) {
           )}
 
           <button
-            className="trade-panel__button"
+            className="trade-panel__button btn-primary"
             disabled={atOrderCap || newOrderInvalid}
             onClick={() => {
               playConfirm();

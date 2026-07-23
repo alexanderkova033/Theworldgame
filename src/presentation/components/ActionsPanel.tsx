@@ -43,6 +43,8 @@ import { canAffordResource } from "../../domain/resources/resourceRules";
 import type { ResourceType } from "../../domain/resources/types";
 import { playConfirm } from "../audio/sound";
 import { BuildingIcon } from "./BuildingIcon";
+import { CostChips, ResourceChip, TreasuryChip } from "./CostChips";
+import { StatIcon, type StatIconType } from "./StatIcon";
 
 interface ActionsPanelProps {
   state: GameState;
@@ -67,6 +69,23 @@ function perDay(value: number, days: number): number {
   return Math.round((value / days) * 10) / 10;
 }
 
+// A map-pin glyph standing in for the words "Building in" — the province
+// name is the thing that changes; the pin makes the row scannable as
+// "location: X" at a glance instead of needing the label read every time.
+function PinIcon() {
+  return (
+    <svg viewBox="-10 -10 20 20" width={14} height={14}>
+      <path
+        d="M0,-7.5 C3.6,-7.5 6.2,-4.9 6.2,-1.5 C6.2,2.8 0,8 0,8 C0,8 -6.2,2.8 -6.2,-1.5 C-6.2,-4.9 -3.6,-7.5 0,-7.5 Z"
+        fill="#c9a24a"
+        stroke="#7a531f"
+        strokeWidth={0.7}
+      />
+      <circle cx={0} cy={-1.5} r={2.3} fill="#241708" />
+    </svg>
+  );
+}
+
 export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPanelProps) {
   const provinceName = getProvinceName(selectedProvinceId);
 
@@ -74,7 +93,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
   const canneryUnlocked = isBuildingUnlocked(state.enactedResearchIds, "cannery");
 
   const buildItems: Array<{
-    type: Exclude<ProjectType, "research">;
+    type: ProjectType;
     name: string;
     cost: number;
     resourceCost: number;
@@ -82,6 +101,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
     resourceLabel: string;
     buildDays: number;
     description: string;
+    benefitIcon: StatIconType;
     count: number;
     max: number;
     canBuild: boolean;
@@ -98,6 +118,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
       resourceLabel: "Wood",
       buildDays: FARM_BUILD_DAYS,
       description: `Produces ${FOOD_PER_FARM.toLocaleString()} food/day.`,
+      benefitIcon: "food",
       count: countBuildingsInProvince(state, "farm", selectedProvinceId),
       max: buildFarm.maxPerProvince,
       canBuild: buildFarm.canBuild(state, selectedProvinceId),
@@ -112,6 +133,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
       resourceLabel: "Ore",
       buildDays: FACTORY_BUILD_DAYS,
       description: `Produces ${INDUSTRY_PER_FACTORY} industry/day (~${INDUSTRY_PER_FACTORY * INCOME_PER_INDUSTRY} ${CURRENCY_SYMBOL}/day in income).`,
+      benefitIcon: "industry",
       count: countBuildingsInProvince(state, "factory", selectedProvinceId),
       max: buildFactory.maxPerProvince,
       canBuild: buildFactory.canBuild(state, selectedProvinceId),
@@ -130,6 +152,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
       resourceLabel: "Ore",
       buildDays: ROAD_BUILD_DAYS,
       description: `+${ROAD_EFFICIENCY_BONUS * 100}% income & construction speed nationwide, per road (stacks).`,
+      benefitIcon: "treasury",
       count: countBuildingsInProvince(state, "road", selectedProvinceId),
       max: buildRoad.maxPerProvince,
       canBuild: buildRoad.canBuild(state, selectedProvinceId),
@@ -144,6 +167,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
       resourceLabel: "Wood",
       buildDays: EDUCATION_BUILD_DAYS,
       description: "Raises your education level — improves research pass chance and unlocks the research tree faster.",
+      benefitIcon: "research",
       count: countBuildingsInProvince(state, "education", selectedProvinceId),
       max: buildEducation.maxPerProvince,
       canBuild: buildEducation.canBuild(state, selectedProvinceId),
@@ -158,6 +182,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
       resourceLabel: "Wood",
       buildDays: GRANARY_BUILD_DAYS,
       description: `Processes up to ${GRAIN_PROCESSED_PER_GRANARY} Grain/day into ${(GRAIN_PROCESSED_PER_GRANARY * FOOD_PER_GRAIN).toLocaleString()} food/day, stock permitting.`,
+      benefitIcon: "food",
       count: countBuildingsInProvince(state, "granary", selectedProvinceId),
       max: buildGranary.maxPerProvince,
       canBuild: buildGranary.canBuild(state, selectedProvinceId),
@@ -173,6 +198,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
       resourceLabel: "Ore",
       buildDays: CANNERY_BUILD_DAYS,
       description: `Processes up to ${FISH_PROCESSED_PER_CANNERY} Fish/day into ${(FISH_PROCESSED_PER_CANNERY * FOOD_PER_FISH).toLocaleString()} food/day, stock permitting.`,
+      benefitIcon: "food",
       count: countBuildingsInProvince(state, "cannery", selectedProvinceId),
       max: buildCannery.maxPerProvince,
       canBuild: buildCannery.canBuild(state, selectedProvinceId),
@@ -201,6 +227,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
     <section className="panel actions-panel">
       <h2>Actions</h2>
       <p className="actions-panel__target">
+        <PinIcon />
         Building in: <strong>{provinceName}</strong> <span className="actions-panel__hint">(click the map to change)</span>
       </p>
 
@@ -239,26 +266,39 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
                   <>
                     <div className="build-card__cost build-card__cost--total">
                       <span className="build-card__cost-tag">Total</span>
-                      {item.cost.toLocaleString()} {CURRENCY_SYMBOL} + {item.resourceCost} {item.resourceLabel}
+                      <CostChips>
+                        <TreasuryChip amount={item.cost.toLocaleString()} />
+                        <ResourceChip type={item.resourceType} amount={item.resourceCost} />
+                      </CostChips>
                     </div>
                     <div className="build-card__cost">
                       <span className="build-card__cost-tag">Now</span>
-                      {upfrontCost} {CURRENCY_SYMBOL} + {upfrontResource} {item.resourceLabel}
+                      <CostChips>
+                        <TreasuryChip amount={upfrontCost} />
+                        <ResourceChip type={item.resourceType} amount={upfrontResource} />
+                      </CostChips>
                     </div>
                     <div className="build-card__cost build-card__cost--later">
                       <span className="build-card__cost-tag">Then</span>
-                      {dailyCost} {CURRENCY_SYMBOL}/day + {dailyResource} {item.resourceLabel}/day, for {item.buildDays} days
+                      <CostChips>
+                        <TreasuryChip amount={dailyCost} suffix="/d" />
+                        <ResourceChip type={item.resourceType} amount={dailyResource} suffix="/d" />
+                      </CostChips>
+                      <span className="build-card__cost-duration">for {item.buildDays}d</span>
                     </div>
                   </>
                 )}
                 <p className="build-card__description">
+                  <span className="build-card__description-icon">
+                    <StatIcon type={item.benefitIcon} size={13} />
+                  </span>
                   {item.description}
                   {item.paybackDays !== undefined && ` ≈ pays for itself in ${item.paybackDays.toLocaleString()} days after completion.`}
                 </p>
                 {!isLocked && disabledReason && <p className="build-card__disabled-reason">{disabledReason}</p>}
                 {!isLocked && (
                   <button
-                    className="build-card__button"
+                    className="build-card__button btn-primary"
                     disabled={!item.canBuild}
                     onClick={() => {
                       playConfirm();

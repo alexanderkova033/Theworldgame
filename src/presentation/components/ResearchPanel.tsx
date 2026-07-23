@@ -1,7 +1,6 @@
 import "./ResearchPanel.css";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { enactResearch } from "../../application/actions";
-import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getLawNode } from "../../domain/laws/lawsRules";
 import { getRivalParty } from "../../domain/parties/partyRules";
@@ -16,10 +15,10 @@ import {
   type ResearchNodeStatus,
 } from "../../domain/research/researchRules";
 import type { ResearchCategory, ResearchEffects, ResearchNode } from "../../domain/research/types";
-import type { ResourceType } from "../../domain/resources/types";
 import { getSynergiesForResearch } from "../../domain/synergy/synergyRules";
 import type { Synergy } from "../../domain/synergy/synergyData";
 import { playConfirm } from "../audio/sound";
+import { CostChips, ResourceChip, StatChip, TreasuryChip } from "./CostChips";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
 interface ResearchPanelProps {
@@ -40,13 +39,6 @@ const CATEGORY_ICONS: Record<ResearchCategory, StatIconType> = {
   industry: "industry",
   agriculture: "food",
   administration: "stability",
-};
-
-const RESOURCE_LABELS: Record<ResourceType, string> = {
-  wood: "Wood",
-  ore: "Ore",
-  grain: "Grain",
-  fish: "Fish",
 };
 
 function nodesFor(category: ResearchCategory, tier: number): ResearchNode[] {
@@ -208,11 +200,17 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
         </span>
       </div>
 
-      <p className="law-inspector__enact-cost">
-        Costs {node.enactCost.researchPoints} Research Points + {node.enactCost.treasury.toLocaleString()} {CURRENCY_SYMBOL}
-        {node.enactCost.resourceType && ` + ${node.enactCost.resourceAmount} ${RESOURCE_LABELS[node.enactCost.resourceType]}`}
-        {" "}to put to a vote — you have {state.stats.researchPoints.toFixed(1)} points banked.
-      </p>
+      <div className="law-inspector__enact-cost">
+        <span className="law-inspector__enact-cost-label">To fund the trial</span>
+        <CostChips>
+          <StatChip type="research" amount={node.enactCost.researchPoints} />
+          <TreasuryChip amount={node.enactCost.treasury.toLocaleString()} />
+          {node.enactCost.resourceType && (
+            <ResourceChip type={node.enactCost.resourceType} amount={node.enactCost.resourceAmount ?? 0} />
+          )}
+        </CostChips>
+        <span className="law-inspector__enact-cost-note">{state.stats.researchPoints.toFixed(1)} banked</span>
+      </div>
 
       {synergies.map((synergy) => {
         const lawNode = getLawNode(synergy.lawId);
@@ -257,6 +255,7 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
             {passChance}% chance to pass
           </span>
           <button
+            className="btn-primary law-inspector__vote-button"
             disabled={!affordable}
             onClick={() => {
               if (isArmed) {
@@ -267,7 +266,15 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
               }
             }}
           >
-            {!affordable ? "Can't afford it" : isArmed ? "Confirm — put it to a vote" : "Propose"}
+            {!affordable ? (
+              "Can't afford it"
+            ) : isArmed ? (
+              <>
+                <CheckBadge /> Confirm — put it to a vote
+              </>
+            ) : (
+              "Propose"
+            )}
           </button>
         </div>
       )}
@@ -278,8 +285,16 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
 export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [armedId, setArmedId] = useState<string | null>(null);
+  const inspectorRef = useRef<HTMLDivElement>(null);
 
   const selectedNode = selectedId ? (RESEARCH_NODES.find((n) => n.id === selectedId) ?? null) : null;
+
+  // The tree can run 4 tiers deep, well past the fold — without this, picking
+  // a node (especially near the bottom of a branch) opens the inspector
+  // somewhere below the visible modal with no indication it appeared at all.
+  useEffect(() => {
+    if (selectedId) inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [selectedId]);
 
   return (
     <div className="law-tree research-tree">
@@ -324,17 +339,19 @@ export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
       </div>
 
       {selectedNode && (
-        <ResearchInspector
-          node={selectedNode}
-          state={state}
-          status={getResearchNodeStatus(state, selectedNode)}
-          isArmed={armedId === selectedNode.id}
-          onArm={() => setArmedId(selectedNode.id)}
-          onConfirm={() => {
-            dispatch((s) => enactResearch(s, selectedNode.id));
-            setArmedId(null);
-          }}
-        />
+        <div ref={inspectorRef}>
+          <ResearchInspector
+            node={selectedNode}
+            state={state}
+            status={getResearchNodeStatus(state, selectedNode)}
+            isArmed={armedId === selectedNode.id}
+            onArm={() => setArmedId(selectedNode.id)}
+            onConfirm={() => {
+              dispatch((s) => enactResearch(s, selectedNode.id));
+              setArmedId(null);
+            }}
+          />
+        </div>
       )}
     </div>
   );

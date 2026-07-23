@@ -84,6 +84,7 @@ export function ExpeditionPanel({ state, selectedIslandId, dispatch }: Expeditio
                 <>
                   <p className="expedition-panel__hint">Uncharted. Chartering a venture there takes {EXPEDITION_DAYS} days.</p>
                   <button
+                    className="btn-primary"
                     disabled={!canSendExpedition(state, island.id)}
                     onClick={() => {
                       playConfirm();

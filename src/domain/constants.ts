@@ -106,10 +106,6 @@ export const EDUCATION_BUILD_DAYS = 90;
 export const MAX_EDUCATION_PER_PROVINCE = 2;
 export const RESEARCH_BASE_RATE = 0.5; // research points/day, even with no education
 export const RESEARCH_PER_EDUCATION_LEVEL = 0.05; // extra research points/day per education level
-export const RESEARCH_PROJECT_COST = 800;
-export const RESEARCH_PROJECT_DAYS = 150;
-export const RESEARCH_POINTS_REQUIRED = 50; // accumulated research points needed to start a research project
-export const RESEARCH_INDUSTRY_BONUS = 0.1; // +10% industry output per completed research project
 
 // --- Research tree (see domain/research) ---
 export const FAILED_RESEARCH_VOTE_POPULARITY_PENALTY = 2; // smaller than a failed law vote — a research setback is less politically charged
@@ -137,7 +133,7 @@ export const SOLDIER_RECRUIT_STRENGTH = 10;
 export const ARMY_UPKEEP_PER_STRENGTH = 0.05; // treasury cost per strength point per day
 
 // --- Economy / taxes ---
-export const BASE_TAX_INCOME_PER_POP = 0.02;
+export const BASE_TAX_INCOME_PER_POP = 0.014; // was 0.02 — tax alone covered ~80% of starting income, dwarfing industry; cut ~30% so factories matter more
 export const MIN_TAX_RATE = 0;
 export const MAX_TAX_RATE = 0.6;
 export const TAX_RATE_STEP = 0.05;

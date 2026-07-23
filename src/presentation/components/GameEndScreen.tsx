@@ -95,7 +95,7 @@ export function GameEndScreen({ state, onNewGame }: GameEndScreenProps) {
           </div>
         </div>
 
-        <button className="game-end-screen__button" onClick={onNewGame}>
+        <button className="game-end-screen__button btn-primary" onClick={onNewGame}>
           Start a New Game
         </button>
       </div>

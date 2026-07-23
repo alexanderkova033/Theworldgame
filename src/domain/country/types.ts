@@ -85,7 +85,6 @@ export interface GameState {
   granaryCount: number; // research-gated — see domain/research; turns Grain into Food
   canneryCount: number; // research-gated — see domain/research; turns Fish into Food
   educationLevel: number;
-  researchLevel: number;
 
   projects: Project[];
   placedBuildings: PlacedBuilding[]; // completed buildings, for the map

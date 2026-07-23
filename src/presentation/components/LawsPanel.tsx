@@ -1,5 +1,5 @@
 import "./LawsPanel.css";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { enactLaw } from "../../application/actions";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
@@ -15,10 +15,10 @@ import {
 import type { LawCategory, LawEffects, LawNode, QuotaStat } from "../../domain/laws/types";
 import { getRivalParty } from "../../domain/parties/partyRules";
 import { getResearchNode } from "../../domain/research/researchRules";
-import type { ResourceType } from "../../domain/resources/types";
 import { getSynergiesForLaw } from "../../domain/synergy/synergyRules";
 import type { Synergy } from "../../domain/synergy/synergyData";
 import { playConfirm } from "../audio/sound";
+import { CostChips, ResourceChip, TreasuryChip } from "./CostChips";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
 interface LawsPanelProps {
@@ -48,13 +48,6 @@ const QUOTA_LABELS: Record<QuotaStat, string> = {
   industry: "Industry",
   stability: "Stability",
   popularity: "Popularity",
-};
-
-const RESOURCE_LABELS: Record<ResourceType, string> = {
-  wood: "Wood",
-  ore: "Ore",
-  grain: "Grain",
-  fish: "Fish",
 };
 
 function formatQuotaValue(stat: QuotaStat, value: number): string {
@@ -225,11 +218,15 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
         </span>
       </div>
 
-      <p className="law-inspector__enact-cost">
-        Costs {node.enactCost.treasury.toLocaleString()} {CURRENCY_SYMBOL}
-        {node.enactCost.resourceType && ` + ${node.enactCost.resourceAmount} ${RESOURCE_LABELS[node.enactCost.resourceType]}`}
-        {" "}to put to a vote
-      </p>
+      <div className="law-inspector__enact-cost">
+        <span className="law-inspector__enact-cost-label">To put to a vote</span>
+        <CostChips>
+          <TreasuryChip amount={node.enactCost.treasury.toLocaleString()} />
+          {node.enactCost.resourceType && (
+            <ResourceChip type={node.enactCost.resourceType} amount={node.enactCost.resourceAmount ?? 0} />
+          )}
+        </CostChips>
+      </div>
 
       {synergies.map((synergy) => {
         const researchNode = getResearchNode(synergy.researchId);
@@ -282,6 +279,7 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
             {passChance}% chance to pass
           </span>
           <button
+            className="btn-primary law-inspector__vote-button"
             disabled={!affordable}
             onClick={() => {
               if (isArmed) {
@@ -292,7 +290,15 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
               }
             }}
           >
-            {!affordable ? "Can't afford it" : isArmed ? "Confirm — put it to a vote" : "Propose"}
+            {!affordable ? (
+              "Can't afford it"
+            ) : isArmed ? (
+              <>
+                <CheckBadge /> Confirm — put it to a vote
+              </>
+            ) : (
+              "Propose"
+            )}
           </button>
         </div>
       )}
@@ -303,8 +309,16 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
 export function LawsPanel({ state, dispatch }: LawsPanelProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [armedId, setArmedId] = useState<string | null>(null);
+  const inspectorRef = useRef<HTMLDivElement>(null);
 
   const selectedNode = selectedId ? (LAW_NODES.find((n) => n.id === selectedId) ?? null) : null;
+
+  // The tree can run 4 tiers deep, well past the fold — without this, picking
+  // a node (especially near the bottom of a branch) opens the inspector
+  // somewhere below the visible modal with no indication it appeared at all.
+  useEffect(() => {
+    if (selectedId) inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [selectedId]);
 
   return (
     <div className="law-tree">
@@ -346,17 +360,19 @@ export function LawsPanel({ state, dispatch }: LawsPanelProps) {
       </div>
 
       {selectedNode && (
-        <LawInspector
-          node={selectedNode}
-          state={state}
-          status={getLawNodeStatus(state, selectedNode)}
-          isArmed={armedId === selectedNode.id}
-          onArm={() => setArmedId(selectedNode.id)}
-          onConfirm={() => {
-            dispatch((s) => enactLaw(s, selectedNode.id));
-            setArmedId(null);
-          }}
-        />
+        <div ref={inspectorRef}>
+          <LawInspector
+            node={selectedNode}
+            state={state}
+            status={getLawNodeStatus(state, selectedNode)}
+            isArmed={armedId === selectedNode.id}
+            onArm={() => setArmedId(selectedNode.id)}
+            onConfirm={() => {
+              dispatch((s) => enactLaw(s, selectedNode.id));
+              setArmedId(null);
+            }}
+          />
+        </div>
       )}
     </div>
   );

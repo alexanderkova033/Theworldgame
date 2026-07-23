@@ -10,7 +10,6 @@ export const BUILDING_COLORS: Record<ProjectType, string> = {
   factory: "#e0954a",
   road: "#e8d9ab",
   education: "#4fa8ff",
-  research: "#c58ae0",
   granary: "#c9a45c",
   cannery: "#6ea3c9",
 };
@@ -65,22 +64,6 @@ export function BuildingIcon({ type, x, y, size = 5 }: BuildingIconProps) {
           <polygon points={`${x},${y - size * 0.9} ${x + size * 1.15},${y - size * 0.35} ${x + size * 1.15},${y + size * 0.9} ${x},${y + size * 0.35}`} fill={color} />
           <polygon points={`${x},${y - size * 0.9} ${x - size * 0.28},${y - size * 0.6} ${x - size * 0.28},${y + size * 0.6} ${x},${y + size * 0.35}`} fill="#1c4a7a" opacity={0.18} stroke="none" />
           <line x1={x} y1={y - size * 0.9} x2={x} y2={y + size * 0.35} />
-        </g>
-      );
-    case "research":
-      // A flask: narrow neck flaring into a rounded body, with a bubble
-      // highlight and a glint of light on the glass.
-      return (
-        <g>
-          <rect x={x - size * 0.3} y={y - size * 1.3} width={size * 0.6} height={size * 0.6} fill={color} stroke="#5a2f78" strokeWidth={0.6} />
-          <polygon
-            points={`${x - size * 0.3},${y - size * 0.7} ${x + size * 0.3},${y - size * 0.7} ${x + size * 1.1},${y + size * 1.1} ${x - size * 1.1},${y + size * 1.1}`}
-            fill={color}
-            stroke="#5a2f78"
-            strokeWidth={0.6}
-          />
-          <circle cx={x - size * 0.35} cy={y + size * 0.5} r={size * 0.22} fill="#ffffff" opacity={0.5} />
-          <line x1={x - size * 0.7} y1={y - size * 0.3} x2={x - size * 0.35} y2={y - size * 0.65} stroke="#ffffff" strokeWidth={size * 0.1} opacity={0.4} strokeLinecap="round" />
         </g>
       );
     case "granary":

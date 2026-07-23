@@ -194,9 +194,9 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
-  // 5. Industry output (derived from factories + research bonus + laws + the research tree).
+  // 5. Industry output (derived from factories, scaled by laws + the research tree).
   const industry =
-    calculateIndustryOutput(working.factoryCount, working.researchLevel) *
+    calculateIndustryOutput(working.factoryCount) *
     lawEffects.industryMultiplier *
     nationEffects.industryMultiplier *
     researchEffects.industryMultiplier *

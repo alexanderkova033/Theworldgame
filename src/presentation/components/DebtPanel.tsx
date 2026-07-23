@@ -60,6 +60,7 @@ export function DebtPanel({ state, dispatch, bare = false }: DebtPanelProps) {
           Take Loan ({LOAN_BATCH_SIZE.toLocaleString()} {CURRENCY_SYMBOL})
         </button>
         <button
+          className="btn-primary"
           disabled={!canRepayLoan(state)}
           onClick={() => {
             playConfirm();
