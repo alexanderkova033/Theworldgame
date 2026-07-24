@@ -29,6 +29,14 @@
   --font-display: "Cinzel", "Playfair Display", Georgia, "Times New Roman", serif;
   --font-body: system-ui, "Segoe UI", Roboto, sans-serif;
 
+  /* A fine grayscale film-grain, baked as a tiny seamless-tiling SVG turbulence
+     filter so every wood/gold gradient in the game reads as a textured,
+     hand-carved surface instead of flat, plotter-smooth CSS gradient — the
+     single biggest lever for "looks like a real RTS command UI" vs. "looks
+     like a website". Used as an extra background layer (never its own
+     element), so it never affects layout or interaction. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
   /* TopBar's rendered height (ticker row + tabs row), with a little slack —
      Modal.css uses this so a tall panel's header can never end up rendered
      underneath the top bar (which deliberately sits above Modal's overlay
@@ -56,8 +64,9 @@ html, body, #root {
 
 body {
   background:
-    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(202, 160, 54, 0.08), transparent 60%),
-    repeating-linear-gradient(115deg, rgba(0, 0, 0, 0.12) 0px, transparent 2px, transparent 5px),
+    var(--grain) 0 0/90px 90px repeat,
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(202, 160, 54, 0.08), transparent 60%) no-repeat,
+    repeating-linear-gradient(115deg, rgba(0, 0, 0, 0.12) 0px, transparent 2px, transparent 5px) repeat,
     var(--bg);
   color: var(--text);
 }
@@ -97,23 +106,33 @@ button {
   cursor: pointer;
   border: 2px solid var(--panel-border);
   border-radius: 4px;
-  background: linear-gradient(180deg, var(--wood-light), var(--wood-dark));
+  background:
+    var(--grain) 0 0/70px 70px repeat,
+    linear-gradient(180deg, var(--wood-light), var(--wood-dark)) no-repeat;
   color: var(--text);
   padding: 0.5rem 0.75rem;
   font-size: 0.85rem;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -3px 5px rgba(0, 0, 0, 0.45), 0 2px 3px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 3px 5px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -4px 6px rgba(0, 0, 0, 0.5);
   transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
 
 button:hover:not(:disabled) {
   border-color: var(--accent-active);
-  box-shadow: 0 0 9px rgba(240, 200, 105, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -3px 5px rgba(0, 0, 0, 0.45);
+  box-shadow:
+    0 0 10px rgba(240, 200, 105, 0.5),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -4px 6px rgba(0, 0, 0, 0.5);
 }
 
 button:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(0, 0, 0, 0.4);
 }
 
 button:disabled {
@@ -186,6 +205,21 @@ h2::after {
   background: linear-gradient(90deg, transparent, var(--accent) 15%, var(--accent-active) 50%, var(--accent) 85%, transparent);
 }
 
+/* A small carved gem sits astride the header's underline — the flourish
+   that turns a plain text-and-rule header into a little engraved plaque. */
+h2::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -0.1rem;
+  transform: translateX(-50%) rotate(45deg);
+  width: 7px;
+  height: 7px;
+  background: linear-gradient(135deg, #fff3d0, var(--accent-active) 55%, var(--accent));
+  box-shadow: 0 0 6px rgba(240, 200, 105, 0.75), inset -1px -1px 2px rgba(0, 0, 0, 0.35), inset 1px 1px 1px rgba(255, 255, 255, 0.5);
+  border-radius: 1px;
+}
+
 h3 {
   font-family: var(--font-body);
   font-size: 0.78rem;
@@ -195,24 +229,35 @@ h3 {
   margin-top: 0.9rem;
 }
 
-/* Carved-wood panel: brass double border, corner rivets, subtle grain. */
+/* Carved-wood panel: brass double border, jewelled corner rivets, and a
+   fine grain so the "carved wood" surface reads as textured material, not a
+   flat CSS gradient — plus a second inset gold rim a few px inside the wood
+   border, which is what actually reads as "brass-inlaid frame" rather than
+   just a stroked rectangle. */
 .panel {
   position: relative;
   background:
-    radial-gradient(circle 3px at 11px 11px, var(--accent-active) 92%, transparent 100%),
-    radial-gradient(circle 3px at calc(100% - 11px) 11px, var(--accent-active) 92%, transparent 100%),
-    radial-gradient(circle 3px at 11px calc(100% - 11px), var(--accent-active) 92%, transparent 100%),
-    radial-gradient(circle 3px at calc(100% - 11px) calc(100% - 11px), var(--accent-active) 92%, transparent 100%),
-    linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg));
-  background-repeat: no-repeat;
-  border: 2px solid var(--panel-border);
+    var(--grain) 0 0/90px 90px repeat,
+    radial-gradient(circle 3.5px at 11px 11px, var(--accent-active) 85%, transparent 100%) no-repeat,
+    radial-gradient(circle 1.3px at 9.8px 9.8px, #fff8e2 85%, transparent 100%) no-repeat,
+    radial-gradient(circle 3.5px at calc(100% - 11px) 11px, var(--accent-active) 85%, transparent 100%) no-repeat,
+    radial-gradient(circle 1.3px at calc(100% - 12.2px) 9.8px, #fff8e2 85%, transparent 100%) no-repeat,
+    radial-gradient(circle 3.5px at 11px calc(100% - 11px), var(--accent-active) 85%, transparent 100%) no-repeat,
+    radial-gradient(circle 1.3px at 9.8px calc(100% - 12.2px), #fff8e2 85%, transparent 100%) no-repeat,
+    radial-gradient(circle 3.5px at calc(100% - 11px) calc(100% - 11px), var(--accent-active) 85%, transparent 100%) no-repeat,
+    radial-gradient(circle 1.3px at calc(100% - 12.2px) calc(100% - 12.2px), #fff8e2 85%, transparent 100%) no-repeat,
+    linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg)) no-repeat;
+  border: 3px solid var(--panel-border);
   border-radius: 6px;
   padding: 1.1rem;
   margin-bottom: 1rem;
   box-shadow:
-    0 8px 20px rgba(0, 0, 0, 0.45),
-    inset 0 0 0 1px rgba(240, 200, 105, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 14px 30px rgba(0, 0, 0, 0.55),
+    0 2px 6px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 4px rgba(240, 200, 105, 0.16),
+    inset 0 2px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -3px 12px rgba(0, 0, 0, 0.5);
 }
 
 /* Shared "icon tile" layout: a portrait glyph in a round frame beside a
@@ -240,7 +285,11 @@ h3 {
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.12), transparent 65%), var(--panel-bg-raised);
   border: 2px solid var(--panel-border);
-  box-shadow: 0 0 0 1px rgba(240, 200, 105, 0.25);
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(240, 200, 105, 0.3),
+    inset 0 2px 2px rgba(255, 255, 255, 0.14),
+    inset 0 -3px 5px rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;

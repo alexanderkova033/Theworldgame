@@ -263,10 +263,11 @@ function App() {
       {openModal === "reports" && (
         <Modal title="Reports" icon={<NavIcon type="reports" size={22} />} onClose={() => setOpenModal(null)} wide>
           <div className="reports-modal">
-            <div className="reports-modal__column">
-              <ProjectsPanel state={state} />
-              <ReportsPanel reports={state.monthlyReports} />
-            </div>
+            {/* Active projects already live on the Economy tab, right next to
+                the Build actions that create them — showing the same list
+                again here was pure duplication. Reports stays the historical
+                record: monthly summaries + the event log. */}
+            <ReportsPanel reports={state.monthlyReports} />
             <EventLog events={state.events} />
           </div>
         </Modal>

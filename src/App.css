@@ -39,18 +39,12 @@
   margin-bottom: 0;
 }
 
-/* Reports modal: projects+monthly reports in one column, the event log in
-   its own scrollable column. */
+/* Reports modal: monthly reports and the event log side by side. */
 .reports-modal {
   display: grid;
   grid-template-columns: 1.1fr 1fr;
   gap: 1.1rem;
   align-items: start;
-}
-
-.reports-modal__column {
-  display: flex;
-  flex-direction: column;
 }
 
 @media (max-width: 900px) {
