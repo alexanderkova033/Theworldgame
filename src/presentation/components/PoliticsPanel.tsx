@@ -60,9 +60,12 @@ function CoalitionRow({ ideology, weight, approval, tag, color }: CoalitionRowPr
           <div className="politics-panel__faction-bar-fill" style={{ width: `${rounded}%` }} />
         </div>
       </div>
-      <span className="politics-panel__faction-weight">
-        ~{Math.round(weight * 100)}% of electorate
-        <span className="politics-panel__faction-contribution">→ {contribution} pts</span>
+      <span
+        className="politics-panel__faction-weight"
+        title={`${Math.round(weight * 100)}% of the electorate, ${rounded}% approving — worth ${contribution} of your popularity`}
+      >
+        {Math.round(weight * 100)}%
+        <span className="politics-panel__faction-contribution">{contribution} pts</span>
       </span>
     </div>
   );
@@ -80,8 +83,8 @@ export function PoliticsPanel({ state }: PoliticsPanelProps) {
 
   return (
     <section className="politics-panel">
-      <p className="panel-hint">
-        Election in {monthsLeft} mo. — stay ≥{ELECTION_WIN_THRESHOLD}%.
+      <p className="panel-hint" title={`Lose an election below ${ELECTION_WIN_THRESHOLD}% and your government falls`}>
+        Election in {monthsLeft} mo. — hold ≥{ELECTION_WIN_THRESHOLD}%.
       </p>
 
       <div className="politics-panel__meter" aria-label={`${party.name} ${popularity}% support, ${rival.name} ${rivalPopularity}% support`}>
@@ -128,12 +131,9 @@ export function PoliticsPanel({ state }: PoliticsPanelProps) {
       </div>
 
       <div className="politics-panel__coalition">
-        <h3>Coalition</h3>
-        <p className="panel-hint">
-          The {popularity}% above is just these six rows added up (each one's "→ pts" figure, weight × approval).
-          A law that helps industry, say, usually raises Commercial and Nationalist approval while costing Agrarian
-          and Labor — pass it and your headline number can rise even as part of your own coalition sours on you.
-        </p>
+        <h3 title={`The ${popularity}% above is these six rows added up: each faction's approval times its share of the electorate`}>
+          Coalition
+        </h3>
         {[...FACTIONS]
           .sort((a, b) => weights[b] - weights[a])
           .map((ideology) => (
@@ -170,7 +170,7 @@ export function PoliticsPanel({ state }: PoliticsPanelProps) {
             <span aria-hidden="true">
               <NavIcon type="politics" size={24} />
             </span>
-            <p>None yet — they pop up unannounced.</p>
+            <p>None yet.</p>
           </div>
         ) : (
           <ul className="politics-panel__decisions-list">

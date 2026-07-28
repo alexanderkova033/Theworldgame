@@ -127,16 +127,8 @@ export const RIVAL_CAMPAIGN_POPULARITY_SWING = 4; // base popularity swing from 
 // may gain.
 export const FACTION_SENSITIVITY = 3;
 
-// --- Army ---
-export const SOLDIER_RECRUIT_COST = 200;
-export const SOLDIER_RECRUIT_STRENGTH = 10;
-export const ARMY_UPKEEP_PER_STRENGTH = 0.05; // treasury cost per strength point per day
-
 // --- Economy / taxes ---
 export const BASE_TAX_INCOME_PER_POP = 0.014; // was 0.02 — tax alone covered ~80% of starting income, dwarfing industry; cut ~30% so factories matter more
-export const MIN_TAX_RATE = 0;
-export const MAX_TAX_RATE = 0.6;
-export const TAX_RATE_STEP = 0.05;
 export const COMFORTABLE_TAX_RATE = 0.15; // above this, popularity starts to suffer
 export const POPULARITY_DRIFT_RATE = 0.05; // fraction of the gap to target popularity closed per day
 

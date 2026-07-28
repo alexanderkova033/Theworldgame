@@ -47,7 +47,7 @@ function RewardIcon({ reward }: { reward: ExpeditionReward }) {
 export function ExpeditionPanel({ state, selectedIslandId, dispatch }: ExpeditionPanelProps) {
   return (
     <div className="expedition-panel">
-      <p className="panel-hint">Charter a venture to an unclaimed island for a one-time reward.</p>
+      <p className="panel-hint">One-time rewards from unclaimed islands.</p>
 
       {MAP_GEOMETRY.otherLandmasses.map((island) => {
         const data = getIslandExpeditionData(island.id);
@@ -69,11 +69,11 @@ export function ExpeditionPanel({ state, selectedIslandId, dispatch }: Expeditio
             <div className="expedition-panel__body">
               <h3 className="expedition-panel__island">{island.name}</h3>
 
-              {isScouted && data && <p className="expedition-panel__result">Charted. {data.reward.flavor}</p>}
+              {isScouted && data && <p className="expedition-panel__result">{data.reward.flavor}</p>}
 
               {!isScouted && inProgress && (
                 <>
-                  <p className="expedition-panel__hint">Venture under way — {Math.ceil(inProgress.daysRemaining)} days left.</p>
+                  <p className="expedition-panel__hint">Under way — {Math.ceil(inProgress.daysRemaining)}d left</p>
                   <div className="progress-bar">
                     <div className="progress-bar__fill" style={{ width: `${Math.round(expeditionProgress(inProgress) * 100)}%` }} />
                   </div>
@@ -82,7 +82,7 @@ export function ExpeditionPanel({ state, selectedIslandId, dispatch }: Expeditio
 
               {!isScouted && !inProgress && (
                 <>
-                  <p className="expedition-panel__hint">Uncharted. Chartering a venture there takes {EXPEDITION_DAYS} days.</p>
+                  <p className="expedition-panel__hint">Uncharted · {EXPEDITION_DAYS}d voyage</p>
                   <button
                     className="btn-primary"
                     disabled={!canSendExpedition(state, island.id)}

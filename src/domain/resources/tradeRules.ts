@@ -2,13 +2,12 @@
 // a better rate for nations that own a coastal ("port") province — and, on
 // top of that base rate, a dynamic market: buying a resource repeatedly
 // makes it dearer, selling it repeatedly makes it cheaper, drifting back to
-// baseline the longer it's left alone. See getDynamicTradeRate/applyTradeDemand/decayDemand.
+// baseline the longer it's left alone. See getDynamicTradeRate/decayDemand.
 import {
   BASE_TRADE_RATE,
   DEMAND_CAP,
   DEMAND_DECAY_PER_DAY,
   DEMAND_PRICE_SENSITIVITY,
-  DEMAND_STEP,
   PORT_TRADE_RATE,
   RESOURCE_MARKET_BUY_PRICE_PER_UNIT,
   RESOURCE_MARKET_PORT_DISCOUNT,
@@ -44,16 +43,6 @@ export function getPriceIndex(demand: ResourceBundle, type: ResourceType): numbe
 export function getDynamicTradeRate(nation: Nation, demand: ResourceBundle, give: ResourceType, receive: ResourceType): number {
   const base = getTradeRate(nation);
   return base * (getPriceIndex(demand, receive) / getPriceIndex(demand, give));
-}
-
-// Every trade nudges the market: the resource you gave gets a little more
-// plentiful (cheaper), the one you received a little scarcer (dearer).
-export function applyTradeDemand(demand: ResourceBundle, give: ResourceType, receive: ResourceType): ResourceBundle {
-  return {
-    ...demand,
-    [give]: demand[give] - DEMAND_STEP,
-    [receive]: demand[receive] + DEMAND_STEP,
-  };
 }
 
 // The treasury's price to buy one unit of a resource outright (the "money

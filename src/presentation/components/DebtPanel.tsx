@@ -28,9 +28,13 @@ export function DebtPanel({ state, dispatch, bare = false }: DebtPanelProps) {
 
   const content = (
     <>
-      <p className="panel-hint">
-        Debt compounds daily, no fixed term — but past {formatCompact(DEBT_DANGER_THRESHOLD)} {CURRENCY_SYMBOL} the
-        interest alone starts costing stability and popularity every day.
+      <p
+        className="panel-hint"
+        title={`Debt compounds daily with no fixed term. Past ${formatCompact(
+          DEBT_DANGER_THRESHOLD,
+        )} ${CURRENCY_SYMBOL} the interest alone costs stability and popularity every day.`}
+      >
+        Compounds daily · dangerous past {formatCompact(DEBT_DANGER_THRESHOLD)} {CURRENCY_SYMBOL}
       </p>
 
       <div className={`debt-panel__status ${dangerous ? "is-dangerous" : state.debt > 0 ? "is-active" : ""}`}>
@@ -43,10 +47,23 @@ export function DebtPanel({ state, dispatch, bare = false }: DebtPanelProps) {
           </span>
           {state.debt > 0 && (
             <span className="debt-panel__status-detail">
-              +{dailyInterest} {CURRENCY_SYMBOL}/day interest{dangerous ? " — dangerous" : ""}
+              +{dailyInterest} {CURRENCY_SYMBOL}/d interest
             </span>
           )}
         </div>
+      </div>
+
+      {/* How close the debt is to both lines that matter — the danger
+          threshold and the hard cap — as a gauge rather than two sentences
+          of thresholds to hold in your head. */}
+      <div
+        className={`debt-panel__gauge ${dangerous ? "is-dangerous" : ""}`}
+        title={`${formatCompact(state.debt)} of a ${formatCompact(LOAN_MAX_DEBT)} ${CURRENCY_SYMBOL} cap; the marker is the ${formatCompact(
+          DEBT_DANGER_THRESHOLD,
+        )} ${CURRENCY_SYMBOL} danger line`}
+      >
+        <span className="debt-panel__gauge-fill" style={{ width: `${Math.min(100, (state.debt / LOAN_MAX_DEBT) * 100)}%` }} />
+        <span className="debt-panel__gauge-mark" style={{ left: `${(DEBT_DANGER_THRESHOLD / LOAN_MAX_DEBT) * 100}%` }} />
       </div>
 
       <div className="debt-panel__buttons">
@@ -70,7 +87,11 @@ export function DebtPanel({ state, dispatch, bare = false }: DebtPanelProps) {
           Repay ({repayAmount.toLocaleString()} {CURRENCY_SYMBOL})
         </button>
       </div>
-      {!canTakeLoan(state) && <p className="debt-panel__cap-note">Debt is capped at {formatCompact(LOAN_MAX_DEBT)} {CURRENCY_SYMBOL}.</p>}
+      {!canTakeLoan(state) && (
+        <p className="debt-panel__cap-note">
+          At the {formatCompact(LOAN_MAX_DEBT)} {CURRENCY_SYMBOL} borrowing cap.
+        </p>
+      )}
     </>
   );
 

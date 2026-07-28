@@ -27,13 +27,12 @@ Every country tracks the following core stats (see `CountryStats` in `src/domain
 | **Food** | Stockpiled food. Produced by farms, consumed by population every day. |
 | **Industry** | Industrial output capacity. Produced by factories; boosts income and construction speed. |
 | **Stability** | How well-ordered the country is (0–100). Low stability risks unrest/collapse. |
-| **Army Strength** | Military power, built from recruited soldiers. Costs upkeep. |
 | **Research Points** | Accumulated science output, spent on research projects. |
 | **Popularity** | Government approval (0–100). Affected by taxes, stability, and food shortages. |
 
 The MVP simulates the player's chosen nation only — the other two nations exist on the map but aren't separately simulated yet. Playable/AI multi-nation simulation is a roadmap item.
 
-**Scope note:** Army Strength, Research Points, and Popularity are still part of `CountryStats` and the simulation, but the actions that would let the player affect them (Recruit Soldiers, Invest in Education, Start Research, raise/lower taxes) are temporarily hidden from the UI while the core build/food/economy loop is being tuned. They're hidden together with their stats — see TODO.md for exactly what comes back and when.
+**Scope note:** Army Strength has been removed from `CountryStats` entirely. Nothing could recruit, so it was permanently 0 — and with army upkeep the only expense in the model, daily expenses were permanently 0 too. Both are gone; a military layer is a roadmap item to design from scratch. The tax rate is still simulated (it drives income and popularity drift) but is fixed at its starting value, with no player control.
 
 ## Map and provinces
 
@@ -63,8 +62,8 @@ Trading happens with "the continental market" (an abstract bank, not the other t
 ## Economy system
 
 - **Income** comes from taxes on population and industry, scaled by the current tax rate.
-- **Expenses** come from army upkeep and any active construction/research projects.
-- Net treasury change each day = income − expenses.
+- **Costs** come from active construction projects, which pay 60% up front and drain the rest in daily installments until they finish.
+- Net treasury change each day = income − whatever those projects draw.
 - **Industry** increases the efficiency of income generation and shortens construction time.
 - **Roads** provide a global "economic efficiency" multiplier that boosts income and reduces construction time, representing better logistics.
 
@@ -77,7 +76,7 @@ Trading happens with "the continental market" (an abstract bank, not the other t
 - Multiple projects can run at once across different provinces — there's no limit on that.
 - **Each individual province** does have a cap, though: at most 3 farms, 2 factories, and 5 roads per province (built *or* being built — queuing a 4th farm when 3 already exist is blocked the same as if all 3 were finished). This is what makes having sixteen smaller provinces matter mechanically, not just visually — a nation that wants more farms needs more provinces to spread them across, not just one province piled high.
 
-## Stability, taxes, population, army, and research interactions
+## Stability, taxes, population, and research interactions
 
 These systems are intentionally simple in the MVP but designed to be tuned and expanded later:
 
@@ -85,7 +84,6 @@ These systems are intentionally simple in the MVP but designed to be tuned and e
 - **Food**: Every person consumes 1 food per day. If food stock runs low or goes negative, stability drops. Building farms is the main way to keep up with a growing population.
 - **Stability**: Falls when food is scarce or popularity is very low. Very low stability increases the risk of a "collapse" event (early MVP: this is logged as a warning; full collapse consequences are a roadmap item).
 - **Population**: Grows slowly when food and stability are both healthy; growth stalls or reverses under famine or unrest.
-- **Army**: Recruiting soldiers costs treasury immediately and adds ongoing upkeep (a daily treasury cost). Army strength does not yet have a gameplay use beyond being a stat to manage (wars are a roadmap item).
 - **Research**: Education investment and research points slowly increase the country's ability to complete research projects; research projects (once completed) are meant to unlock/improve future systems.
 
 ## Intended player experience

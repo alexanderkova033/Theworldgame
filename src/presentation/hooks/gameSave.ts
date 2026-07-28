@@ -25,7 +25,6 @@ function hydrateStats(stats: Partial<CountryStats> | undefined): CountryStats {
     food: stats?.food ?? 8000,
     industry: stats?.industry ?? 0,
     stability: stats?.stability ?? 60,
-    armyStrength: stats?.armyStrength ?? 0,
     researchPoints: stats?.researchPoints ?? 0,
     popularity: stats?.popularity ?? 55,
   };

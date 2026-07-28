@@ -53,7 +53,7 @@ export function ResourceTicker({ stats, resources, production, debt }: ResourceT
   // into an unreadable wall of digits; the exact figure is still one hover
   // away via the title/aria-label.
   const statItems: Array<[StatIconType, string, string, string, number | undefined]> = [
-    ["treasury", "Treasury", `${formatCompact(stats.treasury)} ${CURRENCY_SYMBOL}`, `${formatExact(stats.treasury)} ${CURRENCY_SYMBOL}`, production.netTreasury],
+    ["treasury", "Treasury", `${formatCompact(stats.treasury)} ${CURRENCY_SYMBOL}`, `${formatExact(stats.treasury)} ${CURRENCY_SYMBOL}`, production.totalIncome],
     ["population", "Population", formatCompact(stats.population), formatExact(stats.population), undefined],
     ["food", "Food", formatCompact(stats.food), formatExact(stats.food), production.netFood],
     ["industry", "Industry", formatCompact(stats.industry), formatExact(stats.industry), undefined],

@@ -163,13 +163,6 @@
   stroke-width: 1.5;
 }
 
-.map-panel__army-marker {
-  stroke: #c66a6a;
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  fill: #c66a6a;
-}
-
 .map-panel__info-bar {
   fill: rgba(6, 9, 13, 0.62);
   stroke: rgba(244, 239, 226, 0.16);

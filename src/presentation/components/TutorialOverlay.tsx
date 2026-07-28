@@ -16,74 +16,74 @@ export interface TutorialStep {
 // see TUTORIAL_STEPS below.
 export const TUTORIAL_STEPS: TutorialStep[] = [
   {
-    title: "Welcome to The World Game",
-    body: "You've just taken the helm of a young nation. This short tour covers the controls — skip it any time, or replay it later from the \"?\" button.",
+    title: "You run a young nation",
+    body: "A quick tour of the controls. Skip any time, or replay it from the \"?\" button.",
     target: null,
     panel: null,
   },
   {
     title: "The Map",
-    body: "Your provinces, always on screen. Click one to build there — see the Economy tab for what you can build.",
+    body: "Your provinces. Click one to build there.",
     target: "map",
     panel: null,
   },
   {
     title: "The Ticker",
-    body: "Treasury, population, food, industry, stability, popularity, and your raw resources — always visible, never buried in a menu.",
+    body: "Everything you own, always on screen.",
     target: "ticker",
     panel: null,
   },
   {
     title: "Pause & Speed",
-    body: "The game runs on its own once you leave the start screen. Pause any time, or push the pace up to 5x once you've got a rhythm.",
+    body: "The clock runs on its own. Pause with Space, or push it to 5x.",
     target: "pause-speed",
     panel: null,
   },
   {
     title: "Politics",
-    body: "Your popularity is a zero-sum tug-of-war with the rival party — stay ahead of them, or a general election ends your government.",
+    body: "A tug-of-war with the rival party. Fall behind at an election and your government ends.",
     target: "tab-politics",
     panel: "politics",
   },
   {
     title: "Economy",
-    body: "Build farms, factories, and roads on your provinces, and keep an eye on today's production, itemized.",
+    body: "Build farms, factories, and roads — and watch what they earn.",
     target: "tab-economy",
     panel: "economy",
   },
   {
     title: "Trade",
-    body: "Barter resources on the open market, buy or sell them outright for Crowns, or take out a loan when the treasury runs short — rates move with supply and demand.",
+    body: "Barter, buy, sell, or borrow. Rates move with supply and demand.",
     target: "tab-trade",
     panel: "trade",
   },
   {
     title: "Laws",
-    body: "A branching tree of policy — each one is a vote, not a guarantee, and the opposition has its own opinion on every branch.",
+    body: "A tree of policy. Each node is a vote, not a guarantee.",
     target: "tab-laws",
     panel: "laws",
   },
   {
     title: "Research",
-    body: "A second tree, paid for in research points instead of your country's condition — invest in education to improve your odds.",
+    body: "A second tree, paid in research points. Schools improve your odds.",
     target: "tab-research",
     panel: "research",
   },
   {
     title: "Reports",
-    body: "Monthly reports, active construction, and the full event log — everything that's happened, in one place.",
+    body: "Monthly numbers and the full event log.",
     target: "tab-reports",
     panel: "reports",
   },
   {
     title: "Ventures",
-    body: "Send expeditions to unclaimed islands for one-time rewards — a nice bonus once your home nation is stable.",
+    body: "Charter expeditions to unclaimed islands for one-time rewards.",
     target: "tab-ventures",
     panel: "ventures",
   },
   {
     title: "You're ready",
-    body: "That's the whole toolkit. Good luck out there.",
+    body: "Good luck out there.",
     target: null,
     panel: null,
   },
@@ -98,6 +98,12 @@ interface TutorialOverlayProps {
 // A CSS-only spotlight: a box-shadow "hole" the size of the target element,
 // with a huge spread so everything outside it reads as darkened backdrop —
 // no canvas, no extra library, just one absolutely-positioned div per step.
+//
+// The target can move while a step is showing (a panel opening behind the
+// overlay reflows the tabs), so its box is polled on an animation frame —
+// but only committed to state when it has actually changed. Setting a fresh
+// DOMRect every frame, as this used to, re-rendered the whole overlay 60
+// times a second for the entire tour.
 function useTargetRect(selector: string | null): DOMRect | null {
   const [rect, setRect] = useState<DOMRect | null>(null);
 
@@ -109,7 +115,13 @@ function useTargetRect(selector: string | null): DOMRect | null {
     let frame: number;
     function tick() {
       const el = document.querySelector(`[data-tutorial="${selector}"]`);
-      setRect(el ? el.getBoundingClientRect() : null);
+      const next = el ? el.getBoundingClientRect() : null;
+      setRect((prev) => {
+        if (prev === next) return prev;
+        if (!prev || !next) return next;
+        const same = prev.top === next.top && prev.left === next.left && prev.width === next.width && prev.height === next.height;
+        return same ? prev : next;
+      });
       frame = requestAnimationFrame(tick);
     }
     frame = requestAnimationFrame(tick);

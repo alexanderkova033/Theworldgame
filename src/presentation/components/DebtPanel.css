@@ -69,6 +69,40 @@
   font-weight: 700;
 }
 
+/* Debt against its cap, with the danger line marked — the two thresholds
+   that used to be spelled out in prose, shown as one gauge. */
+.debt-panel__gauge {
+  position: relative;
+  height: 10px;
+  margin-bottom: 0.75rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--panel-border);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.55);
+  cursor: help;
+}
+
+.debt-panel__gauge-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(180deg, #e0b465, var(--warning));
+  transition: width 0.3s ease;
+}
+
+.debt-panel__gauge.is-dangerous .debt-panel__gauge-fill {
+  background: linear-gradient(180deg, #d6604c, var(--danger));
+}
+
+.debt-panel__gauge-mark {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--danger);
+  box-shadow: 0 0 4px rgba(194, 64, 47, 0.9);
+}
+
 .debt-panel__buttons {
   display: flex;
   gap: 0.5rem;

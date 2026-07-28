@@ -7,7 +7,7 @@ import { BASE_TAX_INCOME_PER_POP, INCOME_PER_INDUSTRY } from "../domain/constant
 import { getActiveLawEffects } from "../domain/laws/lawsRules";
 import { getNationEffects } from "../domain/nations/nationEffects";
 import { getNation } from "../domain/nations/nationRules";
-import { calculateDailyIncome, calculateDailyExpenses } from "../domain/economy/economyRules";
+import { calculateDailyIncome } from "../domain/economy/economyRules";
 import type { GameState } from "../domain/country/types";
 import { consumeFood, produceFood, produceProcessedFood } from "../domain/food/foodRules";
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
@@ -20,8 +20,6 @@ export interface DailyProductionSummary {
   taxIncome: number;
   industryIncome: number;
   totalIncome: number;
-  expenses: number;
-  netTreasury: number;
   foodProduced: number;
   foodConsumed: number;
   netFood: number;
@@ -39,7 +37,6 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const taxIncome = state.stats.population * BASE_TAX_INCOME_PER_POP * state.taxRate * incomeMultiplier;
   const industryIncome = state.stats.industry * INCOME_PER_INDUSTRY * incomeMultiplier;
   const totalIncome = calculateDailyIncome(state.stats, state.taxRate, incomeMultiplier);
-  const expenses = calculateDailyExpenses(state.stats);
 
   const { foodProduced: processedFood } = produceProcessedFood(state.granaryCount, state.canneryCount, state.resources);
   const foodProduced = produceFood(state.farmCount) + processedFood;
@@ -57,8 +54,6 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
     taxIncome,
     industryIncome,
     totalIncome,
-    expenses,
-    netTreasury: totalIncome - expenses,
     foodProduced,
     foodConsumed,
     netFood: foodProduced - foodConsumed,

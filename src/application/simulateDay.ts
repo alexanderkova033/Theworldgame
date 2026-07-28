@@ -2,7 +2,7 @@
 // place allowed to call across every domain module, in order, to advance the
 // whole country by one day. Never mutates the state it's given; always
 // returns a new GameState.
-import { calculateDailyExpenses, calculateDailyIncome } from "../domain/economy/economyRules";
+import { calculateDailyIncome } from "../domain/economy/economyRules";
 import { advanceProject, isProjectComplete } from "../domain/construction/constructionRules";
 import { advanceDay, isEveryNMonths, isFirstDayOfMonth } from "../domain/country/calendar";
 import { generateId } from "../domain/country/id";
@@ -174,14 +174,14 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
-  // 3. Economy: income and expenses.
+  // 3. Economy: daily income (project installments are already drained in
+  // step 1, so this is the only other thing moving the treasury on a tick).
   const income = calculateDailyIncome(
     working.stats,
     working.taxRate,
     efficiencyMultiplier * lawEffects.incomeMultiplier * nationEffects.incomeMultiplier * researchEffects.incomeMultiplier * synergyEffects.incomeMultiplier,
   );
-  const expenses = calculateDailyExpenses(working.stats);
-  const treasury = working.stats.treasury + income - expenses;
+  const treasury = working.stats.treasury + income;
 
   // 4. Food: production (farms + processed Grain/Fish) vs consumption.
   const { newFoodStock, isShortage } = updateFood(working.stats, working.farmCount, processedFood);
@@ -250,7 +250,6 @@ export function simulateDay(state: GameState): GameState {
     food: newFoodStock,
     industry,
     stability,
-    armyStrength: working.stats.armyStrength,
     researchPoints,
     popularity,
   };
@@ -259,7 +258,6 @@ export function simulateDay(state: GameState): GameState {
   const delta: DailyDelta = {
     date: state.date,
     income,
-    expenses,
     populationChange: population - state.stats.population,
     stabilityChange: stability - state.stats.stability,
   };

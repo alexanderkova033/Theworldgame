@@ -23,7 +23,6 @@ export interface CountryStats {
   food: number;
   industry: number;
   stability: number; // 0-100
-  armyStrength: number;
   researchPoints: number;
   popularity: number; // 0-100
 }
@@ -46,7 +45,6 @@ export interface GameEvent {
 export interface DailyDelta {
   date: GameDate;
   income: number;
-  expenses: number;
   populationChange: number;
   stabilityChange: number;
 }
@@ -55,8 +53,6 @@ export interface MonthlyReport {
   id: string;
   date: GameDate; // the first day of the new month, when the report was generated
   totalIncome: number;
-  totalExpenses: number;
-  netTreasuryChange: number;
   populationChange: number;
   stabilityChange: number;
 }

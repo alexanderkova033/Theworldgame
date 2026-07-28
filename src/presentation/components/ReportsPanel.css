@@ -4,36 +4,56 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.35rem;
 }
 
+/* One month per row, not one month per card: month label, then three
+   icon+figure cells on a fixed grid so the columns line up down the panel
+   and can be compared vertically at a glance. */
 .reports-panel__item {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 1fr) repeat(3, minmax(4.5rem, auto));
+  align-items: center;
+  gap: 0.5rem;
   border: 1px solid var(--panel-border);
   border-radius: 6px;
-  padding: 0.6rem 0.75rem;
+  padding: 0.4rem 0.6rem;
   background: rgba(0, 0, 0, 0.15);
   box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
-.reports-panel__item-header {
+.reports-panel__month {
   font-family: var(--font-display);
   font-weight: 700;
-  margin-bottom: 0.3rem;
+  font-size: 0.82rem;
   color: var(--text);
 }
 
-.reports-panel__item-row {
-  display: flex;
+.reports-panel__metric {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 0.85rem;
+  justify-content: flex-end;
+  gap: 0.3rem;
+}
+
+.reports-panel__metric svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.reports-panel__metric-value {
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
-.reports-panel__row-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
+.reports-panel__metric-value.is-gain {
+  color: var(--success);
+}
+
+.reports-panel__metric-value.is-loss {
+  color: var(--danger);
 }
 
 .reports-panel__empty {
@@ -71,10 +91,17 @@
 }
 
 .reports-panel__sparkline-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   font-size: 0.68rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+.reports-panel__sparkline-label svg {
+  display: block;
 }
 
 .reports-panel__sparkline-baseline {

@@ -2,14 +2,15 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   margin: 0 0 0.75rem 0;
   color: var(--text-muted);
   background: var(--accent-soft);
   border: 1px solid var(--panel-border);
   border-radius: 6px;
-  padding: 0.5rem 0.65rem;
+  padding: 0.45rem 0.65rem;
   box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.3);
+  cursor: help;
 }
 
 .actions-panel__target svg {
@@ -18,10 +19,7 @@
 
 .actions-panel__target strong {
   color: var(--accent-active);
-}
-
-.actions-panel__hint {
-  font-size: 0.75rem;
+  font-family: var(--font-display);
 }
 
 .actions-panel__group {
@@ -59,7 +57,12 @@
   border: 1px dashed var(--panel-border);
   border-radius: 6px;
   padding: 0.35rem 0.55rem;
-  margin: 0.1rem 0 0.4rem;
+  margin: 0.25rem 0 0;
+  cursor: help;
+}
+
+.build-card__locked svg {
+  flex-shrink: 0;
 }
 
 .build-card__icon {
@@ -87,7 +90,7 @@
 
 .build-card__top {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
 }
@@ -98,71 +101,119 @@
   color: var(--text);
 }
 
-.build-card__cap {
-  font-size: 0.68rem;
+/* Filled/empty pips instead of a "2/4 here" fraction — how much room is
+   left in this province is a shape you glance at, not a number you read. */
+.build-card__pips {
+  display: inline-flex;
+  gap: 3px;
+  flex-shrink: 0;
+  cursor: help;
+}
+
+.build-card__pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1px solid var(--panel-border);
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.build-card__pip.is-filled {
+  background: linear-gradient(180deg, var(--accent-active), var(--accent));
+  border-color: #fff0c2;
+  box-shadow: 0 0 4px rgba(240, 200, 105, 0.5);
+}
+
+/* What it makes, as glyphs and rates — this replaced a full sentence per
+   building. Processors read as a conversion: grain in, food out. */
+.build-card__yields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.35rem 0;
+}
+
+.build-card__yield {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--success);
+  background: rgba(111, 174, 124, 0.12);
+  border: 1px solid rgba(111, 174, 124, 0.35);
+  border-radius: 999px;
+  padding: 0.12rem 0.45rem;
+  cursor: help;
+}
+
+.build-card__yield svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.build-card__yield-arrow {
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
+  margin: 0 0.05rem;
 }
 
 .build-card__cost {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.78rem;
-  color: var(--accent-active);
-  margin-top: 0.2rem;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
+  margin-bottom: 0.5rem;
 }
 
-.build-card__cost--later {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-}
-
-.build-card__cost-duration {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-}
-
-.build-card__cost--total {
-  color: var(--text);
-  font-weight: 700;
-}
-
-.build-card__disabled-reason {
-  font-size: 0.72rem;
-  color: var(--danger);
-  margin: 0.2rem 0 0.4rem;
-}
-
-.build-card__cost-tag {
-  flex-shrink: 0;
-  min-width: 2.6rem;
-  text-align: center;
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--text);
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--panel-border);
-  border-radius: 999px;
-  padding: 0.1rem 0.4rem;
-}
-
-.build-card__description {
-  font-size: 0.74rem;
-  color: var(--text-muted);
-  margin: 0.25rem 0 0.5rem;
-  line-height: 1.4;
-}
-
-.build-card__description-icon {
+/* The payment schedule as a filled bar (what's due on order) plus the build
+   duration — the exact per-day drip is one hover away rather than three
+   labeled rows of numbers. */
+.build-card__schedule {
   display: inline-flex;
-  vertical-align: -2px;
-  margin-right: 0.15rem;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  cursor: help;
+}
+
+.build-card__schedule svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.build-card__schedule-bar {
+  display: block;
+  width: 2.6rem;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--panel-border);
+}
+
+.build-card__schedule-upfront {
+  display: block;
+  height: 100%;
+  background: linear-gradient(180deg, var(--accent-active), var(--accent));
 }
 
 .build-card__button {
   width: 100%;
+}
+
+/* A disabled build says what's missing right on the button — an icon and a
+   shortfall, in place of the sentence that used to sit above it. */
+.build-card__missing {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  color: var(--danger);
+  font-variant-numeric: tabular-nums;
+}
+
+.build-card__missing svg {
+  display: block;
 }

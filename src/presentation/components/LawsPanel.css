@@ -19,6 +19,37 @@
   box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(240, 200, 105, 0.06);
 }
 
+/* Research only: the pool every node spends from, and how fast it refills.
+   The tree itself can show everything else. */
+.law-tree__bank {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+.law-tree__bank svg {
+  display: block;
+}
+
+.law-tree__bank-value {
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.law-tree__bank-rate {
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--success);
+}
+
 .law-tree__column {
   flex: 1;
   min-width: 0;
@@ -350,18 +381,21 @@
   color: var(--text);
 }
 
-.law-inspector__enact-cost-note {
-  font-size: 0.7rem;
-  opacity: 0.8;
-}
-
 .law-inspector__synergy {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.78rem;
   color: var(--text-muted);
   margin: 0 0 0.5rem;
   padding: 0.3rem 0.55rem;
   border-radius: 6px;
   border: 1px dashed var(--panel-border);
+}
+
+.law-inspector__synergy svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 .law-inspector__synergy.is-active {
@@ -382,8 +416,16 @@
 }
 
 .law-inspector__status {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.82rem;
   margin: 0;
+}
+
+.law-inspector__status svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 .law-inspector__status.is-enacted {
@@ -397,10 +439,18 @@
 }
 
 .law-inspector__quota-label {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
   color: var(--text-muted);
   margin-bottom: 0.4rem;
+}
+
+.law-inspector__quota-label svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 .law-inspector__vote {
@@ -415,11 +465,34 @@
   gap: 0.4rem;
 }
 
+/* The odds as a bar first, a number second — the fill length says
+   "safe / risky / a gamble" before the percentage is read at all. */
 .law-inspector__chance {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   font-size: 0.82rem;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
   padding: 0.3rem 0.65rem;
   border-radius: 999px;
+}
+
+.law-inspector__chance-bar {
+  width: 4.5rem;
+  height: 7px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.law-inspector__chance-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: currentColor;
+  transition: width 0.3s ease;
 }
 
 .law-inspector__chance.is-safe {

@@ -1,5 +1,5 @@
 import "./MapPanel.css";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { memo, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { ProjectType } from "../../domain/construction/types";
 import { NATIONS } from "../../domain/nations/nationData";
 import { getNationForProvince } from "../../domain/nations/nationRules";
@@ -7,6 +7,7 @@ import type { Nation } from "../../domain/nations/types";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
 import type { PlacedBuilding, Terrain } from "../../domain/provinces/types";
 import { RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
+import { RESOURCE_TYPES } from "../../domain/resources/types";
 import { BUILDING_COLORS, BuildingIcon } from "./BuildingIcon";
 import { starPoints } from "./iconShapes";
 import { ResourceIcon } from "./ResourceIcon";
@@ -29,8 +30,7 @@ const BUILDING_LABELS: Record<ProjectType, string> = {
   farm: "Farm",
   factory: "Factory",
   road: "Road",
-  education: "Education",
-  research: "Research",
+  education: "School",
   granary: "Granary",
   cannery: "Cannery",
 };
@@ -38,7 +38,6 @@ const BUILDING_LABELS: Record<ProjectType, string> = {
 interface MapPanelProps {
   nation: Nation;
   placedBuildings: PlacedBuilding[];
-  armyStrength: number;
   selectedProvinceId: string;
   onSelectProvince: (provinceId: string) => void;
   scoutedIslandIds: string[];
@@ -161,10 +160,14 @@ const OCEAN_RECT = {
   height: WORLD_VIEW.height * 1.4,
 };
 
-export function MapPanel({
+// Memoized: the map is by far the heaviest thing on screen (hundreds of SVG
+// nodes, patterns, and filters), but it only depends on which buildings
+// exist and what's selected — none of which change on an ordinary daily
+// tick. Without this it re-rendered up to 5x/second at 5x game speed purely
+// because the treasury number moved.
+export const MapPanel = memo(function MapPanel({
   nation,
   placedBuildings,
-  armyStrength,
   selectedProvinceId,
   onSelectProvince,
   scoutedIslandIds,
@@ -326,17 +329,22 @@ export function MapPanel({
     });
   }
 
-  const buildingsByProvince = new Map<string, PlacedBuilding[]>();
-  const roadCountByProvince = new Map<string, number>();
-  for (const building of placedBuildings) {
-    if (building.type === "road") {
-      roadCountByProvince.set(building.provinceId, (roadCountByProvince.get(building.provinceId) ?? 0) + 1);
-      continue;
+  // Rebuilt only when a building actually completes — not on every pan,
+  // zoom, or hover, all of which re-render this component.
+  const { buildingsByProvince, roadCountByProvince } = useMemo(() => {
+    const byProvince = new Map<string, PlacedBuilding[]>();
+    const roads = new Map<string, number>();
+    for (const building of placedBuildings) {
+      if (building.type === "road") {
+        roads.set(building.provinceId, (roads.get(building.provinceId) ?? 0) + 1);
+        continue;
+      }
+      const list = byProvince.get(building.provinceId) ?? [];
+      list.push(building);
+      byProvince.set(building.provinceId, list);
     }
-    const list = buildingsByProvince.get(building.provinceId) ?? [];
-    list.push(building);
-    buildingsByProvince.set(building.provinceId, list);
-  }
+    return { buildingsByProvince: byProvince, roadCountByProvince: roads };
+  }, [placedBuildings]);
 
   return (
     <section className="map-panel">
@@ -593,25 +601,6 @@ export function MapPanel({
               );
             })}
 
-          {/* Army marker: crossed swords at the capital, growing (and labeled)
-              with army strength, so recruiting soldiers shows up on the map too. */}
-          {capital && armyStrength > 0 && (
-            <g
-              transform={`translate(${capital.labelX - 32}, ${capital.labelY}) scale(${Math.min(0.7 + armyStrength / 150, 1.8)})`}
-              className="map-panel__army-marker"
-            >
-              <line x1={-6} y1={-6} x2={6} y2={6} />
-              <line x1={6} y1={-6} x2={-6} y2={6} />
-              <circle cx={6} cy={6} r={1.2} />
-              <circle cx={-6} cy={6} r={1.2} />
-            </g>
-          )}
-          {capital && armyStrength > 0 && (
-            <text x={capital.labelX - 32} y={capital.labelY + 17} className="map-panel__road-count">
-              {Math.round(armyStrength)}
-            </text>
-          )}
-
           {provinces.map((province) => {
             const isCapital = province.id === nation.capitalProvinceId;
             // The continent packs a lot of small provinces close together —
@@ -764,24 +753,25 @@ export function MapPanel({
         {showLegend && (
           <div className="map-panel__legend">
             {NATIONS.map((n) => (
-              <span key={n.id} className="map-panel__legend-item">
+              <span key={n.id} className={`map-panel__legend-item ${n.id === nation.id ? "is-you" : ""}`} title={n.name}>
                 <span className="map-panel__legend-swatch" style={{ backgroundColor: n.color }} />
                 {n.name}
-                {n.id === nation.id ? " (yours)" : ""}
               </span>
             ))}
             {(Object.keys(BUILDING_COLORS) as ProjectType[]).map((type) => (
-              <span key={type} className="map-panel__legend-item">
-                <BuildingIconSwatch type={type} />
-                {type}
+              <span key={type} className="map-panel__legend-item" title={BUILDING_LABELS[type]}>
+                <svg width={20} height={20} viewBox="-9 -9 18 18" className="map-panel__legend-icon">
+                  <BuildingIcon type={type} x={0} y={0} size={5.5} />
+                </svg>
+                {BUILDING_LABELS[type]}
               </span>
             ))}
-            {(["wood", "ore", "grain", "fish"] as const).map((type) => (
-              <span key={type} className="map-panel__legend-item">
+            {RESOURCE_TYPES.map((type) => (
+              <span key={type} className="map-panel__legend-item" title={RESOURCE_LABELS[type]}>
                 <svg width={20} height={20} viewBox="-9 -9 18 18" className="map-panel__legend-icon">
                   <ResourceIcon type={type} size={7.5} />
                 </svg>
-                {type}
+                {RESOURCE_LABELS[type]}
               </span>
             ))}
           </div>
@@ -789,12 +779,4 @@ export function MapPanel({
       </div>
     </section>
   );
-}
-
-function BuildingIconSwatch({ type }: { type: ProjectType }) {
-  return (
-    <svg width={20} height={20} viewBox="-9 -9 18 18" className="map-panel__legend-icon">
-      <BuildingIcon type={type} x={0} y={0} size={5.5} />
-    </svg>
-  );
-}
+});

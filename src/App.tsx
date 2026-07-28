@@ -2,7 +2,7 @@
 // app: it owns the live GameState (via useGameClock) and wires it into the
 // UI panels. It never computes simulation values itself.
 import "./App.css";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getNation } from "./domain/nations/nationRules";
 import { NATIONS } from "./domain/nations/nationData";
 import type { GameSpeed } from "./domain/country/types";
@@ -66,6 +66,23 @@ function App() {
   // event log now lives behind a closed-by-default panel instead of an
   // always-visible sidebar.
   const [seenEventCount, setSeenEventCount] = useState(0);
+
+  // Today's projected numbers. Recomputed only when the day actually
+  // advances — not on every hover, panel toggle, or map pan that also
+  // re-renders App.
+  const production = useMemo(() => (state ? getDailyProductionSummary(state) : null), [state]);
+
+  // MapPanel is memoized (it's the heaviest thing on screen), so its props
+  // have to keep stable identities across a tick or the memo buys nothing.
+  // simulateDay rebuilds `expeditions` every single day even when it's
+  // empty, so derive the id list from a plain string key instead.
+  const expeditionKey = state?.expeditions.map((e) => e.islandId).join(",") ?? "";
+  const expeditionIslandIds = useMemo(() => (expeditionKey ? expeditionKey.split(",") : []), [expeditionKey]);
+
+  const handleSelectIsland = useCallback((islandId: string) => {
+    setSelectedIslandId(islandId);
+    setOpenModal("ventures");
+  }, []);
 
   // Keyboard shortcuts: Space toggles pause, 1/2/3/5 set speed. Scoped to
   // "nothing else has focus" so they never double-fire alongside a focused
@@ -182,7 +199,8 @@ function App() {
   const party = getParty(state.partyId);
   const currentProvinceId = selectedProvinceId ?? nation.capitalProvinceId;
   const unseenEventCount = Math.max(0, state.events.length - seenEventCount);
-  const production = getDailyProductionSummary(state);
+  // Non-null past the `!state` guard above — it's memoized from that same value.
+  const dailyProduction = production!;
 
   function openPanel(panel: PanelKey) {
     // Always opens/switches to the tab — never toggles it closed. An
@@ -206,7 +224,7 @@ function App() {
         speed={state.speed}
         stats={state.stats}
         resources={state.resources}
-        production={production}
+        production={dailyProduction}
         debt={state.debt}
         activePanel={openModal}
         reportsBadgeCount={unseenEventCount}
@@ -222,16 +240,12 @@ function App() {
           <MapPanel
             nation={nation}
             placedBuildings={state.placedBuildings}
-            armyStrength={state.stats.armyStrength}
             selectedProvinceId={currentProvinceId}
             onSelectProvince={setSelectedProvinceId}
             scoutedIslandIds={state.scoutedIslandIds}
-            expeditionIslandIds={state.expeditions.map((e) => e.islandId)}
+            expeditionIslandIds={expeditionIslandIds}
             selectedIslandId={selectedIslandId}
-            onSelectIsland={(islandId) => {
-              setSelectedIslandId(islandId);
-              setOpenModal("ventures");
-            }}
+            onSelectIsland={handleSelectIsland}
           />
         </div>
       </main>
@@ -248,7 +262,7 @@ function App() {
             <ActionsPanel state={state} selectedProvinceId={currentProvinceId} dispatch={dispatch} />
             <div className="economy-modal__side">
               <ProjectsPanel state={state} />
-              <ProductionPanel production={production} />
+              <ProductionPanel production={dailyProduction} />
             </div>
           </div>
         </Modal>

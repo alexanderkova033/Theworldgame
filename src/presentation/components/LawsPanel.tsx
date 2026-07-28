@@ -10,36 +10,26 @@ import {
   getLawNodeStatus,
   getRivalStance,
   getQuotaProgress,
-  type LawNodeStatus,
 } from "../../domain/laws/lawsRules";
-import type { LawCategory, LawEffects, LawNode, QuotaStat } from "../../domain/laws/types";
+import type { LawCategory, LawNode, QuotaStat } from "../../domain/laws/types";
 import { getRivalParty } from "../../domain/parties/partyRules";
 import { getResearchNode } from "../../domain/research/researchRules";
 import { getSynergiesForLaw } from "../../domain/synergy/synergyRules";
-import type { Synergy } from "../../domain/synergy/synergyData";
 import { playConfirm } from "../audio/sound";
 import { CostChips, ResourceChip, TreasuryChip } from "./CostChips";
-import { StatIcon, type StatIconType } from "./StatIcon";
+import { StatIcon } from "./StatIcon";
+import { InspectorHeader, StatusLine, SynergyLine, TreeColumns, VoteRow, type TreeNodeStatus } from "./TechTree";
 
 interface LawsPanelProps {
   state: GameState;
   dispatch: (action: (state: GameState) => GameState) => void;
 }
 
-const CATEGORIES: LawCategory[] = ["labor", "sustenance", "order"];
-const TIERS = [1, 2, 3, 4] as const;
-
-const CATEGORY_LABELS: Record<LawCategory, string> = {
-  labor: "Labor",
-  sustenance: "Sustenance",
-  order: "Order",
-};
-
-const CATEGORY_ICONS: Record<LawCategory, StatIconType> = {
-  labor: "industry",
-  sustenance: "food",
-  order: "stability",
-};
+const CATEGORIES = [
+  { key: "labor", label: "Labor", icon: "industry" as const },
+  { key: "sustenance", label: "Sustenance", icon: "food" as const },
+  { key: "order", label: "Order", icon: "stability" as const },
+];
 
 const QUOTA_LABELS: Record<QuotaStat, string> = {
   treasury: "Treasury",
@@ -50,194 +40,61 @@ const QUOTA_LABELS: Record<QuotaStat, string> = {
   popularity: "Popularity",
 };
 
+const QUOTA_ICONS: Record<QuotaStat, "treasury" | "population" | "food" | "industry" | "stability" | "popularity"> = {
+  treasury: "treasury",
+  population: "population",
+  food: "food",
+  industry: "industry",
+  stability: "stability",
+  popularity: "popularity",
+};
+
 function formatQuotaValue(stat: QuotaStat, value: number): string {
   if (stat === "treasury") return `${Math.round(value).toLocaleString()} ${CURRENCY_SYMBOL}`;
   if (stat === "stability" || stat === "popularity") return `${Math.round(value)}`;
   return Math.round(value).toLocaleString();
 }
 
-function nodesFor(category: LawCategory, tier: number): LawNode[] {
-  return LAW_NODES.filter((n) => n.category === category && n.tier === tier);
-}
-
-// "+5% industry, +5% income" from a synergy's multiplier-only effects.
-function formatSynergyEffect(effects: Synergy["effects"]): string {
-  const parts: string[] = [];
-  if (effects.industryMultiplier) parts.push(`+${Math.round((effects.industryMultiplier - 1) * 100)}% industry`);
-  if (effects.incomeMultiplier) parts.push(`+${Math.round((effects.incomeMultiplier - 1) * 100)}% income`);
-  return parts.join(", ");
-}
-
-// Turns a law's numeric effects into (icon, is-it-a-benefit) pairs so the
-// benefit/cost lines carry a matching stat glyph instead of being plain text.
-function effectEntries(effects: LawEffects): Array<{ icon: StatIconType; positive: boolean }> {
-  const entries: Array<{ icon: StatIconType; positive: boolean }> = [];
-  if (effects.industryMultiplier !== undefined) entries.push({ icon: "industry", positive: effects.industryMultiplier >= 1 });
-  if (effects.incomeMultiplier !== undefined) entries.push({ icon: "treasury", positive: effects.incomeMultiplier >= 1 });
-  if (effects.treasuryDelta !== undefined) entries.push({ icon: "treasury", positive: effects.treasuryDelta >= 0 });
-  if (effects.foodDelta !== undefined) entries.push({ icon: "food", positive: effects.foodDelta >= 0 });
-  if (effects.stabilityDelta !== undefined) entries.push({ icon: "stability", positive: effects.stabilityDelta >= 0 });
-  if (effects.populationDelta !== undefined) entries.push({ icon: "population", positive: effects.populationDelta >= 0 });
-  if (effects.popularityDelta !== undefined) entries.push({ icon: "popularity", positive: effects.popularityDelta >= 0 });
-  return entries;
-}
-
-function EffectIcons({ icons }: { icons: StatIconType[] }) {
-  if (icons.length === 0) return null;
-  return (
-    <span className="law-effect-icons">
-      {icons.map((icon, i) => (
-        <StatIcon type={icon} size={15} key={`${icon}-${i}`} />
-      ))}
-    </span>
-  );
-}
-
-function CheckBadge() {
-  return (
-    <svg viewBox="-10 -10 20 20" width={13} height={13}>
-      <polyline points="-5,0 -1,4 5,-6" fill="none" stroke="#1a1406" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function LockBadge() {
-  return (
-    <svg viewBox="-10 -10 20 20" width={11} height={11}>
-      <rect x={-4} y={-1} width={8} height={7} rx={1.2} fill="currentColor" />
-      <path d="M-2.5,-1 L-2.5,-3.5 A2.5,2.5 0 0 1 2.5,-3.5 L2.5,-1" fill="none" stroke="currentColor" strokeWidth={1.6} />
-    </svg>
-  );
-}
-
-function XBadge() {
-  return (
-    <svg viewBox="-10 -10 20 20" width={11} height={11}>
-      <line x1={-4} y1={-4} x2={4} y2={4} stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" />
-      <line x1={4} y1={-4} x2={-4} y2={4} stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" />
-    </svg>
-  );
-}
-
-// Legs are spread evenly between 22%/78% so a 2-way fork still looks
-// pixel-identical to before — this just stops assuming exactly two, since
-// Order tier 2 now has a 3-way fork alongside Agriculture's on the Research
-// tree (see ResearchPanel.tsx, which this was ported from).
-function TierConnector({ legCount }: { legCount: number }) {
-  const legPositions =
-    legCount === 1 ? [50] : Array.from({ length: legCount }, (_, i) => 22 + i * (56 / (legCount - 1)));
-  return (
-    <div className="law-tree__connector">
-      <div className="law-tree__connector-stem" />
-      {legCount > 1 && (
-        <div className="law-tree__connector-fork">
-          <div className="law-tree__connector-bar" />
-          {legPositions.map((left, i) => (
-            <div className="law-tree__connector-leg" style={{ left: `${left}%` }} key={i} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface LawNodeBadgeProps {
-  node: LawNode;
-  status: LawNodeStatus;
-  isSelected: boolean;
-  onSelect: () => void;
-}
-
-function LawNodeBadge({ node, status, isSelected, onSelect }: LawNodeBadgeProps) {
-  return (
-    <button type="button" className={`law-node law-node--${status} ${isSelected ? "is-selected" : ""}`} onClick={onSelect}>
-      <span className="law-node__icon">
-        <StatIcon type={node.icon as StatIconType} size={26} />
-        {status === "enacted" && (
-          <span className="law-node__badge law-node__badge--enacted">
-            <CheckBadge />
-          </span>
-        )}
-        {status === "foreclosed" && (
-          <span className="law-node__badge law-node__badge--foreclosed">
-            <XBadge />
-          </span>
-        )}
-        {(status === "locked-prerequisite" || status === "locked-cross" || status === "locked-quota") && (
-          <span className="law-node__badge law-node__badge--locked">
-            <LockBadge />
-          </span>
-        )}
-      </span>
-      <span className="law-node__name">{node.name}</span>
-    </button>
-  );
+function nodesFor(category: string, tier: number): LawNode[] {
+  return LAW_NODES.filter((n) => n.category === (category as LawCategory) && n.tier === tier);
 }
 
 interface LawInspectorProps {
   node: LawNode;
   state: GameState;
-  status: LawNodeStatus;
+  status: TreeNodeStatus;
   isArmed: boolean;
   onArm: () => void;
   onConfirm: () => void;
 }
 
 function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawInspectorProps) {
-  const entries = effectEntries(node.effects);
-  const benefitIcons = entries.filter((e) => e.positive).map((e) => e.icon);
-  const costIcons = entries.filter((e) => !e.positive).map((e) => e.icon);
   const passChance = Math.round(getEffectivePassChance(state, node) * 100);
   const quota = getQuotaProgress(state, node);
   const rival = getRivalParty(state.partyId);
   const stance = getRivalStance(state, node);
-  const affordable = canAffordLawEnactCost(state, node.enactCost);
   const crossNodeName = node.crossRequirement ? getResearchNode(node.crossRequirement.nodeId)?.name : undefined;
-  const synergies = getSynergiesForLaw(node.id);
 
   return (
     <div className="law-inspector">
-      <div className="law-inspector__header">
-        <div className="law-inspector__icon">
-          <StatIcon type={node.icon as StatIconType} size={30} />
-        </div>
-        <div className="law-inspector__heading">
-          <h4 className="law-inspector__name">{node.name}</h4>
-          <p className="law-inspector__description">{node.description}</p>
-        </div>
-      </div>
-
-      <div className="law-inspector__effects">
-        <span className="law-inspector__benefit">
-          <EffectIcons icons={benefitIcons} />
-          {node.benefit}
-        </span>
-        <span className="law-inspector__cost">
-          <EffectIcons icons={costIcons} />
-          {node.cost}
-        </span>
-      </div>
+      <InspectorHeader node={node} description={node.description} benefit={node.benefit} cost={node.cost} effects={node.effects} />
 
       <div className="law-inspector__enact-cost">
         <span className="law-inspector__enact-cost-label">To put to a vote</span>
         <CostChips>
           <TreasuryChip amount={node.enactCost.treasury.toLocaleString()} />
-          {node.enactCost.resourceType && (
-            <ResourceChip type={node.enactCost.resourceType} amount={node.enactCost.resourceAmount ?? 0} />
-          )}
+          {node.enactCost.resourceType && <ResourceChip type={node.enactCost.resourceType} amount={node.enactCost.resourceAmount ?? 0} />}
         </CostChips>
       </div>
 
-      {synergies.map((synergy) => {
-        const researchNode = getResearchNode(synergy.researchId);
-        const isActive = status === "enacted" && state.enactedResearchIds.includes(synergy.researchId);
-        return (
-          <p key={synergy.id} className={`law-inspector__synergy ${isActive ? "is-active" : ""}`}>
-            {isActive ? "Synergy active — " : "Synergy: pair with "}
-            {researchNode?.name ?? "a Research node"} (Research) for {formatSynergyEffect(synergy.effects)}.
-          </p>
-        );
-      })}
+      {getSynergiesForLaw(node.id).map((synergy) => (
+        <SynergyLine
+          key={synergy.id}
+          synergy={synergy}
+          partnerName={getResearchNode(synergy.researchId)?.name ?? "a Research node"}
+          isActive={status === "enacted" && state.enactedResearchIds.includes(synergy.researchId)}
+        />
+      ))}
 
       {stance !== "neutral" && status !== "enacted" && (
         <p className={`rival-stance is-${stance}`}>
@@ -245,25 +102,16 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
         </p>
       )}
 
-      {status === "enacted" && <p className="law-inspector__status is-enacted">Enacted.</p>}
-
-      {status === "foreclosed" && (
-        <p className="law-inspector__status is-foreclosed">Foreclosed — a rival law took this branch instead.</p>
-      )}
-
-      {status === "locked-prerequisite" && (
-        <p className="law-inspector__status is-locked">Requires the law above it in this branch to be enacted first.</p>
-      )}
-
-      {status === "locked-cross" && (
-        <p className="law-inspector__status is-locked">Requires {crossNodeName ?? "a Research node"} (Research) enacted first.</p>
-      )}
+      {status === "enacted" && <StatusLine status="enacted">Enacted.</StatusLine>}
+      {status === "foreclosed" && <StatusLine status="foreclosed">A rival law took this branch.</StatusLine>}
+      {status === "locked-prerequisite" && <StatusLine status="locked">Enact the law above it first.</StatusLine>}
+      {status === "locked-cross" && <StatusLine status="locked">Needs {crossNodeName ?? "a Research node"} (Research).</StatusLine>}
 
       {status === "locked-quota" && (
         <div className="law-inspector__quota">
           <span className="law-inspector__quota-label">
-            Needs {QUOTA_LABELS[node.quota.stat]} ≥ {formatQuotaValue(node.quota.stat, node.quota.threshold)} — currently{" "}
-            {formatQuotaValue(node.quota.stat, quota.current)}
+            <StatIcon type={QUOTA_ICONS[node.quota.stat]} size={15} />
+            {QUOTA_LABELS[node.quota.stat]} {formatQuotaValue(node.quota.stat, quota.current)} / {formatQuotaValue(node.quota.stat, node.quota.threshold)}
           </span>
           <div className="progress-bar">
             <div className="progress-bar__fill" style={{ width: `${Math.round(quota.ratio * 100)}%` }} />
@@ -272,35 +120,16 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
       )}
 
       {status === "available" && (
-        <div className="law-inspector__vote">
-          <span
-            className={`law-inspector__chance ${passChance >= 80 ? "is-safe" : passChance >= 50 ? "is-risky" : "is-dangerous"}`}
-          >
-            {passChance}% chance to pass
-          </span>
-          <button
-            className="btn-primary law-inspector__vote-button"
-            disabled={!affordable}
-            onClick={() => {
-              if (isArmed) {
-                playConfirm();
-                onConfirm();
-              } else {
-                onArm();
-              }
-            }}
-          >
-            {!affordable ? (
-              "Can't afford it"
-            ) : isArmed ? (
-              <>
-                <CheckBadge /> Confirm — put it to a vote
-              </>
-            ) : (
-              "Propose"
-            )}
-          </button>
-        </div>
+        <VoteRow
+          passChance={passChance}
+          affordable={canAffordLawEnactCost(state, node.enactCost)}
+          isArmed={isArmed}
+          onArm={onArm}
+          onConfirm={() => {
+            playConfirm();
+            onConfirm();
+          }}
+        />
       )}
     </div>
   );
@@ -322,42 +151,13 @@ export function LawsPanel({ state, dispatch }: LawsPanelProps) {
 
   return (
     <div className="law-tree">
-      <p className="panel-hint">
-        Each branch opens as you cross a quota and pay to put it to a vote — select a node to see what it needs.
-        Passing isn't guaranteed: your party's popularity swings the odds.
-      </p>
-
-      <div className="law-tree__columns">
-        {CATEGORIES.map((category) => (
-          <div className="law-tree__column" key={category}>
-            <h3 className="law-tree__column-title">
-              <StatIcon type={CATEGORY_ICONS[category]} size={20} />
-              {CATEGORY_LABELS[category]}
-            </h3>
-
-            {TIERS.map((tier, tierIndex) => {
-              const nodes = nodesFor(category, tier);
-              if (nodes.length === 0) return null;
-              return (
-                <div className="law-tree__tier" key={tier}>
-                  {tierIndex > 0 && <TierConnector legCount={nodes.length} />}
-                  <div className={`law-tree__row ${nodes.length > 1 ? "law-tree__row--fork" : ""}`}>
-                    {nodes.map((node) => (
-                      <LawNodeBadge
-                        key={node.id}
-                        node={node}
-                        status={getLawNodeStatus(state, node)}
-                        isSelected={selectedId === node.id}
-                        onSelect={() => setSelectedId(node.id === selectedId ? null : node.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
+      <TreeColumns
+        categories={CATEGORIES}
+        nodesFor={nodesFor}
+        getStatus={(node) => getLawNodeStatus(state, node)}
+        selectedId={selectedId}
+        onSelect={(id) => setSelectedId(id === selectedId ? null : id)}
+      />
 
       {selectedNode && (
         <div ref={inspectorRef}>

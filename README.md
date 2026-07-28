@@ -19,9 +19,7 @@ You govern one nation, made up of four to six provinces on a sixteen-province co
 - Building happens in whichever province you've selected on the map.
 - At the end of each in-game month, you get a report summarizing what happened.
 
-**Currently trimmed down on purpose:** taxes, education/research, and recruiting soldiers are temporarily removed from the Actions panel (and their stats hidden) while the core build/economy/food loop gets nailed down. The underlying code for them still exists — see ROADMAP.md — they're coming back once the basics feel right.
-
-There is no win/lose condition yet. The current goal is to build and manage a stable, growing nation.
+**Removed:** army/recruitment and player-adjustable tax rates have been deleted rather than left hidden. Neither had any reachable UI, so army strength was permanently 0 and daily expenses permanently 0 — dead weight in the state, the simulation, and the map. Taxes still exist as a fixed rate feeding income and popularity; there's just no control to change one. Both are roadmap items to reintroduce properly, not code sitting idle — see ROADMAP.md.
 
 ## How to install and run it
 
@@ -87,7 +85,6 @@ src/
     roads/               Economic efficiency rules from infrastructure.
     stability/           Stability gain/loss rules.
     politics/            Tax rate & popularity rules.
-    army/                Recruitment & upkeep rules.
     research/            Research point accumulation rules.
     construction/        Project types + progress/completion rules.
     provinces/           Map geometry (8 provinces) + placed-building records.

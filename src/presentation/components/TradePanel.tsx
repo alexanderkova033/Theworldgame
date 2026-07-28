@@ -73,6 +73,8 @@ const ORDER_KIND_LABELS: Record<StandingOrderKind, string> = {
   exportFood: "Export Food",
 };
 
+const ORDER_KINDS = Object.keys(ORDER_KIND_LABELS) as StandingOrderKind[];
+
 function receiveBatchSize(type: TradeableType, multiplier: number): number {
   return (type === "food" ? FOOD_TRADE_BATCH_SIZE : TRADE_BATCH_SIZE) * multiplier;
 }
@@ -279,7 +281,9 @@ export function TradePanel({ state, dispatch }: TradePanelProps) {
 
       {tab === "barter" && (
         <>
-          <p className="panel-hint">Rates float with supply and demand{hasPort ? " — your port keeps the base rate down." : "."}</p>
+          <p className="panel-hint" title={hasPort ? "Your port keeps the base rate down" : undefined}>
+            Rates float with supply and demand{hasPort ? " · port bonus active" : ""}
+          </p>
           <div className="trade-panel__row">
             <ResourcePicker label="Give" value={give} demand={state.resourceDemand} onChange={setGive} />
             <span className="trade-panel__arrow">→</span>
@@ -300,7 +304,10 @@ export function TradePanel({ state, dispatch }: TradePanelProps) {
 
       {tab === "market" && (
         <>
-          <p className="panel-hint">Buy or sell outright for {CURRENCY_SYMBOL}{hasPort ? " — buying is cheaper with your port." : "."}</p>
+          <p className="panel-hint" title={hasPort ? "Your port makes buying cheaper" : undefined}>
+            Buy or sell outright for {CURRENCY_SYMBOL}
+            {hasPort ? " · port bonus active" : ""}
+          </p>
           <div className="trade-panel__market">
             {RESOURCE_TYPES.map((type) => (
               <MarketRow key={type} state={state} dispatch={dispatch} type={type} multiplier={multiplier} />
@@ -338,7 +345,7 @@ export function TradePanel({ state, dispatch }: TradePanelProps) {
       {tab === "orders" && (
         <>
           {state.standingOrders.length === 0 ? (
-            <p className="panel-hint">No standing orders yet — set one up below and it runs automatically, once a day, whenever affordable.</p>
+            <p className="panel-hint">An order set up here runs itself once a day, whenever it's affordable.</p>
           ) : (
             <ul className="trade-panel__order-list">
               {state.standingOrders.map((order) => (
@@ -361,11 +368,12 @@ export function TradePanel({ state, dispatch }: TradePanelProps) {
           <div className="trade-panel__divider" />
 
           <div className="trade-panel__order-kinds">
-            {(Object.keys(ORDER_KIND_LABELS) as StandingOrderKind[]).map((kind) => (
+            {ORDER_KINDS.map((kind) => (
               <button
                 key={kind}
                 className={`trade-panel__tab trade-panel__tab--small ${orderKind === kind ? "is-active" : ""}`}
                 onClick={() => setOrderKind(kind)}
+                title={ORDER_KIND_LABELS[kind]}
               >
                 {ORDER_KIND_LABELS[kind]}
               </button>

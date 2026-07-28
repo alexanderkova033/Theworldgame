@@ -14,7 +14,7 @@ presentation/   →   application/   →   domain/
    (React)          (use cases)         (rules & types)
 ```
 
-- **`domain/`** — The rules of the world, grouped by game concept. Each subfolder (`economy`, `population`, `food`, `industry`, `roads`, `stability`, `politics`, `army`, `research`, `construction`, `provinces`, `nations`, `resources`, `country`) exports pure functions and types for that concept only. A function like `applyFoodConsumption(stats, days)` takes data in and returns new data out — no mutation, no side effects, no imports from React or `application/`.
+- **`domain/`** — The rules of the world, grouped by game concept. Each subfolder (`economy`, `population`, `food`, `industry`, `roads`, `stability`, `politics`, `research`, `construction`, `provinces`, `nations`, `resources`, `country`) exports pure functions and types for that concept only. A function like `applyFoodConsumption(stats, days)` takes data in and returns new data out — no mutation, no side effects, no imports from React or `application/`.
 - **`application/`** — Use cases that orchestrate multiple domain modules to do something meaningful: "simulate one day," "build a farm," "generate this month's report," "start a new game." This is the only layer allowed to call more than one domain module at a time.
 - **`presentation/`** — React components and hooks. This layer calls `application/` functions in response to user input (button clicks) or time passing (the game clock hook), and renders whatever `GameState` it's given. It never contains simulation math itself.
 
@@ -30,7 +30,7 @@ interface GameState {
   date: GameDate;          // { year, month, day } — see "Daily tick system" below
   isPaused: boolean;
   speed: GameSpeed;        // 1 | 2 | 3 | 5
-  stats: CountryStats;     // treasury, population, food, industry, stability, army, research, popularity
+  stats: CountryStats;     // treasury, population, food, industry, stability, research, popularity
   resources: ResourceBundle; // { wood, ore, grain, fish } — see "Resources and trade" below
   taxRate: number;         // 0–1
   farmCount: number; factoryCount: number; roadCount: number;
@@ -69,11 +69,11 @@ None of these functions know about days, projects, or the UI — they just trans
 `application/simulateDay.ts` exports `simulateDay(state: GameState): GameState`, which is called once per in-game day. It:
 
 1. Advances `state.date` by one day (`domain/country` calendar helper).
-2. Applies economy rules (income from tax/industry, expenses from army/projects) to `treasury`.
+2. Applies economy rules (income from tax/industry; active projects have already drawn their daily installment) to `treasury`.
 3. Applies food production/consumption to `food`.
 4. Applies industry, roads, and research accumulation.
 5. Advances any active `projects` by one day; when a project's `daysRemaining` hits 0, applies its completion effect (e.g., "+1 farm" → increases food production rate), records a `PlacedBuilding` at that project's `provinceId` (so the map can show it), and logs an event.
-6. Applies stability and popularity adjustments based on the new food/tax/army numbers.
+6. Applies stability and popularity adjustments based on the new food/tax/debt numbers.
 7. Applies slow population growth/decline based on food and stability.
 8. Appends a `DailyDelta` to `state.history` (what changed today), used later for the monthly report.
 9. Every `RANDOM_EVENT_INTERVAL_MONTHS` (6), applies a random world event on top of everything else that day (see below) and logs it.
@@ -99,7 +99,7 @@ Deliberately **not** modeled yet: per-province stats. `treasury`, `food`, `indus
 
 `MAP_GEOMETRY` also carries `otherLandmasses`: a few small decorative island coastlines (no provinces, no owner) rendered the same way as the main continent, just to make the world feel bigger than one landmass. They're generated the same offline way as the main coastline (smooth sine-harmonic noise around a circle, not per-vertex random jitter — the latter produces spiky, self-intersecting shapes) and hardcoded like everything else in `provinceData.ts`.
 
-**Roads get their own rendering**, not `BuildingIcon`: a road built in the capital grows its hub marker; a road built elsewhere thickens the single line connecting that province to the capital, with a "×N" badge carrying the exact count once there's more than one. The line has a floor and ceiling width so it stays legible whether it's carrying 1 road or the province's max. The same "make it actually visible" lesson was applied to the army: recruiting soldiers shows a crossed-swords marker + number at the capital, since previously it had zero map presence at all.
+**Roads get their own rendering**, not `BuildingIcon`: a road built in the capital grows its hub marker; a road built elsewhere thickens the single line connecting that province to the capital, with a "×N" badge carrying the exact count once there's more than one. The line has a floor and ceiling width so it stays legible whether it's carrying 1 road or the province's max.
 
 ## Build actions and the province cap
 
@@ -116,7 +116,7 @@ Deliberately **not** modeled yet: per-province stats. `treasury`, `food`, `indus
 
 `application/simulateDay.ts` adds resource production as its own step: it resolves the current nation via `getNation(working.nationId)`, maps its `provinceIds` to their `terrain` via `MAP_GEOMETRY`, and adds `calculateDailyProduction(...)` to `working.resources`. `buildFarm`/`buildFactory`/`buildRoad` each gained a resource cost (`FARM_WOOD_COST`, `FACTORY_ORE_COST`, `ROAD_ORE_COST`) checked and deducted the same way treasury already was — two `canAfford`-style guards instead of one. A new `application/actions/tradeResources.ts` implements the bank trade: `canTrade`/`tradeResources(state, give, receive)` deduct `rate * TRADE_BATCH_SIZE` of `give` and add `TRADE_BATCH_SIZE` of `receive`, batched so a useful trade isn't a dozen individual clicks.
 
-On the presentation side, `ResourceIcon.tsx` (log/rock/wheat-sheaf/fish glyphs, same basic-shapes approach as `BuildingIcon`/`StatIcon`) backs three consumers: `ResourcesPanel.tsx` (a stat-style readout), a small badge per owned province on `MapPanel.tsx` (positioned at a fixed offset that stays clear of the capital's road hub, army marker, and building-icon grid), and `TradePanel.tsx` (give/receive `<select>`s plus a trade button showing the live rate and whether the nation has a port).
+On the presentation side, `ResourceIcon.tsx` (log/rock/wheat-sheaf/fish glyphs, same basic-shapes approach as `BuildingIcon`/`StatIcon`) backs three consumers: `ResourcesPanel.tsx` (a stat-style readout), a small badge per owned province on `MapPanel.tsx` (positioned at a fixed offset that stays clear of the capital's road hub and building-icon grid), and `TradePanel.tsx` (give/receive icon pickers plus a trade button showing the live rate and whether the nation has a port).
 
 ## Nations and the start screen
 
@@ -139,7 +139,7 @@ The game doesn't begin with a `GameState` — `useGameClock`'s state starts as `
 
 **Layout**: the map is the central, dominant element rather than a banner above everything else. `App.tsx` renders `TopBar`, then a `.game-layout__main` flex row of `[left sidebar][map stage][right sidebar]` — `StatsPanel`/`ActionsPanel` on the left, `ProjectsPanel`/`ReportsPanel`/`EventLog` on the right, each independently scrollable, with the map filling all remaining space (`MapPanel`'s `<svg>` uses `preserveAspectRatio="xMidYMid meet"` so it scales cleanly rather than being capped at a fixed height). Below ~1100px viewport width, `.game-layout__main` switches to a column layout via a media query so it degrades to something usable on narrow screens instead of squeezing three columns.
 
-**Temporarily-hidden actions**: Development/Military/Taxes were removed from `ActionsPanel` (and their corresponding rows from `StatsPanel`) to keep the UI focused on the core build/food/economy loop. This was a presentation-only change — `application/actions/investEducation.ts`, `startResearch.ts`, `recruitSoldiers.ts`, `taxActions.ts` and their domain rules are untouched, just currently unreferenced by any component. Re-adding them later is re-adding a couple of button groups to `ActionsPanel.tsx`, not rebuilding anything.
+**Deleted actions**: Military and Taxes are gone, not hidden. `recruitSoldiers.ts`, `taxActions.ts`, `domain/army/`, `calculateDailyExpenses`, and `CountryStats.armyStrength` were all removed once it was clear nothing could reach them — army strength was pinned at 0 for an entire game, which made army upkeep (the model's only expense) 0 too, and dragged an always-`-0` "Upkeep" tile, an unreachable map marker, and an always-`-0` "Expenses" report row along behind it. `taxRate` itself survives: it still feeds income and popularity drift, there's just no control to change it. Reintroducing either means designing it, not un-hiding it.
 
 ## How future systems can be added
 

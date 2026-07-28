@@ -1,9 +1,5 @@
 import { SYNERGIES, type Synergy } from "./synergyData";
 
-export function getSynergy(id: string): Synergy | undefined {
-  return SYNERGIES.find((s) => s.id === id);
-}
-
 // A synergy pair naming this law node, if any — used by LawsPanel to show
 // the potential/active bonus in the inspector.
 export function getSynergiesForLaw(lawId: string): Synergy[] {
@@ -15,7 +11,7 @@ export function getSynergiesForResearch(researchId: string): Synergy[] {
   return SYNERGIES.filter((s) => s.researchId === researchId);
 }
 
-export function getActiveSynergies(enactedLawIds: string[], enactedResearchIds: string[]): Synergy[] {
+function getActiveSynergies(enactedLawIds: string[], enactedResearchIds: string[]): Synergy[] {
   return SYNERGIES.filter((s) => enactedLawIds.includes(s.lawId) && enactedResearchIds.includes(s.researchId));
 }
 

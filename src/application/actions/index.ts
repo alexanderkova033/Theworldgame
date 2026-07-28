@@ -5,8 +5,6 @@ export { buildEducation } from "./buildEducation";
 export { buildGranary } from "./buildGranary";
 export { buildCannery } from "./buildCannery";
 export { countBuildingsInProvince } from "./createBuildAction";
-export { recruitSoldiers } from "./recruitSoldiers";
-export { raiseTaxes, lowerTaxes } from "./taxActions";
 export { canTrade, getGiveAmount, tradeResources, type TradeableType } from "./tradeResources";
 export { canImportFood, getFoodImportCost, importFood } from "./importFood";
 export { canExportFood, getFoodExportRevenue, exportFood } from "./exportFood";

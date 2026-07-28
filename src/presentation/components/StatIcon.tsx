@@ -10,7 +10,6 @@ export type StatIconType =
   | "food"
   | "industry"
   | "stability"
-  | "army"
   | "research"
   | "popularity";
 
@@ -90,19 +89,6 @@ function renderShape(type: StatIconType) {
           <polygon points="0,-9 7.5,-5 6.3,-1 0,-3" fill="#5b9bd6" opacity={0.6} />
           <line x1={0} y1={-5} x2={0} y2={5} stroke="#e6c56a" strokeWidth={1.4} strokeLinecap="round" />
           <line x1={-3.5} y1={0} x2={3.5} y2={0} stroke="#e6c56a" strokeWidth={1.4} strokeLinecap="round" />
-        </g>
-      );
-    case "army":
-      // Crossed swords: steel blades, gold hilts, a small red gem.
-      return (
-        <g strokeLinecap="round">
-          <line x1={-7} y1={-7} x2={7} y2={7} stroke="#c9ccd1" strokeWidth={1.8} />
-          <line x1={7} y1={-7} x2={-7} y2={7} stroke="#c9ccd1" strokeWidth={1.8} />
-          <line x1={-8.3} y1={-5.4} x2={-5.4} y2={-8.3} stroke="#c9a24a" strokeWidth={1.8} />
-          <line x1={5.4} y1={-8.3} x2={8.3} y2={-5.4} stroke="#c9a24a" strokeWidth={1.8} />
-          <circle cx={0} cy={0} r={1.3} fill="#c0524f" stroke="#7a2e2c" strokeWidth={0.4} />
-          <circle cx={7} cy={7} r={1.1} fill="#c9a24a" />
-          <circle cx={-7} cy={7} r={1.1} fill="#c9a24a" />
         </g>
       );
     case "research":

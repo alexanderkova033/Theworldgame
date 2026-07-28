@@ -1,28 +1,10 @@
 // Tax policy and government popularity. Taxes above a "comfortable" rate
 // pull popularity down over time; popularity drifts toward that target daily.
-import {
-  COMFORTABLE_TAX_RATE,
-  MAX_TAX_RATE,
-  MIN_TAX_RATE,
-  POPULARITY_DRIFT_RATE,
-  TAX_RATE_STEP,
-} from "../constants";
+import { COMFORTABLE_TAX_RATE, POPULARITY_DRIFT_RATE } from "../constants";
 import { FACTIONS } from "../parties/factionData";
 import type { Ideology } from "../parties/types";
 import type { FactionUpdateResult } from "../parties/factionRules";
 import { getWeightedPopularity } from "../parties/factionRules";
-
-export function clampTaxRate(rate: number): number {
-  return Math.min(MAX_TAX_RATE, Math.max(MIN_TAX_RATE, rate));
-}
-
-export function raiseTaxRate(currentRate: number): number {
-  return clampTaxRate(currentRate + TAX_RATE_STEP);
-}
-
-export function lowerTaxRate(currentRate: number): number {
-  return clampTaxRate(currentRate - TAX_RATE_STEP);
-}
 
 // Daily drift toward a tax-derived target, same formula as before but
 // applied per-faction — every faction drifts toward the same shared target

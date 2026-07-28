@@ -1,11 +1,11 @@
 import "./ProjectsPanel.css";
 import { getProjectAffordabilities } from "../../application/getProjectAffordability";
-import { CURRENCY_SYMBOL } from "../../domain/constants";
 import { projectProgress } from "../../domain/construction/constructionRules";
 import type { GameState } from "../../domain/country/types";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { BuildingIcon } from "./BuildingIcon";
 import { ResourceIcon } from "./ResourceIcon";
+import { StatIcon } from "./StatIcon";
 
 interface ProjectsPanelProps {
   state: GameState;
@@ -21,16 +21,17 @@ function DailyCost({ treasuryPerDay, resourceType, resourcePerDay }: { treasuryP
   return (
     <span className="projects-panel__cost">
       {treasuryRounded > 0 && (
-        <span className="projects-panel__cost-item">
-          {treasuryRounded} {CURRENCY_SYMBOL}/day
+        <span className="projects-panel__cost-item" title="Treasury drawn per day while this builds">
+          <StatIcon type="treasury" size={13} />
+          {treasuryRounded}/d
         </span>
       )}
       {resourceType && resourceRounded > 0 && (
-        <span className="projects-panel__cost-item">
+        <span className="projects-panel__cost-item" title={`${resourceType} drawn per day while this builds`}>
           <svg viewBox="-10 -10 20 20" width={13} height={13}>
             <ResourceIcon type={resourceType as never} size={8} />
           </svg>
-          {resourceRounded}/day
+          {resourceRounded}/d
         </span>
       )}
     </span>
@@ -69,9 +70,11 @@ export function ProjectsPanel({ state }: ProjectsPanelProps) {
                     {project.label} <span className="projects-panel__province">— {getProvinceName(project.provinceId)}</span>
                   </span>
                   {project.isStalled ? (
-                    <span className="projects-panel__stalled-tag">Stalled — can't afford it</span>
+                    <span className="projects-panel__stalled-tag" title="Not enough treasury or resources to pay today's installment">
+                      Stalled
+                    </span>
                   ) : (
-                    <span>{Math.ceil(project.daysRemaining)} days left</span>
+                    <span>{Math.ceil(project.daysRemaining)}d left</span>
                   )}
                 </div>
                 <div className="progress-bar">
@@ -80,7 +83,9 @@ export function ProjectsPanel({ state }: ProjectsPanelProps) {
                 <div className="projects-panel__footer">
                   <DailyCost treasuryPerDay={project.treasuryCostPerDay} resourceType={project.resourceType} resourcePerDay={project.resourceCostPerDay} />
                   {!project.isStalled && !willAffordTomorrow && (
-                    <span className="projects-panel__warning-tag">Will stall tomorrow — not enough to cover it</span>
+                    <span className="projects-panel__warning-tag" title="Tomorrow's installment isn't covered at the current rate">
+                      Stalls tomorrow
+                    </span>
                   )}
                 </div>
               </div>

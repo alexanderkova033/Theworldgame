@@ -2,16 +2,17 @@ import "./ReportsPanel.css";
 import { formatMonthYear } from "../../domain/country/calendar";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { MonthlyReport } from "../../domain/country/types";
+import { formatCompact } from "../formatNumber";
 import { NavIcon } from "./NavIcon";
-import { StatIcon } from "./StatIcon";
+import { StatIcon, type StatIconType } from "./StatIcon";
 
 interface ReportsPanelProps {
   reports: MonthlyReport[];
 }
 
 function formatSigned(value: number): string {
-  const rounded = Math.round(value);
-  return rounded >= 0 ? `+${rounded}` : `${rounded}`;
+  const rounded = Math.round(value) || 0;
+  return `${rounded >= 0 ? "+" : ""}${formatCompact(rounded)}`;
 }
 
 // A tiny bar sparkline, not a line — these are per-month net changes that
@@ -19,7 +20,7 @@ function formatSigned(value: number): string {
 // player wants to see. Bars use the app's existing success/danger status
 // tokens (same green/red already used for law benefit/cost), since the
 // series' meaning is "gain vs loss," not an arbitrary series identity.
-function TrendSparkline({ label, values }: { label: string; values: number[] }) {
+function TrendSparkline({ icon, label, values }: { icon: StatIconType; label: string; values: number[] }) {
   const width = 132;
   const height = 36;
   const baseline = height / 2;
@@ -30,7 +31,10 @@ function TrendSparkline({ label, values }: { label: string; values: number[] }) 
 
   return (
     <div className="reports-panel__sparkline">
-      <span className="reports-panel__sparkline-label">{label}</span>
+      <span className="reports-panel__sparkline-label">
+        <StatIcon type={icon} size={15} />
+        {label}
+      </span>
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${label} trend, last ${values.length} months`}>
         <line x1={0} y1={baseline} x2={width} y2={baseline} className="reports-panel__sparkline-baseline" />
         {values.map((value, i) => {
@@ -54,6 +58,22 @@ function TrendSparkline({ label, values }: { label: string; values: number[] }) 
   );
 }
 
+// One month, one row: three icon+figure cells instead of five labeled
+// sentences. The old labels were the same three words repeated down the
+// whole panel — the glyph says it in the width of a character.
+function Metric({ icon, value, suffix = "", title }: { icon: StatIconType; value: number; suffix?: string; title: string }) {
+  const rounded = Math.round(value) || 0;
+  return (
+    <span className="reports-panel__metric" title={`${title}: ${formatSigned(value)}${suffix}`}>
+      <StatIcon type={icon} size={17} />
+      <span className={`reports-panel__metric-value ${rounded > 0 ? "is-gain" : rounded < 0 ? "is-loss" : ""}`}>
+        {formatSigned(value)}
+        {suffix}
+      </span>
+    </span>
+  );
+}
+
 export function ReportsPanel({ reports }: ReportsPanelProps) {
   const recent = reports.slice(0, 6);
   const chronological = [...recent].reverse();
@@ -66,51 +86,24 @@ export function ReportsPanel({ reports }: ReportsPanelProps) {
           <span aria-hidden="true">
             <NavIcon type="reports" size={28} />
           </span>
-          <p>No reports yet — check back after the first month.</p>
+          <p>Nothing yet — the first report lands next month.</p>
         </div>
       )}
 
       {recent.length > 1 && (
         <div className="reports-panel__trends">
-          <TrendSparkline label={`Treasury (last ${chronological.length} mo.)`} values={chronological.map((r) => r.netTreasuryChange)} />
-          <TrendSparkline label={`Population (last ${chronological.length} mo.)`} values={chronological.map((r) => r.populationChange)} />
+          <TrendSparkline icon="treasury" label={`${chronological.length} mo.`} values={chronological.map((r) => r.totalIncome)} />
+          <TrendSparkline icon="population" label={`${chronological.length} mo.`} values={chronological.map((r) => r.populationChange)} />
         </div>
       )}
 
       <ul className="reports-panel__list">
         {recent.map((report) => (
           <li key={report.id} className="reports-panel__item">
-            <div className="reports-panel__item-header">{formatMonthYear(report.date)}</div>
-            <div className="reports-panel__item-row">
-              <span className="reports-panel__row-label">
-                <StatIcon type="treasury" size={18} /> Income
-              </span>
-              <span>+{Math.round(report.totalIncome)} {CURRENCY_SYMBOL}</span>
-            </div>
-            <div className="reports-panel__item-row">
-              <span className="reports-panel__row-label">
-                <StatIcon type="treasury" size={18} /> Expenses
-              </span>
-              <span>-{Math.round(report.totalExpenses)} {CURRENCY_SYMBOL}</span>
-            </div>
-            <div className="reports-panel__item-row">
-              <span className="reports-panel__row-label">
-                <StatIcon type="treasury" size={18} /> Net Treasury
-              </span>
-              <span>{formatSigned(report.netTreasuryChange)}</span>
-            </div>
-            <div className="reports-panel__item-row">
-              <span className="reports-panel__row-label">
-                <StatIcon type="population" size={18} /> Population
-              </span>
-              <span>{formatSigned(report.populationChange)}</span>
-            </div>
-            <div className="reports-panel__item-row">
-              <span className="reports-panel__row-label">
-                <StatIcon type="stability" size={18} /> Stability
-              </span>
-              <span>{formatSigned(report.stabilityChange)}</span>
-            </div>
+            <span className="reports-panel__month">{formatMonthYear(report.date)}</span>
+            <Metric icon="treasury" value={report.totalIncome} suffix={` ${CURRENCY_SYMBOL}`} title="Income" />
+            <Metric icon="population" value={report.populationChange} title="Population" />
+            <Metric icon="stability" value={report.stabilityChange} title="Stability" />
           </li>
         ))}
       </ul>
