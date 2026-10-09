@@ -173,56 +173,236 @@
   white-space: nowrap;
 }
 
-/* --- What moves support --- */
-.politics-mood {
-  margin-bottom: 1.2rem;
-}
-
-.politics-mood h3 {
-  margin-bottom: 0.2rem;
-}
-
-.politics-mood__heading,
-.politics-mood__none {
-  margin: 0 0 0.5rem;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-.politics-mood__heading strong {
-  color: var(--text);
-}
-
-.politics-mood ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* --- Shared section heading: title left, a figure right --- */
+.politics-section-head {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
-.politics-mood li {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  border: 1px solid var(--panel-border);
-  background: rgba(0, 0, 0, 0.2);
-  font-size: 0.9rem;
+.politics-section-head h3 {
+  margin: 0;
 }
 
-.politics-mood li svg {
-  display: block;
+.politics-heading {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
-.politics-mood li.is-gain strong {
+.politics-heading.is-up {
   color: var(--success);
 }
 
-.politics-mood li.is-loss strong {
+.politics-heading.is-down {
   color: var(--danger);
+}
+
+/* --- What support gets you: three tiles --- */
+.politics-benefits {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+}
+
+.politics-benefit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.55rem 0.4rem;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  background: rgba(0, 0, 0, 0.22);
+  text-align: center;
+}
+
+.politics-benefit svg {
+  display: block;
+}
+
+.politics-benefit strong {
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.politics-benefit span {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.politics-benefit.is-good strong {
+  color: var(--success);
+}
+
+.politics-benefit.is-bad strong {
+  color: var(--danger);
+}
+
+/* --- What moves support: a card per cause, each with its fix --- */
+.politics-drivers {
+  margin-bottom: 1.2rem;
+}
+
+.politics-drivers__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+  gap: 0.45rem;
+}
+
+.politics-driver {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 0.5rem;
+  row-gap: 0.3rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  border-left-width: 4px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.politics-driver.is-gain {
+  border-left-color: var(--success);
+}
+
+.politics-driver.is-loss {
+  border-left-color: var(--danger);
+}
+
+.politics-driver > svg {
+  display: block;
+}
+
+.politics-driver__label {
+  font-weight: 700;
+}
+
+.politics-driver__value {
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.politics-driver.is-gain .politics-driver__value {
+  color: var(--success);
+}
+
+.politics-driver.is-loss .politics-driver__value {
+  color: var(--danger);
+}
+
+.politics-driver__fix {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.politics-driver__fix button {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.politics-driver__tax {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.politics-driver__tax button {
+  width: 1.7rem;
+  padding: 0.2rem 0;
+}
+
+/* --- Act: spend political power --- */
+.politics-actions {
+  margin-bottom: 1.2rem;
+}
+
+.politics-bank {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.politics-bank svg {
+  display: block;
+}
+
+.politics-actions__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.politics-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.6rem 0.4rem;
+  font-family: var(--font-body);
+  text-align: center;
+}
+
+.politics-action svg {
+  display: block;
+}
+
+.politics-action strong {
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.politics-action__effect,
+.politics-action__cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.politics-action__effect {
+  color: var(--success);
+}
+
+.politics-action__cost {
+  color: var(--text-muted);
+}
+
+.politics-court {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.politics-court button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  font-family: var(--font-body);
+}
+
+.politics-court svg {
+  display: block;
+}
+
+@media (max-width: 560px) {
+  .politics-benefits,
+  .politics-actions__grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* --- Voter groups --- */

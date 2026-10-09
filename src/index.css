@@ -168,16 +168,6 @@ button.btn-primary:hover:not(:disabled) {
 
 /* Danger: destructive/reversing actions (cancel an order, etc.) — the same
    red already used for the modal close button, formalized as a variant. */
-button.btn-danger {
-  background: linear-gradient(180deg, #a63a2b, #6a1f16);
-  border-color: #d97a63;
-}
-
-button.btn-danger:hover:not(:disabled) {
-  border-color: #f0a894;
-  box-shadow: 0 0 10px rgba(194, 64, 47, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -3px 5px rgba(0, 0, 0, 0.45);
-}
-
 h1, h2, h3 {
   margin: 0 0 0.5rem 0;
   font-family: var(--font-display);
@@ -263,12 +253,6 @@ h3 {
 /* Shared "icon tile" layout: a portrait glyph in a round frame beside a
    label/value pair. Used anywhere a panel would otherwise be a plain text
    list (stats, resources) so the sidebars read as imagery first. */
-.icon-tile-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
 .icon-tile {
   display: flex;
   align-items: center;

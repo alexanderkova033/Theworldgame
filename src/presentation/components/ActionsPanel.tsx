@@ -36,6 +36,7 @@ import {
   PEOPLE_PER_HOME,
   INCOME_PER_INDUSTRY,
   INDUSTRY_PER_FACTORY,
+  JOBS_PER_BUILDING,
   ROAD_BUILD_DAYS,
   ROAD_COST,
   ROAD_EFFICIENCY_BONUS,
@@ -354,6 +355,15 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
                       short={resourceShort}
                       hint={`${item.resourceCost} ${item.resourceType} (${upfront(item.resourceCost)} up front)`}
                     />
+                    {item.type in JOBS_PER_BUILDING && (
+                      <span
+                        className="build-tile__cost build-tile__cost--jobs"
+                        title={`Needs ${JOBS_PER_BUILDING[item.type as keyof typeof JOBS_PER_BUILDING]} workers from your population — without them it runs below capacity`}
+                      >
+                        <StatIcon type="population" size={14} />
+                        {formatCompact(JOBS_PER_BUILDING[item.type as keyof typeof JOBS_PER_BUILDING])}
+                      </span>
+                    )}
                     <span className="build-tile__cost build-tile__cost--days" title={`${item.buildDays} days to build`}>
                       <HourglassIcon />
                       {item.buildDays}d

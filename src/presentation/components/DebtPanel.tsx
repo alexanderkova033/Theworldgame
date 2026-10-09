@@ -10,10 +10,6 @@ import { StatIcon } from "./StatIcon";
 interface DebtPanelProps {
   state: GameState;
   dispatch: (action: (state: GameState) => GameState) => void;
-  // True when embedded inside another panel (e.g. the Trade tab's Loans
-  // sub-tab) — skips the outer .panel wrapper/heading, since the host
-  // already provides that context.
-  bare?: boolean;
 }
 
 // Revolving debt: take it in fixed batches whenever, no term, no forced
@@ -21,7 +17,7 @@ interface DebtPanelProps {
 // down yourself. There's no cap on how long you can carry it, only a cost:
 // past DEBT_DANGER_THRESHOLD it starts dragging stability and popularity
 // down every day, same lever a food shortage already pulls.
-export function DebtPanel({ state, dispatch, bare = false }: DebtPanelProps) {
+export function DebtPanel({ state, dispatch }: DebtPanelProps) {
   const dangerous = isDebtDangerous(state.debt);
   const dailyInterest = Math.round(state.debt * LOAN_INTEREST_RATE_PER_DAY);
   const repayAmount = getRepayAmount(state);
@@ -94,8 +90,6 @@ export function DebtPanel({ state, dispatch, bare = false }: DebtPanelProps) {
       )}
     </>
   );
-
-  if (bare) return <div className="debt-panel">{content}</div>;
 
   return (
     <section className="panel debt-panel">

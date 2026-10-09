@@ -16,3 +16,4 @@ export { canRepairBuilding, repairBuilding } from "./repairBuilding";
 export { canPressureGovernment, pressureGovernment } from "./pressureGovernment";
 export { resolveDecision, dismissDecision } from "./resolveDecision";
 export { setTaxRate } from "./setTaxRate";
+export { canCourtGroup, canCrackDown, canHoldRally, courtGroup, crackDown, holdRally } from "./politicalActions";

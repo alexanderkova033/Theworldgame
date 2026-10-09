@@ -1,0 +1,111 @@
+/* Bottom-right, above the map, below any open panel (Modal is z-index 50). */
+.toasts {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(24rem, calc(100vw - 2rem));
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.65rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  border-left-width: 5px;
+  background: var(--panel-bg);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+  animation: toast-in 0.18s ease-out;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.toast--report {
+  border-left-color: var(--info);
+}
+
+.toast--breakdown,
+.toast--danger {
+  border-left-color: var(--danger);
+}
+
+.toast--warning {
+  border-left-color: var(--warning);
+}
+
+.toast--info {
+  border-left-color: var(--accent);
+}
+
+.toast__icon {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.toast__icon svg {
+  display: block;
+}
+
+.toast--report .toast__icon {
+  color: var(--info);
+}
+
+.toast--breakdown .toast__icon,
+.toast--danger .toast__icon {
+  color: var(--danger);
+}
+
+.toast--warning .toast__icon {
+  color: var(--warning);
+}
+
+.toast__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.toast__title {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+}
+
+.toast__message {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.toast__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.toast__actions .btn-primary {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.toast__close {
+  padding: 0;
+  width: 1.6rem;
+  font-size: 1.1rem;
+  line-height: 1;
+}

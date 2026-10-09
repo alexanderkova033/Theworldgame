@@ -1,5 +1,5 @@
 import "./MapPanel.css";
-import { memo, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type Dispatch, type SetStateAction } from "react";
 import type { ProjectType } from "../../domain/construction/types";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import { NATIONS } from "../../domain/nations/nationData";
@@ -11,6 +11,7 @@ import type { PlacedBuilding, Terrain } from "../../domain/provinces/types";
 import { RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
 import { RESOURCE_TYPES } from "../../domain/resources/types";
 import { BUILDING_COLORS, BuildingIcon } from "./BuildingIcon";
+import { NATION_SHAPES } from "../nationFrontiers";
 import { starPoints } from "./iconShapes";
 import { ResourceIcon } from "./ResourceIcon";
 
@@ -76,19 +77,6 @@ const TERRAIN_TINT: Record<Terrain, string> = {
 // Each road built thickens the single line to its province (instead of
 // fanning out extra parallel lines) — a "×N" badge carries the exact count
 // so the line itself never has to turn into a tangle to stay informative.
-// Every nation as one shape — all its provinces as subpaths of a single
-// path, so a filter can find the nation's *outer* edge without the internal
-// province borders getting in the way — plus a point to center its name on.
-const NATION_SHAPES = NATIONS.map((n) => {
-  const owned = MAP_GEOMETRY.provinces.filter((p) => n.provinceIds.includes(p.id));
-  return {
-    nation: n,
-    path: owned.map((p) => p.path).join(" "),
-    labelX: owned.reduce((sum, p) => sum + p.labelX, 0) / owned.length,
-    labelY: owned.reduce((sum, p) => sum + p.labelY, 0) / owned.length,
-  };
-});
-
 // A brighter shade of a nation's color for its border band, so the band
 // stands out against the nation's own fill.
 function lighten(hex: string, amount: number): string {
@@ -188,8 +176,448 @@ const OCEAN_RECT = {
   height: WORLD_VIEW.height * 1.4,
 };
 
+interface MapLayersProps {
+  nation: Nation;
+  buildingsByProvince: Map<string, PlacedBuilding[]>;
+  roadCountByProvince: Map<string, number>;
+  selectedProvinceId: string;
+  hoveredProvinceId: string | null;
+  zoomedIn: boolean; // past LABEL_ZOOM_THRESHOLD: every province labeled, nation names hidden
+  scoutedIslandIds: string[];
+  expeditionIslandIds: string[];
+  selectedIslandId: string | null;
+  foreignRulers: Record<string, string>;
+  onProvinceClick: (provinceId: string) => void;
+  onProvinceKeySelect: (provinceId: string) => void;
+  onIslandClick: (islandId: string) => void;
+  onHoverProvince: Dispatch<SetStateAction<string | null>>;
+}
+
+// Everything drawn on the map, as its own memoized component: panning and
+// zooming only change the <svg>'s viewBox in MapPanel, so none of these
+// hundreds of nodes are re-rendered while the map moves — only when what's
+// on it changes (a building, a selection, a hover, crossing the label zoom).
+const MapLayers = memo(function MapLayers({
+  nation,
+  buildingsByProvince,
+  roadCountByProvince,
+  selectedProvinceId,
+  hoveredProvinceId,
+  zoomedIn,
+  scoutedIslandIds,
+  expeditionIslandIds,
+  selectedIslandId,
+  foreignRulers,
+  onProvinceClick,
+  onProvinceKeySelect,
+  onIslandClick,
+  onHoverProvince,
+}: MapLayersProps) {
+  const { coastPath, provinces, otherLandmasses } = MAP_GEOMETRY;
+  const capital = provinces.find((p) => p.id === nation.capitalProvinceId);
+
+  return (
+    <>
+    <defs>
+      <radialGradient id="ocean-gradient" cx="50%" cy="40%" r="75%">
+        <stop offset="0%" stopColor="#1e3a52" />
+        <stop offset="100%" stopColor="#101d29" />
+      </radialGradient>
+      {/* Each nation's shape, to keep its border band on its own side
+          of the frontier. */}
+      {NATION_SHAPES.map((shape) => (
+        <clipPath id={`nation-clip-${shape.nationId}`} key={shape.nationId}>
+          <path d={shape.outline} />
+        </clipPath>
+      ))}
+
+      {/* Open-sea texture: soft, wide-set swells across the whole
+          ocean, distinct from the tighter shoreline ripples in
+          terrain-coast, so the water reads as alive everywhere, not
+          just at the water's edge. */}
+      <pattern id="ocean-swell" width={140} height={90} patternUnits="userSpaceOnUse">
+        <path d="M-10,20 Q25,4 60,20 T130,20" stroke="#3a7093" strokeWidth={1.6} fill="none" opacity={0.16} />
+        <path d="M-10,55 Q25,39 60,55 T130,55" stroke="#3a7093" strokeWidth={1.4} fill="none" opacity={0.12} />
+        <path d="M15,80 Q50,66 85,80 T155,80" stroke="#3a7093" strokeWidth={1.2} fill="none" opacity={0.1} />
+      </pattern>
+
+      {/* Terrain textures — scattered props (pine, boulder, wheat,
+          surf) instead of a flat relief hint, but kept sparse, thin-
+          stroked, and low-opacity so they read as a quiet landscape
+          cue rather than competing with the map's political color and
+          icons. */}
+      <pattern id="terrain-hills" width={100} height={90} patternUnits="userSpaceOnUse">
+        <ellipse cx={20} cy={50} rx={11} ry={5} fill="#4a3a24" opacity={0.35} />
+        <ellipse cx={20} cy={46} rx={13} ry={9} fill="#7a6a52" stroke="#241c10" strokeWidth={0.8} opacity={0.8} />
+        <ellipse cx={16} cy={41} rx={6} ry={3.5} fill="#a89877" opacity={0.4} />
+      </pattern>
+      <pattern id="terrain-forest" width={90} height={90} patternUnits="userSpaceOnUse">
+        <rect x={14.5} y={54} width={3} height={4} fill="#4a3320" opacity={0.75} />
+        <polygon points="7,54 25,54 16,42" fill="#2d6b3a" stroke="#12291a" strokeWidth={0.7} opacity={0.75} />
+        <polygon points="9,47 23,47 16,37" fill="#34793f" stroke="#12291a" strokeWidth={0.7} opacity={0.75} />
+        <polygon points="11,41 21,41 16,32" fill="#3d8a48" stroke="#12291a" strokeWidth={0.7} opacity={0.75} />
+        <polygon points="16,34 18,40 15,40" fill="#7ecf86" opacity={0.3} />
+      </pattern>
+      <pattern id="terrain-coast" width={40} height={22} patternUnits="userSpaceOnUse">
+        <path d="M0,11 Q10,3 20,11 T40,11" stroke="#d8f2fa" strokeWidth={1.6} fill="none" opacity={0.35} strokeLinecap="round" />
+        <path d="M0,18 Q10,12 20,18 T40,18" stroke="#d8f2fa" strokeWidth={1.2} fill="none" opacity={0.2} strokeLinecap="round" />
+      </pattern>
+      <pattern id="terrain-plains" width={50} height={50} patternUnits="userSpaceOnUse">
+        <path d="M10,30 Q7,22 5,14" stroke="#c9a23a" strokeWidth={1} fill="none" strokeLinecap="round" opacity={0.65} />
+        <ellipse cx={5} cy={13} rx={1.4} ry={2.6} fill="#d9b846" opacity={0.65} />
+        <path d="M10,30 Q10,20 9,10" stroke="#d9b846" strokeWidth={1} fill="none" strokeLinecap="round" opacity={0.65} />
+        <ellipse cx={9} cy={9} rx={1.4} ry={2.8} fill="#e8c860" opacity={0.65} />
+        <path d="M10,30 Q13,22 15,14" stroke="#c9a23a" strokeWidth={1} fill="none" strokeLinecap="round" opacity={0.65} />
+        <ellipse cx={15} cy={13} rx={1.4} ry={2.6} fill="#d9b846" opacity={0.65} />
+      </pattern>
+    </defs>
+
+    <rect x={OCEAN_RECT.x} y={OCEAN_RECT.y} width={OCEAN_RECT.width} height={OCEAN_RECT.height} fill="url(#ocean-gradient)" />
+    <rect
+      x={OCEAN_RECT.x}
+      y={OCEAN_RECT.y}
+      width={OCEAN_RECT.width}
+      height={OCEAN_RECT.height}
+      fill="url(#ocean-swell)"
+      pointerEvents="none"
+    />
+
+    {/* Shallow water: a soft halo hugging every coastline,
+        plus a thin surf line right at the water's edge — drawn before
+        any land fill, so the fill's inner half covers it and only the
+        water-side sliver shows through. Reads as an actual sea meeting
+        an actual shore instead of a flat shape dropped on blue. */}
+    <g pointerEvents="none">
+      <path d={coastPath} className="map-panel__shallows" />
+      <path d={coastPath} className="map-panel__shallows map-panel__shallows--near" />
+      {otherLandmasses.map((land) => (
+        <path key={`${land.id}-shallows`} d={land.path} className="map-panel__shallows" />
+      ))}
+      <path d={coastPath} className="map-panel__surf" />
+      {otherLandmasses.map((land) => (
+        <path key={`${land.id}-surf`} d={land.path} className="map-panel__surf" />
+      ))}
+    </g>
+
+    {/* A shadow under all land: the same shapes, offset and dark —
+        no blur filter, so panning never re-rasterizes it. */}
+    <g className="map-panel__land-shadow" transform="translate(0 5)" pointerEvents="none">
+      <path d={coastPath} />
+      {otherLandmasses.map((land) => (
+        <path key={`${land.id}-shadow`} d={land.path} />
+      ))}
+    </g>
+
+    {/* Other landmasses: unowned, but chartable via ventures. */}
+    <g>
+      {otherLandmasses.map((land) => {
+        const isScouted = scoutedIslandIds.includes(land.id);
+        const isExpeditionActive = expeditionIslandIds.includes(land.id);
+        const isSelected = land.id === selectedIslandId;
+        const status = isScouted ? "charted" : isExpeditionActive ? "venture under way" : "uncharted — click to charter a venture";
+        return (
+          <path
+            key={land.id}
+            d={land.path}
+            className={[
+              "map-panel__unclaimed-land",
+              "map-panel__unclaimed-land--clickable",
+              isSelected ? "is-selected" : "",
+            ].join(" ")}
+            onClick={() => onIslandClick(land.id)}
+          >
+            <title>
+              {land.name} ({status})
+            </title>
+          </path>
+        );
+      })}
+      {/* A hint of vegetation so unclaimed islands read as actual
+          islands, not flat brown blobs. */}
+      {otherLandmasses.map((land) => (
+        <path key={`${land.id}-terrain`} d={land.path} fill="url(#terrain-forest)" opacity={0.55} pointerEvents="none" />
+      ))}
+    </g>
+    {otherLandmasses.map((land) => (
+      <text key={`${land.id}-label`} x={land.labelX} y={land.labelY} className="map-panel__label is-foreign" pointerEvents="none">
+        {land.name}
+      </text>
+    ))}
+
+    <g>
+      <path d={coastPath} className="map-panel__coast" />
+
+      {provinces.map((province) => {
+        const isOwned = nation.provinceIds.includes(province.id);
+        const owner = isOwned ? nation : getNationForProvince(province.id);
+        const isSelected = isOwned && province.id === selectedProvinceId;
+        return (
+          <path
+            key={province.id}
+            d={province.path}
+            className={[
+              "map-panel__province",
+              isOwned ? "is-owned" : "is-foreign",
+              isSelected ? "is-selected" : "",
+            ].join(" ")}
+            style={!isOwned ? { fill: owner?.color ?? "#414a58" } : undefined}
+            onClick={isOwned ? () => onProvinceClick(province.id) : undefined}
+            tabIndex={isOwned ? 0 : undefined}
+            role={isOwned ? "button" : undefined}
+            aria-label={isOwned ? `${province.name}${isSelected ? ", selected" : ""}` : undefined}
+            aria-pressed={isOwned ? isSelected : undefined}
+            onKeyDown={
+              isOwned
+                ? (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onProvinceKeySelect(province.id);
+                    }
+                  }
+                : undefined
+            }
+            onMouseEnter={isOwned ? () => onHoverProvince(province.id) : undefined}
+            onMouseLeave={isOwned ? () => onHoverProvince((prev) => (prev === province.id ? null : prev)) : undefined}
+          >
+            <title>
+              {province.name}
+              {isOwned ? " (yours)" : owner ? ` (${owner.name})` : " (unclaimed)"}
+            </title>
+          </path>
+        );
+      })}
+
+      {/* Terrain tint: a faint multiply wash in the terrain's own
+          color, underneath its texture — the two together make hills,
+          forest, plains, and coast actually look different from each
+          other, instead of only differing by which pattern is
+          stamped on the same flat political fill. */}
+      {provinces.map((province) => {
+        const isOwned = nation.provinceIds.includes(province.id);
+        return (
+          <path
+            key={`${province.id}-tint`}
+            d={province.path}
+            fill={TERRAIN_TINT[province.terrain]}
+            opacity={isOwned ? 0.3 : 0.18}
+            className="map-panel__terrain-tint"
+            pointerEvents="none"
+          />
+        );
+      })}
+
+      {/* Terrain props for every province — a quiet landscape cue
+          (sparse trees/rocks/wheat/surf), not a competing pattern.
+          Owned provinces get them a little clearer, foreign ones
+          quieter still. */}
+      {provinces.map((province) => {
+        const isOwned = nation.provinceIds.includes(province.id);
+        return (
+          <path
+            key={`${province.id}-terrain`}
+            d={province.path}
+            fill={TERRAIN_PATTERN[province.terrain]}
+            opacity={isOwned ? 0.65 : 0.35}
+            pointerEvents="none"
+          />
+        );
+      })}
+    </g>
+
+    {/* National frontiers: a band in each nation's (brightened) color
+        just inside its outer edge, so who owns what reads at a glance
+        even where two nations' fills sit side by side. */}
+    <g pointerEvents="none">
+      {NATION_SHAPES.map((shape) => (
+        <path
+          key={`${shape.nationId}-border`}
+          d={shape.frontier}
+          clipPath={`url(#nation-clip-${shape.nationId})`}
+          stroke={lighten(shape.color, shape.nationId === nation.id ? 0.45 : 0.3)}
+          className="map-panel__nation-border"
+        />
+      ))}
+      {NATION_SHAPES.map((shape) => (
+        <path key={`${shape.nationId}-frontier`} d={shape.frontier} className="map-panel__nation-frontier" />
+      ))}
+    </g>
+
+    {/* Road network: every road built in the capital grows its hub;
+        every road built elsewhere thickens the single line connecting
+        that province to the capital, with a "×N" badge carrying the
+        exact count — a clean, single connection per province instead
+        of a fan of parallel lines. */}
+    {capital &&
+      [...roadCountByProvince.entries()].map(([provinceId, count]) => {
+        const province = provinces.find((p) => p.id === provinceId);
+        if (!province) return null;
+
+        if (provinceId === nation.capitalProvinceId) {
+          return (
+            <g key={`road-hub-${provinceId}`}>
+              <circle
+                cx={province.labelX}
+                cy={province.labelY - 24}
+                r={Math.min(2.5 + count * 1.2, 10)}
+                className="map-panel__road-hub"
+              />
+              {count > 1 && (
+                <text x={province.labelX + 14} y={province.labelY - 20} className="map-panel__road-count">
+                  ×{count}
+                </text>
+              )}
+            </g>
+          );
+        }
+
+        const width = roadLineWidth(count);
+
+        return (
+          <g key={`road-${provinceId}`}>
+            <line
+              x1={capital.labelX}
+              y1={capital.labelY}
+              x2={province.labelX}
+              y2={province.labelY}
+              className="map-panel__road-line-base"
+              style={{ strokeWidth: width }}
+            />
+            <line
+              x1={capital.labelX}
+              y1={capital.labelY}
+              x2={province.labelX}
+              y2={province.labelY}
+              className="map-panel__road-line-top"
+              style={{ strokeWidth: width * 0.4 }}
+            />
+            {count > 1 && (
+              <text
+                x={(capital.labelX + province.labelX) / 2}
+                y={(capital.labelY + province.labelY) / 2 - 8}
+                className="map-panel__road-count"
+              >
+                ×{count}
+              </text>
+            )}
+          </g>
+        );
+      })}
+
+    {/* Big, spaced-out nation names across each country (EU4-style),
+        with the party currently ruling each neighbor underneath. They
+        give way to the per-province labels once zoomed in. */}
+    {!zoomedIn && (
+      <g pointerEvents="none">
+        {NATION_SHAPES.map((shape) => {
+          const isYou = shape.nationId === nation.id;
+          const rulerId = foreignRulers[shape.nationId];
+          const ruler = rulerId ? getParty(rulerId) : null;
+          return (
+            <g key={`${shape.nationId}-name`}>
+              <text x={shape.labelX} y={shape.labelY - 34} className={`map-panel__nation-name ${isYou ? "is-you" : ""}`}>
+                {shape.name}
+              </text>
+              {ruler && (
+                <text x={shape.labelX} y={shape.labelY - 16} className="map-panel__nation-party" style={{ fill: lighten(ruler.color, 0.35) }}>
+                  {ruler.name}
+                </text>
+              )}
+            </g>
+          );
+        })}
+      </g>
+    )}
+
+    {provinces.map((province) => {
+      const isCapital = province.id === nation.capitalProvinceId;
+      // The continent packs a lot of small provinces close together —
+      // at the fully-zoomed-out default view, every name label at full
+      // size collides with its neighbors into unreadable clutter,
+      // so only the province the player's attention is already on
+      // (selected/hovered) stays labeled until they zoom in past
+      // LABEL_ZOOM_THRESHOLD, same as EU4/HOI4-style province maps.
+      const isFocused = province.id === selectedProvinceId || province.id === hoveredProvinceId;
+      const showLabel = isCapital || isFocused || zoomedIn;
+      if (!showLabel) return null;
+      return (
+        <g key={`${province.id}-label`}>
+          {isCapital && <CapitalBadge x={province.labelX} y={province.labelY - 13} />}
+          <text
+            x={province.labelX}
+            y={province.labelY}
+            className={`map-panel__label ${nation.provinceIds.includes(province.id) ? "" : "is-foreign"}`}
+            pointerEvents="none"
+          >
+            {province.name}
+          </text>
+        </g>
+      );
+    })}
+
+    {/* Province info bar: one compact strip per owned province, on its
+        own translucent backing so it reads clearly no matter what
+        terrain or nation color sits underneath — what it produces,
+        then what's built there (one icon + a "×N" count per building
+        type, not one icon per building), instead of scattering icons
+        loose across the map. */}
+    {provinces.map((province) => {
+      if (!nation.provinceIds.includes(province.id)) return null;
+
+      const buildings = buildingsByProvince.get(province.id) ?? [];
+      const counts = new Map<ProjectType, number>();
+      for (const building of buildings) {
+        counts.set(building.type, (counts.get(building.type) ?? 0) + 1);
+      }
+      const buildingTypes = [...counts.keys()];
+      const brokenCount = buildings.filter((b) => !isWorking(b)).length;
+
+      const itemWidth = 20;
+      const itemCount = 1 + buildingTypes.length + (brokenCount > 0 ? 1 : 0); // resource + one slot per building type present + a broken marker
+      const barWidth = itemCount * itemWidth + 6;
+      const barX = province.labelX - barWidth / 2;
+      const barY = province.labelY + 10;
+      const itemCenterY = barY + 11;
+
+      return (
+        <g key={`${province.id}-info`} pointerEvents="none">
+          <rect x={barX} y={barY} width={barWidth} height={22} rx={5} className="map-panel__info-bar" />
+          <ResourceIcon
+            type={RESOURCE_BY_TERRAIN[province.terrain]}
+            x={barX + itemWidth / 2 + 3}
+            y={itemCenterY}
+            size={7}
+          />
+          {buildingTypes.map((type, index) => {
+            const cx = barX + itemWidth * (index + 1) + itemWidth / 2 + 3;
+            const count = counts.get(type)!;
+            return (
+              <g key={type}>
+                <BuildingIcon type={type} x={cx - 3} y={itemCenterY} size={5.5} />
+                {count > 1 && (
+                  <text x={cx + 7} y={itemCenterY + 3} className="map-panel__info-count">
+                    {count}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+          {brokenCount > 0 && (
+            <g>
+              <circle cx={barX + itemWidth * (buildingTypes.length + 1) + itemWidth / 2 + 3} cy={itemCenterY} r={7} className="map-panel__broken-marker" />
+              <text x={barX + itemWidth * (buildingTypes.length + 1) + itemWidth / 2 + 3} y={itemCenterY + 3.5} className="map-panel__broken-count">
+                !
+              </text>
+            </g>
+          )}
+        </g>
+      );
+    })}
+    </>
+  );
+});
+
 // Memoized: the map is by far the heaviest thing on screen (hundreds of SVG
-// nodes, patterns, and filters), but it only depends on which buildings
+// nodes and patterns), but it only depends on which buildings
 // exist and what's selected — none of which change on an ordinary daily
 // tick. Without this it re-rendered up to 5x/second at 5x game speed purely
 // because the treasury number moved.
@@ -204,8 +632,7 @@ export const MapPanel = memo(function MapPanel({
   onSelectIsland,
   foreignRulers,
 }: MapPanelProps) {
-  const { coastPath, provinces, otherLandmasses } = MAP_GEOMETRY;
-  const capital = provinces.find((p) => p.id === nation.capitalProvinceId);
+  const { provinces } = MAP_GEOMETRY;
 
   const svgRef = useRef<SVGSVGElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -229,7 +656,10 @@ export const MapPanel = memo(function MapPanel({
   // building actually standing there, in one place instead of only as
   // small icons on the map itself.
   const [hoveredProvinceId, setHoveredProvinceId] = useState<string | null>(null);
-  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+  // The tooltip's position is written straight to its element on every
+  // mouse move — keeping it in state re-rendered the whole map each time.
+  const tooltipPos = useRef({ x: 0, y: 0 });
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   // The legend is a lot of content (every nation, building type, and raw
   // resource) — collapsed by default so it doesn't sit permanently on top of
@@ -240,7 +670,11 @@ export const MapPanel = memo(function MapPanel({
   function handleStageMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     const rect = stageRef.current?.getBoundingClientRect();
     if (!rect) return;
-    setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    tooltipPos.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    if (tooltipRef.current) {
+      tooltipRef.current.style.left = `${tooltipPos.current.x + 18}px`;
+      tooltipRef.current.style.top = `${tooltipPos.current.y + 18}px`;
+    }
   }
 
   // Wheel-to-zoom, centered on the cursor. Attached as a native (non-passive)
@@ -332,21 +766,27 @@ export const MapPanel = memo(function MapPanel({
     setIsPanning(false);
   }
 
-  function handleProvinceClick(provinceId: string) {
-    if (suppressNextClick.current) {
-      suppressNextClick.current = false;
-      return;
-    }
-    onSelectProvince(provinceId);
-  }
+  const handleProvinceClick = useCallback(
+    (provinceId: string) => {
+      if (suppressNextClick.current) {
+        suppressNextClick.current = false;
+        return;
+      }
+      onSelectProvince(provinceId);
+    },
+    [onSelectProvince],
+  );
 
-  function handleIslandClick(islandId: string) {
-    if (suppressNextClick.current) {
-      suppressNextClick.current = false;
-      return;
-    }
-    onSelectIsland(islandId);
-  }
+  const handleIslandClick = useCallback(
+    (islandId: string) => {
+      if (suppressNextClick.current) {
+        suppressNextClick.current = false;
+        return;
+      }
+      onSelectIsland(islandId);
+    },
+    [onSelectIsland],
+  );
 
   function zoomBy(factor: number) {
     setView((vb) => {
@@ -388,406 +828,22 @@ export const MapPanel = memo(function MapPanel({
           onPointerUp={handlePointerUp}
           onPointerLeave={handlePointerUp}
         >
-          <defs>
-            <radialGradient id="ocean-gradient" cx="50%" cy="40%" r="75%">
-              <stop offset="0%" stopColor="#1e3a52" />
-              <stop offset="100%" stopColor="#101d29" />
-            </radialGradient>
-            <filter id="coast-shadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#000" floodOpacity="0.45" />
-            </filter>
-            {/* A nation's border band: its combined shape minus an eroded
-                copy of itself leaves a ring just inside the outer edge —
-                internal province borders don't exist in the combined alpha,
-                so only the national frontier gets the band. */}
-            <filter id="nation-border" x="-5%" y="-5%" width="110%" height="110%">
-              <feMorphology in="SourceAlpha" operator="erode" radius={5} result="inner" />
-              <feComposite in="SourceGraphic" in2="inner" operator="out" />
-            </filter>
-            {/* The same trick, thinner and in near-black: a dark frontier
-                line, so where one nation ends never depends on telling two
-                hues apart (colour-blind players, low contrast screens). */}
-            <filter id="nation-frontier" x="-5%" y="-5%" width="110%" height="110%">
-              <feMorphology in="SourceAlpha" operator="erode" radius={2.5} result="inner" />
-              <feComposite in="SourceAlpha" in2="inner" operator="out" result="ring" />
-              <feFlood floodColor="#06090d" />
-              <feComposite in2="ring" operator="in" />
-            </filter>
-            <filter id="shallow-blur" x="-60%" y="-60%" width="220%" height="220%">
-              <feGaussianBlur stdDeviation="9" />
-            </filter>
-
-            {/* Open-sea texture: soft, wide-set swells across the whole
-                ocean, distinct from the tighter shoreline ripples in
-                terrain-coast, so the water reads as alive everywhere, not
-                just at the water's edge. */}
-            <pattern id="ocean-swell" width={140} height={90} patternUnits="userSpaceOnUse">
-              <path d="M-10,20 Q25,4 60,20 T130,20" stroke="#3a7093" strokeWidth={1.6} fill="none" opacity={0.16} />
-              <path d="M-10,55 Q25,39 60,55 T130,55" stroke="#3a7093" strokeWidth={1.4} fill="none" opacity={0.12} />
-              <path d="M15,80 Q50,66 85,80 T155,80" stroke="#3a7093" strokeWidth={1.2} fill="none" opacity={0.1} />
-            </pattern>
-
-            {/* Terrain textures — scattered props (pine, boulder, wheat,
-                surf) instead of a flat relief hint, but kept sparse, thin-
-                stroked, and low-opacity so they read as a quiet landscape
-                cue rather than competing with the map's political color and
-                icons. */}
-            <pattern id="terrain-hills" width={100} height={90} patternUnits="userSpaceOnUse">
-              <ellipse cx={20} cy={50} rx={11} ry={5} fill="#4a3a24" opacity={0.35} />
-              <ellipse cx={20} cy={46} rx={13} ry={9} fill="#7a6a52" stroke="#241c10" strokeWidth={0.8} opacity={0.8} />
-              <ellipse cx={16} cy={41} rx={6} ry={3.5} fill="#a89877" opacity={0.4} />
-            </pattern>
-            <pattern id="terrain-forest" width={90} height={90} patternUnits="userSpaceOnUse">
-              <rect x={14.5} y={54} width={3} height={4} fill="#4a3320" opacity={0.75} />
-              <polygon points="7,54 25,54 16,42" fill="#2d6b3a" stroke="#12291a" strokeWidth={0.7} opacity={0.75} />
-              <polygon points="9,47 23,47 16,37" fill="#34793f" stroke="#12291a" strokeWidth={0.7} opacity={0.75} />
-              <polygon points="11,41 21,41 16,32" fill="#3d8a48" stroke="#12291a" strokeWidth={0.7} opacity={0.75} />
-              <polygon points="16,34 18,40 15,40" fill="#7ecf86" opacity={0.3} />
-            </pattern>
-            <pattern id="terrain-coast" width={40} height={22} patternUnits="userSpaceOnUse">
-              <path d="M0,11 Q10,3 20,11 T40,11" stroke="#d8f2fa" strokeWidth={1.6} fill="none" opacity={0.35} strokeLinecap="round" />
-              <path d="M0,18 Q10,12 20,18 T40,18" stroke="#d8f2fa" strokeWidth={1.2} fill="none" opacity={0.2} strokeLinecap="round" />
-            </pattern>
-            <pattern id="terrain-plains" width={50} height={50} patternUnits="userSpaceOnUse">
-              <path d="M10,30 Q7,22 5,14" stroke="#c9a23a" strokeWidth={1} fill="none" strokeLinecap="round" opacity={0.65} />
-              <ellipse cx={5} cy={13} rx={1.4} ry={2.6} fill="#d9b846" opacity={0.65} />
-              <path d="M10,30 Q10,20 9,10" stroke="#d9b846" strokeWidth={1} fill="none" strokeLinecap="round" opacity={0.65} />
-              <ellipse cx={9} cy={9} rx={1.4} ry={2.8} fill="#e8c860" opacity={0.65} />
-              <path d="M10,30 Q13,22 15,14" stroke="#c9a23a" strokeWidth={1} fill="none" strokeLinecap="round" opacity={0.65} />
-              <ellipse cx={15} cy={13} rx={1.4} ry={2.6} fill="#d9b846" opacity={0.65} />
-            </pattern>
-          </defs>
-
-          <rect x={OCEAN_RECT.x} y={OCEAN_RECT.y} width={OCEAN_RECT.width} height={OCEAN_RECT.height} fill="url(#ocean-gradient)" />
-          <rect
-            x={OCEAN_RECT.x}
-            y={OCEAN_RECT.y}
-            width={OCEAN_RECT.width}
-            height={OCEAN_RECT.height}
-            fill="url(#ocean-swell)"
-            pointerEvents="none"
+          <MapLayers
+            nation={nation}
+            buildingsByProvince={buildingsByProvince}
+            roadCountByProvince={roadCountByProvince}
+            selectedProvinceId={selectedProvinceId}
+            hoveredProvinceId={hoveredProvinceId}
+            zoomedIn={zoomRatio > LABEL_ZOOM_THRESHOLD}
+            scoutedIslandIds={scoutedIslandIds}
+            expeditionIslandIds={expeditionIslandIds}
+            selectedIslandId={selectedIslandId}
+            foreignRulers={foreignRulers}
+            onProvinceClick={handleProvinceClick}
+            onProvinceKeySelect={onSelectProvince}
+            onIslandClick={handleIslandClick}
+            onHoverProvince={setHoveredProvinceId}
           />
-
-          {/* Shallow water: a soft blurred halo hugging every coastline,
-              plus a thin surf line right at the water's edge — drawn before
-              any land fill, so the fill's inner half covers it and only the
-              water-side sliver shows through. Reads as an actual sea meeting
-              an actual shore instead of a flat shape dropped on blue. */}
-          <g pointerEvents="none">
-            <path d={coastPath} className="map-panel__shallows" filter="url(#shallow-blur)" />
-            {otherLandmasses.map((land) => (
-              <path key={`${land.id}-shallows`} d={land.path} className="map-panel__shallows" filter="url(#shallow-blur)" />
-            ))}
-            <path d={coastPath} className="map-panel__surf" />
-            {otherLandmasses.map((land) => (
-              <path key={`${land.id}-surf`} d={land.path} className="map-panel__surf" />
-            ))}
-          </g>
-
-          {/* Other landmasses: unowned, but chartable via ventures. */}
-          <g filter="url(#coast-shadow)">
-            {otherLandmasses.map((land) => {
-              const isScouted = scoutedIslandIds.includes(land.id);
-              const isExpeditionActive = expeditionIslandIds.includes(land.id);
-              const isSelected = land.id === selectedIslandId;
-              const status = isScouted ? "charted" : isExpeditionActive ? "venture under way" : "uncharted — click to charter a venture";
-              return (
-                <path
-                  key={land.id}
-                  d={land.path}
-                  className={[
-                    "map-panel__unclaimed-land",
-                    "map-panel__unclaimed-land--clickable",
-                    isSelected ? "is-selected" : "",
-                  ].join(" ")}
-                  onClick={() => handleIslandClick(land.id)}
-                >
-                  <title>
-                    {land.name} ({status})
-                  </title>
-                </path>
-              );
-            })}
-            {/* A hint of vegetation so unclaimed islands read as actual
-                islands, not flat brown blobs. */}
-            {otherLandmasses.map((land) => (
-              <path key={`${land.id}-terrain`} d={land.path} fill="url(#terrain-forest)" opacity={0.55} pointerEvents="none" />
-            ))}
-          </g>
-          {otherLandmasses.map((land) => (
-            <text key={`${land.id}-label`} x={land.labelX} y={land.labelY} className="map-panel__label is-foreign" pointerEvents="none">
-              {land.name}
-            </text>
-          ))}
-
-          <g filter="url(#coast-shadow)">
-            <path d={coastPath} className="map-panel__coast" />
-
-            {provinces.map((province) => {
-              const isOwned = nation.provinceIds.includes(province.id);
-              const owner = isOwned ? nation : getNationForProvince(province.id);
-              const isSelected = isOwned && province.id === selectedProvinceId;
-              return (
-                <path
-                  key={province.id}
-                  d={province.path}
-                  className={[
-                    "map-panel__province",
-                    isOwned ? "is-owned" : "is-foreign",
-                    isSelected ? "is-selected" : "",
-                  ].join(" ")}
-                  style={!isOwned ? { fill: owner?.color ?? "#414a58" } : undefined}
-                  onClick={isOwned ? () => handleProvinceClick(province.id) : undefined}
-                  tabIndex={isOwned ? 0 : undefined}
-                  role={isOwned ? "button" : undefined}
-                  aria-label={isOwned ? `${province.name}${isSelected ? ", selected" : ""}` : undefined}
-                  aria-pressed={isOwned ? isSelected : undefined}
-                  onKeyDown={
-                    isOwned
-                      ? (e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            onSelectProvince(province.id);
-                          }
-                        }
-                      : undefined
-                  }
-                  onMouseEnter={isOwned ? () => setHoveredProvinceId(province.id) : undefined}
-                  onMouseLeave={isOwned ? () => setHoveredProvinceId((prev) => (prev === province.id ? null : prev)) : undefined}
-                >
-                  <title>
-                    {province.name}
-                    {isOwned ? " (yours)" : owner ? ` (${owner.name})` : " (unclaimed)"}
-                  </title>
-                </path>
-              );
-            })}
-
-            {/* Terrain tint: a faint multiply wash in the terrain's own
-                color, underneath its texture — the two together make hills,
-                forest, plains, and coast actually look different from each
-                other, instead of only differing by which pattern is
-                stamped on the same flat political fill. */}
-            {provinces.map((province) => {
-              const isOwned = nation.provinceIds.includes(province.id);
-              return (
-                <path
-                  key={`${province.id}-tint`}
-                  d={province.path}
-                  fill={TERRAIN_TINT[province.terrain]}
-                  opacity={isOwned ? 0.3 : 0.18}
-                  className="map-panel__terrain-tint"
-                  pointerEvents="none"
-                />
-              );
-            })}
-
-            {/* Terrain props for every province — a quiet landscape cue
-                (sparse trees/rocks/wheat/surf), not a competing pattern.
-                Owned provinces get them a little clearer, foreign ones
-                quieter still. */}
-            {provinces.map((province) => {
-              const isOwned = nation.provinceIds.includes(province.id);
-              return (
-                <path
-                  key={`${province.id}-terrain`}
-                  d={province.path}
-                  fill={TERRAIN_PATTERN[province.terrain]}
-                  opacity={isOwned ? 0.65 : 0.35}
-                  pointerEvents="none"
-                />
-              );
-            })}
-          </g>
-
-          {/* National frontiers: a band in each nation's (brightened) color
-              just inside its outer edge, so who owns what reads at a glance
-              even where two nations' fills sit side by side. */}
-          <g pointerEvents="none">
-            {NATION_SHAPES.map((shape) => (
-              <path
-                key={`${shape.nation.id}-border`}
-                d={shape.path}
-                fill={lighten(shape.nation.color, shape.nation.id === nation.id ? 0.45 : 0.3)}
-                filter="url(#nation-border)"
-                className="map-panel__nation-border"
-              />
-            ))}
-            {NATION_SHAPES.map((shape) => (
-              <path key={`${shape.nation.id}-frontier`} d={shape.path} filter="url(#nation-frontier)" className="map-panel__nation-frontier" />
-            ))}
-          </g>
-
-          {/* Road network: every road built in the capital grows its hub;
-              every road built elsewhere thickens the single line connecting
-              that province to the capital, with a "×N" badge carrying the
-              exact count — a clean, single connection per province instead
-              of a fan of parallel lines. */}
-          {capital &&
-            [...roadCountByProvince.entries()].map(([provinceId, count]) => {
-              const province = provinces.find((p) => p.id === provinceId);
-              if (!province) return null;
-
-              if (provinceId === nation.capitalProvinceId) {
-                return (
-                  <g key={`road-hub-${provinceId}`}>
-                    <circle
-                      cx={province.labelX}
-                      cy={province.labelY - 24}
-                      r={Math.min(2.5 + count * 1.2, 10)}
-                      className="map-panel__road-hub"
-                    />
-                    {count > 1 && (
-                      <text x={province.labelX + 14} y={province.labelY - 20} className="map-panel__road-count">
-                        ×{count}
-                      </text>
-                    )}
-                  </g>
-                );
-              }
-
-              const width = roadLineWidth(count);
-
-              return (
-                <g key={`road-${provinceId}`}>
-                  <line
-                    x1={capital.labelX}
-                    y1={capital.labelY}
-                    x2={province.labelX}
-                    y2={province.labelY}
-                    className="map-panel__road-line-base"
-                    style={{ strokeWidth: width }}
-                  />
-                  <line
-                    x1={capital.labelX}
-                    y1={capital.labelY}
-                    x2={province.labelX}
-                    y2={province.labelY}
-                    className="map-panel__road-line-top"
-                    style={{ strokeWidth: width * 0.4 }}
-                  />
-                  {count > 1 && (
-                    <text
-                      x={(capital.labelX + province.labelX) / 2}
-                      y={(capital.labelY + province.labelY) / 2 - 8}
-                      className="map-panel__road-count"
-                    >
-                      ×{count}
-                    </text>
-                  )}
-                </g>
-              );
-            })}
-
-          {/* Big, spaced-out nation names across each country (EU4-style),
-              with the party currently ruling each neighbor underneath. They
-              give way to the per-province labels once zoomed in. */}
-          {zoomRatio <= LABEL_ZOOM_THRESHOLD && (
-            <g pointerEvents="none">
-              {NATION_SHAPES.map((shape) => {
-                const isYou = shape.nation.id === nation.id;
-                const rulerId = foreignRulers[shape.nation.id];
-                const ruler = rulerId ? getParty(rulerId) : null;
-                return (
-                  <g key={`${shape.nation.id}-name`}>
-                    <text x={shape.labelX} y={shape.labelY - 34} className={`map-panel__nation-name ${isYou ? "is-you" : ""}`}>
-                      {shape.nation.name}
-                    </text>
-                    {ruler && (
-                      <text x={shape.labelX} y={shape.labelY - 16} className="map-panel__nation-party" style={{ fill: lighten(ruler.color, 0.35) }}>
-                        {ruler.name}
-                      </text>
-                    )}
-                  </g>
-                );
-              })}
-            </g>
-          )}
-
-          {provinces.map((province) => {
-            const isCapital = province.id === nation.capitalProvinceId;
-            // The continent packs a lot of small provinces close together —
-            // at the fully-zoomed-out default view, every name label at full
-            // size collides with its neighbors into unreadable clutter,
-            // so only the province the player's attention is already on
-            // (selected/hovered) stays labeled until they zoom in past
-            // LABEL_ZOOM_THRESHOLD, same as EU4/HOI4-style province maps.
-            const isFocused = province.id === selectedProvinceId || province.id === hoveredProvinceId;
-            const showLabel = isCapital || isFocused || zoomRatio > LABEL_ZOOM_THRESHOLD;
-            if (!showLabel) return null;
-            return (
-              <g key={`${province.id}-label`}>
-                {isCapital && <CapitalBadge x={province.labelX} y={province.labelY - 13} />}
-                <text
-                  x={province.labelX}
-                  y={province.labelY}
-                  className={`map-panel__label ${nation.provinceIds.includes(province.id) ? "" : "is-foreign"}`}
-                  pointerEvents="none"
-                >
-                  {province.name}
-                </text>
-              </g>
-            );
-          })}
-
-          {/* Province info bar: one compact strip per owned province, on its
-              own translucent backing so it reads clearly no matter what
-              terrain or nation color sits underneath — what it produces,
-              then what's built there (one icon + a "×N" count per building
-              type, not one icon per building), instead of scattering icons
-              loose across the map. */}
-          {provinces.map((province) => {
-            if (!nation.provinceIds.includes(province.id)) return null;
-
-            const buildings = buildingsByProvince.get(province.id) ?? [];
-            const counts = new Map<ProjectType, number>();
-            for (const building of buildings) {
-              counts.set(building.type, (counts.get(building.type) ?? 0) + 1);
-            }
-            const buildingTypes = [...counts.keys()];
-            const brokenCount = buildings.filter((b) => !isWorking(b)).length;
-
-            const itemWidth = 20;
-            const itemCount = 1 + buildingTypes.length + (brokenCount > 0 ? 1 : 0); // resource + one slot per building type present + a broken marker
-            const barWidth = itemCount * itemWidth + 6;
-            const barX = province.labelX - barWidth / 2;
-            const barY = province.labelY + 10;
-            const itemCenterY = barY + 11;
-
-            return (
-              <g key={`${province.id}-info`} pointerEvents="none">
-                <rect x={barX} y={barY} width={barWidth} height={22} rx={5} className="map-panel__info-bar" />
-                <ResourceIcon
-                  type={RESOURCE_BY_TERRAIN[province.terrain]}
-                  x={barX + itemWidth / 2 + 3}
-                  y={itemCenterY}
-                  size={7}
-                />
-                {buildingTypes.map((type, index) => {
-                  const cx = barX + itemWidth * (index + 1) + itemWidth / 2 + 3;
-                  const count = counts.get(type)!;
-                  return (
-                    <g key={type}>
-                      <BuildingIcon type={type} x={cx - 3} y={itemCenterY} size={5.5} />
-                      {count > 1 && (
-                        <text x={cx + 7} y={itemCenterY + 3} className="map-panel__info-count">
-                          {count}
-                        </text>
-                      )}
-                    </g>
-                  );
-                })}
-                {brokenCount > 0 && (
-                  <g>
-                    <circle cx={barX + itemWidth * (buildingTypes.length + 1) + itemWidth / 2 + 3} cy={itemCenterY} r={7} className="map-panel__broken-marker" />
-                    <text x={barX + itemWidth * (buildingTypes.length + 1) + itemWidth / 2 + 3} y={itemCenterY + 3.5} className="map-panel__broken-count">
-                      !
-                    </text>
-                  </g>
-                )}
-              </g>
-            );
-          })}
         </svg>
 
         <div className="map-panel__zoom-controls">
@@ -803,7 +859,6 @@ export const MapPanel = memo(function MapPanel({
         </div>
 
         {hoveredProvinceId &&
-          tooltipPos &&
           !isPanning &&
           (() => {
             const province = provinces.find((p) => p.id === hoveredProvinceId);
@@ -815,7 +870,7 @@ export const MapPanel = memo(function MapPanel({
             const resourceType = RESOURCE_BY_TERRAIN[province.terrain];
 
             return (
-              <div className="map-panel__tooltip" style={{ left: tooltipPos.x + 18, top: tooltipPos.y + 18 }}>
+              <div className="map-panel__tooltip" ref={tooltipRef} style={{ left: tooltipPos.current.x + 18, top: tooltipPos.current.y + 18 }}>
                 <div className="map-panel__tooltip-title">
                   {province.id === nation.capitalProvinceId ? "★ " : ""}
                   {province.name}

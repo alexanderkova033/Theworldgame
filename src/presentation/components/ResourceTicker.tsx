@@ -6,6 +6,7 @@ import "./ResourceTicker.css";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { CountryStats } from "../../domain/country/types";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
+import type { HeatingOutlook } from "../../application/getHeatingOutlook";
 import { isDebtDangerous } from "../../domain/loans/loanRules";
 import { calculateDailyPoliticalPower } from "../../domain/politics/politicsRules";
 import { formatCompact } from "../formatNumber";
@@ -17,6 +18,7 @@ interface ResourceTickerProps {
   stats: CountryStats;
   resources: ResourceBundle;
   production: DailyProductionSummary;
+  heating: HeatingOutlook;
   debt: number;
 }
 
@@ -54,7 +56,7 @@ function Delta({ value }: { value: number | undefined }) {
   return <span className={`resource-ticker__delta ${value >= 0 ? "is-positive" : "is-negative"}`}>{formatDelta(value)}</span>;
 }
 
-export function ResourceTicker({ stats, resources, production, debt }: ResourceTickerProps) {
+export function ResourceTicker({ stats, resources, production, heating, debt }: ResourceTickerProps) {
   // Compact ("215k") in the chip itself so a big food stockpile doesn't turn
   // into an unreadable wall of digits; the exact figure is still one hover
   // away via the title/aria-label.
@@ -102,6 +104,24 @@ export function ResourceTicker({ stats, resources, production, debt }: ResourceT
         >
           <StatIcon type="treasury" size={20} />
           <span>{formatCompact(debt)} owed</span>
+        </div>
+      )}
+      {/* All winter: how many days the fuel in stock keeps homes warm. */}
+      {heating.isWinter && heating.fuelPerDay > 0 && (
+        <div
+          className={`resource-ticker__chip ${heating.daysOfFuel < 10 ? "is-danger" : ""}`}
+          title={`Heating: ${Math.floor(heating.fuel)} wood + ore in stock, homes burn ${heating.fuelPerDay.toFixed(1)} a day — lasts ${Math.floor(heating.daysOfFuel)} days`}
+        >
+          <svg width={20} height={20} viewBox="-10 -10 20 20" aria-hidden="true">
+            <path d="M0,-9 C4,-4 7,-1 7,3 C7,7 4,9.5 0,9.5 C-4,9.5 -7,7 -7,3 C-7,-1 -3,-2 -2,-6 C-1,-3 1,-2 0,-9 Z" fill="#e0703a" />
+            <path d="M0,-1 C2.5,2 3.5,3.5 3.5,5.5 C3.5,7.6 2,9 0,9 C-2,9 -3.5,7.6 -3.5,5.5 C-3.5,3.5 -1.5,2.5 0,-1 Z" fill="#f0c869" />
+          </svg>
+          <span>{Math.floor(heating.daysOfFuel)}d</span>
+          {heating.daysOfFuel < 10 && (
+            <span className="resource-ticker__alert" aria-hidden="true">
+              !
+            </span>
+          )}
         </div>
       )}
       <div className="resource-ticker__divider" />

@@ -3,6 +3,7 @@
 // from the current state, so the Politics tab can show the reasons.
 import { getSeason } from "../domain/country/calendar";
 import type { GameState } from "../domain/country/types";
+import { getLabourSituation } from "../domain/labour/labourRules";
 import { burnHeatingFuel, getHeatingDemand, getHomelessShare, getHousingCapacity } from "../domain/housing/housingRules";
 import { getPopularityDrivers, getPopularityTarget, type PopularityConditions, type PopularityDriver } from "../domain/politics/politicsRules";
 
@@ -17,6 +18,7 @@ export function getPopularityOutlook(state: GameState): PopularityOutlook {
     isFoodShortage: state.stats.food <= 0,
     homelessShare: getHomelessShare(state.stats.population, getHousingCapacity(state)),
     unheatedShare: burnHeatingFuel(state.resources, getHeatingDemand(state, getSeason(state.date))).unheatedShare,
+    unemploymentShare: getLabourSituation(state).unemploymentShare,
     stability: state.stats.stability,
   };
   return { target: getPopularityTarget(conditions), drivers: getPopularityDrivers(conditions) };

@@ -4,6 +4,8 @@
 // can backfire when it isn't. A neighbor ruled by the party you backed is
 // "friendly" and opens up better trade (an income bonus).
 import {
+  FOREIGN_MEDDLING_CHANCE_PER_MONTH,
+  FOREIGN_MEDDLING_SUPPORT,
   FOREIGN_SUPPORT_DRIFT,
   FOREIGN_SUPPORT_NOISE,
   FOREIGN_TAKEOVER_THRESHOLD,
@@ -89,4 +91,26 @@ export function updateForeignPolitics(foreignPolitics: Record<string, ForeignGov
     next[nationId] = updated;
   }
   return { foreignPolitics: next, changes };
+}
+
+export interface ForeignMeddling {
+  nationId: string;
+  partyId: string; // the neighbour's ruling party, doing the pushing
+  supportDelta: number; // what it does to your support: + if it backs you, − if it backs your rival
+}
+
+// Monthly: each neighbour may lean on your elections. A friendly government
+// (ruled by the party you backed) campaigns for you; any other funds your
+// opposition. So who governs next door matters in both directions.
+export function rollForeignMeddling(foreignPolitics: Record<string, ForeignGovernment>): ForeignMeddling[] {
+  const moves: ForeignMeddling[] = [];
+  for (const [nationId, gov] of Object.entries(foreignPolitics)) {
+    if (Math.random() >= FOREIGN_MEDDLING_CHANCE_PER_MONTH) continue;
+    moves.push({
+      nationId,
+      partyId: gov.rulingPartyId,
+      supportDelta: isFriendly(gov) ? FOREIGN_MEDDLING_SUPPORT : -FOREIGN_MEDDLING_SUPPORT,
+    });
+  }
+  return moves;
 }

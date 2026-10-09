@@ -147,15 +147,16 @@ export function TradePanel({ state, production, dispatch }: TradePanelProps) {
             ))}
           </div>
         </div>
-        <p className="trade__note">
-          Prices follow supply and demand: sell a lot and the price drops, buy a lot and it climbs. Both recover over a few weeks.
-          {hasPort ? " Your port makes buying cheaper." : ""}
-        </p>
+        {hasPort && (
+          <span className="trade__port" title="A coastal port makes buying cheaper">
+            ⚓ Port: cheaper buying
+          </span>
+        )}
 
         <div className="trade__columns" aria-hidden="true">
           <span>Good</span>
           <span>You have</span>
-          <span>Price</span>
+          <span title="Supply and demand: selling floods the market and the price drops, buying drains it and the price climbs. Both recover over a few weeks.">Price ⓘ</span>
           <span />
         </div>
 

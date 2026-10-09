@@ -95,7 +95,7 @@
     inset 0 -3px 6px rgba(0, 0, 0, 0.4);
 }
 
-.build-tile__art svg {
+.build-tile__art > svg {
   width: 54px;
   height: 54px;
   display: block;
@@ -200,7 +200,7 @@
   background: rgba(0, 0, 0, 0.25);
 }
 
-.build-tile.is-locked .build-tile__art svg {
+.build-tile.is-locked .build-tile__art > svg {
   filter: grayscale(1) brightness(0.6);
 }
 
@@ -275,4 +275,8 @@
 .build-tile__cost.is-short {
   text-decoration: underline wavy;
   text-underline-offset: 3px;
+}
+
+.build-tile__cost--jobs {
+  color: var(--info);
 }

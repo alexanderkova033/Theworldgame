@@ -108,21 +108,29 @@ export function ForeignAffairs({ state, dispatch }: { state: GameState; dispatch
 
   return (
     <div className="foreign-affairs">
-      <p className="foreign-affairs__intro">
-        Back a party in a neighboring country. If it takes power, trade improves: +{FRIENDLY_GOVERNMENT_INCOME_BONUS * 100}% income each.
-      </p>
+      <div className="foreign-affairs__how" aria-label="How it works">
+        <span title="Spend political power to push a neighbour's vote toward one of its parties">
+          <StatIcon type="politicalPower" size={18} /> {PRESSURE_POLITICAL_POWER_COST} → push
+        </span>
+        <span className="foreign-affairs__arrow">→</span>
+        <span title="If your party takes power there, the government is friendly">party wins</span>
+        <span className="foreign-affairs__arrow">→</span>
+        <span className="is-gain" title="Each friendly government: better trade terms, and it campaigns for you at home">
+          <StatIcon type="treasury" size={18} /> +{FRIENDLY_GOVERNMENT_INCOME_BONUS * 100}%
+        </span>
+      </div>
       <div
         className={`foreign-affairs__strength ${strength >= 0 ? "is-gain" : "is-loss"}`}
-        title="Set by your popularity and stability at home. Below zero, meddling backfires."
+        title="Your popularity plus stability at home sets how far one push moves them. Below zero, meddling backfires."
       >
-        <span>Each push moves their vote by</span>
+        <span>Push size</span>
         <strong>
           {strength >= 0 ? "+" : ""}
           {strength}
         </strong>
         <span className="foreign-affairs__why">
-          (from your <StatIcon type="popularity" size={15} /> {Math.round(state.stats.popularity)} popularity and{" "}
-          <StatIcon type="stability" size={15} /> {Math.round(state.stats.stability)} stability)
+          (<StatIcon type="popularity" size={15} /> {Math.round(state.stats.popularity)} + <StatIcon type="stability" size={15} />{" "}
+          {Math.round(state.stats.stability)})
         </span>
       </div>
       <div className="foreign-affairs__cards">

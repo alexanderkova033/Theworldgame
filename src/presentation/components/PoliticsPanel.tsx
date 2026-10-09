@@ -1,32 +1,61 @@
-// Politics, split into two views so neither is a wall of numbers:
-// - Elections: when the next vote is, whether you'd win it today, and which
-//   groups of voters are behind you — plus the decisions you've made.
+// Politics, split into two views:
+// - At home: the election, what support gets you, what's moving it (each
+//   cause with a button to fix it), and political actions that spend
+//   political power directly on the mood of the country.
 // - Abroad: leaning on the neighbors' governments (see ForeignAffairs.tsx).
 import "./PoliticsPanel.css";
-import { useState, type CSSProperties } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
+import { canCourtGroup, canCrackDown, canHoldRally, courtGroup, crackDown, holdRally, setTaxRate } from "../../application/actions";
 import { getPopularityOutlook } from "../../application/getPopularityOutlook";
 import { formatDate } from "../../domain/country/calendar";
-import { ELECTIONS_TO_WIN_GAME, ELECTION_WIN_THRESHOLD } from "../../domain/constants";
+import {
+  COURT_POLITICAL_POWER_COST,
+  COURT_SUPPORT,
+  COURT_TREASURY_COST,
+  CRACKDOWN_POLITICAL_POWER_COST,
+  CRACKDOWN_STABILITY,
+  CRACKDOWN_SUPPORT,
+  ELECTIONS_TO_WIN_GAME,
+  ELECTION_WIN_THRESHOLD,
+  MAX_TAX_RATE,
+  MIN_TAX_RATE,
+  RALLY_POLITICAL_POWER_COST,
+  RALLY_SUPPORT,
+  RALLY_TREASURY_COST,
+  STABILITY_GOOD_POPULARITY_THRESHOLD,
+  STABILITY_LOW_POPULARITY_PENALTY,
+  STABILITY_LOW_POPULARITY_THRESHOLD,
+  STABILITY_RECOVERY_RATE,
+  TAX_RATE_STEP,
+} from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getDecision } from "../../domain/decisions/decisionRules";
 import { monthsUntilNextElection } from "../../domain/parties/electionRules";
 import { FACTIONS, getFactionWeights } from "../../domain/parties/factionData";
 import { getParty, getRivalParty } from "../../domain/parties/partyRules";
 import type { Ideology } from "../../domain/parties/types";
+import type { PopularityDriver } from "../../domain/politics/politicsRules";
+import { calculateDailyPoliticalPower } from "../../domain/politics/politicsRules";
+import { playConfirm } from "../audio/sound";
 import { ForeignAffairs } from "./ForeignAffairs";
 import { StatIcon, type StatIconType } from "./StatIcon";
+import type { PanelKey } from "./TopBar";
+
+type Dispatch = (action: (state: GameState) => GameState) => void;
 
 interface PoliticsPanelProps {
   state: GameState;
-  dispatch: (action: (state: GameState) => GameState) => void;
+  dispatch: Dispatch;
+  onOpenPanel: (panel: PanelKey) => void;
 }
 
-const DRIVER_ICONS: Record<string, StatIconType> = {
+const DRIVER_ICONS: Record<PopularityDriver["key"], StatIconType> = {
   taxes: "treasury",
   food: "food",
   homes: "population",
   heat: "stability",
-  order: "stability",
+  jobs: "industry",
+  order: "police",
 };
 
 const IDEOLOGY_ICONS: Record<Ideology, StatIconType> = {
@@ -69,41 +98,221 @@ function CrossIcon() {
   );
 }
 
-// Where opinion is heading, and each thing pushing it there — sorted so the
-// biggest problem is at the top. Zero-value rows are left out.
-function MoodDrivers({ state }: { state: GameState }) {
+function signed(n: number, digits = 0): string {
+  const rounded = Number(n.toFixed(digits));
+  return rounded > 0 ? `+${rounded}` : `${rounded}`;
+}
+
+// --- What support gets you -------------------------------------------------
+function BenefitTile({ icon, value, caption, good }: { icon: StatIconType; value: string; caption: string; good: boolean | null }) {
+  return (
+    <div className={`politics-benefit ${good === true ? "is-good" : good === false ? "is-bad" : ""}`}>
+      <StatIcon type={icon} size={28} />
+      <strong>{value}</strong>
+      <span>{caption}</span>
+    </div>
+  );
+}
+
+function Benefits({ state }: { state: GameState }) {
+  const popularity = state.stats.popularity;
+  const order =
+    popularity >= STABILITY_GOOD_POPULARITY_THRESHOLD
+      ? STABILITY_RECOVERY_RATE
+      : popularity < STABILITY_LOW_POPULARITY_THRESHOLD
+        ? -STABILITY_LOW_POPULARITY_PENALTY
+        : 0;
+  return (
+    <div className="politics-benefits">
+      <BenefitTile
+        icon="popularity"
+        value={popularity >= ELECTION_WIN_THRESHOLD ? "Win" : "Lose"}
+        caption={`elections need ${ELECTION_WIN_THRESHOLD}%`}
+        good={popularity >= ELECTION_WIN_THRESHOLD}
+      />
+      <BenefitTile icon="politicalPower" value={`+${calculateDailyPoliticalPower(popularity).toFixed(2)}/d`} caption="political power" good={null} />
+      <BenefitTile icon="stability" value={`${signed(order, 2)}/d`} caption="stability" good={order > 0 ? true : order < 0 ? false : null} />
+    </div>
+  );
+}
+
+// --- What moves it, each with a fix ----------------------------------------
+function DriverCard({ driver, children }: { driver: PopularityDriver; children?: ReactNode }) {
+  const value = Math.round(driver.value);
+  return (
+    <div className={`politics-driver ${value > 0 ? "is-gain" : value < 0 ? "is-loss" : ""}`}>
+      <StatIcon type={DRIVER_ICONS[driver.key]} size={24} />
+      <span className="politics-driver__label">{driver.label}</span>
+      <strong className="politics-driver__value">{signed(value)}</strong>
+      <span className="politics-driver__fix">{children}</span>
+    </div>
+  );
+}
+
+function Drivers({ state, dispatch, onOpenPanel }: { state: GameState; dispatch: Dispatch; onOpenPanel: (panel: PanelKey) => void }) {
   const outlook = getPopularityOutlook(state);
   const current = Math.round(state.stats.popularity);
   const target = Math.round(outlook.target);
-  const drivers = outlook.drivers.filter((d) => Math.round(d.value) !== 0).sort((a, b) => a.value - b.value);
+  const go = (panel: PanelKey, label: string) => (
+    <button type="button" onClick={() => onOpenPanel(panel)}>
+      {label}
+    </button>
+  );
+  const fixes: Record<PopularityDriver["key"], ReactNode> = {
+    taxes: (
+      <span className="politics-driver__tax">
+        <button type="button" disabled={state.taxRate <= MIN_TAX_RATE} onClick={() => dispatch((s) => setTaxRate(s, s.taxRate - TAX_RATE_STEP))} aria-label="Lower taxes">
+          −
+        </button>
+        {Math.round(state.taxRate * 100)}%
+        <button type="button" disabled={state.taxRate >= MAX_TAX_RATE} onClick={() => dispatch((s) => setTaxRate(s, s.taxRate + TAX_RATE_STEP))} aria-label="Raise taxes">
+          +
+        </button>
+      </span>
+    ),
+    food: go("trade", "Buy food"),
+    homes: go("economy", "Build"),
+    heat: go("trade", "Buy fuel"),
+    jobs: go("economy", "Jobs"),
+    order: go("economy", "Police"),
+  };
+
   return (
-    <div className="politics-mood">
-      <h3>What moves your support</h3>
-      <p className="politics-mood__heading">
-        Support is drifting {target > current ? "up" : target < current ? "down" : "nowhere"} toward <strong>{target}%</strong>
-        {target > current ? " ↑" : target < current ? " ↓" : ""}
-      </p>
-      {drivers.length === 0 ? (
-        <p className="politics-mood__none">Nothing is helping or hurting you right now.</p>
-      ) : (
-        <ul>
-          {drivers.map((d) => (
-            <li key={d.key} className={d.value > 0 ? "is-gain" : "is-loss"}>
-              <StatIcon type={DRIVER_ICONS[d.key]} size={18} />
-              <span>{d.label}</span>
-              <strong>
-                {d.value > 0 ? "+" : "−"}
-                {Math.abs(Math.round(d.value))}
-              </strong>
-            </li>
-          ))}
-        </ul>
+    <div className="politics-drivers">
+      <div className="politics-section-head">
+        <h3>What moves support</h3>
+        <span className={`politics-heading ${target > current ? "is-up" : target < current ? "is-down" : ""}`} title="Where support is slowly drifting">
+          {current}% → {target}% {target > current ? "↑" : target < current ? "↓" : ""}
+        </span>
+      </div>
+      <div className="politics-drivers__grid">
+        {outlook.drivers.map((driver) => (
+          <DriverCard key={driver.key} driver={driver}>
+            {fixes[driver.key]}
+          </DriverCard>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// --- Spend political power on the mood of the country ---------------------
+function ActionCard({
+  icon,
+  title,
+  effect,
+  cost,
+  enabled,
+  onClick,
+}: {
+  icon: StatIconType;
+  title: string;
+  effect: ReactNode;
+  cost: ReactNode;
+  enabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="politics-action"
+      disabled={!enabled}
+      onClick={() => {
+        playConfirm();
+        onClick();
+      }}
+    >
+      <StatIcon type={icon} size={28} />
+      <strong>{title}</strong>
+      <span className="politics-action__effect">{effect}</span>
+      <span className="politics-action__cost">{cost}</span>
+    </button>
+  );
+}
+
+function Cost({ pp, cr }: { pp: number; cr?: number }) {
+  return (
+    <>
+      <StatIcon type="politicalPower" size={14} />
+      {pp}
+      {cr !== undefined && (
+        <>
+          <StatIcon type="treasury" size={14} />
+          {cr}
+        </>
+      )}
+    </>
+  );
+}
+
+function Actions({ state, dispatch }: { state: GameState; dispatch: Dispatch }) {
+  const [courting, setCourting] = useState(false);
+  const weights = getFactionWeights(state.nationId);
+  return (
+    <div className="politics-actions">
+      <div className="politics-section-head">
+        <h3>Act</h3>
+        <span className="politics-bank" title="Political power — earned faster the more popular you are">
+          <StatIcon type="politicalPower" size={18} />
+          {Math.floor(state.stats.politicalPower)}
+        </span>
+      </div>
+      <div className="politics-actions__grid">
+        <ActionCard
+          icon="popularity"
+          title="Rally"
+          effect={<>Everyone +{RALLY_SUPPORT}</>}
+          cost={<Cost pp={RALLY_POLITICAL_POWER_COST} cr={RALLY_TREASURY_COST} />}
+          enabled={canHoldRally(state)}
+          onClick={() => dispatch(holdRally)}
+        />
+        <ActionCard
+          icon="population"
+          title="Court a group"
+          effect={<>One group +{COURT_SUPPORT}</>}
+          cost={<Cost pp={COURT_POLITICAL_POWER_COST} cr={COURT_TREASURY_COST} />}
+          enabled={canCourtGroup(state)}
+          onClick={() => setCourting((v) => !v)}
+        />
+        <ActionCard
+          icon="police"
+          title="Crack down"
+          effect={
+            <>
+              <StatIcon type="stability" size={14} />+{CRACKDOWN_STABILITY} · everyone {CRACKDOWN_SUPPORT}
+            </>
+          }
+          cost={<Cost pp={CRACKDOWN_POLITICAL_POWER_COST} />}
+          enabled={canCrackDown(state)}
+          onClick={() => dispatch(crackDown)}
+        />
+      </div>
+      {courting && canCourtGroup(state) && (
+        <div className="politics-court" role="group" aria-label="Which group to court">
+          {[...FACTIONS]
+            .sort((a, b) => weights[b] - weights[a])
+            .map((ideology) => (
+              <button
+                key={ideology}
+                type="button"
+                title={`${IDEOLOGY_GROUPS[ideology]} — ${Math.round(weights[ideology] * 100)}% of voters, ${Math.round(state.factionApproval[ideology])}% like you`}
+                onClick={() => {
+                  playConfirm();
+                  dispatch((s) => courtGroup(s, ideology));
+                  setCourting(false);
+                }}
+              >
+                <StatIcon type={IDEOLOGY_ICONS[ideology]} size={20} />
+                {IDEOLOGY_GROUPS[ideology]}
+              </button>
+            ))}
+        </div>
       )}
     </div>
   );
 }
 
-function ElectionsView({ state }: { state: GameState }) {
+function ElectionsView({ state, dispatch, onOpenPanel }: { state: GameState; dispatch: Dispatch; onOpenPanel: (panel: PanelKey) => void }) {
   const party = getParty(state.partyId);
   const rival = getRivalParty(state.partyId);
   const weights = getFactionWeights(state.nationId);
@@ -124,7 +333,7 @@ function ElectionsView({ state }: { state: GameState }) {
         </div>
         <div className={`politics-hero__verdict ${isWinning ? "is-winning" : "is-losing"}`}>
           {isWinning ? <CheckIcon /> : <CrossIcon />}
-          {isWinning ? `You'd win today, by ${margin}` : `You'd lose today, by ${-margin}`}
+          {isWinning ? `Winning by ${margin}` : `Losing by ${-margin}`}
         </div>
         <div className="politics-hero__wins" title={`Win ${ELECTIONS_TO_WIN_GAME} elections in a row for outright victory. Lose one and the game ends.`}>
           <span className="politics-hero__pips">
@@ -166,13 +375,18 @@ function ElectionsView({ state }: { state: GameState }) {
         </span>
       </div>
 
-      {/* 3. What's moving support — the things you control. */}
-      <MoodDrivers state={state} />
+      {/* 3. What support gets you. */}
+      <Benefits state={state} />
 
-      {/* 4. Who your support comes from. */}
+      {/* 4. What's moving it — each with a fix. */}
+      <Drivers state={state} dispatch={dispatch} onOpenPanel={onOpenPanel} />
+
+      {/* 5. Spend political power on it directly. */}
+      <Actions state={state} dispatch={dispatch} />
+
+      {/* 6. Who your support comes from. */}
       <div className="politics-groups">
         <h3>Who backs you</h3>
-        <p className="politics-groups__hint">Each group's approval of your party. Bigger groups count for more.</p>
         {[...FACTIONS]
           .sort((a, b) => weights[b] - weights[a])
           .map((ideology) => {
@@ -205,7 +419,7 @@ function ElectionsView({ state }: { state: GameState }) {
           })}
       </div>
 
-      {/* 5. What you've decided lately. */}
+      {/* 7. What you've decided lately. */}
       {recentDecisions.length > 0 && (
         <div className="politics-decisions">
           <h3>Recent decisions</h3>
@@ -231,7 +445,7 @@ function ElectionsView({ state }: { state: GameState }) {
   );
 }
 
-export function PoliticsPanel({ state, dispatch }: PoliticsPanelProps) {
+export function PoliticsPanel({ state, dispatch, onOpenPanel }: PoliticsPanelProps) {
   const [view, setView] = useState<View>("elections");
 
   return (
@@ -259,7 +473,11 @@ export function PoliticsPanel({ state, dispatch }: PoliticsPanelProps) {
         </button>
       </div>
 
-      {view === "elections" ? <ElectionsView state={state} /> : <ForeignAffairs state={state} dispatch={dispatch} />}
+      {view === "elections" ? (
+        <ElectionsView state={state} dispatch={dispatch} onOpenPanel={onOpenPanel} />
+      ) : (
+        <ForeignAffairs state={state} dispatch={dispatch} />
+      )}
     </section>
   );
 }

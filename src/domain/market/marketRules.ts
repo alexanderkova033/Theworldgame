@@ -37,15 +37,15 @@ interface GoodSpec {
 }
 
 export const GOOD_SPECS: Record<MarketGood, GoodSpec> = {
-  wood: { basePrice: 20, equilibrium: 150, batch: 5 },
-  ore: { basePrice: 22, equilibrium: 150, batch: 5 },
-  grain: { basePrice: 16, equilibrium: 150, batch: 5 },
-  fish: { basePrice: 16, equilibrium: 150, batch: 5 },
+  wood: { basePrice: 25, equilibrium: 120, batch: 5 },
+  ore: { basePrice: 28, equilibrium: 120, batch: 5 },
+  grain: { basePrice: 20, equilibrium: 120, batch: 5 },
+  fish: { basePrice: 20, equilibrium: 120, batch: 5 },
   // Food moves in cartloads and is cheap per unit — but the market only
   // absorbs so much before the price collapses.
   // A food glut can drive the price almost to nothing, and the market only
   // works through it slowly — dumping a surplus every day stops paying.
-  food: { basePrice: 0.008, equilibrium: 60000, batch: 2000, priceFloor: 0.05, recovery: 0.015 },
+  food: { basePrice: 0.01, equilibrium: 50000, batch: 2000, priceFloor: 0.05, recovery: 0.015 },
 };
 
 // How the season shifts each good's normal stock (1 = unchanged).

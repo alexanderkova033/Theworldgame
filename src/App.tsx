@@ -9,6 +9,7 @@ import type { GameSpeed } from "./domain/country/types";
 import { getPartiesForNation, getParty } from "./domain/parties/partyRules";
 import { dismissDecision, resolveDecision } from "./application/actions";
 import { getDailyProductionSummary } from "./application/getDailyProductionSummary";
+import { getHeatingOutlook } from "./application/getHeatingOutlook";
 import { playDanger, playGameOver } from "./presentation/audio/sound";
 import { ActionsPanel } from "./presentation/components/ActionsPanel";
 import { DecisionModal } from "./presentation/components/DecisionModal";
@@ -20,6 +21,7 @@ import { MapPanel } from "./presentation/components/MapPanel";
 import { Modal } from "./presentation/components/Modal";
 import { NavIcon } from "./presentation/components/NavIcon";
 import { PartySelectScreen } from "./presentation/components/PartySelectScreen";
+import { PeoplePanel } from "./presentation/components/PeoplePanel";
 import { PoliticsPanel } from "./presentation/components/PoliticsPanel";
 import { ProductionPanel } from "./presentation/components/ProductionPanel";
 import { ProjectsPanel } from "./presentation/components/ProjectsPanel";
@@ -28,6 +30,7 @@ import { ReportsPanel } from "./presentation/components/ReportsPanel";
 import { ResearchPanel } from "./presentation/components/ResearchPanel";
 import { StartScreen } from "./presentation/components/StartScreen";
 import { TaxPanel } from "./presentation/components/TaxPanel";
+import { Toasts } from "./presentation/components/Toasts";
 import { TopBar, type PanelKey } from "./presentation/components/TopBar";
 import { TradePanel } from "./presentation/components/TradePanel";
 import { WorkforcePanel } from "./presentation/components/WorkforcePanel";
@@ -73,6 +76,7 @@ function App() {
   // advances — not on every hover, panel toggle, or map pan that also
   // re-renders App.
   const production = useMemo(() => (state ? getDailyProductionSummary(state) : null), [state]);
+  const heating = useMemo(() => (state ? getHeatingOutlook(state) : null), [state]);
 
   // MapPanel is memoized (it's the heaviest thing on screen), so its props
   // have to keep stable identities across a tick or the memo buys nothing.
@@ -222,6 +226,7 @@ function App() {
         stats={state.stats}
         resources={state.resources}
         production={dailyProduction}
+        heating={heating!}
         debt={state.debt}
         activePanel={openModal}
         reportsBadgeCount={unseenEventCount}
@@ -249,7 +254,7 @@ function App() {
 
       {openModal === "politics" && (
         <Modal title="Politics" icon={<NavIcon type="politics" size={22} />} onClose={() => setOpenModal(null)}>
-          <PoliticsPanel state={state} dispatch={dispatch} />
+          <PoliticsPanel state={state} dispatch={dispatch} onOpenPanel={openPanel} />
         </Modal>
       )}
 
@@ -259,6 +264,7 @@ function App() {
             <ActionsPanel state={state} selectedProvinceId={currentProvinceId} dispatch={dispatch} />
             <div className="economy-modal__side">
               <TaxPanel state={state} production={dailyProduction} dispatch={dispatch} />
+              <PeoplePanel state={state} production={dailyProduction} onOpenPanel={openPanel} />
               <RepairsPanel state={state} dispatch={dispatch} />
               <WorkforcePanel state={state} dispatch={dispatch} />
               <ProjectsPanel state={state} />
@@ -304,6 +310,8 @@ function App() {
           <ExpeditionPanel state={state} selectedIslandId={selectedIslandId} dispatch={dispatch} />
         </Modal>
       )}
+
+      <Toasts events={state.events} monthlyReports={state.monthlyReports} onOpenPanel={openPanel} />
 
       <DecisionModal
         state={state}

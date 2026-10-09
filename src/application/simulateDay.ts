@@ -8,7 +8,7 @@ import { advanceDay, getSeason, isEveryNMonths, isFirstDayOfMonth } from "../dom
 import { generateId } from "../domain/country/id";
 import type { CountryStats, DailyDelta, GameEvent, GameState } from "../domain/country/types";
 import { pickRandomDecision } from "../domain/decisions/decisionRules";
-import { getDiplomacyIncomeMultiplier, isFriendly, updateForeignPolitics } from "../domain/diplomacy/diplomacyRules";
+import { getDiplomacyIncomeMultiplier, isFriendly, rollForeignMeddling, updateForeignPolitics } from "../domain/diplomacy/diplomacyRules";
 import { getIslandExpeditionData } from "../domain/expeditions/expeditionData";
 import { advanceExpedition, isExpeditionComplete } from "../domain/expeditions/expeditionRules";
 import { produceProcessedFood, updateFood } from "../domain/food/foodRules";
@@ -21,12 +21,13 @@ import {
   getHousingCapacity,
 } from "../domain/housing/housingRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
+import { getLabourSituation } from "../domain/labour/labourRules";
 import { getActiveLawEffects } from "../domain/laws/lawsRules";
 import { accrueInterest, getDebtPopularityPenalty, getDebtStabilityPenalty, isDebtDangerous } from "../domain/loans/loanRules";
 import { advanceRepairs, getWorkingCounts, rollBreakdowns } from "../domain/maintenance/maintenanceRules";
 import { getNationEffects } from "../domain/nations/nationEffects";
 import { getNation } from "../domain/nations/nationRules";
-import { applyFactionEffects, getFactionWeights } from "../domain/parties/factionRules";
+import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../domain/parties/factionRules";
 import { getParty } from "../domain/parties/partyRules";
 import { getProvinceName } from "../domain/provinces/provinceRules";
 import { calculateDailyPoliticalPower, getPopularityTarget, updateFactionPopularity } from "../domain/politics/politicsRules";
@@ -193,6 +194,9 @@ export function simulateDay(state: GameState): GameState {
   }
   working = { ...working, placedBuildings: breakdowns.placedBuildings };
   const workingCounts = getWorkingCounts(working);
+  // Staffed buildings run at the share of their jobs that can be filled —
+  // food first, then schools, then factories (see labourRules.ts).
+  const labour = getLabourSituation(working);
 
   // 2. Raw resources: every owned province produces its terrain's resource.
   const nation = getNation(working.nationId);
@@ -208,8 +212,8 @@ export function simulateDay(state: GameState): GameState {
   // province's own grain/fish that same day is available to process) but
   // before step 4 folds the result into the food stock.
   const { foodProduced: processedFood, grainConsumed, fishConsumed } = produceProcessedFood(
-    workingCounts.granaries,
-    workingCounts.canneries,
+    workingCounts.granaries * labour.foodStaffing,
+    workingCounts.canneries * labour.foodStaffing,
     producedResources,
   );
   const processedResources: typeof producedResources = {
@@ -278,7 +282,7 @@ export function simulateDay(state: GameState): GameState {
   const treasury = working.stats.treasury + income;
 
   // 4. Food: production (farms + processed Grain/Fish) vs consumption.
-  const { newFoodStock, isShortage } = updateFood(working.stats, workingCounts.farms, season, processedFood);
+  const { newFoodStock, isShortage } = updateFood(working.stats, workingCounts.farms * labour.foodStaffing, season, processedFood);
   if (isShortage) {
     events.unshift({
       id: generateId("event"),
@@ -290,7 +294,7 @@ export function simulateDay(state: GameState): GameState {
 
   // 5. Industry output (derived from factories, scaled by laws + the research tree).
   const industry =
-    calculateIndustryOutput(workingCounts.factories) *
+    calculateIndustryOutput(workingCounts.factories * labour.industryStaffing) *
     lawEffects.industryMultiplier *
     nationEffects.industryMultiplier *
     researchEffects.industryMultiplier *
@@ -347,6 +351,7 @@ export function simulateDay(state: GameState): GameState {
     isFoodShortage: isShortage,
     homelessShare,
     unheatedShare: heating.unheatedShare,
+    unemploymentShare: labour.unemploymentShare,
     stability,
   });
   const { factionApproval, popularity } = updateFactionPopularity(working.factionApproval, factionWeights, popularityTarget, getDebtPopularityPenalty(debt));
@@ -443,6 +448,24 @@ export function simulateDay(state: GameState): GameState {
         date,
         message: `${nation.name} changes government: the ${newParty.name} takes power${friendly ? " — a friendly government, trade terms improve." : "."}`,
         severity: friendly ? "info" : "warning",
+      });
+    }
+
+    // ...and they meddle back in yours.
+    for (const move of rollForeignMeddling(foreignPolitics)) {
+      const applied = applyUniformDelta(finalFactionApproval, factionWeights, move.supportDelta);
+      finalFactionApproval = applied.factionApproval;
+      finalStats = { ...finalStats, popularity: applied.popularity };
+      const nation = getNation(move.nationId);
+      const party = getParty(move.partyId);
+      events.unshift({
+        id: generateId("event"),
+        date,
+        message:
+          move.supportDelta > 0
+            ? `${nation.name}'s ${party.name} campaigns for you across the border — support +${move.supportDelta}.`
+            : `${nation.name}'s ${party.name} is funding your opposition — support ${move.supportDelta}.`,
+        severity: move.supportDelta > 0 ? "info" : "warning",
       });
     }
   }

@@ -6,14 +6,14 @@ export const DAYS_PER_MONTH = 30;
 export const MONTHS_PER_YEAR = 12;
 
 // --- Food ---
-export const FOOD_PER_FARM = 3000; // food produced per farm per in-game day (before the season — see FARM_SEASON_MULTIPLIER)
+export const FOOD_PER_FARM = 2700; // food produced per farm per in-game day (before the season — see FARM_SEASON_MULTIPLIER)
 export const FOOD_PER_POP_CONSUMPTION = 1; // food eaten per person per in-game day
 export const FARM_COST = 800;
 export const FARM_BUILD_DAYS = 60;
 export const MAX_FARMS_PER_PROVINCE = 3;
 
 // --- Resources (Catan-inspired: terrain produces, provinces trade) ---
-export const RESOURCE_PER_PROVINCE = 1; // units of matching resource produced per owned province per day
+export const RESOURCE_PER_PROVINCE = 0.6; // units of matching resource produced per owned province per day
 export const STARTING_RESOURCE_STOCK = 0; // nothing in the stores — every log and ingot has to be produced or bought
 export const FARM_WOOD_COST = 15; // lumber for the barn
 export const FACTORY_ORE_COST = 22; // metal for machinery
@@ -22,9 +22,9 @@ export const ROAD_ORE_COST = 10; // gravel for the roadbed
 // --- Market (see domain/market/marketRules.ts) ---
 // Supply and demand: the market holds a stock of every good, prices follow
 // how scarce that stock is, and it recovers toward a moving equilibrium.
-export const MARKET_BUY_MARKUP = 1.2; // buying pays this over the mid price...
-export const MARKET_PORT_BUY_MARKUP = 1.05; // ...less with a coastal port
-export const MARKET_SELL_FACTOR = 0.85; // selling gets this share of the mid price
+export const MARKET_BUY_MARKUP = 1.4; // buying pays this over the mid price...
+export const MARKET_PORT_BUY_MARKUP = 1.2; // ...less with a coastal port
+export const MARKET_SELL_FACTOR = 0.7; // selling gets this share of the mid price
 export const MARKET_RECOVERY_PER_DAY = 0.04; // share of the gap to normal stock closed each day
 export const MARKET_PRICE_FLOOR = 0.25; // mid price never below this × base...
 export const MARKET_PRICE_CEILING = 4; // ...or above this × base
@@ -53,7 +53,7 @@ export const FISH_PROCESSED_PER_CANNERY = 3; // max fish one cannery can process
 export const FOOD_PER_FISH = 500; // food produced per unit of fish processed
 
 // --- Industry ---
-export const INDUSTRY_PER_FACTORY = 5;
+export const INDUSTRY_PER_FACTORY = 4;
 export const INCOME_PER_INDUSTRY = 1.5;
 export const FACTORY_COST = 1600;
 export const FACTORY_BUILD_DAYS = 120;
@@ -67,6 +67,25 @@ export const ROAD_EFFICIENCY_BONUS = 0.02; // +2% income & construction speed pe
 export const ROAD_COST = 450;
 export const ROAD_BUILD_DAYS = 45;
 export const MAX_ROADS_PER_PROVINCE = 5;
+
+// --- Labour (see domain/labour) ---
+// Buildings need workers from the population; short-staffed buildings run
+// below capacity, and people without work weigh on public opinion.
+export const LABOUR_SHARE = 0.25; // share of the population that works
+export const JOBS_PER_BUILDING = { farm: 450, factory: 1000, granary: 300, cannery: 300, education: 250 } as const;
+export const UNEMPLOYMENT_POPULARITY_PENALTY = 30; // times the share of workers without a job
+
+// --- Political actions (see application/actions/politicalActions.ts) ---
+// Ways to spend political power directly on support and order.
+export const RALLY_POLITICAL_POWER_COST = 25;
+export const RALLY_TREASURY_COST = 150;
+export const RALLY_SUPPORT = 3; // every group
+export const COURT_POLITICAL_POWER_COST = 15;
+export const COURT_TREASURY_COST = 300;
+export const COURT_SUPPORT = 8; // one group
+export const CRACKDOWN_POLITICAL_POWER_COST = 20;
+export const CRACKDOWN_STABILITY = 8;
+export const CRACKDOWN_SUPPORT = -4; // every group
 
 // --- Housing (see domain/housing) ---
 // People need a roof. Population keeps growing past what the homes can hold,
@@ -100,7 +119,7 @@ export const MAX_EDUCATION_PER_PROVINCE = 2;
 // every building in that field, and much more for every scientist hired
 // into it. Schools sharpen all three. A node is done once its area has put
 // in RESEARCH_COST_BY_TIER points of work.
-export const RESEARCH_COST_BY_TIER: Record<1 | 2 | 3 | 4, number> = { 1: 20, 2: 35, 3: 55, 4: 80 };
+export const RESEARCH_COST_BY_TIER: Record<1 | 2 | 3 | 4, number> = { 1: 45, 2: 75, 3: 115, 4: 170 };
 export const RESEARCH_BASE_RATE_PER_AREA = 0.1; // per day, per area, with nothing invested
 export const RESEARCH_PER_FACTORY = 0.06; // industry — workshops tinkering on the line
 export const RESEARCH_PER_ROAD = 0.03; // industry
@@ -149,7 +168,7 @@ export const LAW_DAYS_BY_TIER: Record<1 | 2 | 3 | 4, number> = { 1: 20, 2: 30, 3
 export const RIVAL_OPPOSE_PASS_CHANCE_PENALTY = 0.08; // a law/research vote the rival opposes is harder to pass
 export const RIVAL_SUPPORT_PASS_CHANCE_BONUS = 0.04; // ...and easier if the rival happens to agree
 export const RIVAL_CAMPAIGN_CHANCE_PER_MONTH = 0.3; // rolled on the first day of every month, alongside decisions
-export const RIVAL_CAMPAIGN_POPULARITY_SWING = 4; // base popularity swing from a rival campaign move
+export const RIVAL_CAMPAIGN_POPULARITY_SWING = 2.5; // base popularity swing from a rival campaign move
 
 // --- Coalition / factions (see domain/parties/factionRules.ts) ---
 // Extra approval swing, per faction, per point of that faction's ideological
@@ -161,7 +180,7 @@ export const RIVAL_CAMPAIGN_POPULARITY_SWING = 4; // base popularity swing from 
 export const FACTION_SENSITIVITY = 3;
 
 // --- Economy / taxes ---
-export const BASE_TAX_INCOME_PER_POP = 0.014; // was 0.02 — tax alone covered ~80% of starting income, dwarfing industry; cut ~30% so factories matter more
+export const BASE_TAX_INCOME_PER_POP = 0.012; // tax per person at a 100% rate, per day — kept low so the treasury is always tight
 export const COMFORTABLE_TAX_RATE = 0.15; // the rate people accept without complaint
 export const MIN_TAX_RATE = 0.05;
 export const MAX_TAX_RATE = 0.4;
@@ -170,7 +189,7 @@ export const TAX_RATE_STEP = 0.05;
 // --- Public opinion (see domain/politics/politicsRules.ts) ---
 // Popularity drifts toward a target built from how the country is run.
 // Slow on purpose: what you did two months ago still counts.
-export const POPULARITY_DRIFT_RATE = 0.012; // fraction of the gap to target closed per day
+export const POPULARITY_DRIFT_RATE = 0.005; // fraction of the gap to target closed per day (~4.5 months to close half of it)
 export const POPULARITY_BASE_TARGET = 50; // where opinion settles if nothing is good or bad
 export const TAX_POPULARITY_PER_POINT = 1.2; // per percentage point of tax below (+) or above (−) the comfortable rate
 export const FOOD_SHORTAGE_POPULARITY_PENALTY = 15;
@@ -230,6 +249,10 @@ export const PRESSURE_MAX = 12;
 export const FOREIGN_SUPPORT_DRIFT = 0.06; // monthly: fraction of the gap to 50/50 that support relaxes back
 export const FOREIGN_SUPPORT_NOISE = 3; // monthly: random swing, +/- this much
 export const FOREIGN_TAKEOVER_THRESHOLD = 55; // a challenger at or above this support takes power at the next monthly check
+// Neighbours meddle back: each month, each one may lean on your elections —
+// for you if it's ruled by the party you backed, against you otherwise.
+export const FOREIGN_MEDDLING_CHANCE_PER_MONTH = 0.2;
+export const FOREIGN_MEDDLING_SUPPORT = 3; // support swing from one push
 export const FRIENDLY_GOVERNMENT_INCOME_BONUS = 0.05; // +5% income per neighbor ruled by the party you backed
 
 // --- Misc ---

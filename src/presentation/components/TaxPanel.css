@@ -35,8 +35,7 @@
 
 .tax-panel__effects {
   display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+  gap: 1.2rem;
 }
 
 .tax-panel__effect {

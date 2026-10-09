@@ -15,6 +15,7 @@ import {
   POPULARITY_DRIFT_RATE,
   STABILITY_POPULARITY_WEIGHT,
   TAX_POPULARITY_PER_POINT,
+  UNEMPLOYMENT_POPULARITY_PENALTY,
 } from "../constants";
 import { FACTIONS } from "../parties/factionData";
 import type { Ideology } from "../parties/types";
@@ -26,11 +27,12 @@ export interface PopularityConditions {
   isFoodShortage: boolean;
   homelessShare: number; // 0..1
   unheatedShare: number; // 0..1
+  unemploymentShare: number; // 0..1
   stability: number; // 0..100
 }
 
 export interface PopularityDriver {
-  key: "taxes" | "food" | "homes" | "heat" | "order";
+  key: "taxes" | "food" | "homes" | "heat" | "jobs" | "order";
   label: string;
   value: number; // points added to (or taken off) where opinion is heading
 }
@@ -42,6 +44,7 @@ export function getPopularityDrivers(c: PopularityConditions): PopularityDriver[
     { key: "food", label: "Food", value: c.isFoodShortage ? -FOOD_SHORTAGE_POPULARITY_PENALTY : 0 },
     { key: "homes", label: "Homes", value: -c.homelessShare * HOMELESS_POPULARITY_PENALTY },
     { key: "heat", label: "Heating", value: -c.unheatedShare * COLD_POPULARITY_PENALTY },
+    { key: "jobs", label: "Jobs", value: -c.unemploymentShare * UNEMPLOYMENT_POPULARITY_PENALTY },
     { key: "order", label: "Order", value: (c.stability - 50) * STABILITY_POPULARITY_WEIGHT },
   ];
 }

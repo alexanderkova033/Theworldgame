@@ -118,11 +118,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.trade-row__price-unit {
-  font-weight: 400;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
 
 .trade-row__trend {
   font-size: 0.85rem;
@@ -202,4 +197,19 @@
   .trade-row__actions {
     grid-column: 1 / -1;
   }
+}
+
+.trade__port {
+  display: inline-block;
+  margin-top: 0.4rem;
+  padding: 0.1rem 0.55rem;
+  border: 1px solid var(--info);
+  border-radius: 999px;
+  color: var(--info);
+  font-size: 0.85rem;
+  cursor: help;
+}
+
+.trade__columns span[title] {
+  cursor: help;
 }

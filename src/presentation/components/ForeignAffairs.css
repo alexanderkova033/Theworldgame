@@ -1,6 +1,29 @@
-.foreign-affairs__intro {
-  margin: 0 0 0.5rem;
-  font-size: 0.95rem;
+.foreign-affairs__how {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.foreign-affairs__how span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: help;
+}
+
+.foreign-affairs__how svg {
+  display: block;
+}
+
+.foreign-affairs__how .is-gain {
+  color: var(--success);
+}
+
+.foreign-affairs__arrow {
+  color: var(--text-muted);
 }
 
 .foreign-affairs__why {

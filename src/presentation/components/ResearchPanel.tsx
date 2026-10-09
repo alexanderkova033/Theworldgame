@@ -23,7 +23,7 @@ import {
 } from "../../domain/research/researchRules";
 import type { ResearchCategory, ResearchNode } from "../../domain/research/types";
 import { getSynergiesForResearch } from "../../domain/synergy/synergyRules";
-import { getScientistCap, getTotalScientists } from "../../domain/workforce/workforceRules";
+import { getScientistCap, getTotalScientists, RESEARCH_CATEGORIES } from "../../domain/workforce/workforceRules";
 import { playConfirm } from "../audio/sound";
 import { CostChips, StatChip } from "./CostChips";
 import { StatIcon } from "./StatIcon";
@@ -38,7 +38,9 @@ interface ResearchPanelProps {
   dispatch: Dispatch;
 }
 
-const CATEGORIES = (["industry", "agriculture", "administration"] as const).map((key) => ({
+// Every research area, Housing included — taken from the domain list so a
+// new area can't be left off the tree again.
+const CATEGORIES = RESEARCH_CATEGORIES.map((key) => ({
   key,
   label: AREA_LABELS[key],
   icon: AREA_ICONS[key],

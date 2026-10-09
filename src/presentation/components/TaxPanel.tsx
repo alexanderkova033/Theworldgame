@@ -49,18 +49,18 @@ export function TaxPanel({ state, production, dispatch }: TaxPanelProps) {
         </span>
       </div>
       <div className="tax-panel__effects">
-        <span className="tax-panel__effect">
-          <StatIcon type="treasury" size={16} />
-          <span>
-            Brings in <strong>+{Math.round(production.taxIncome)}</strong> {CURRENCY_SYMBOL}/day
-          </span>
+        <span className="tax-panel__effect is-gain" title="Tax income per day at this rate">
+          <StatIcon type="treasury" size={18} />
+          <strong>+{Math.round(production.taxIncome)}</strong>
+          {CURRENCY_SYMBOL}/d
         </span>
-        <span className={`tax-panel__effect ${mood < 0 ? "is-loss" : mood > 0 ? "is-gain" : ""}`}>
-          <StatIcon type="popularity" size={16} />
-          <span>
-            Support <strong>{mood > 0 ? `+${mood}` : mood}</strong>
-            {mood === 0 ? " — people accept this rate" : mood < 0 ? " — people resent it" : " — people like it"}
-          </span>
+        <span
+          className={`tax-panel__effect ${mood < 0 ? "is-loss" : mood > 0 ? "is-gain" : ""}`}
+          title={`Support from taxes: people accept ${Math.round(COMFORTABLE_TAX_RATE * 100)}%; every point above costs support, every point below earns it`}
+        >
+          <StatIcon type="popularity" size={18} />
+          <strong>{mood > 0 ? `+${mood}` : mood}</strong>
+          support
         </span>
       </div>
     </section>

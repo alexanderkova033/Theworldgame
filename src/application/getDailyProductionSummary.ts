@@ -9,6 +9,7 @@ import type { GameState } from "../domain/country/types";
 import { getDiplomacyIncomeMultiplier } from "../domain/diplomacy/diplomacyRules";
 import { consumeFood, produceFood, produceProcessedFood } from "../domain/food/foodRules";
 import { burnHeatingFuel, getHeatingDemand, getHousingCapacity } from "../domain/housing/housingRules";
+import { getLabourSituation } from "../domain/labour/labourRules";
 import { getActiveLawEffects } from "../domain/laws/lawsRules";
 import { getWorkingCounts } from "../domain/maintenance/maintenanceRules";
 import { getNationEffects } from "../domain/nations/nationEffects";
@@ -43,6 +44,7 @@ export interface DailyProductionSummary {
 
 export function getDailyProductionSummary(state: GameState): DailyProductionSummary {
   const working = getWorkingCounts(state);
+  const { foodStaffing: staffing } = getLabourSituation(state);
   const season = getSeason(state.date);
   const efficiencyMultiplier = calculateEfficiencyMultiplier(working.roads);
   const lawEffects = getActiveLawEffects(state.enactedLawIds);
@@ -61,8 +63,8 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const industryIncome = state.stats.industry * INCOME_PER_INDUSTRY * incomeMultiplier;
   const salaries = getDailySalaries(state.workforce);
 
-  const { foodProduced: processedFood } = produceProcessedFood(working.granaries, working.canneries, state.resources);
-  const farmFood = produceFood(working.farms, season);
+  const { foodProduced: processedFood } = produceProcessedFood(working.granaries * staffing, working.canneries * staffing, state.resources);
+  const farmFood = produceFood(working.farms * staffing, season);
   const foodProduced = farmFood + processedFood;
   const foodConsumed = consumeFood(state.stats);
 

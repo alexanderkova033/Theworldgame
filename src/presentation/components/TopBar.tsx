@@ -3,6 +3,7 @@ import { useState, type CSSProperties } from "react";
 import { formatDate, type Season } from "../../domain/country/calendar";
 import type { CountryStats, GameDate, GameSpeed } from "../../domain/country/types";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
+import type { HeatingOutlook } from "../../application/getHeatingOutlook";
 import type { ResourceBundle } from "../../domain/resources/types";
 import { isMuted, setMuted } from "../audio/sound";
 import { NavIcon, type NavIconType } from "./NavIcon";
@@ -133,6 +134,7 @@ interface TopBarProps {
   stats: CountryStats;
   resources: ResourceBundle;
   production: DailyProductionSummary;
+  heating: HeatingOutlook;
   debt: number;
   activePanel: PanelKey | null;
   reportsBadgeCount: number;
@@ -152,6 +154,7 @@ export function TopBar({
   stats,
   resources,
   production,
+  heating,
   debt,
   activePanel,
   reportsBadgeCount,
@@ -170,7 +173,7 @@ export function TopBar({
           <span className="top-bar__party">{partyName}</span>
         </span>
 
-        <ResourceTicker stats={stats} resources={resources} production={production} debt={debt} />
+        <ResourceTicker stats={stats} resources={resources} production={production} debt={debt} heating={heating} />
 
         <div className="top-bar__spacer" />
 
