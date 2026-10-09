@@ -7,10 +7,12 @@ export const AREA_LABELS: Record<ResearchCategory, string> = {
   industry: "Industry",
   agriculture: "Agriculture",
   administration: "Administration",
+  housing: "Housing",
 };
 
 export const AREA_ICONS: Record<ResearchCategory, StatIconType> = {
   industry: "industry",
   agriculture: "food",
   administration: "stability",
+  housing: "population",
 };

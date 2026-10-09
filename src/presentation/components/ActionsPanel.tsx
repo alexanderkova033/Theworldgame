@@ -4,7 +4,7 @@
 // on its chip; the explanations live in hover tooltips, not on the card.
 import "./ActionsPanel.css";
 import type { CSSProperties, ReactNode } from "react";
-import { buildCannery, buildEducation, buildFactory, buildFarm, buildGranary, buildRoad, countBuildingsInProvince } from "../../application/actions";
+import { buildCannery, buildEducation, buildFactory, buildFarm, buildGranary, buildHousing, buildRoad, countBuildingsInProvince } from "../../application/actions";
 import type { BuildAction } from "../../application/actions/createBuildAction";
 import {
   CANNERY_BUILD_DAYS,
@@ -29,6 +29,11 @@ import {
   GRANARY_BUILD_DAYS,
   GRANARY_COST,
   GRANARY_WOOD_COST,
+  HEATING_FUEL_PER_HOME,
+  HOUSING_BUILD_DAYS,
+  HOUSING_COST,
+  HOUSING_WOOD_COST,
+  PEOPLE_PER_HOME,
   INCOME_PER_INDUSTRY,
   INDUSTRY_PER_FACTORY,
   ROAD_BUILD_DAYS,
@@ -147,6 +152,21 @@ interface BuildItem {
 }
 
 const BUILD_ITEMS: BuildItem[] = [
+  {
+    type: "housing",
+    name: "Homes",
+    action: buildHousing,
+    cost: HOUSING_COST,
+    resourceCost: HOUSING_WOOD_COST,
+    resourceType: "wood",
+    buildDays: HOUSING_BUILD_DAYS,
+    yields: (
+      <>
+        <StatIcon type="population" size={16} />+{formatCompact(PEOPLE_PER_HOME)}
+      </>
+    ),
+    hint: `Houses ${PEOPLE_PER_HOME.toLocaleString()} people (more with housing research). Burns ${HEATING_FUEL_PER_HOME} wood or ore a day in winter`,
+  },
   {
     type: "farm",
     name: "Farm",

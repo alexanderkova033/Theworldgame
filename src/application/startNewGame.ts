@@ -4,6 +4,7 @@
 // one, even though the underlying economy math is the same for everyone).
 import { STARTING_RESOURCE_STOCK } from "../domain/constants";
 import { createForeignPolitics } from "../domain/diplomacy/diplomacyRules";
+import { buildStartingHomes } from "../domain/housing/housingRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getNation } from "../domain/nations/nationRules";
 import type { GameState } from "../domain/country/types";
@@ -24,8 +25,8 @@ const STARTING_DATE = { year: 1, month: 1, day: 1 };
 const STARTING_FOOD = 400000;
 
 // Everything else starts at zero: no money, no stockpiles, no political
-// capital, no research. Surviving the first winter — keeping people fed
-// and the government standing with nothing in hand — is the opening challenge.
+// capital, no research. Surviving the first winter — keeping people fed,
+// housed and warm with nothing in hand — is the opening challenge.
 const STARTING_POPULATION = 10000;
 
 // One-time starting-stat nudges that back up each nation's Nation.startingBonus
@@ -103,12 +104,12 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     factionApproval: Object.fromEntries(FACTIONS.map((f) => [f, 55])) as Record<Ideology, number>,
 
     projects: [],
-    placedBuildings: buildStartingBuildings(nationId, farmCount),
+    placedBuildings: [...buildStartingBuildings(nationId, farmCount), ...buildStartingHomes(nationId, STARTING_POPULATION)],
     enactedLawIds: [],
     enactedResearchIds: [],
     researchOutcomes: {},
     activeLaw: null,
-    researchFocus: { industry: null, agriculture: null, administration: null },
+    researchFocus: { industry: null, agriculture: null, administration: null, housing: null },
     researchProgress: {},
     workforce: emptyWorkforce(),
     foreignPolitics: createForeignPolitics(nationId),

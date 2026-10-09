@@ -11,6 +11,7 @@ import {
   RESEARCH_PER_FACTORY,
   RESEARCH_PER_FARM,
   RESEARCH_PER_FOOD_PROCESSOR,
+  RESEARCH_PER_HOME,
   RESEARCH_PER_ROAD,
   RESEARCH_PER_SCHOOL,
   RESEARCH_PER_SCIENTIST,
@@ -47,7 +48,9 @@ export function getResearchRateBreakdown(state: GameState, category: ResearchCat
       ? working.factories * RESEARCH_PER_FACTORY + working.roads * RESEARCH_PER_ROAD
       : category === "agriculture"
         ? working.farms * RESEARCH_PER_FARM + (working.granaries + working.canneries) * RESEARCH_PER_FOOD_PROCESSOR
-        : working.schools * RESEARCH_PER_SCHOOL;
+        : category === "administration"
+          ? working.schools * RESEARCH_PER_SCHOOL
+          : working.homes * RESEARCH_PER_HOME;
   const scientists = state.workforce.scientists[category] * RESEARCH_PER_SCIENTIST;
   const educationMultiplier = 1 + working.schools * EDUCATION_RESEARCH_BONUS;
   return {
@@ -64,6 +67,7 @@ export function getResearchRates(state: GameState): Record<ResearchCategory, num
     industry: getResearchRateBreakdown(state, "industry").total,
     agriculture: getResearchRateBreakdown(state, "agriculture").total,
     administration: getResearchRateBreakdown(state, "administration").total,
+    housing: getResearchRateBreakdown(state, "housing").total,
   };
 }
 
@@ -109,6 +113,8 @@ export function scaleResearchEffects(effects: ResearchEffects, factor: number): 
   const scaled: ResearchEffects = {};
   if (effects.incomeMultiplier !== undefined) scaled.incomeMultiplier = 1 + (effects.incomeMultiplier - 1) * factor;
   if (effects.industryMultiplier !== undefined) scaled.industryMultiplier = 1 + (effects.industryMultiplier - 1) * factor;
+  if (effects.housingCapacityMultiplier !== undefined) scaled.housingCapacityMultiplier = 1 + (effects.housingCapacityMultiplier - 1) * factor;
+  if (effects.heatingMultiplier !== undefined) scaled.heatingMultiplier = Math.max(0, 1 + (effects.heatingMultiplier - 1) * factor);
   if (effects.treasuryDelta !== undefined) scaled.treasuryDelta = Math.round(effects.treasuryDelta * factor);
   if (effects.foodDelta !== undefined) scaled.foodDelta = Math.round(effects.foodDelta * factor);
   if (effects.stabilityDelta !== undefined) scaled.stabilityDelta = Math.round(effects.stabilityDelta * factor);
@@ -123,17 +129,21 @@ export function scaleResearchEffects(effects: ResearchEffects, factor: number): 
 export function getActiveResearchEffects(
   enactedResearchIds: string[],
   researchOutcomes: Record<string, ResearchOutcomeTier>,
-): { incomeMultiplier: number; industryMultiplier: number } {
+): { incomeMultiplier: number; industryMultiplier: number; housingCapacityMultiplier: number; heatingMultiplier: number } {
   let incomeMultiplier = 1;
   let industryMultiplier = 1;
+  let housingCapacityMultiplier = 1;
+  let heatingMultiplier = 1;
   for (const id of enactedResearchIds) {
     const node = getResearchNode(id);
     if (!node) continue;
     const scaled = scaleResearchEffects(node.effects, getResearchOutcomeFactor(researchOutcomes[id]));
     incomeMultiplier *= scaled.incomeMultiplier ?? 1;
     industryMultiplier *= scaled.industryMultiplier ?? 1;
+    housingCapacityMultiplier *= scaled.housingCapacityMultiplier ?? 1;
+    heatingMultiplier *= scaled.heatingMultiplier ?? 1;
   }
-  return { incomeMultiplier, industryMultiplier };
+  return { incomeMultiplier, industryMultiplier, housingCapacityMultiplier, heatingMultiplier };
 }
 
 export type ResearchNodeStatus =

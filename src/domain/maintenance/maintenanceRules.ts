@@ -16,6 +16,8 @@ import {
   FARM_WOOD_COST,
   GRANARY_COST,
   GRANARY_WOOD_COST,
+  HOUSING_COST,
+  HOUSING_WOOD_COST,
   REPAIR_COST_SHARE,
   REPAIR_DAYS,
   ROAD_COST,
@@ -33,6 +35,7 @@ const BUILD_PRICES: Record<ProjectType, { treasury: number; resourceType: Resour
   education: { treasury: EDUCATION_COST, resourceType: "wood", resourceAmount: EDUCATION_WOOD_COST },
   granary: { treasury: GRANARY_COST, resourceType: "wood", resourceAmount: GRANARY_WOOD_COST },
   cannery: { treasury: CANNERY_COST, resourceType: "ore", resourceAmount: CANNERY_ORE_COST },
+  housing: { treasury: HOUSING_COST, resourceType: "wood", resourceAmount: HOUSING_WOOD_COST },
 };
 
 export interface RepairCost {
@@ -65,6 +68,7 @@ export interface WorkingCounts {
   granaries: number;
   canneries: number;
   schools: number;
+  homes: number;
 }
 
 export function getWorkingCounts(state: GameState): WorkingCounts {
@@ -76,6 +80,9 @@ export function getWorkingCounts(state: GameState): WorkingCounts {
     granaries: Math.max(0, state.granaryCount - broken("granary")),
     canneries: Math.max(0, state.canneryCount - broken("cannery")),
     schools: Math.max(0, state.educationLevel - broken("education")),
+    // Homes have no aggregate count on GameState — they're counted straight
+    // from the map.
+    homes: state.placedBuildings.filter((b) => b.type === "housing" && isWorking(b)).length,
   };
 }
 

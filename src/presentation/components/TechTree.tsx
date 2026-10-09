@@ -36,6 +36,8 @@ export interface TreeNode {
 export interface TreeEffects {
   incomeMultiplier?: number;
   industryMultiplier?: number;
+  housingCapacityMultiplier?: number;
+  heatingMultiplier?: number;
   treasuryDelta?: number;
   foodDelta?: number;
   stabilityDelta?: number;
@@ -213,6 +215,9 @@ function effectIcons(effects: TreeEffects, wantPositive: boolean): StatIconType[
   const entries: Array<[StatIconType, number, number]> = [
     ["industry", effects.industryMultiplier ?? NaN, 1],
     ["treasury", effects.incomeMultiplier ?? NaN, 1],
+    ["population", effects.housingCapacityMultiplier ?? NaN, 1],
+    // Less fuel burned is the good direction, so flip it.
+    ["stability", effects.heatingMultiplier !== undefined ? 2 - effects.heatingMultiplier : NaN, 1],
     ["treasury", effects.treasuryDelta ?? NaN, 0],
     ["food", effects.foodDelta ?? NaN, 0],
     ["stability", effects.stabilityDelta ?? NaN, 0],

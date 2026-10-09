@@ -60,7 +60,13 @@ export function ResourceTicker({ stats, resources, production, debt }: ResourceT
   // away via the title/aria-label.
   const statItems: Array<[StatIconType, string, string, string, number | undefined]> = [
     ["treasury", "Treasury", `${formatCompact(stats.treasury)} ${CURRENCY_SYMBOL}`, `${formatExact(stats.treasury)} ${CURRENCY_SYMBOL}`, production.totalIncome],
-    ["population", "Population", formatCompact(stats.population), formatExact(stats.population), undefined],
+    [
+      "population",
+      "Population / homes for",
+      `${formatCompact(stats.population)} / ${formatCompact(production.housingCapacity)}`,
+      `${formatExact(stats.population)} of ${formatExact(production.housingCapacity)} housed${stats.population > production.housingCapacity ? ` — ${formatExact(stats.population - production.housingCapacity)} without a home` : ""}`,
+      undefined,
+    ],
     ["food", "Food", formatCompact(stats.food), formatExact(stats.food), production.netFood],
     ["industry", "Industry", formatCompact(stats.industry), formatExact(stats.industry), undefined],
     ["stability", "Stability", `${formatExact(stats.stability)}/100`, `${formatExact(stats.stability)}/100`, undefined],
@@ -73,13 +79,18 @@ export function ResourceTicker({ stats, resources, production, debt }: ResourceT
     <div className="resource-ticker">
       {statItems.map(([icon, label, displayValue, exactValue, delta]) => (
         <div
-          className="resource-ticker__chip"
+          className={`resource-ticker__chip ${icon === "population" && (stats.population > production.housingCapacity || production.unheatedShare > 0) ? "is-danger" : ""}`}
           key={label}
           title={delta !== undefined ? `${label}: ${exactValue} (${formatDelta(delta)})` : `${label}: ${exactValue}`}
           aria-label={delta !== undefined ? `${label}: ${exactValue}, ${formatDelta(delta)}` : `${label}: ${exactValue}`}
         >
           <StatIcon type={icon} size={20} />
           <span>{displayValue}</span>
+          {icon === "population" && (stats.population > production.housingCapacity || production.unheatedShare > 0) && (
+            <span className="resource-ticker__alert" aria-hidden="true">
+              !
+            </span>
+          )}
           <Delta value={delta} />
         </div>
       ))}

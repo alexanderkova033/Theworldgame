@@ -6,13 +6,15 @@
 // (see researchRules.ts and domain/workforce).
 import type { ProjectType } from "../construction/types";
 
-export type ResearchCategory = "industry" | "agriculture" | "administration";
+export type ResearchCategory = "industry" | "agriculture" | "administration" | "housing";
 
 export interface ResearchEffects {
   // Ongoing, folded into the same multiplier composition as law/nation
   // effects in simulateDay.
   incomeMultiplier?: number;
   industryMultiplier?: number;
+  housingCapacityMultiplier?: number; // people per home
+  heatingMultiplier?: number; // fuel burned per home in winter
   // One-time, applied once when the node completes.
   treasuryDelta?: number;
   foodDelta?: number;

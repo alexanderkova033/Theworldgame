@@ -99,6 +99,25 @@ export const ROAD_COST = 450;
 export const ROAD_BUILD_DAYS = 45;
 export const MAX_ROADS_PER_PROVINCE = 5;
 
+// --- Housing (see domain/housing) ---
+// People need a roof. Population keeps growing past what the homes can hold,
+// and everyone without one weighs on stability and popularity — so a growing
+// country is also a problem to keep up with.
+export const HOUSING_COST = 350;
+export const HOUSING_WOOD_COST = 12;
+export const HOUSING_BUILD_DAYS = 40;
+export const MAX_HOUSING_PER_PROVINCE = 6;
+export const PEOPLE_PER_HOME = 1500;
+export const HOMELESS_STABILITY_PENALTY = 1.5; // per day, times the share of people without a home...
+export const HOMELESS_PENALTY_CAP = 0.4; // ...capped
+export const HOMELESS_GROWTH_FACTOR = 0.5; // past capacity, population still grows, at half the usual rate
+
+// Heating: every working home burns fuel each winter day — wood, or ore
+// burned as coal once the wood runs out. Run out of both and people freeze.
+export const HEATING_FUEL_PER_HOME = 0.12; // units per home per winter day
+export const COLD_STABILITY_PENALTY = 0.5; // per winter day, times the unheated share of homes
+export const COLD_POPULATION_DECLINE_RATE = 0.0004; // per winter day, times the unheated share
+
 // --- Education & research ---
 export const EDUCATION_COST = 400;
 export const EDUCATION_WOOD_COST = 10; // books, desks, building materials
@@ -119,6 +138,7 @@ export const RESEARCH_PER_ROAD = 0.03; // industry
 export const RESEARCH_PER_FARM = 0.05; // agriculture — field trials
 export const RESEARCH_PER_FOOD_PROCESSOR = 0.06; // agriculture, per granary/cannery
 export const RESEARCH_PER_SCHOOL = 0.1; // administration
+export const RESEARCH_PER_HOME = 0.03; // housing — builders learning on the job
 export const RESEARCH_PER_SCIENTIST = 0.3; // in the scientist's own area
 export const EDUCATION_RESEARCH_BONUS = 0.05; // +5% to every area per working school
 

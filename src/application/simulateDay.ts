@@ -12,6 +12,14 @@ import { getDiplomacyIncomeMultiplier, isFriendly, updateForeignPolitics } from 
 import { getIslandExpeditionData } from "../domain/expeditions/expeditionData";
 import { advanceExpedition, isExpeditionComplete } from "../domain/expeditions/expeditionRules";
 import { produceProcessedFood, updateFood } from "../domain/food/foodRules";
+import {
+  burnHeatingFuel,
+  getColdStabilityPenalty,
+  getHeatingDemand,
+  getHomelessShare,
+  getHomelessStabilityPenalty,
+  getHousingCapacity,
+} from "../domain/housing/housingRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getActiveLawEffects } from "../domain/laws/lawsRules";
 import { accrueInterest, getDebtPopularityPenalty, getDebtStabilityPenalty, isDebtDangerous } from "../domain/loans/loanRules";
@@ -56,6 +64,7 @@ const BUILDING_NAMES: Record<string, string> = {
   education: "School",
   granary: "Granary",
   cannery: "Cannery",
+  housing: "Homes",
 };
 
 // The turn of the season, announced on its first day — winter especially,
@@ -210,11 +219,31 @@ export function simulateDay(state: GameState): GameState {
     workingCounts.canneries,
     producedResources,
   );
-  const resources: typeof producedResources = {
+  const processedResources: typeof producedResources = {
     ...producedResources,
     grain: producedResources.grain - grainConsumed,
     fish: producedResources.fish - fishConsumed,
   };
+
+  // 2b'. Winter heating: every working home burns fuel — wood first, then
+  // ore as coal. Whatever can't be heated hits stability (step 7) and
+  // population (step 9). Logged once when the fuel first runs out, and again
+  // at the start of each winter month it's still out.
+  const heating = burnHeatingFuel(processedResources, getHeatingDemand(working, season));
+  const resources = heating.resources;
+  const wasHeatedYesterday = working.resources.wood + working.resources.ore >= getHeatingDemand(working, season);
+  if (heating.unheatedShare > 0 && (wasHeatedYesterday || isFirstDayOfMonth(state.date))) {
+    events.unshift({
+      id: generateId("event"),
+      date: state.date,
+      message: "No wood or ore left to heat homes — people are freezing. Buy fuel on the Trade tab.",
+      severity: "danger",
+    });
+  }
+
+  // Housing: anyone without a roof weighs on stability (step 7).
+  const housingCapacity = getHousingCapacity(working);
+  const homelessShare = getHomelessShare(working.stats.population, housingCapacity);
 
   // 2c. Debt compounds daily, whether or not it's touched — see
   // domain/loans/loanRules.ts. Crossing into "dangerous" territory (and only
@@ -277,10 +306,17 @@ export function simulateDay(state: GameState): GameState {
   // 6. Political power accumulates, faster for a popular government.
   const politicalPower = working.stats.politicalPower + calculateDailyPoliticalPower(working.stats.popularity);
 
-  // 7. Stability reacts to food shortages, popularity, and heavy debt;
-  // police on the payroll steady it a little.
+  // 7. Stability reacts to food shortages, popularity, heavy debt, people
+  // without homes and homes without heat; police on the payroll steady it.
   const statsWithFood: CountryStats = { ...working.stats, food: newFoodStock };
-  const stability = Math.min(100, updateStability(statsWithFood, isShortage, getDebtStabilityPenalty(debt)) + getPoliceStabilityBonus(workforce.police));
+  const stability = Math.min(
+    100,
+    updateStability(
+      statsWithFood,
+      isShortage,
+      getDebtStabilityPenalty(debt) + getHomelessStabilityPenalty(homelessShare) + getColdStabilityPenalty(heating.unheatedShare),
+    ) + getPoliceStabilityBonus(workforce.police),
+  );
   if (isCollapseRisk({ ...statsWithFood, stability })) {
     events.unshift({
       id: generateId("event"),
@@ -312,10 +348,19 @@ export function simulateDay(state: GameState): GameState {
   // if debt is heavy — applied per-faction (see factionRules.ts), then
   // re-aggregated into the single number everything else below still reads.
   const factionWeights = getFactionWeights(working.nationId);
-  const { factionApproval, popularity } = updateFactionPopularity(working.factionApproval, factionWeights, working.taxRate, getDebtPopularityPenalty(debt));
+  const { factionApproval, popularity } = updateFactionPopularity(working.factionApproval, factionWeights, working.taxRate, getDebtPopularityPenalty(debt) + getHomelessStabilityPenalty(homelessShare) / 3);
 
-  // 9. Population grows or shrinks based on food and stability.
-  const population = updatePopulation({ ...statsWithFood, stability }, isShortage);
+  // 9. Population grows or shrinks based on food, stability, housing and heat.
+  const population = updatePopulation({ ...statsWithFood, stability }, isShortage, housingCapacity, heating.unheatedShare);
+  // Logged when homelessness first becomes noticeable (2%), not every day.
+  if (getHomelessShare(population, housingCapacity) >= 0.02 && homelessShare < 0.02) {
+    events.unshift({
+      id: generateId("event"),
+      date: state.date,
+      message: "The homes are full — families are sleeping rough. Build more homes.",
+      severity: "warning",
+    });
+  }
 
   const updatedStats: CountryStats = {
     treasury,

@@ -4,6 +4,7 @@ export { buildRoad } from "./buildRoad";
 export { buildEducation } from "./buildEducation";
 export { buildGranary } from "./buildGranary";
 export { buildCannery } from "./buildCannery";
+export { buildHousing } from "./buildHousing";
 export { countBuildingsInProvince } from "./createBuildAction";
 export { canTrade, getGiveAmount, tradeResources, type TradeableType } from "./tradeResources";
 export { canImportFood, getFoodImportCost, importFood } from "./importFood";

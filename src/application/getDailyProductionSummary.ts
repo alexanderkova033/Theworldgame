@@ -8,6 +8,7 @@ import { getSeason, type Season } from "../domain/country/calendar";
 import type { GameState } from "../domain/country/types";
 import { getDiplomacyIncomeMultiplier } from "../domain/diplomacy/diplomacyRules";
 import { consumeFood, produceFood, produceProcessedFood } from "../domain/food/foodRules";
+import { burnHeatingFuel, getHeatingDemand, getHousingCapacity } from "../domain/housing/housingRules";
 import { getActiveLawEffects } from "../domain/laws/lawsRules";
 import { getWorkingCounts } from "../domain/maintenance/maintenanceRules";
 import { getNationEffects } from "../domain/nations/nationEffects";
@@ -34,7 +35,10 @@ export interface DailyProductionSummary {
   netFood: number;
   resourceProduction: ResourceBundle;
   researchRates: Record<ResearchCategory, number>;
-  researchPerDay: number; // all three areas together
+  researchPerDay: number; // all areas together
+  housingCapacity: number; // people the working homes can hold
+  heatingFuel: number; // fuel the homes burn per day (winter only)
+  unheatedShare: number; // 0..1 of homes that can't be heated from current stock
 }
 
 export function getDailyProductionSummary(state: GameState): DailyProductionSummary {
@@ -66,7 +70,14 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const ownedTerrains = nation.provinceIds.map(
     (provinceId) => MAP_GEOMETRY.provinces.find((p) => p.id === provinceId)!.terrain,
   );
-  const resourceProduction = calculateDailyProduction(ownedTerrains, season);
+  const rawProduction = calculateDailyProduction(ownedTerrains, season);
+  // Today's net, after winter heating is burned (wood first, then ore).
+  const heatingFuel = getHeatingDemand(state, season);
+  const heating = burnHeatingFuel(
+    { ...state.resources, wood: state.resources.wood + rawProduction.wood, ore: state.resources.ore + rawProduction.ore },
+    heatingFuel,
+  );
+  const resourceProduction = { ...rawProduction, wood: rawProduction.wood - heating.woodBurned, ore: rawProduction.ore - heating.oreBurned };
 
   const researchRates = getResearchRates(state);
 
@@ -83,6 +94,9 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
     netFood: foodProduced - foodConsumed,
     resourceProduction,
     researchRates,
-    researchPerDay: researchRates.industry + researchRates.agriculture + researchRates.administration,
+    researchPerDay: researchRates.industry + researchRates.agriculture + researchRates.administration + researchRates.housing,
+    housingCapacity: getHousingCapacity(state),
+    heatingFuel,
+    unheatedShare: heating.unheatedShare,
   };
 }

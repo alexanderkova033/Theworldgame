@@ -8,6 +8,7 @@ import type { CountryStats, GameDate, GameState } from "../../domain/country/typ
 import { FACTIONS } from "../../domain/parties/factionData";
 import type { Ideology } from "../../domain/parties/types";
 import { createForeignPolitics } from "../../domain/diplomacy/diplomacyRules";
+import { buildStartingHomes } from "../../domain/housing/housingRules";
 import { getResearchNode } from "../../domain/research/researchRules";
 import type { ResearchCategory } from "../../domain/research/types";
 import { emptyResourceBundle } from "../../domain/resources/resourceRules";
@@ -37,7 +38,7 @@ function hydrateStats(stats: Partial<CountryStats> | undefined): CountryStats {
 // Saves from when research was a timed vote carried one funded node in
 // `activeResearch` — keep it going as that area's chosen direction.
 function legacyResearchFocus(raw: Partial<GameState>): Record<ResearchCategory, string | null> {
-  const focus: Record<ResearchCategory, string | null> = { industry: null, agriculture: null, administration: null };
+  const focus: Record<ResearchCategory, string | null> = { industry: null, agriculture: null, administration: null, housing: null };
   const legacy = (raw as { activeResearch?: { nodeId: string } | null }).activeResearch;
   const node = legacy ? getResearchNode(legacy.nodeId) : undefined;
   if (node) focus[node.category] = node.id;
@@ -67,14 +68,16 @@ function hydrateGameState(raw: Partial<GameState>): GameState {
     canneryCount: raw.canneryCount ?? 0,
     educationLevel: raw.educationLevel ?? 0,
     projects: raw.projects ?? [],
-    placedBuildings: raw.placedBuildings ?? [],
+    placedBuildings: (raw.placedBuildings ?? []).some((b) => b.type === "housing")
+      ? (raw.placedBuildings ?? [])
+      : [...(raw.placedBuildings ?? []), ...buildStartingHomes(raw.nationId!, stats.population)],
     enactedLawIds: raw.enactedLawIds ?? [],
     enactedResearchIds: raw.enactedResearchIds ?? [],
     researchOutcomes: raw.researchOutcomes ?? {},
     activeLaw: raw.activeLaw ?? null,
-    researchFocus: raw.researchFocus ?? legacyResearchFocus(raw),
+    researchFocus: { ...legacyResearchFocus(raw), ...raw.researchFocus },
     researchProgress: raw.researchProgress ?? {},
-    workforce: raw.workforce ?? emptyWorkforce(),
+    workforce: raw.workforce ? { ...raw.workforce, scientists: { ...emptyWorkforce().scientists, ...raw.workforce.scientists } } : emptyWorkforce(),
     foreignPolitics: raw.foreignPolitics ?? createForeignPolitics(raw.nationId!),
     resourceDemand: raw.resourceDemand ?? emptyResourceBundle(),
     // Pre-coalition saves have no per-faction breakdown — start every faction

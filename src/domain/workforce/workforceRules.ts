@@ -15,10 +15,10 @@ import {
 import type { ResearchCategory } from "../research/types";
 import type { Workforce } from "./types";
 
-export const RESEARCH_CATEGORIES: ResearchCategory[] = ["industry", "agriculture", "administration"];
+export const RESEARCH_CATEGORIES: ResearchCategory[] = ["industry", "agriculture", "administration", "housing"];
 
 export function emptyWorkforce(): Workforce {
-  return { scientists: { industry: 0, agriculture: 0, administration: 0 }, police: 0 };
+  return { scientists: { industry: 0, agriculture: 0, administration: 0, housing: 0 }, police: 0 };
 }
 
 export function getTotalScientists(workforce: Workforce): number {

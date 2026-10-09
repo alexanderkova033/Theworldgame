@@ -12,6 +12,7 @@ export const BUILDING_COLORS: Record<ProjectType, string> = {
   education: "#4fa8ff",
   granary: "#c9a45c",
   cannery: "#6ea3c9",
+  housing: "#e0a87a",
 };
 
 interface BuildingIconProps {
@@ -90,6 +91,17 @@ export function BuildingIcon({ type, x, y, size = 5 }: BuildingIconProps) {
             <ellipse cx={x} cy={y + size * 0.05} rx={size * 0.32} ry={size * 0.16} />
             <polygon points={`${x + size * 0.28},${y + size * 0.05} ${x + size * 0.44},${y - size * 0.06} ${x + size * 0.44},${y + size * 0.16}`} />
           </g>
+        </g>
+      );
+    case "housing":
+      // A cottage: steep roof, a chimney, a lit window and a door.
+      return (
+        <g>
+          <rect x={x + size * 0.35} y={y - size * 1.25} width={size * 0.36} height={size * 0.7} fill="#7a4a2e" stroke="#4a2a14" strokeWidth={0.4} />
+          <polygon points={`${x},${y - size * 1.2} ${x - size * 1.1},${y - size * 0.1} ${x + size * 1.1},${y - size * 0.1}`} fill="#9a4a32" stroke="#4a2a14" strokeWidth={0.6} />
+          <rect x={x - size * 0.85} y={y - size * 0.1} width={size * 1.7} height={size * 1.2} fill={color} stroke="#4a2a14" strokeWidth={0.6} />
+          <rect x={x - size * 0.6} y={y + size * 0.15} width={size * 0.45} height={size * 0.4} fill="#f0c869" stroke="#4a2a14" strokeWidth={0.3} />
+          <rect x={x + size * 0.15} y={y + size * 0.3} width={size * 0.42} height={size * 0.8} fill="#4a2a14" />
         </g>
       );
     case "road":

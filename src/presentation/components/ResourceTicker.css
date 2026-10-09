@@ -54,3 +54,16 @@
   background: var(--panel-border);
   margin: 0 0.15rem;
 }
+
+.resource-ticker__alert {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #1a0d06;
+  font-weight: 800;
+  font-size: 0.8125rem;
+}
