@@ -20,7 +20,7 @@ export const NATIONS: Nation[] = [
   {
     id: "caldenreich",
     name: "Caldenreich",
-    color: "#3f5f8a",
+    color: "#1f3f78",
     capitalProvinceId: "province-5-west", // West Caldermoor
     provinceIds: [
       "province-5-west", "province-5-east", // Caldermoor
@@ -33,7 +33,7 @@ export const NATIONS: Nation[] = [
   {
     id: "veldoria",
     name: "Veldoria",
-    color: "#8a3f4a",
+    color: "#c8693f",
     capitalProvinceId: "province-1-south", // South Veldshire
     provinceIds: [
       "province-1-north", "province-1-south", // Veldshire

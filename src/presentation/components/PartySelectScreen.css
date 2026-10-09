@@ -1,7 +1,7 @@
 .party-select-screen__back {
   display: inline-block;
   margin-bottom: 1.25rem;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   background: transparent;
   border-color: transparent;
   box-shadow: none;
@@ -78,30 +78,28 @@
 }
 
 .party-card__ideology {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
   color: var(--party-color);
   font-weight: 700;
 }
 
 .party-card__description {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--text-muted);
   line-height: 1.5;
 }
 
 .party-card__platform {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--accent-active);
   font-weight: 600;
 }
 
 .party-card__cta {
   margin-top: 0.5rem;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
   color: var(--party-color);
   font-weight: 700;
 }

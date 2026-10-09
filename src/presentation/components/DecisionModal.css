@@ -19,11 +19,11 @@
 }
 
 .decision-modal__prompt {
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: var(--text);
   max-width: 26rem;
   margin: 0 0 1.25rem;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .decision-modal__options {
@@ -53,7 +53,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   white-space: nowrap;
 }

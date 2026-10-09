@@ -45,7 +45,7 @@
 .workforce-panel__cap {
   margin-left: auto;
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
   cursor: help;
 }
@@ -76,7 +76,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.15rem;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: var(--success);
   font-variant-numeric: tabular-nums;
 }

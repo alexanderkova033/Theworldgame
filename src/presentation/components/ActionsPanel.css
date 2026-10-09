@@ -140,7 +140,7 @@
   justify-content: center;
   flex-wrap: wrap;
   gap: 0.2rem 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
 }
 
 .build-tile__cost {
@@ -227,7 +227,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: var(--text-muted);
   line-height: 1.2;
 }
@@ -243,8 +243,8 @@
   padding: 1px 5px 1px 4px;
   border-radius: 999px;
   background: var(--danger);
-  color: var(--text);
-  font-size: 0.7rem;
+  color: #1a0d06;
+  font-size: 0.8125rem;
   font-weight: 700;
   border: 1px solid var(--bg-deep);
 }
@@ -256,4 +256,23 @@
 .build-tile__season {
   color: #bfe3f5;
   margin-left: 0.1rem;
+}
+
+.build-tile__short-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #1a0d06;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.build-tile__cost.is-short {
+  text-decoration: underline wavy;
+  text-underline-offset: 3px;
 }

@@ -11,7 +11,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 0.25rem;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   color: var(--text-muted);
   margin-bottom: 0.6rem;
   cursor: help;
@@ -88,7 +88,7 @@
 
 .foreign-card__friendly {
   margin-left: auto;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: var(--success);
   border: 1px solid var(--success);
@@ -145,7 +145,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--party-color);
 }
@@ -166,7 +166,7 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.2rem 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
   border-color: var(--party-color);
 }

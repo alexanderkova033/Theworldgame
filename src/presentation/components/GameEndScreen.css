@@ -22,9 +22,8 @@
 }
 
 .game-end-screen__eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  font-size: 0.85rem;
   color: var(--danger);
   margin: 0 0 0.5rem;
 }

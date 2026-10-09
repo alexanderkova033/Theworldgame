@@ -50,7 +50,7 @@
 
 .projects-panel__province {
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.875rem;
 }
 
 .progress-bar {
@@ -103,7 +103,7 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: var(--text-muted);
 }
 
@@ -115,7 +115,7 @@
 
 .projects-panel__warning-tag {
   color: var(--warning);
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 700;
 }
 

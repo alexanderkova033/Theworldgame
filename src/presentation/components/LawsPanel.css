@@ -45,7 +45,7 @@
 }
 
 .law-tree__bank-rate {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
   color: var(--success);
 }
@@ -70,9 +70,8 @@
   padding-bottom: 0.5rem;
   position: relative;
   color: var(--accent-active);
-  text-transform: uppercase;
-  font-size: 0.8rem;
-  letter-spacing: 0.06em;
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
 }
 
 .law-tree__column-title::after {
@@ -250,7 +249,7 @@
 
 .law-node__badge--foreclosed {
   background: var(--danger);
-  color: var(--text);
+  color: #1a0d06;
 }
 
 .law-node__badge--locked {
@@ -259,7 +258,7 @@
 }
 
 .law-node__name {
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   line-height: 1.2;
   text-align: center;
   color: var(--text-muted);
@@ -284,7 +283,7 @@
 /* The rival party's simulated stance on the selected node — shared between
    LawsPanel and ResearchPanel, since both trees vote the same way. */
 .rival-stance {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
   margin: 0 0 0.75rem;
 }
@@ -332,9 +331,9 @@
 
 .law-inspector__description {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   color: var(--text-muted);
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .law-inspector__effects {
@@ -349,7 +348,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
@@ -366,15 +365,14 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 0.5rem;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   margin: 0 0 0.75rem;
 }
 
 .law-inspector__enact-cost-label {
-  text-transform: uppercase;
   letter-spacing: 0.03em;
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
 }
 
 .law-inspector__enact-cost .cost-chip {
@@ -385,7 +383,7 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   margin: 0 0 0.5rem;
   padding: 0.3rem 0.55rem;
@@ -419,7 +417,7 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.82rem;
+  font-size: 0.875rem;
   margin: 0;
 }
 
@@ -442,7 +440,7 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);
   margin-bottom: 0.4rem;
@@ -471,7 +469,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.82rem;
+  font-size: 0.875rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   padding: 0.3rem 0.65rem;
@@ -535,7 +533,7 @@
   border-radius: 999px;
   background: var(--accent-soft);
   color: var(--text);
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   text-align: left;
 }
 

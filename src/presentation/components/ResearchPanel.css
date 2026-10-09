@@ -24,7 +24,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--success);
@@ -43,7 +43,7 @@
   border: 1px solid var(--accent);
   border-radius: 999px;
   background: var(--accent-soft);
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
 }
 
 .research-area__bar {
@@ -66,7 +66,7 @@
 }
 
 .research-area__idle {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   text-align: center;
   color: var(--warning);
   border: 1px dashed var(--warning);
@@ -80,6 +80,6 @@
 }
 
 .research-inspector__eta {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
 }

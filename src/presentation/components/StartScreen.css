@@ -39,9 +39,8 @@
 }
 
 .start-screen__eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  font-size: 0.85rem;
   color: var(--accent);
   margin: 0 0 0.5rem;
 }
@@ -158,12 +157,11 @@
 
 .save-slot-card__detail--empty {
   color: var(--text-muted);
-  font-style: italic;
 }
 
 .save-slot-card__date {
   margin: 0 0 0.4rem;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: var(--text-muted);
 }
 
@@ -184,7 +182,7 @@
 
 .save-slot-card__danger-button {
   width: 100%;
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   padding: 0.35rem 0.5rem;
   background: transparent;
   color: var(--text-muted);
@@ -296,22 +294,21 @@
 }
 
 .nation-card__blurb {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--text-muted);
   line-height: 1.5;
 }
 
 .nation-card__bonus {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: var(--accent-active);
   font-weight: 600;
 }
 
 .nation-card__cta {
   margin-top: 0.5rem;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
   color: var(--nation-color);
   font-weight: 700;
 }

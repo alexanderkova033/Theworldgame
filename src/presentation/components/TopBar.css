@@ -70,9 +70,8 @@
 .top-bar__party {
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
   color: var(--party-color);
   text-shadow: none;
 }
@@ -120,7 +119,7 @@
 .top-bar__speed-button {
   min-width: 2.3rem;
   padding: 0.4rem 0.5rem;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
 }
 
 .top-bar__spacer {
@@ -133,9 +132,8 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.35rem 0.9rem 0.35rem 0.35rem;
-  font-size: 0.82rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
 }
 
@@ -189,7 +187,7 @@
   background: var(--danger);
   border: 1px solid #f0c2b8;
   color: #2a0906;
-  font-size: 0.62rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   line-height: 1.1rem;
   text-align: center;

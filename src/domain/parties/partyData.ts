@@ -52,7 +52,7 @@ export const PARTIES: Party[] = [
     nationId: "veldoria",
     name: "Ironworkers' Guild",
     ideology: "Labor",
-    color: "#c07a4a",
+    color: "#e0a15c",
     description: "The foundry and rail unions that built Veldoria's industry, now organizing to run it themselves.",
     platform: "Popular with factory workers; suspicious of unearned wealth.",
   },

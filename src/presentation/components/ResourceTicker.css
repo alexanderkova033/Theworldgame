@@ -14,7 +14,7 @@
   border: 1px solid var(--panel-border);
   border-radius: 5px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -2px 4px rgba(0, 0, 0, 0.4);
-  font-size: 0.82rem;
+  font-size: 0.875rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--text);
@@ -29,7 +29,7 @@
 /* A per-day rate riding alongside a chip's current total — see
    getDailyProductionSummary.ts. */
 .resource-ticker__delta {
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   opacity: 0.85;
 }

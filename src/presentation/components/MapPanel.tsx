@@ -403,6 +403,15 @@ export const MapPanel = memo(function MapPanel({
               <feMorphology in="SourceAlpha" operator="erode" radius={5} result="inner" />
               <feComposite in="SourceGraphic" in2="inner" operator="out" />
             </filter>
+            {/* The same trick, thinner and in near-black: a dark frontier
+                line, so where one nation ends never depends on telling two
+                hues apart (colour-blind players, low contrast screens). */}
+            <filter id="nation-frontier" x="-5%" y="-5%" width="110%" height="110%">
+              <feMorphology in="SourceAlpha" operator="erode" radius={2.5} result="inner" />
+              <feComposite in="SourceAlpha" in2="inner" operator="out" result="ring" />
+              <feFlood floodColor="#06090d" />
+              <feComposite in2="ring" operator="in" />
+            </filter>
             <filter id="shallow-blur" x="-60%" y="-60%" width="220%" height="220%">
               <feGaussianBlur stdDeviation="9" />
             </filter>
@@ -528,6 +537,22 @@ export const MapPanel = memo(function MapPanel({
                   ].join(" ")}
                   style={!isOwned ? { fill: owner?.color ?? "#414a58" } : undefined}
                   onClick={isOwned ? () => handleProvinceClick(province.id) : undefined}
+                  tabIndex={isOwned ? 0 : undefined}
+                  role={isOwned ? "button" : undefined}
+                  aria-label={isOwned ? `${province.name}${isSelected ? ", selected" : ""}` : undefined}
+                  aria-pressed={isOwned ? isSelected : undefined}
+                  onKeyDown={
+                    isOwned
+                      ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onSelectProvince(province.id);
+                          }
+                        }
+                      : undefined
+                  }
+                  onFocus={isOwned ? () => setHoveredProvinceId(province.id) : undefined}
+                  onBlur={isOwned ? () => setHoveredProvinceId((prev) => (prev === province.id ? null : prev)) : undefined}
                   onMouseEnter={isOwned ? () => setHoveredProvinceId(province.id) : undefined}
                   onMouseLeave={isOwned ? () => setHoveredProvinceId((prev) => (prev === province.id ? null : prev)) : undefined}
                 >
@@ -588,6 +613,9 @@ export const MapPanel = memo(function MapPanel({
                 filter="url(#nation-border)"
                 className="map-panel__nation-border"
               />
+            ))}
+            {NATION_SHAPES.map((shape) => (
+              <path key={`${shape.nation.id}-frontier`} d={shape.path} filter="url(#nation-frontier)" className="map-panel__nation-frontier" />
             ))}
           </g>
 

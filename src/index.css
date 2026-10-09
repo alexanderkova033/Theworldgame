@@ -21,12 +21,14 @@
   --accent: #caa036;
   --accent-soft: rgba(202, 160, 54, 0.16);
   --accent-active: #f0c869;
-  --danger: #c2402f;
+  --danger: #ea6a52; /* 5.6:1 on panels — readable as text, not just as a fill */
   --warning: #d9a24f;
   --info: #5b9bd6;
   --success: #6fae7c;
 
-  --font-display: "Cinzel", "Playfair Display", Georgia, "Times New Roman", serif;
+  /* Alegreya rather than an all-caps engraved face: it keeps the period
+     look, but has a real lowercase, so words keep their shape. */
+  --font-display: "Alegreya", Georgia, "Times New Roman", serif;
   --font-body: system-ui, "Segoe UI", Roboto, sans-serif;
 
   /* A fine grayscale film-grain, baked as a tiny seamless-tiling SVG turbulence
@@ -41,10 +43,10 @@
      Modal.css uses this so a tall panel's header can never end up rendered
      underneath the top bar (which deliberately sits above Modal's overlay
      in z-index, so its tabs stay clickable while a panel is open). */
-  --top-bar-height: 8.9rem;
+  --top-bar-height: 9.4rem;
 
   font-family: var(--font-body);
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 * {
@@ -100,7 +102,7 @@ body {
 }
 
 button {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-weight: 600;
   letter-spacing: 0.01em;
   cursor: pointer;
@@ -136,7 +138,7 @@ button:active:not(:disabled) {
 }
 
 button:disabled {
-  opacity: 0.42;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
@@ -184,8 +186,7 @@ h1, h2, h3 {
 h2 {
   position: relative;
   font-size: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.02em;
   color: var(--accent-active);
   font-weight: 700;
   text-align: center;
@@ -222,9 +223,8 @@ h2::before {
 
 h3 {
   font-family: var(--font-body);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
   color: var(--text-muted);
   margin-top: 0.9rem;
 }
@@ -310,10 +310,9 @@ h3 {
 }
 
 .icon-tile__label {
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 
 .icon-tile__value {
@@ -325,8 +324,34 @@ h3 {
 
 /* Shared muted helper/explainer line under a panel heading. */
 .panel-hint {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   margin: 0 0 0.6rem;
-  line-height: 1.4;
+  line-height: 1.5;
+}
+
+/* --- Base-level accessibility -------------------------------------------
+   Always on, no settings: a visible keyboard focus ring (WCAG 2.4.7 / 1.4.11,
+   at least 2px and 3:1 against its surroundings), pointer targets of at
+   least 24px (WCAG 2.5.8), and motion that stands down when the operating
+   system asks for it. */
+:focus-visible {
+  outline: 3px solid var(--accent-active);
+  outline-offset: 2px;
+}
+
+button {
+  min-height: 1.6rem;
+  min-width: 1.6rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -14,9 +14,8 @@
 }
 
 .production-panel__ledger-title {
-  font-size: 0.66rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
   color: var(--text-muted);
 }
 
@@ -100,7 +99,7 @@
 }
 
 .production-panel__key-value {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);
 }
@@ -114,7 +113,7 @@
   border: 1px solid var(--panel-border);
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.28);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);
 }

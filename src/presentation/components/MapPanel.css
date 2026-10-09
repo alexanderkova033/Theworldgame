@@ -64,10 +64,9 @@
   min-width: 2.4rem;
   border-radius: 999px;
   padding: 0.3rem 0.55rem;
-  font-size: 0.6rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 
 .map-panel__coast {
@@ -173,7 +172,7 @@
 
 .map-panel__info-count {
   font-family: var(--font-body);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   fill: #f4efe2;
   user-select: none;
@@ -181,7 +180,7 @@
 
 .map-panel__road-count {
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
   fill: #f4efe2;
   text-anchor: middle;
@@ -194,7 +193,7 @@
 
 .map-panel__label {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: 17px;
   fill: #f4efe2;
   text-anchor: middle;
   font-weight: 700;
@@ -216,7 +215,7 @@
   bottom: 0.9rem;
   z-index: 2;
   padding: 0.4rem 0.7rem;
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   background: rgba(9, 12, 17, 0.85);
 }
 
@@ -236,7 +235,7 @@
   border: 2px solid var(--panel-border);
   border-radius: 6px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(240, 200, 105, 0.14);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   text-transform: capitalize;
   animation: modal-pop 0.12s ease-out;
@@ -285,7 +284,7 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--text);
   padding: 0.15rem 0;
 }
@@ -295,7 +294,7 @@
 }
 
 .map-panel__tooltip-empty {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
 }
 
@@ -305,10 +304,9 @@
 
 .map-panel__nation-name {
   font-family: var(--font-display);
-  font-size: 30px;
+  font-size: 34px;
   font-weight: 700;
-  letter-spacing: 0.35em;
-  text-transform: uppercase;
+  letter-spacing: 0.08em;
   text-anchor: middle;
   fill: rgba(244, 239, 226, 0.78);
   paint-order: stroke;
@@ -324,9 +322,9 @@
 
 .map-panel__nation-party {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
   text-anchor: middle;
   paint-order: stroke;
   stroke: rgba(6, 9, 13, 0.75);
@@ -342,7 +340,7 @@
 }
 
 .map-panel__broken-count {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   text-anchor: middle;
   fill: #fff;
@@ -351,4 +349,17 @@
 .map-panel__tooltip-broken {
   color: var(--danger);
   font-weight: 700;
+}
+
+.map-panel__nation-frontier {
+  fill: #000;
+}
+
+/* Keyboard focus on a province: the same gold edge as a selection, but
+   dashed, so focus and selection can be told apart. */
+.map-panel__province:focus-visible {
+  outline: none;
+  stroke: var(--accent-active);
+  stroke-width: 5;
+  stroke-dasharray: 10 6;
 }

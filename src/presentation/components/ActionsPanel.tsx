@@ -117,9 +117,16 @@ function CapPips({ count, max }: { count: number; max: number }) {
 }
 
 // One cost on a tile, red when that's the thing you can't cover yet.
+// The "!" matters as much as the red: a colour-blind player gets the same
+// signal from the shape alone.
 function CostPip({ icon, amount, short, hint }: { icon: ReactNode; amount: string; short: boolean; hint: string }) {
   return (
-    <span className={`build-tile__cost ${short ? "is-short" : ""}`} title={hint}>
+    <span className={`build-tile__cost ${short ? "is-short" : ""}`} title={short ? `Not enough — ${hint}` : hint}>
+      {short && (
+        <span className="build-tile__short-mark" aria-label="not enough">
+          !
+        </span>
+      )}
       {icon}
       {amount}
     </span>
