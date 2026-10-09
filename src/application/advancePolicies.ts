@@ -1,9 +1,12 @@
-// Use case: one day of work on whatever Law is being drafted and whatever
-// Research is in the lab (GameState.activeLaw / activeResearch). When either
-// runs out of days it takes effect — see completeLaw / completeResearch.
+// Use case: one day of work on whatever Law is being drafted
+// (GameState.activeLaw) and on each research area's chosen direction
+// (GameState.researchFocus). Anything that finishes takes effect — see
+// completeLaw / completeResearch.
 import type { GameState, PolicyInProgress } from "../domain/country/types";
+import { getResearchCost, getResearchNode, getResearchRates } from "../domain/research/researchRules";
+import { RESEARCH_CATEGORIES } from "../domain/workforce/workforceRules";
 import { completeLaw } from "./actions/enactLaw";
-import { completeResearch } from "./actions/enactResearch";
+import { completeResearch } from "./actions/researchActions";
 
 function tick(work: PolicyInProgress): PolicyInProgress {
   return { ...work, daysRemaining: work.daysRemaining - 1 };
@@ -17,9 +20,15 @@ export function advancePolicies(state: GameState): GameState {
     next = law.daysRemaining <= 0 ? completeLaw({ ...next, activeLaw: null }, law.nodeId) : { ...next, activeLaw: law };
   }
 
-  if (next.activeResearch) {
-    const research = tick(next.activeResearch);
-    next = research.daysRemaining <= 0 ? completeResearch({ ...next, activeResearch: null }, research.nodeId) : { ...next, activeResearch: research };
+  // An area with no direction chosen simply idles — the panel flags it.
+  const rates = getResearchRates(next);
+  for (const category of RESEARCH_CATEGORIES) {
+    const nodeId = next.researchFocus[category];
+    const node = nodeId ? getResearchNode(nodeId) : undefined;
+    if (!node) continue;
+    const progress = (next.researchProgress[node.id] ?? 0) + rates[category];
+    next = { ...next, researchProgress: { ...next.researchProgress, [node.id]: progress } };
+    if (progress >= getResearchCost(node)) next = completeResearch(next, node.id);
   }
 
   return next;

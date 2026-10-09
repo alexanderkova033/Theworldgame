@@ -13,5 +13,8 @@ export { canAddStandingOrder, addStandingOrder, removeStandingOrder } from "./st
 export { canTakeLoan, canRepayLoan, getRepayAmount, repayLoan, takeLoan } from "./loanActions";
 export { canSendExpedition, sendExpedition } from "./sendExpedition";
 export { canEnactLaw, enactLaw } from "./enactLaw";
-export { canEnactResearch, enactResearch } from "./enactResearch";
+export { canFocusResearch, clearResearchFocus, focusResearch } from "./researchActions";
+export { canHirePolice, canHireScientist, dismissPolice, dismissScientist, hirePolice, hireScientist } from "./workforceActions";
+export { canRepairBuilding, repairBuilding } from "./repairBuilding";
+export { canPressureGovernment, pressureGovernment } from "./pressureGovernment";
 export { resolveDecision, dismissDecision } from "./resolveDecision";

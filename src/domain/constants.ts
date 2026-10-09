@@ -104,16 +104,49 @@ export const EDUCATION_COST = 400;
 export const EDUCATION_WOOD_COST = 10; // books, desks, building materials
 export const EDUCATION_BUILD_DAYS = 90;
 export const MAX_EDUCATION_PER_PROVINCE = 2;
-export const RESEARCH_BASE_RATE = 0.5; // research points/day, even with no education
-export const RESEARCH_PER_EDUCATION_LEVEL = 0.05; // extra research points/day per education level
 
-// --- Research tree (see domain/research) ---
-export const FAILED_RESEARCH_VOTE_POPULARITY_PENALTY = 2; // smaller than a failed law vote — a research setback is less politically charged
-export const EDUCATION_PASS_CHANCE_PER_LEVEL = 0.03; // +3% research pass chance per education level...
-export const EDUCATION_PASS_CHANCE_CAP = 0.2; // ...capped at +20%
-// Passing the vote only funds the work — the node takes effect once this
-// many days of lab time have run (one technology at a time).
-export const RESEARCH_DAYS_BY_TIER: Record<1 | 2 | 3 | 4, number> = { 1: 30, 2: 45, 3: 60, 4: 90 };
+// --- Research (see domain/research) ---
+// There's no research-point pool to spend. Each area — industry,
+// agriculture, administration — makes daily progress toward whichever node
+// it's been pointed at, at its own rate: a trickle by default, more for
+// every building in that field, and much more for every scientist hired
+// into it. Schools sharpen all three. A node is done once its area has put
+// in RESEARCH_COST_BY_TIER points of work.
+export const RESEARCH_COST_BY_TIER: Record<1 | 2 | 3 | 4, number> = { 1: 20, 2: 35, 3: 55, 4: 80 };
+export const RESEARCH_BASE_RATE_PER_AREA = 0.1; // per day, per area, with nothing invested
+export const RESEARCH_PER_FACTORY = 0.06; // industry — workshops tinkering on the line
+export const RESEARCH_PER_ROAD = 0.03; // industry
+export const RESEARCH_PER_FARM = 0.05; // agriculture — field trials
+export const RESEARCH_PER_FOOD_PROCESSOR = 0.06; // agriculture, per granary/cannery
+export const RESEARCH_PER_SCHOOL = 0.1; // administration
+export const RESEARCH_PER_SCIENTIST = 0.3; // in the scientist's own area
+export const EDUCATION_RESEARCH_BONUS = 0.05; // +5% to every area per working school
+
+// --- Workforce (see domain/workforce) ---
+// Hired staff, paid a salary every day. Scientists drive research in one
+// specific area; police keep order. Hiring is a small one-off fee.
+export const SCIENTIST_SALARY = 2; // Crowns per scientist per day
+export const SCIENTIST_HIRE_COST = 60;
+export const BASE_SCIENTIST_CAP = 3; // scientists you can employ with no schools at all...
+export const SCIENTISTS_PER_SCHOOL = 2; // ...and how many more each school trains
+export const POLICE_SALARY = 1; // Crowns per officer per day
+export const POLICE_HIRE_COST = 30;
+export const POPULATION_PER_POLICE = 2000; // cap: one officer per this many people
+export const POLICE_STABILITY_PER_OFFICER = 0.02; // stability per day, per officer...
+export const POLICE_STABILITY_CAP = 0.1; // ...capped
+export const POLICE_BREAKDOWN_REDUCTION = 0.06; // fewer vandalism-driven breakdowns, per officer...
+export const POLICE_BREAKDOWN_REDUCTION_CAP = 0.4; // ...capped at -40%
+
+// --- Seasons (see domain/country/calendar.ts) ---
+// Winter is Dec-Feb. Farms barely yield, grain fields lie fallow; fishing,
+// canneries, and granaries working through stored grain carry on. The
+// autumn harvest is the time to stockpile.
+export const FARM_SEASON_MULTIPLIER = { spring: 1, summer: 1.15, autumn: 1.35, winter: 0.55 } as const;
+
+// --- Breakdowns & repairs (see domain/maintenance) ---
+export const BREAKDOWN_CHANCE_PER_DAY = 0.0008; // per working building — roughly once every 3-4 years each
+export const REPAIR_COST_SHARE = 0.25; // a repair costs this share of the building's original price
+export const REPAIR_DAYS = 10;
 
 // --- Laws & political power (see domain/laws, domain/politics) ---
 // Political power trickles in daily — faster the more popular the government
@@ -180,6 +213,22 @@ export const LOAN_INTEREST_RATE_PER_DAY = 0.002; // compounds daily — roughly 
 export const DEBT_DANGER_THRESHOLD = 8000; // beyond this, debt itself starts costing stability/popularity every day
 export const DEBT_STABILITY_PENALTY_PER_DAY = 0.15;
 export const DEBT_POPULARITY_PENALTY_PER_DAY = 0.1;
+
+// --- Foreign affairs (see domain/diplomacy) ---
+// Pressuring a neighbor spends political power and shifts its electorate
+// toward the party you back. How hard it lands depends on how strong your
+// own government looks at home: PRESSURE_BASE * (popularity + stability)/100
+// - PRESSURE_OFFSET, so a popular, stable government pushes ~+5-10 support
+// per push, and a weak one can backfire (negative).
+export const PRESSURE_POLITICAL_POWER_COST = 30;
+export const PRESSURE_BASE = 10;
+export const PRESSURE_OFFSET = 6;
+export const PRESSURE_MIN = -5;
+export const PRESSURE_MAX = 12;
+export const FOREIGN_SUPPORT_DRIFT = 0.06; // monthly: fraction of the gap to 50/50 that support relaxes back
+export const FOREIGN_SUPPORT_NOISE = 3; // monthly: random swing, +/- this much
+export const FOREIGN_TAKEOVER_THRESHOLD = 55; // a challenger at or above this support takes power at the next monthly check
+export const FRIENDLY_GOVERNMENT_INCOME_BONUS = 0.05; // +5% income per neighbor ruled by the party you backed
 
 // --- Misc ---
 export const MAX_EVENT_LOG_LENGTH = 100;

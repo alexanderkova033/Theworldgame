@@ -3,6 +3,7 @@
 // provinces (so different nations feel at least slightly different from day
 // one, even though the underlying economy math is the same for everyone).
 import { STARTING_RESOURCE_STOCK } from "../domain/constants";
+import { createForeignPolitics } from "../domain/diplomacy/diplomacyRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getNation } from "../domain/nations/nationRules";
 import type { GameState } from "../domain/country/types";
@@ -10,8 +11,11 @@ import { FACTIONS } from "../domain/parties/factionData";
 import type { Ideology } from "../domain/parties/types";
 import type { PlacedBuilding } from "../domain/provinces/types";
 import { emptyResourceBundle } from "../domain/resources/resourceRules";
+import { emptyWorkforce } from "../domain/workforce/workforceRules";
 
-const STARTING_DATE = { year: 1, month: 1, day: 1 };
+// The reign opens in early spring, so the first winter (see getSeason) is
+// most of a year off — time to build farms and stockpile the harvest.
+const STARTING_DATE = { year: 1, month: 3, day: 1 };
 
 // One-time starting-stat nudges that back up each nation's Nation.startingBonus
 // blurb (nationData.ts) — keep the two in sync when tuning. Veldoria's bonus
@@ -76,7 +80,6 @@ export function startNewGame(nationId: string, partyId: string): GameState {
       food: 8000,
       industry: calculateIndustryOutput(factoryCount),
       stability,
-      researchPoints: 0,
       politicalPower: 25, // enough for one tier-1 law straight away
       popularity: 55,
     },
@@ -94,7 +97,10 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     enactedResearchIds: [],
     researchOutcomes: {},
     activeLaw: null,
-    activeResearch: null,
+    researchFocus: { industry: null, agriculture: null, administration: null },
+    researchProgress: {},
+    workforce: emptyWorkforce(),
+    foreignPolitics: createForeignPolitics(nationId),
     resourceDemand: emptyResourceBundle(),
     standingOrders: [],
     expeditions: [],

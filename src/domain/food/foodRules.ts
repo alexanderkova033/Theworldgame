@@ -8,19 +8,24 @@ import {
   FISH_PROCESSED_PER_CANNERY,
   FOOD_IMPORT_COST_PER_UNIT,
   FOOD_IMPORT_PORT_DISCOUNT,
+  FARM_SEASON_MULTIPLIER,
   FOOD_PER_FARM,
   FOOD_PER_FISH,
   FOOD_PER_GRAIN,
   FOOD_PER_POP_CONSUMPTION,
   GRAIN_PROCESSED_PER_GRANARY,
 } from "../constants";
+import type { Season } from "../country/calendar";
 import type { CountryStats } from "../country/types";
 import type { Nation } from "../nations/types";
 import { nationHasPort } from "../resources/tradeRules";
 import type { ResourceBundle } from "../resources/types";
 
-export function produceFood(farmCount: number): number {
-  return farmCount * FOOD_PER_FARM;
+// Farms follow the seasons: a bumper autumn harvest, a lean winter (see
+// FARM_SEASON_MULTIPLIER). Granaries/canneries below don't — they work from
+// whatever grain/fish is already in stock.
+export function produceFood(farmCount: number, season: Season): number {
+  return farmCount * FOOD_PER_FARM * FARM_SEASON_MULTIPLIER[season];
 }
 
 export function consumeFood(stats: CountryStats): number {
@@ -52,8 +57,8 @@ export interface FoodUpdateResult {
   isShortage: boolean;
 }
 
-export function updateFood(stats: CountryStats, farmCount: number, extraFoodProduced = 0): FoodUpdateResult {
-  const produced = produceFood(farmCount) + extraFoodProduced;
+export function updateFood(stats: CountryStats, farmCount: number, season: Season, extraFoodProduced = 0): FoodUpdateResult {
+  const produced = produceFood(farmCount, season) + extraFoodProduced;
   const consumed = consumeFood(stats);
   const rawStock = stats.food + produced - consumed;
   return {

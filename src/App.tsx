@@ -23,11 +23,13 @@ import { PartySelectScreen } from "./presentation/components/PartySelectScreen";
 import { PoliticsPanel } from "./presentation/components/PoliticsPanel";
 import { ProductionPanel } from "./presentation/components/ProductionPanel";
 import { ProjectsPanel } from "./presentation/components/ProjectsPanel";
+import { RepairsPanel } from "./presentation/components/RepairsPanel";
 import { ReportsPanel } from "./presentation/components/ReportsPanel";
 import { ResearchPanel } from "./presentation/components/ResearchPanel";
 import { StartScreen } from "./presentation/components/StartScreen";
 import { TopBar, type PanelKey } from "./presentation/components/TopBar";
 import { TradePanel } from "./presentation/components/TradePanel";
+import { WorkforcePanel } from "./presentation/components/WorkforcePanel";
 import { useGameClock } from "./presentation/hooks/useGameClock";
 
 const SPEED_KEYS: Record<string, GameSpeed> = { "1": 1, "2": 2, "3": 3, "5": 5 };
@@ -77,6 +79,14 @@ function App() {
   // empty, so derive the id list from a plain string key instead.
   const expeditionKey = state?.expeditions.map((e) => e.islandId).join(",") ?? "";
   const expeditionIslandIds = useMemo(() => (expeditionKey ? expeditionKey.split(",") : []), [expeditionKey]);
+
+  // Same trick for the neighbors' ruling parties (shown on the map), which
+  // only change on the odd monthly government change.
+  const foreignRulersKey = state ? Object.entries(state.foreignPolitics).map(([id, gov]) => `${id}:${gov.rulingPartyId}`).join(",") : "";
+  const foreignRulers = useMemo(
+    () => Object.fromEntries(foreignRulersKey ? foreignRulersKey.split(",").map((pair) => pair.split(":")) : []) as Record<string, string>,
+    [foreignRulersKey],
+  );
 
   const handleSelectIsland = useCallback((islandId: string) => {
     setSelectedIslandId(islandId);
@@ -212,7 +222,6 @@ function App() {
         resources={state.resources}
         production={dailyProduction}
         debt={state.debt}
-        educationLevel={state.educationLevel}
         activePanel={openModal}
         reportsBadgeCount={unseenEventCount}
         onPause={pause}
@@ -232,13 +241,14 @@ function App() {
             expeditionIslandIds={expeditionIslandIds}
             selectedIslandId={selectedIslandId}
             onSelectIsland={handleSelectIsland}
+            foreignRulers={foreignRulers}
           />
         </div>
       </main>
 
       {openModal === "politics" && (
         <Modal title="Politics" icon={<NavIcon type="politics" size={22} />} onClose={() => setOpenModal(null)}>
-          <PoliticsPanel state={state} />
+          <PoliticsPanel state={state} dispatch={dispatch} />
         </Modal>
       )}
 
@@ -247,6 +257,8 @@ function App() {
           <div className="economy-modal">
             <ActionsPanel state={state} selectedProvinceId={currentProvinceId} dispatch={dispatch} />
             <div className="economy-modal__side">
+              <RepairsPanel state={state} dispatch={dispatch} />
+              <WorkforcePanel state={state} dispatch={dispatch} />
               <ProjectsPanel state={state} />
               <ProductionPanel production={dailyProduction} />
             </div>

@@ -4,30 +4,34 @@
 // returns a new GameState.
 import { calculateDailyIncome } from "../domain/economy/economyRules";
 import { advanceProject, isProjectComplete } from "../domain/construction/constructionRules";
-import { advanceDay, isEveryNMonths, isFirstDayOfMonth } from "../domain/country/calendar";
+import { advanceDay, getSeason, isEveryNMonths, isFirstDayOfMonth } from "../domain/country/calendar";
 import { generateId } from "../domain/country/id";
 import type { CountryStats, DailyDelta, GameEvent, GameState } from "../domain/country/types";
 import { pickRandomDecision } from "../domain/decisions/decisionRules";
+import { getDiplomacyIncomeMultiplier, isFriendly, updateForeignPolitics } from "../domain/diplomacy/diplomacyRules";
 import { getIslandExpeditionData } from "../domain/expeditions/expeditionData";
 import { advanceExpedition, isExpeditionComplete } from "../domain/expeditions/expeditionRules";
 import { produceProcessedFood, updateFood } from "../domain/food/foodRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getActiveLawEffects } from "../domain/laws/lawsRules";
 import { accrueInterest, getDebtPopularityPenalty, getDebtStabilityPenalty, isDebtDangerous } from "../domain/loans/loanRules";
+import { advanceRepairs, getWorkingCounts, rollBreakdowns } from "../domain/maintenance/maintenanceRules";
 import { getNationEffects } from "../domain/nations/nationEffects";
 import { getNation } from "../domain/nations/nationRules";
 import { applyFactionEffects, getFactionWeights } from "../domain/parties/factionRules";
 import { getParty } from "../domain/parties/partyRules";
+import { getProvinceName } from "../domain/provinces/provinceRules";
 import { calculateDailyPoliticalPower, updateFactionPopularity } from "../domain/politics/politicsRules";
 import { updatePopulation } from "../domain/population/populationRules";
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
 import { applyRandomEventEffect, pickRandomEvent } from "../domain/randomEvents/randomEventRules";
-import { getActiveResearchEffects, calculateDailyResearch } from "../domain/research/researchRules";
+import { getActiveResearchEffects } from "../domain/research/researchRules";
 import { addResources, calculateDailyProduction } from "../domain/resources/resourceRules";
 import { decayDemand } from "../domain/resources/tradeRules";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
 import { isCollapseRisk, updateStability } from "../domain/stability/stabilityRules";
 import { getActiveSynergyEffects } from "../domain/synergy/synergyRules";
+import { getDailySalaries, getPoliceBreakdownReduction, getPoliceStabilityBonus, layOffUntilAffordable } from "../domain/workforce/workforceRules";
 import { advancePolicies } from "./advancePolicies";
 import { applyExpeditionCompletion } from "./applyExpeditionCompletion";
 import { applyProjectCompletion } from "./applyProjectCompletion";
@@ -45,8 +49,26 @@ import {
   RIVAL_CAMPAIGN_CHANCE_PER_MONTH,
 } from "../domain/constants";
 
+const BUILDING_NAMES: Record<string, string> = {
+  farm: "Farm",
+  factory: "Factory",
+  road: "Road",
+  education: "School",
+  granary: "Granary",
+  cannery: "Cannery",
+};
+
+// The turn of the season, announced on its first day — winter especially,
+// since it's when farms stop pulling their weight.
+const SEASON_MESSAGES: Record<number, { message: string; severity: GameEvent["severity"] }> = {
+  3: { message: "Spring thaw — the fields are workable again.", severity: "info" },
+  9: { message: "Harvest season — farms yield their best of the year. Stockpile for winter.", severity: "info" },
+  12: { message: "Winter sets in — farms yield little and grain fields lie fallow until spring.", severity: "warning" },
+};
+
 export function simulateDay(state: GameState): GameState {
-  const efficiencyMultiplier = calculateEfficiencyMultiplier(state.roadCount);
+  const efficiencyMultiplier = calculateEfficiencyMultiplier(getWorkingCounts(state).roads);
+  const season = getSeason(state.date);
   const lawEffects = getActiveLawEffects(state.enactedLawIds);
   const researchEffects = getActiveResearchEffects(state.enactedResearchIds, state.researchOutcomes);
   // A Law+Research pair that's both enacted layers on an extra bonus, on top
@@ -146,12 +168,36 @@ export function simulateDay(state: GameState): GameState {
   // afterward, so nothing is double-counted or skipped, just simply sequenced.
   working = runStandingOrders(working);
 
+  // 1d. Repairs in progress tick down; then any working building might
+  // break (police deter some of it). Broken buildings stop producing until
+  // repaired — everything below reads getWorkingCounts, not the raw counts.
+  const repairs = advanceRepairs(working.placedBuildings);
+  for (const building of repairs.repaired) {
+    events.unshift({
+      id: generateId("event"),
+      date: state.date,
+      message: `${BUILDING_NAMES[building.type]} in ${getProvinceName(building.provinceId)} is repaired and back in service.`,
+      severity: "info",
+    });
+  }
+  const breakdowns = rollBreakdowns(repairs.placedBuildings, getPoliceBreakdownReduction(working.workforce.police));
+  for (const building of breakdowns.broken) {
+    events.unshift({
+      id: generateId("event"),
+      date: state.date,
+      message: `${BUILDING_NAMES[building.type]} in ${getProvinceName(building.provinceId)} has broken down — repair it from the Economy tab.`,
+      severity: "warning",
+    });
+  }
+  working = { ...working, placedBuildings: breakdowns.placedBuildings };
+  const workingCounts = getWorkingCounts(working);
+
   // 2. Raw resources: every owned province produces its terrain's resource.
   const nation = getNation(working.nationId);
   const ownedTerrains = nation.provinceIds.map(
     (provinceId) => MAP_GEOMETRY.provinces.find((p) => p.id === provinceId)!.terrain,
   );
-  const producedResources = addResources(working.resources, calculateDailyProduction(ownedTerrains));
+  const producedResources = addResources(working.resources, calculateDailyProduction(ownedTerrains, season));
   const resourceDemand = decayDemand(working.resourceDemand);
 
   // 2b. Granaries/Canneries (research-gated — see domain/research) turn
@@ -160,8 +206,8 @@ export function simulateDay(state: GameState): GameState {
   // province's own grain/fish that same day is available to process) but
   // before step 4 folds the result into the food stock.
   const { foodProduced: processedFood, grainConsumed, fishConsumed } = produceProcessedFood(
-    working.granaryCount,
-    working.canneryCount,
+    workingCounts.granaries,
+    workingCounts.canneries,
     producedResources,
   );
   const resources: typeof producedResources = {
@@ -184,16 +230,33 @@ export function simulateDay(state: GameState): GameState {
   }
 
   // 3. Economy: daily income (project installments are already drained in
-  // step 1, so this is the only other thing moving the treasury on a tick).
-  const income = calculateDailyIncome(
+  // step 1, so this is the only other thing moving the treasury on a tick),
+  // with a bonus for every neighbor ruled by the party you backed — then
+  // the workforce's salaries. Staff who can't be paid walk out.
+  const grossIncome = calculateDailyIncome(
     working.stats,
     working.taxRate,
-    efficiencyMultiplier * lawEffects.incomeMultiplier * nationEffects.incomeMultiplier * researchEffects.incomeMultiplier * synergyEffects.incomeMultiplier,
+    efficiencyMultiplier *
+      lawEffects.incomeMultiplier *
+      nationEffects.incomeMultiplier *
+      researchEffects.incomeMultiplier *
+      synergyEffects.incomeMultiplier *
+      getDiplomacyIncomeMultiplier(working.foreignPolitics),
   );
+  const { workforce, laidOff } = layOffUntilAffordable(working.workforce, working.stats.treasury + grossIncome);
+  if (laidOff > 0) {
+    events.unshift({
+      id: generateId("event"),
+      date: state.date,
+      message: `The treasury can't cover salaries — ${laidOff} unpaid staff walk off the job.`,
+      severity: "warning",
+    });
+  }
+  const income = grossIncome - getDailySalaries(workforce);
   const treasury = working.stats.treasury + income;
 
   // 4. Food: production (farms + processed Grain/Fish) vs consumption.
-  const { newFoodStock, isShortage } = updateFood(working.stats, working.farmCount, processedFood);
+  const { newFoodStock, isShortage } = updateFood(working.stats, workingCounts.farms, season, processedFood);
   if (isShortage) {
     events.unshift({
       id: generateId("event"),
@@ -205,21 +268,19 @@ export function simulateDay(state: GameState): GameState {
 
   // 5. Industry output (derived from factories, scaled by laws + the research tree).
   const industry =
-    calculateIndustryOutput(working.factoryCount) *
+    calculateIndustryOutput(workingCounts.factories) *
     lawEffects.industryMultiplier *
     nationEffects.industryMultiplier *
     researchEffects.industryMultiplier *
     synergyEffects.industryMultiplier;
 
-  // 6. Research points accumulate passively.
-  const researchPoints = working.stats.researchPoints + calculateDailyResearch(working.educationLevel);
-
-  // 6b. Political power accumulates too, faster for a popular government.
+  // 6. Political power accumulates, faster for a popular government.
   const politicalPower = working.stats.politicalPower + calculateDailyPoliticalPower(working.stats.popularity);
 
-  // 7. Stability reacts to food shortages, popularity, and heavy debt.
+  // 7. Stability reacts to food shortages, popularity, and heavy debt;
+  // police on the payroll steady it a little.
   const statsWithFood: CountryStats = { ...working.stats, food: newFoodStock };
-  const stability = updateStability(statsWithFood, isShortage, getDebtStabilityPenalty(debt));
+  const stability = Math.min(100, updateStability(statsWithFood, isShortage, getDebtStabilityPenalty(debt)) + getPoliceStabilityBonus(workforce.police));
   if (isCollapseRisk({ ...statsWithFood, stability })) {
     events.unshift({
       id: generateId("event"),
@@ -262,7 +323,6 @@ export function simulateDay(state: GameState): GameState {
     food: newFoodStock,
     industry,
     stability,
-    researchPoints,
     politicalPower,
     popularity,
   };
@@ -320,6 +380,31 @@ export function simulateDay(state: GameState): GameState {
       message: move.message,
       severity: move.popularityDelta < 0 ? "warning" : "info",
     });
+  }
+
+  // 12c. Neighbors' politics move once a month: their electorates relax
+  // toward an even split, and a challenger past the threshold takes power.
+  let foreignPolitics = working.foreignPolitics;
+  if (!isGameOver && isFirstDayOfMonth(date)) {
+    const update = updateForeignPolitics(foreignPolitics);
+    foreignPolitics = update.foreignPolitics;
+    for (const change of update.changes) {
+      const nation = getNation(change.nationId);
+      const newParty = getParty(change.newRulingPartyId);
+      const friendly = isFriendly(foreignPolitics[change.nationId]);
+      events.unshift({
+        id: generateId("event"),
+        date,
+        message: `${nation.name} changes government: the ${newParty.name} takes power${friendly ? " — a friendly government, trade terms improve." : "."}`,
+        severity: friendly ? "info" : "warning",
+      });
+    }
+  }
+
+  // 12d. The turn of the season.
+  const seasonMessage = isFirstDayOfMonth(date) ? SEASON_MESSAGES[date.month] : undefined;
+  if (!isGameOver && seasonMessage) {
+    events.unshift({ id: generateId("event"), date, ...seasonMessage });
   }
 
   // 13. A general election, roughly every ELECTION_INTERVAL_MONTHS — the
@@ -388,6 +473,8 @@ export function simulateDay(state: GameState): GameState {
     resources: finalResources,
     resourceDemand,
     factionApproval: finalFactionApproval,
+    workforce,
+    foreignPolitics,
     debt,
     events: events.slice(0, MAX_EVENT_LOG_LENGTH),
     history: finalHistory,

@@ -89,6 +89,7 @@ export function ProductionPanel({ production }: ProductionPanelProps) {
         parts={[
           { icon: "treasury", label: "Tax", value: production.taxIncome },
           { icon: "industry", label: "Industry", value: production.industryIncome },
+          { icon: "population", label: "Salaries", value: -production.salaries },
         ]}
       />
 
@@ -96,14 +97,15 @@ export function ProductionPanel({ production }: ProductionPanelProps) {
         title="Food"
         net={production.netFood}
         parts={[
-          { icon: "food", label: "Farmed", value: production.foodProduced },
+          { icon: "food", label: production.season === "winter" ? "Farmed (winter)" : "Farmed", value: production.farmFood },
+          { icon: "industry", label: "Granaries & canneries", value: production.processedFood },
           { icon: "population", label: "Eaten", value: -production.foodConsumed },
         ]}
       />
 
-      <div className="production-panel__aside" title="Research points per day">
+      <div className="production-panel__aside" title="Research progress per day, all three areas together">
         <StatIcon type="research" size={17} />
-        <span>{signed(production.researchPointsPerDay)}/d</span>
+        <span>+{production.researchPerDay.toFixed(1)}/d</span>
       </div>
     </section>
   );

@@ -1,32 +1,82 @@
-// Research points accumulate passively every day, boosted by education
-// investment. They gate starting research projects (see domain/construction)
-// and every node in the research tree below.
-import { EDUCATION_PASS_CHANCE_CAP, EDUCATION_PASS_CHANCE_PER_LEVEL, RESEARCH_BASE_RATE, RESEARCH_DAYS_BY_TIER, RESEARCH_PER_EDUCATION_LEVEL, RIVAL_OPPOSE_PASS_CHANCE_PENALTY, RIVAL_SUPPORT_PASS_CHANCE_BONUS } from "../constants";
+// Research has no shared pool of points and no vote. Each area — industry,
+// agriculture, administration — works toward one node of your choosing at
+// its own daily rate (getResearchRates): a small base trickle, plus every
+// working building in that field, plus every scientist hired into it, all
+// sharpened by schools. Picking the direction is the only decision; funding
+// it means building things and paying scientists.
+import {
+  EDUCATION_RESEARCH_BONUS,
+  RESEARCH_BASE_RATE_PER_AREA,
+  RESEARCH_COST_BY_TIER,
+  RESEARCH_PER_FACTORY,
+  RESEARCH_PER_FARM,
+  RESEARCH_PER_FOOD_PROCESSOR,
+  RESEARCH_PER_ROAD,
+  RESEARCH_PER_SCHOOL,
+  RESEARCH_PER_SCIENTIST,
+} from "../constants";
 import type { ProjectType } from "../construction/types";
 import type { GameState } from "../country/types";
-import { getRivalParty } from "../parties/partyRules";
-import { getPartyStance } from "../parties/rivalRules";
+import { getWorkingCounts } from "../maintenance/maintenanceRules";
 import { RESEARCH_NODES } from "./researchData";
-import type { ResearchEffects, ResearchEnactCost, ResearchNode, ResearchOutcomeTier } from "./types";
-
-export function calculateDailyResearch(educationLevel: number): number {
-  return RESEARCH_BASE_RATE + educationLevel * RESEARCH_PER_EDUCATION_LEVEL;
-}
+import type { ResearchCategory, ResearchEffects, ResearchNode, ResearchOutcomeTier } from "./types";
 
 export function getResearchNode(id: string): ResearchNode | undefined {
   return RESEARCH_NODES.find((n) => n.id === id);
 }
 
+// Points of work a node needs before it's done.
+export function getResearchCost(node: ResearchNode): number {
+  return RESEARCH_COST_BY_TIER[node.tier];
+}
+
+export interface ResearchRateBreakdown {
+  base: number;
+  buildings: number;
+  scientists: number;
+  educationMultiplier: number;
+  total: number;
+}
+
+// Where one area's daily progress comes from — the panel shows these parts
+// so it's clear what building more or hiring more actually buys.
+export function getResearchRateBreakdown(state: GameState, category: ResearchCategory): ResearchRateBreakdown {
+  const working = getWorkingCounts(state);
+  const buildings =
+    category === "industry"
+      ? working.factories * RESEARCH_PER_FACTORY + working.roads * RESEARCH_PER_ROAD
+      : category === "agriculture"
+        ? working.farms * RESEARCH_PER_FARM + (working.granaries + working.canneries) * RESEARCH_PER_FOOD_PROCESSOR
+        : working.schools * RESEARCH_PER_SCHOOL;
+  const scientists = state.workforce.scientists[category] * RESEARCH_PER_SCIENTIST;
+  const educationMultiplier = 1 + working.schools * EDUCATION_RESEARCH_BONUS;
+  return {
+    base: RESEARCH_BASE_RATE_PER_AREA,
+    buildings,
+    scientists,
+    educationMultiplier,
+    total: (RESEARCH_BASE_RATE_PER_AREA + buildings + scientists) * educationMultiplier,
+  };
+}
+
+export function getResearchRates(state: GameState): Record<ResearchCategory, number> {
+  return {
+    industry: getResearchRateBreakdown(state, "industry").total,
+    agriculture: getResearchRateBreakdown(state, "agriculture").total,
+    administration: getResearchRateBreakdown(state, "administration").total,
+  };
+}
+
 // Granary/Cannery (and any future research-gated building) are buildable
-// once the node that names them in unlocksBuildingType has actually passed
-// its vote — see ActionsPanel.tsx.
+// once the node that names them in unlocksBuildingType has completed — see
+// ActionsPanel.tsx.
 export function isBuildingUnlocked(enactedResearchIds: string[], type: ProjectType): boolean {
   return RESEARCH_NODES.some((n) => n.unlocksBuildingType === type && enactedResearchIds.includes(n.id));
 }
 
 // "You don't know if the scientist will actually make something good" — a
-// passed vote still rolls how well it actually panned out. Weighted toward
-// "expected" so most adoptions feel like what the node promised, with real
+// finished node still rolls how well it actually panned out. Weighted toward
+// "expected" so most results feel like what the node promised, with real
 // upside and downside tails on either end.
 const RESEARCH_OUTCOME_TABLE: Array<{ tier: ResearchOutcomeTier; weight: number; factor: number; flavor: string }> = [
   { tier: "breakthrough", weight: 0.2, factor: 1.5, flavor: "a genuine breakthrough — the results exceed every projection" },
@@ -67,8 +117,8 @@ export function scaleResearchEffects(effects: ResearchEffects, factor: number): 
   return scaled;
 }
 
-// Ongoing multipliers from every enacted research node, composed the same
-// way getActiveLawEffects folds enacted laws together — each node's own
+// Ongoing multipliers from every completed research node, composed the
+// same way getActiveLawEffects folds enacted laws together — each node's own
 // rolled outcome (see rollResearchOutcome) scales its contribution.
 export function getActiveResearchEffects(
   enactedResearchIds: string[],
@@ -86,22 +136,17 @@ export function getActiveResearchEffects(
   return { incomeMultiplier, industryMultiplier };
 }
 
-// No "locked-quota" here — Research has no stat condition to meet at all
-// (that's what distinguishes it from Laws). Whether you can actually afford
-// a node's researchPoints/treasury/resource cost is a separate, softer
-// question — see canAffordResearchEnactCost — surfaced as a disabled vote
-// button, not a hard lock icon.
 export type ResearchNodeStatus =
-  | "enacted"
-  | "in-progress" // funded, still in the lab — see GameState.activeResearch
+  | "enacted" // completed
+  | "in-progress" // its area's current direction
   | "foreclosed"
   | "locked-prerequisite"
   | "locked-cross" // a required node in the Law tree isn't enacted yet
-  | "available"; // ready for a vote (may still be unaffordable — see canEnactResearch)
+  | "available"; // can be chosen as its area's direction
 
 export function getResearchNodeStatus(state: GameState, node: ResearchNode): ResearchNodeStatus {
   if (state.enactedResearchIds.includes(node.id)) return "enacted";
-  if (state.activeResearch?.nodeId === node.id) return "in-progress";
+  if (state.researchFocus[node.category] === node.id) return "in-progress";
 
   const siblingEnacted = RESEARCH_NODES.some(
     (n) => n.category === node.category && n.tier === node.tier && n.id !== node.id && state.enactedResearchIds.includes(n.id),
@@ -120,37 +165,21 @@ export function getResearchNodeStatus(state: GameState, node: ResearchNode): Res
   return "available";
 }
 
-export function canAffordResearchEnactCost(state: GameState, cost: ResearchEnactCost): boolean {
-  if (state.stats.treasury < cost.treasury) return false;
-  if (state.stats.researchPoints < cost.researchPoints) return false;
-  if (cost.resourceType && (cost.resourceAmount ?? 0) > state.resources[cost.resourceType]) return false;
-  return true;
-}
-
-export function canEnactResearch(state: GameState, id: string): boolean {
+// Choosing a direction is free — switching away from a half-done node keeps
+// its progress (GameState.researchProgress) for if you come back to it.
+export function canFocusResearch(state: GameState, id: string): boolean {
   const node = getResearchNode(id);
-  if (!node) return false;
-  // One technology in the lab at a time — see GameState.activeResearch.
-  return getResearchNodeStatus(state, node) === "available" && !state.activeResearch && canAffordResearchEnactCost(state, node.enactCost);
+  return node !== undefined && getResearchNodeStatus(state, node) === "available";
 }
 
-// How long a funded technology spends in the lab before it takes effect.
-export function getResearchDays(node: ResearchNode): number {
-  return RESEARCH_DAYS_BY_TIER[node.tier];
+export function getResearchProgressRatio(state: GameState, node: ResearchNode): number {
+  return Math.min(1, (state.researchProgress[node.id] ?? 0) / getResearchCost(node));
 }
 
-// A better-educated population runs more successful trials (a capped bonus,
-// so it never guarantees a pass), and the rival party's stance on this exact
-// node swings the vote too — see domain/parties/rivalRules.ts.
-export function getEffectivePassChance(state: GameState, node: ResearchNode): number {
-  const educationNudge = Math.min(EDUCATION_PASS_CHANCE_CAP, state.educationLevel * EDUCATION_PASS_CHANCE_PER_LEVEL);
-  const rival = getRivalParty(state.partyId);
-  const stance = getPartyStance(rival.ideology, node.effects);
-  const rivalNudge = stance === "opposes" ? -RIVAL_OPPOSE_PASS_CHANCE_PENALTY : stance === "supports" ? RIVAL_SUPPORT_PASS_CHANCE_BONUS : 0;
-  return Math.min(0.98, Math.max(0.05, node.passChance + educationNudge + rivalNudge));
-}
-
-export function getRivalStance(state: GameState, node: ResearchNode) {
-  const rival = getRivalParty(state.partyId);
-  return getPartyStance(rival.ideology, node.effects);
+// Whole days left at today's rate for that area, or null if it's stalled.
+export function getResearchDaysLeft(state: GameState, node: ResearchNode): number | null {
+  const rate = getResearchRateBreakdown(state, node.category).total;
+  if (rate <= 0) return null;
+  const remaining = getResearchCost(node) - (state.researchProgress[node.id] ?? 0);
+  return Math.max(0, Math.ceil(remaining / rate));
 }

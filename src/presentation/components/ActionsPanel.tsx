@@ -11,6 +11,7 @@ import {
   CANNERY_COST,
   CANNERY_ORE_COST,
   CURRENCY_SYMBOL,
+  FARM_SEASON_MULTIPLIER,
   EDUCATION_BUILD_DAYS,
   EDUCATION_COST,
   EDUCATION_WOOD_COST,
@@ -36,13 +37,16 @@ import {
   ROAD_ORE_COST,
 } from "../../domain/constants";
 import type { ProjectType } from "../../domain/construction/types";
+import { getSeason, type Season } from "../../domain/country/calendar";
 import type { GameState } from "../../domain/country/types";
+import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { getResearchNode, isBuildingUnlocked } from "../../domain/research/researchRules";
 import type { ResourceType } from "../../domain/resources/types";
 import { playConfirm } from "../audio/sound";
 import { formatCompact } from "../formatNumber";
 import { BUILDING_COLORS, BuildingIcon } from "./BuildingIcon";
+import { WrenchIcon } from "./RepairsPanel";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 
@@ -130,7 +134,7 @@ interface BuildItem {
   resourceCost: number;
   resourceType: ResourceType;
   buildDays: number;
-  yields: ReactNode; // glyph + a short number — the full sentence is `hint`
+  yields: ReactNode | ((season: Season) => ReactNode); // glyph + a short number — the full sentence is `hint`
   hint: string;
   unlockedBy?: string; // research node name, for buildings still locked behind the Research tree
 }
@@ -144,12 +148,15 @@ const BUILD_ITEMS: BuildItem[] = [
     resourceCost: FARM_WOOD_COST,
     resourceType: "wood",
     buildDays: FARM_BUILD_DAYS,
-    yields: (
+    // Today's seasonal yield, not the nominal one — a farm built in winter
+    // should say so.
+    yields: (season) => (
       <>
-        <StatIcon type="food" size={16} />+{formatCompact(FOOD_PER_FARM)}
+        <StatIcon type="food" size={16} />+{formatCompact(FOOD_PER_FARM * FARM_SEASON_MULTIPLIER[season])}
+        {season === "winter" && <span className="build-tile__season">❄</span>}
       </>
     ),
-    hint: `Produces ${FOOD_PER_FARM.toLocaleString()} food per day`,
+    hint: `Produces ${FOOD_PER_FARM.toLocaleString()} food per day — more at harvest, far less in winter`,
   },
   {
     type: "factory",
@@ -235,6 +242,7 @@ const BUILD_ITEMS: BuildItem[] = [
 ];
 
 export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPanelProps) {
+  const season = getSeason(state.date);
   return (
     <section className="panel actions-panel">
       <div className="actions-panel__header">
@@ -255,6 +263,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
           const treasuryShort = state.stats.treasury < upfront(item.cost);
           const resourceShort = state.resources[item.resourceType] < upfront(item.resourceCost);
           const unlockName = item.unlockedBy ? getResearchNode(item.unlockedBy)?.name : undefined;
+          const brokenHere = state.placedBuildings.filter((b) => b.type === item.type && b.provinceId === selectedProvinceId && !isWorking(b)).length;
 
           const title = isLocked
             ? `${item.name} — unlocked by ${unlockName ?? "research"} (Research tab)`
@@ -282,6 +291,12 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
                 <svg viewBox="-12 -16 24 24">
                   <BuildingIcon type={item.type} x={0} y={0} size={7} />
                 </svg>
+                {brokenHere > 0 && (
+                  <span className="build-tile__broken" title={`${brokenHere} broken here — repair from the Repairs panel`}>
+                    <WrenchIcon size={11} />
+                    {brokenHere}
+                  </span>
+                )}
                 {isLocked && (
                   <span className="build-tile__lock">
                     <LockIcon />
@@ -298,7 +313,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
                 </span>
               ) : (
                 <>
-                  <span className="build-tile__yield">{item.yields}</span>
+                  <span className="build-tile__yield">{typeof item.yields === "function" ? item.yields(season) : item.yields}</span>
                   <span className="build-tile__costs">
                     <CostPip
                       icon={<StatIcon type="treasury" size={14} />}

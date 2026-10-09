@@ -30,6 +30,18 @@ export function isEveryNMonths(date: GameDate, n: number): boolean {
   return totalMonths % n === 1;
 }
 
+export type Season = "spring" | "summer" | "autumn" | "winter";
+
+// Meteorological seasons: Mar-May spring, Jun-Aug summer, Sep-Nov autumn,
+// Dec-Feb winter. Winter is what matters to the simulation — see
+// FARM_SEASON_MULTIPLIER in constants.ts and domain/food.
+export function getSeason(date: GameDate): Season {
+  if (date.month >= 3 && date.month <= 5) return "spring";
+  if (date.month >= 6 && date.month <= 8) return "summer";
+  if (date.month >= 9 && date.month <= 11) return "autumn";
+  return "winter";
+}
+
 const MONTH_NAMES = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",

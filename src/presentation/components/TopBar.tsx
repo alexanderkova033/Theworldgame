@@ -1,6 +1,6 @@
 import "./TopBar.css";
 import { useState, type CSSProperties } from "react";
-import { formatDate } from "../../domain/country/calendar";
+import { formatDate, type Season } from "../../domain/country/calendar";
 import type { CountryStats, GameDate, GameSpeed } from "../../domain/country/types";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import type { ResourceBundle } from "../../domain/resources/types";
@@ -30,6 +30,60 @@ function DateIcon() {
       <path d="M-4,-6.3 L4,-6.3 L1,-0.4 L-1,-0.4 Z" fill="#c9a24a" opacity={0.85} />
     </svg>
   );
+}
+
+// The season, as a glyph beside the date — winter matters (farms barely
+// yield), so it should be visible without opening anything.
+const SEASON_LABELS: Record<Season, string> = {
+  spring: "Spring",
+  summer: "Summer",
+  autumn: "Autumn — harvest season, farms yield their best",
+  winter: "Winter — farms yield little, grain fields lie fallow",
+};
+
+function SeasonIcon({ season }: { season: Season }) {
+  switch (season) {
+    case "spring":
+      return (
+        <svg width={16} height={16} viewBox="-10 -10 20 20">
+          <path d="M0,8 L0,-1" stroke="#6fae7c" strokeWidth={1.6} strokeLinecap="round" />
+          <path d="M0,1 C-6,0 -7,-6 -6,-7 C-1,-7 0,-3 0,1 Z" fill="#8bc34a" />
+          <path d="M0,-1 C5,-2 7,-7 6,-8 C1,-8 0,-5 0,-1 Z" fill="#6fae7c" />
+        </svg>
+      );
+    case "summer":
+      return (
+        <svg width={16} height={16} viewBox="-10 -10 20 20">
+          <circle r={4.2} fill="#f0c869" />
+          <g stroke="#f0c869" strokeWidth={1.5} strokeLinecap="round">
+            {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
+              <line key={angle} x1={0} y1={-6.2} x2={0} y2={-8.6} transform={`rotate(${angle})`} />
+            ))}
+          </g>
+        </svg>
+      );
+    case "autumn":
+      return (
+        <svg width={16} height={16} viewBox="-10 -10 20 20">
+          <path d="M0,-8.5 L2,-3.5 L7,-5 L4.5,0 L8,2.5 L3,3.5 L3.5,7 L0,5 L-3.5,7 L-3,3.5 L-8,2.5 L-4.5,0 L-7,-5 L-2,-3.5 Z" fill="#d9822b" stroke="#8a4a14" strokeWidth={0.6} />
+          <line x1={0} y1={5} x2={0} y2={9} stroke="#8a4a14" strokeWidth={1.2} strokeLinecap="round" />
+        </svg>
+      );
+    case "winter":
+      return (
+        <svg width={16} height={16} viewBox="-10 -10 20 20">
+          <g stroke="#bfe3f5" strokeWidth={1.5} strokeLinecap="round">
+            {[0, 60, 120].map((angle) => (
+              <g key={angle} transform={`rotate(${angle})`}>
+                <line x1={0} y1={-8} x2={0} y2={8} />
+                <polyline points="-2.4,-6.2 0,-4 2.4,-6.2" fill="none" />
+                <polyline points="-2.4,6.2 0,4 2.4,6.2" fill="none" />
+              </g>
+            ))}
+          </g>
+        </svg>
+      );
+  }
 }
 
 function PlayIcon() {
@@ -80,7 +134,6 @@ interface TopBarProps {
   resources: ResourceBundle;
   production: DailyProductionSummary;
   debt: number;
-  educationLevel: number;
   activePanel: PanelKey | null;
   reportsBadgeCount: number;
   onPause: () => void;
@@ -100,7 +153,6 @@ export function TopBar({
   resources,
   production,
   debt,
-  educationLevel,
   activePanel,
   reportsBadgeCount,
   onPause,
@@ -118,7 +170,7 @@ export function TopBar({
           <span className="top-bar__party">{partyName}</span>
         </span>
 
-        <ResourceTicker stats={stats} resources={resources} production={production} debt={debt} educationLevel={educationLevel} />
+        <ResourceTicker stats={stats} resources={resources} production={production} debt={debt} />
 
         <div className="top-bar__spacer" />
 
@@ -135,7 +187,8 @@ export function TopBar({
           <SpeakerIcon muted={muted} />
         </button>
 
-        <span className="top-bar__date">
+        <span className={`top-bar__date top-bar__date--${production.season}`} title={SEASON_LABELS[production.season]}>
+          <SeasonIcon season={production.season} />
           <DateIcon />
           {formatDate(date)}
         </span>

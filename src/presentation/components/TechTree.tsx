@@ -152,14 +152,23 @@ interface TreeColumnsProps<N extends TreeNode> {
   categories: Array<{ key: string; label: string; icon: StatIconType }>;
   nodesFor: (categoryKey: string, tier: number) => N[];
   getStatus: (node: N) => TreeNodeStatus;
-  progress: { nodeId: string; ratio: number } | null; // the one node currently underway, if any
+  getProgress: (node: N) => number; // 0..1 — fills the ring on an in-progress node
+  renderColumnExtra?: (categoryKey: string) => ReactNode; // shown under each column's title
   selectedId: string | null;
   onSelect: (nodeId: string) => void;
 }
 
 // The tree proper: one column per category, one row per tier, forks drawn
 // between them.
-export function TreeColumns<N extends TreeNode>({ categories, nodesFor, getStatus, progress, selectedId, onSelect }: TreeColumnsProps<N>) {
+export function TreeColumns<N extends TreeNode>({
+  categories,
+  nodesFor,
+  getStatus,
+  getProgress,
+  renderColumnExtra,
+  selectedId,
+  onSelect,
+}: TreeColumnsProps<N>) {
   return (
     <div className="law-tree__columns">
       {categories.map((category) => (
@@ -168,6 +177,7 @@ export function TreeColumns<N extends TreeNode>({ categories, nodesFor, getStatu
             <StatIcon type={category.icon} size={20} />
             {category.label}
           </h3>
+          {renderColumnExtra?.(category.key)}
 
           {TIERS.map((tier, tierIndex) => {
             const nodes = nodesFor(category.key, tier);
@@ -181,7 +191,7 @@ export function TreeColumns<N extends TreeNode>({ categories, nodesFor, getStatu
                       key={node.id}
                       node={node}
                       status={getStatus(node)}
-                      progress={progress?.nodeId === node.id ? progress.ratio : 0}
+                      progress={getProgress(node)}
                       isSelected={selectedId === node.id}
                       onSelect={() => onSelect(node.id)}
                     />

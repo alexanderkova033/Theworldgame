@@ -1,72 +1,124 @@
 // The Research tree shares LawsPanel's stylesheet and every piece of its
-// shape (see TechTree.tsx) — what differs is the gate: research points
-// instead of a country-condition quota, and education instead of popularity
-// nudging the vote.
+// shape (see TechTree.tsx) — what differs is how it moves. There's no vote
+// and no price: each column is a research area with its own daily rate
+// (its buildings + its scientists), and you only choose which node it
+// works toward. The column headers carry that rate, the scientists hired
+// into the area, and how far along its current direction is.
 import "./LawsPanel.css";
+import "./ResearchPanel.css";
 import { useEffect, useRef, useState } from "react";
-import { enactResearch } from "../../application/actions";
+import { clearResearchFocus, focusResearch } from "../../application/actions";
+import { CURRENCY_SYMBOL, SCIENTIST_SALARY } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getLawNode } from "../../domain/laws/lawsRules";
-import { getRivalParty } from "../../domain/parties/partyRules";
 import { RESEARCH_NODES } from "../../domain/research/researchData";
 import {
-  calculateDailyResearch,
-  canAffordResearchEnactCost,
-  getEffectivePassChance,
-  getResearchDays,
+  getResearchCost,
+  getResearchDaysLeft,
+  getResearchNode,
   getResearchNodeStatus,
   getResearchOutcomeFlavor,
-  getRivalStance,
+  getResearchProgressRatio,
+  getResearchRateBreakdown,
 } from "../../domain/research/researchRules";
 import type { ResearchCategory, ResearchNode } from "../../domain/research/types";
 import { getSynergiesForResearch } from "../../domain/synergy/synergyRules";
+import { getScientistCap, getTotalScientists } from "../../domain/workforce/workforceRules";
 import { playConfirm } from "../audio/sound";
-import { CostChips, DaysChip, ResourceChip, StatChip, TreasuryChip } from "./CostChips";
-import { InspectorHeader, StatusLine, SynergyLine, TreeBank, TreeColumns, VoteRow, WorkInProgress, type TreeNodeStatus } from "./TechTree";
+import { CostChips, StatChip } from "./CostChips";
+import { StatIcon } from "./StatIcon";
+import { InspectorHeader, StatusLine, SynergyLine, TreeColumns, type TreeNodeStatus } from "./TechTree";
+import { AREA_ICONS, AREA_LABELS } from "../researchAreas";
+import { ScientistStepper } from "./WorkforcePanel";
+
+type Dispatch = (action: (state: GameState) => GameState) => void;
 
 interface ResearchPanelProps {
   state: GameState;
-  dispatch: (action: (state: GameState) => GameState) => void;
+  dispatch: Dispatch;
 }
 
-const CATEGORIES = [
-  { key: "industry", label: "Industry", icon: "industry" as const },
-  { key: "agriculture", label: "Agriculture", icon: "food" as const },
-  { key: "administration", label: "Administration", icon: "stability" as const },
-];
+const CATEGORIES = (["industry", "agriculture", "administration"] as const).map((key) => ({
+  key,
+  label: AREA_LABELS[key],
+  icon: AREA_ICONS[key],
+}));
 
 function nodesFor(category: string, tier: number): ResearchNode[] {
   return RESEARCH_NODES.filter((n) => n.category === (category as ResearchCategory) && n.tier === tier);
+}
+
+// Under each column title: the area's daily rate (with where it comes from
+// in the tooltip), its scientists, and its current direction's progress —
+// or a warning that it's idle.
+function AreaHeader({ state, category, dispatch, onSelectNode }: { state: GameState; category: ResearchCategory; dispatch: Dispatch; onSelectNode: (id: string) => void }) {
+  const rate = getResearchRateBreakdown(state, category);
+  const focusId = state.researchFocus[category];
+  const focusNode = focusId ? getResearchNode(focusId) : undefined;
+  const ratio = focusNode ? getResearchProgressRatio(state, focusNode) : 0;
+  const daysLeft = focusNode ? getResearchDaysLeft(state, focusNode) : null;
+
+  return (
+    <div className="research-area">
+      <div className="research-area__row">
+        <span
+          className="research-area__rate"
+          title={`Base ${rate.base.toFixed(2)} + buildings ${rate.buildings.toFixed(2)} + scientists ${rate.scientists.toFixed(2)}, ×${rate.educationMultiplier.toFixed(2)} from schools`}
+        >
+          <StatIcon type="research" size={16} />+{rate.total.toFixed(2)}/d
+        </span>
+        <ScientistStepper state={state} category={category} dispatch={dispatch} />
+      </div>
+      {focusNode ? (
+        <button type="button" className="research-area__focus" onClick={() => onSelectNode(focusNode.id)} title={`${focusNode.name}: ${Math.round(ratio * 100)}%`}>
+          <span className="research-area__bar">
+            <span className="research-area__fill" style={{ width: `${Math.round(ratio * 100)}%` }} />
+          </span>
+          <span className="research-area__days">{daysLeft === null ? "—" : `${daysLeft}d`}</span>
+        </button>
+      ) : (
+        <span className="research-area__idle" title="This area's research is going nowhere — pick a node below">
+          Idle — pick a direction
+        </span>
+      )}
+    </div>
+  );
 }
 
 interface ResearchInspectorProps {
   node: ResearchNode;
   state: GameState;
   status: TreeNodeStatus;
-  isArmed: boolean;
-  onArm: () => void;
-  onConfirm: () => void;
+  onFocus: () => void;
+  onStop: () => void;
 }
 
-function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: ResearchInspectorProps) {
-  const passChance = Math.round(getEffectivePassChance(state, node) * 100);
-  const rival = getRivalParty(state.partyId);
-  const stance = getRivalStance(state, node);
+function ResearchInspector({ node, state, status, onFocus, onStop }: ResearchInspectorProps) {
   const crossNodeName = node.crossRequirement ? getLawNode(node.crossRequirement.nodeId)?.name : undefined;
+  const ratio = getResearchProgressRatio(state, node);
+  const daysLeft = getResearchDaysLeft(state, node);
+  const currentFocus = state.researchFocus[node.category];
+  const isSwitch = status === "available" && currentFocus !== null && currentFocus !== node.id;
 
   return (
     <div className="law-inspector">
       <InspectorHeader node={node} description={node.description} benefit={node.benefit} cost={node.cost} effects={node.effects} />
 
-      <div className="law-inspector__enact-cost">
-        <span className="law-inspector__enact-cost-label">To fund the trial</span>
-        <CostChips>
-          <StatChip type="research" amount={node.enactCost.researchPoints} />
-          <TreasuryChip amount={node.enactCost.treasury.toLocaleString()} />
-          {node.enactCost.resourceType && <ResourceChip type={node.enactCost.resourceType} amount={node.enactCost.resourceAmount ?? 0} />}
-          <DaysChip days={getResearchDays(node)} />
-        </CostChips>
-      </div>
+      {status !== "enacted" && (
+        <div className="law-inspector__enact-cost">
+          <span className="law-inspector__enact-cost-label">Work needed</span>
+          <CostChips>
+            <StatChip type="research" amount={getResearchCost(node)} />
+          </CostChips>
+          {daysLeft !== null && <span className="research-inspector__eta">≈ {daysLeft} days at today's rate</span>}
+        </div>
+      )}
+
+      {ratio > 0 && status !== "enacted" && (
+        <div className="progress-bar" title={`${Math.round(ratio * 100)}% done`}>
+          <div className="progress-bar__fill" style={{ width: `${Math.round(ratio * 100)}%` }} />
+        </div>
+      )}
 
       {getSynergiesForResearch(node.id).map((synergy) => (
         <SynergyLine
@@ -77,34 +129,37 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
         />
       ))}
 
-      {stance !== "neutral" && status !== "enacted" && (
-        <p className={`rival-stance is-${stance}`}>
-          {rival.name} {stance === "opposes" ? "opposes this." : "supports this."}
-        </p>
-      )}
-
       {status === "enacted" && (
-        <StatusLine status="enacted">Adopted — {getResearchOutcomeFlavor(state.researchOutcomes[node.id]) ?? "as projected"}.</StatusLine>
-      )}
-      {status === "in-progress" && state.activeResearch && (
-        <StatusLine status="in-progress">In the lab — {state.activeResearch.daysRemaining} days left.</StatusLine>
+        <StatusLine status="enacted">Complete — {getResearchOutcomeFlavor(state.researchOutcomes[node.id]) ?? "as projected"}.</StatusLine>
       )}
       {status === "foreclosed" && <StatusLine status="foreclosed">A rival technology took this branch.</StatusLine>}
-      {status === "locked-prerequisite" && <StatusLine status="locked">Adopt the technology above it first.</StatusLine>}
+      {status === "locked-prerequisite" && <StatusLine status="locked">Finish the technology above it first.</StatusLine>}
       {status === "locked-cross" && <StatusLine status="locked">Needs {crossNodeName ?? "a Law"} (Laws).</StatusLine>}
 
+      {status === "in-progress" && (
+        <div className="law-inspector__vote">
+          <StatusLine status="in-progress">This is where {AREA_LABELS[node.category].toLowerCase()} research is headed.</StatusLine>
+          <button type="button" onClick={onStop}>
+            Stop
+          </button>
+        </div>
+      )}
+
       {status === "available" && (
-        <VoteRow
-          passChance={passChance}
-          affordable={canAffordResearchEnactCost(state, node.enactCost)}
-          busy={state.activeResearch !== null}
-          isArmed={isArmed}
-          onArm={onArm}
-          onConfirm={() => {
-            playConfirm();
-            onConfirm();
-          }}
-        />
+        <div className="law-inspector__vote">
+          <button
+            type="button"
+            className="btn-primary law-inspector__vote-button"
+            onClick={() => {
+              playConfirm();
+              onFocus();
+            }}
+            title={isSwitch ? "Progress on the current direction is kept if you come back to it" : undefined}
+          >
+            <StatIcon type="research" size={16} />
+            {isSwitch ? "Switch direction" : "Research this"}
+          </button>
+        </div>
       )}
     </div>
   );
@@ -112,14 +167,10 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
 
 export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [armedId, setArmedId] = useState<string | null>(null);
   const inspectorRef = useRef<HTMLDivElement>(null);
 
   const selectedNode = selectedId ? (RESEARCH_NODES.find((n) => n.id === selectedId) ?? null) : null;
-  const activeNode = state.activeResearch ? (RESEARCH_NODES.find((n) => n.id === state.activeResearch?.nodeId) ?? null) : null;
-  const progress = state.activeResearch
-    ? { nodeId: state.activeResearch.nodeId, ratio: 1 - state.activeResearch.daysRemaining / state.activeResearch.totalDays }
-    : null;
+  const scientists = getTotalScientists(state.workforce);
 
   // The tree can run 4 tiers deep, well past the fold — without this, picking
   // a node (especially near the bottom of a branch) opens the inspector
@@ -130,25 +181,29 @@ export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
 
   return (
     <div className="law-tree research-tree">
-      {/* What the tree itself can't show: the pool every node spends from,
-          and whatever is in the lab right now. */}
       <div className="law-tree__header">
-        <TreeBank icon="research" label="Research points" value={state.stats.researchPoints} rate={calculateDailyResearch(state.educationLevel)} />
-        {activeNode && state.activeResearch && (
-          <WorkInProgress
-            node={activeNode}
-            daysRemaining={state.activeResearch.daysRemaining}
-            totalDays={state.activeResearch.totalDays}
-            onSelect={() => setSelectedId(activeNode.id)}
-          />
-        )}
+        <span
+          className="law-tree__bank"
+          title={`Scientists employed, of how many your schools can train. Each costs ${SCIENTIST_SALARY} ${CURRENCY_SYMBOL}/day.`}
+        >
+          <StatIcon type="research" size={22} />
+          <span className="law-tree__bank-value">
+            {scientists}/{getScientistCap(state.educationLevel)}
+          </span>
+          <span className="law-tree__bank-rate is-cost">
+            −{scientists * SCIENTIST_SALARY} {CURRENCY_SYMBOL}/d
+          </span>
+        </span>
       </div>
 
       <TreeColumns
         categories={CATEGORIES}
         nodesFor={nodesFor}
         getStatus={(node) => getResearchNodeStatus(state, node)}
-        progress={progress}
+        getProgress={(node) => getResearchProgressRatio(state, node)}
+        renderColumnExtra={(key) => (
+          <AreaHeader state={state} category={key as ResearchCategory} dispatch={dispatch} onSelectNode={setSelectedId} />
+        )}
         selectedId={selectedId}
         onSelect={(id) => setSelectedId(id === selectedId ? null : id)}
       />
@@ -159,12 +214,8 @@ export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
             node={selectedNode}
             state={state}
             status={getResearchNodeStatus(state, selectedNode)}
-            isArmed={armedId === selectedNode.id}
-            onArm={() => setArmedId(selectedNode.id)}
-            onConfirm={() => {
-              dispatch((s) => enactResearch(s, selectedNode.id));
-              setArmedId(null);
-            }}
+            onFocus={() => dispatch((s) => focusResearch(s, selectedNode.id))}
+            onStop={() => dispatch((s) => clearResearchFocus(s, selectedNode.category))}
           />
         </div>
       )}

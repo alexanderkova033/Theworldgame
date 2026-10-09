@@ -8,11 +8,13 @@ import { monthsUntilNextElection } from "../../domain/parties/electionRules";
 import { FACTIONS, getFactionWeights } from "../../domain/parties/factionData";
 import { getParty, getRivalParty } from "../../domain/parties/partyRules";
 import type { Ideology } from "../../domain/parties/types";
+import { ForeignAffairs } from "./ForeignAffairs";
 import { NavIcon } from "./NavIcon";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
 interface PoliticsPanelProps {
   state: GameState;
+  dispatch: (action: (state: GameState) => GameState) => void;
 }
 
 const IDEOLOGY_ICONS: Record<Ideology, StatIconType> = {
@@ -71,7 +73,7 @@ function CoalitionRow({ ideology, weight, approval, tag, color }: CoalitionRowPr
   );
 }
 
-export function PoliticsPanel({ state }: PoliticsPanelProps) {
+export function PoliticsPanel({ state, dispatch }: PoliticsPanelProps) {
   const party = getParty(state.partyId);
   const rival = getRivalParty(state.partyId);
   const weights = getFactionWeights(state.nationId);
@@ -147,6 +149,8 @@ export function PoliticsPanel({ state }: PoliticsPanelProps) {
             />
           ))}
       </div>
+
+      <ForeignAffairs state={state} dispatch={dispatch} />
 
       <div className="politics-panel__progress">
         <span className="politics-panel__progress-label">

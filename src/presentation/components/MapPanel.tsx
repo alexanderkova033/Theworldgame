@@ -1,9 +1,11 @@
 import "./MapPanel.css";
 import { memo, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { ProjectType } from "../../domain/construction/types";
+import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import { NATIONS } from "../../domain/nations/nationData";
 import { getNationForProvince } from "../../domain/nations/nationRules";
 import type { Nation } from "../../domain/nations/types";
+import { getParty } from "../../domain/parties/partyRules";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
 import type { PlacedBuilding, Terrain } from "../../domain/provinces/types";
 import { RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
@@ -44,6 +46,7 @@ interface MapPanelProps {
   expeditionIslandIds: string[]; // islands with an expedition currently in progress
   selectedIslandId: string | null;
   onSelectIsland: (islandId: string) => void;
+  foreignRulers: Record<string, string>; // nationId -> ruling party id, for every nation but the player's
 }
 
 // Every terrain gets a decorative texture, drawn on top of the province's
@@ -72,6 +75,30 @@ const TERRAIN_TINT: Record<Terrain, string> = {
 // Each road built thickens the single line to its province (instead of
 // fanning out extra parallel lines) — a "×N" badge carries the exact count
 // so the line itself never has to turn into a tangle to stay informative.
+// Every nation as one shape — all its provinces as subpaths of a single
+// path, so a filter can find the nation's *outer* edge without the internal
+// province borders getting in the way — plus a point to center its name on.
+const NATION_SHAPES = NATIONS.map((n) => {
+  const owned = MAP_GEOMETRY.provinces.filter((p) => n.provinceIds.includes(p.id));
+  return {
+    nation: n,
+    path: owned.map((p) => p.path).join(" "),
+    labelX: owned.reduce((sum, p) => sum + p.labelX, 0) / owned.length,
+    labelY: owned.reduce((sum, p) => sum + p.labelY, 0) / owned.length,
+  };
+});
+
+// A brighter shade of a nation's color for its border band, so the band
+// stands out against the nation's own fill.
+function lighten(hex: string, amount: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  const channel = (shift: number) => {
+    const c = (n >> shift) & 0xff;
+    return Math.round(c + (255 - c) * amount);
+  };
+  return `rgb(${channel(16)}, ${channel(8)}, ${channel(0)})`;
+}
+
 const ROAD_BASE_WIDTH = 2.5;
 const ROAD_WIDTH_PER_ROAD = 1.1;
 const ROAD_MAX_WIDTH = 9;
@@ -174,6 +201,7 @@ export const MapPanel = memo(function MapPanel({
   expeditionIslandIds,
   selectedIslandId,
   onSelectIsland,
+  foreignRulers,
 }: MapPanelProps) {
   const { coastPath, provinces, otherLandmasses } = MAP_GEOMETRY;
   const capital = provinces.find((p) => p.id === nation.capitalProvinceId);
@@ -367,6 +395,14 @@ export const MapPanel = memo(function MapPanel({
             <filter id="coast-shadow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#000" floodOpacity="0.45" />
             </filter>
+            {/* A nation's border band: its combined shape minus an eroded
+                copy of itself leaves a ring just inside the outer edge —
+                internal province borders don't exist in the combined alpha,
+                so only the national frontier gets the band. */}
+            <filter id="nation-border" x="-5%" y="-5%" width="110%" height="110%">
+              <feMorphology in="SourceAlpha" operator="erode" radius={5} result="inner" />
+              <feComposite in="SourceGraphic" in2="inner" operator="out" />
+            </filter>
             <filter id="shallow-blur" x="-60%" y="-60%" width="220%" height="220%">
               <feGaussianBlur stdDeviation="9" />
             </filter>
@@ -540,6 +576,21 @@ export const MapPanel = memo(function MapPanel({
             })}
           </g>
 
+          {/* National frontiers: a band in each nation's (brightened) color
+              just inside its outer edge, so who owns what reads at a glance
+              even where two nations' fills sit side by side. */}
+          <g pointerEvents="none">
+            {NATION_SHAPES.map((shape) => (
+              <path
+                key={`${shape.nation.id}-border`}
+                d={shape.path}
+                fill={lighten(shape.nation.color, shape.nation.id === nation.id ? 0.45 : 0.3)}
+                filter="url(#nation-border)"
+                className="map-panel__nation-border"
+              />
+            ))}
+          </g>
+
           {/* Road network: every road built in the capital grows its hub;
               every road built elsewhere thickens the single line connecting
               that province to the capital, with a "×N" badge carrying the
@@ -601,6 +652,31 @@ export const MapPanel = memo(function MapPanel({
               );
             })}
 
+          {/* Big, spaced-out nation names across each country (EU4-style),
+              with the party currently ruling each neighbor underneath. They
+              give way to the per-province labels once zoomed in. */}
+          {zoomRatio <= LABEL_ZOOM_THRESHOLD && (
+            <g pointerEvents="none">
+              {NATION_SHAPES.map((shape) => {
+                const isYou = shape.nation.id === nation.id;
+                const rulerId = foreignRulers[shape.nation.id];
+                const ruler = rulerId ? getParty(rulerId) : null;
+                return (
+                  <g key={`${shape.nation.id}-name`}>
+                    <text x={shape.labelX} y={shape.labelY - 34} className={`map-panel__nation-name ${isYou ? "is-you" : ""}`}>
+                      {shape.nation.name}
+                    </text>
+                    {ruler && (
+                      <text x={shape.labelX} y={shape.labelY - 16} className="map-panel__nation-party" style={{ fill: lighten(ruler.color, 0.35) }}>
+                        {ruler.name}
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
+            </g>
+          )}
+
           {provinces.map((province) => {
             const isCapital = province.id === nation.capitalProvinceId;
             // The continent packs a lot of small provinces close together —
@@ -642,9 +718,10 @@ export const MapPanel = memo(function MapPanel({
               counts.set(building.type, (counts.get(building.type) ?? 0) + 1);
             }
             const buildingTypes = [...counts.keys()];
+            const brokenCount = buildings.filter((b) => !isWorking(b)).length;
 
             const itemWidth = 20;
-            const itemCount = 1 + buildingTypes.length; // resource + one slot per building type present
+            const itemCount = 1 + buildingTypes.length + (brokenCount > 0 ? 1 : 0); // resource + one slot per building type present + a broken marker
             const barWidth = itemCount * itemWidth + 6;
             const barX = province.labelX - barWidth / 2;
             const barY = province.labelY + 10;
@@ -673,6 +750,14 @@ export const MapPanel = memo(function MapPanel({
                     </g>
                   );
                 })}
+                {brokenCount > 0 && (
+                  <g>
+                    <circle cx={barX + itemWidth * (buildingTypes.length + 1) + itemWidth / 2 + 3} cy={itemCenterY} r={7} className="map-panel__broken-marker" />
+                    <text x={barX + itemWidth * (buildingTypes.length + 1) + itemWidth / 2 + 3} y={itemCenterY + 3.5} className="map-panel__broken-count">
+                      !
+                    </text>
+                  </g>
+                )}
               </g>
             );
           })}
@@ -734,6 +819,11 @@ export const MapPanel = memo(function MapPanel({
                     <span>
                       {roads}× {BUILDING_LABELS.road}
                     </span>
+                  </div>
+                )}
+                {buildings.some((b) => !isWorking(b)) && (
+                  <div className="map-panel__tooltip-row map-panel__tooltip-broken">
+                    {buildings.filter((b) => !isWorking(b)).length} broken — repair from the Economy tab
                   </div>
                 )}
                 {buildings.length === 0 && roads === 0 && <div className="map-panel__tooltip-empty">No buildings yet.</div>}

@@ -1,13 +1,10 @@
-// Research: a branching tech tree with the same branch/tier/fork/vote shape
-// as the Law tree (domain/laws), but a genuinely different gate. Laws are
-// gated by the country's actual condition (a stat quota — see LawQuota) and
-// funded by treasury. Research has no quota at all: every node just costs a
-// chunk of accumulated research points to enact (see enactCost.researchPoints
-// below), spent like a currency the moment the vote passes — the same role
-// treasury plays for Laws, just a different pool. Pass chance is nudged by
-// educationLevel instead of popularity. See researchRules.ts.
+// Research: a branching tech tree with the same branch/tier/fork shape as
+// the Law tree (domain/laws), but no vote and no up-front price. You only
+// choose the *direction* — which node each area (industry/agriculture/
+// administration) works toward — and that area makes progress every day,
+// funded by the buildings in its field and the scientists hired into it
+// (see researchRules.ts and domain/workforce).
 import type { ProjectType } from "../construction/types";
-import type { ResourceType } from "../resources/types";
 
 export type ResearchCategory = "industry" | "agriculture" | "administration";
 
@@ -16,24 +13,12 @@ export interface ResearchEffects {
   // effects in simulateDay.
   incomeMultiplier?: number;
   industryMultiplier?: number;
-  // One-time, applied once when the vote actually passes.
+  // One-time, applied once when the node completes.
   treasuryDelta?: number;
   foodDelta?: number;
   stabilityDelta?: number;
   populationDelta?: number;
   popularityDelta?: number;
-}
-
-// What it actually costs to put a node to a vote in the first place —
-// distinct from `effects.treasuryDelta`, which is the node's own one-time
-// fiscal effect once enacted. All three deducted only on a successful vote —
-// see application/actions/enactResearch.ts. `researchPoints` is required
-// (every node spends some), treasury/resource costs scale it further.
-export interface ResearchEnactCost {
-  treasury: number;
-  researchPoints: number;
-  resourceType?: ResourceType;
-  resourceAmount?: number;
 }
 
 // A handful of advanced nodes also require a specific node from the *Law*
@@ -51,10 +36,8 @@ export interface ResearchNode {
   description: string;
   benefit: string;
   cost: string;
-  enactCost: ResearchEnactCost;
   crossRequirement?: ResearchCrossRequirement;
   effects: ResearchEffects;
-  passChance: number; // 0..1 base chance before the education/rival nudges — see researchRules.ts
   icon: string; // a StatIconType name — kept as a plain string here so domain/ doesn't depend on presentation/
 
   // A handful of nodes unlock a building instead of (or alongside) a stat
@@ -66,9 +49,9 @@ export interface ResearchNode {
   unlocksBuildingType?: ProjectType;
 }
 
-// A research node passing its vote doesn't guarantee the listed effects
+// Finishing a research node doesn't guarantee the listed effects
 // happen exactly as written — the scientist might get lucky or might not.
-// Rolled once when a node passes and stored (see GameState.researchOutcomes)
+// Rolled once when a node completes and stored (see GameState.researchOutcomes)
 // so the same scaled result applies every day after, not just on the day it
 // was adopted.
 export type ResearchOutcomeTier = "breakthrough" | "expected" | "underwhelming";

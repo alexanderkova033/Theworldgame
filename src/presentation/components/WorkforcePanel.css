@@ -1,0 +1,117 @@
+.workforce-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.workforce-panel__header h2 {
+  margin: 0;
+}
+
+.workforce-panel__salaries {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--danger);
+}
+
+.workforce-panel__salaries svg,
+.workforce-panel__group-title svg,
+.workforce-panel__row > svg,
+.workforce-panel__effect svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.workforce-panel__group + .workforce-panel__group {
+  margin-top: 0.7rem;
+}
+
+.workforce-panel__group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+
+.workforce-panel__cap {
+  margin-left: auto;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  cursor: help;
+}
+
+.workforce-panel__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--panel-border);
+}
+
+.workforce-panel__row + .workforce-panel__row {
+  margin-top: 0.3rem;
+}
+
+.workforce-panel__label {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.workforce-panel__effect {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.72rem;
+  color: var(--success);
+  font-variant-numeric: tabular-nums;
+}
+
+/* −  3  + : a compact headcount control. */
+.staff-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.staff-stepper__button {
+  width: 1.55rem;
+  height: 1.55rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1;
+  border-radius: 50%;
+  border-width: 1px;
+}
+
+.staff-stepper__button--add:not(:disabled) {
+  background: linear-gradient(180deg, var(--accent-active), var(--accent));
+  border-color: #fff0c2;
+  color: #241505;
+  text-shadow: none;
+}
+
+.staff-stepper__count {
+  min-width: 1.3rem;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

@@ -7,7 +7,11 @@
 import type { CountryStats, GameDate, GameState } from "../../domain/country/types";
 import { FACTIONS } from "../../domain/parties/factionData";
 import type { Ideology } from "../../domain/parties/types";
+import { createForeignPolitics } from "../../domain/diplomacy/diplomacyRules";
+import { getResearchNode } from "../../domain/research/researchRules";
+import type { ResearchCategory } from "../../domain/research/types";
 import { emptyResourceBundle } from "../../domain/resources/resourceRules";
+import { emptyWorkforce } from "../../domain/workforce/workforceRules";
 
 // GameState has grown fields release over release (debt, researchOutcomes,
 // resourceDemand, ...), and a save is just a blind JSON round-trip with no
@@ -25,10 +29,19 @@ function hydrateStats(stats: Partial<CountryStats> | undefined): CountryStats {
     food: stats?.food ?? 8000,
     industry: stats?.industry ?? 0,
     stability: stats?.stability ?? 60,
-    researchPoints: stats?.researchPoints ?? 0,
     politicalPower: stats?.politicalPower ?? 25,
     popularity: stats?.popularity ?? 55,
   };
+}
+
+// Saves from when research was a timed vote carried one funded node in
+// `activeResearch` — keep it going as that area's chosen direction.
+function legacyResearchFocus(raw: Partial<GameState>): Record<ResearchCategory, string | null> {
+  const focus: Record<ResearchCategory, string | null> = { industry: null, agriculture: null, administration: null };
+  const legacy = (raw as { activeResearch?: { nodeId: string } | null }).activeResearch;
+  const node = legacy ? getResearchNode(legacy.nodeId) : undefined;
+  if (node) focus[node.category] = node.id;
+  return focus;
 }
 
 function hydrateGameState(raw: Partial<GameState>): GameState {
@@ -59,7 +72,10 @@ function hydrateGameState(raw: Partial<GameState>): GameState {
     enactedResearchIds: raw.enactedResearchIds ?? [],
     researchOutcomes: raw.researchOutcomes ?? {},
     activeLaw: raw.activeLaw ?? null,
-    activeResearch: raw.activeResearch ?? null,
+    researchFocus: raw.researchFocus ?? legacyResearchFocus(raw),
+    researchProgress: raw.researchProgress ?? {},
+    workforce: raw.workforce ?? emptyWorkforce(),
+    foreignPolitics: raw.foreignPolitics ?? createForeignPolitics(raw.nationId!),
     resourceDemand: raw.resourceDemand ?? emptyResourceBundle(),
     // Pre-coalition saves have no per-faction breakdown — start every faction
     // exactly where the old flat popularity number already was, so resuming

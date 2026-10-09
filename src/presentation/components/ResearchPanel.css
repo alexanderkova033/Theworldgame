@@ -1,0 +1,85 @@
+/* One research area's live state, under its column title: daily rate,
+   scientists, and how far along its chosen direction is. */
+.research-area {
+  width: 100%;
+  max-width: 15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0 0 0.6rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.research-area__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.research-area__rate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--success);
+  cursor: help;
+}
+
+.research-area__rate svg {
+  display: block;
+}
+
+.research-area__focus {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  font-size: 0.72rem;
+}
+
+.research-area__bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.research-area__fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(180deg, var(--accent-active), var(--accent));
+}
+
+.research-area__days {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-active);
+}
+
+.research-area__idle {
+  font-size: 0.72rem;
+  text-align: center;
+  color: var(--warning);
+  border: 1px dashed var(--warning);
+  border-radius: 999px;
+  padding: 0.15rem 0.4rem;
+  cursor: help;
+}
+
+.law-tree__bank-rate.is-cost {
+  color: var(--danger);
+}
+
+.research-inspector__eta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}

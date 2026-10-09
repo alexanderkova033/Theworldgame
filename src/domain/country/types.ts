@@ -2,12 +2,14 @@
 // whole simulation: every other domain module reads from and writes pieces of it.
 import type { Project } from "../construction/types";
 import type { DecisionHistoryEntry } from "../decisions/types";
+import type { ForeignGovernment } from "../diplomacy/types";
 import type { Expedition } from "../expeditions/types";
 import type { Ideology } from "../parties/types";
 import type { PlacedBuilding } from "../provinces/types";
-import type { ResearchOutcomeTier } from "../research/types";
+import type { ResearchCategory, ResearchOutcomeTier } from "../research/types";
 import type { ResourceBundle } from "../resources/types";
 import type { StandingOrder } from "../trade/standingOrderTypes";
+import type { Workforce } from "../workforce/types";
 
 export interface GameDate {
   year: number;
@@ -23,7 +25,6 @@ export interface CountryStats {
   food: number;
   industry: number;
   stability: number; // 0-100
-  researchPoints: number;
   politicalPower: number; // accrues daily, spent to put Laws to a vote — see politicsRules.ts
   popularity: number; // 0-100
 }
@@ -36,10 +37,9 @@ export type EventSeverity = "info" | "warning" | "danger";
 // "victory": won enough elections in a row to cement outright rule.
 export type GameOutcome = "collapsed" | "voted-out" | "victory";
 
-// A Law or Research node that has already passed its vote but hasn't taken
-// effect yet — a law still being drafted into force, a technology still in
-// the lab. Only one of each runs at a time (GameState.activeLaw /
-// activeResearch); see application/advancePolicies.ts for the daily tick.
+// A Law that has already passed its vote but hasn't taken effect yet —
+// still being drafted into force. Only one at a time (GameState.activeLaw);
+// see application/advancePolicies.ts for the daily tick.
 export interface PolicyInProgress {
   nodeId: string;
   totalDays: number;
@@ -99,7 +99,10 @@ export interface GameState {
   enactedResearchIds: string[]; // permanent tech choices, one per category — see domain/research
   researchOutcomes: Record<string, ResearchOutcomeTier>; // rolled once per enacted node — see researchRules.ts
   activeLaw: PolicyInProgress | null; // a passed law still being drafted into force — see domain/laws
-  activeResearch: PolicyInProgress | null; // a funded technology still in the lab — see domain/research
+  researchFocus: Record<ResearchCategory, string | null>; // the node each research area is working toward — see domain/research
+  researchProgress: Record<string, number>; // work put into each node so far; kept if you switch direction and come back
+  workforce: Workforce; // salaried scientists and police — see domain/workforce
+  foreignPolitics: Record<string, ForeignGovernment>; // every nation but the player's — see domain/diplomacy
   resourceDemand: ResourceBundle; // dynamic-market demand index per resource, drifts toward 0 — see domain/resources/tradeRules.ts
   factionApproval: Record<Ideology, number>; // per-ideology approval (0-100); stats.popularity is their electorate-weighted average — see domain/parties/factionRules.ts
   standingOrders: StandingOrder[]; // automated daily trades, capped at MAX_STANDING_ORDERS — see application/actions/standingOrders.ts

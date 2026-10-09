@@ -1,4 +1,5 @@
 import { RESOURCE_PER_PROVINCE } from "../constants";
+import type { Season } from "../country/calendar";
 import type { Terrain } from "../provinces/types";
 import type { ResourceBundle, ResourceType } from "./types";
 
@@ -17,10 +18,12 @@ export function emptyResourceBundle(): ResourceBundle {
 }
 
 // One day's production across every owned province, given their terrains.
-export function calculateDailyProduction(terrains: Terrain[]): ResourceBundle {
+// Grain fields lie fallow in winter; forests, mines and the sea don't stop.
+export function calculateDailyProduction(terrains: Terrain[], season: Season): ResourceBundle {
   const production = emptyResourceBundle();
   for (const terrain of terrains) {
     const type = RESOURCE_BY_TERRAIN[terrain];
+    if (type === "grain" && season === "winter") continue;
     production[type] += RESOURCE_PER_PROVINCE;
   }
   return production;

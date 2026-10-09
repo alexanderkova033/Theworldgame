@@ -231,3 +231,29 @@
   color: var(--text-muted);
   line-height: 1.2;
 }
+
+/* Broken buildings of this type here: a red wrench + count on the art. */
+.build-tile__broken {
+  position: absolute;
+  right: -6px;
+  bottom: -2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 1px 5px 1px 4px;
+  border-radius: 999px;
+  background: var(--danger);
+  color: var(--text);
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 1px solid var(--bg-deep);
+}
+
+.build-tile__broken svg {
+  display: block;
+}
+
+.build-tile__season {
+  color: #bfe3f5;
+  margin-left: 0.1rem;
+}

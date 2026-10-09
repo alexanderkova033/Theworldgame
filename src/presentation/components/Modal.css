@@ -92,11 +92,22 @@
   display: block;
 }
 
+/* Centered with a negative margin rather than translateY(-50%): the global
+   button:active rule swaps in its own `transform`, which used to drop the
+   button half its height mid-click (and lose the click). No transform, no
+   transition — it just sits still. */
+.modal__close,
+.modal__close:hover:not(:disabled),
+.modal__close:active:not(:disabled) {
+  transform: none;
+  transition: none;
+}
+
 .modal__close {
   position: absolute;
   right: 0.9rem;
   top: 50%;
-  transform: translateY(-50%);
+  margin-top: -0.95rem;
   width: 1.9rem;
   height: 1.9rem;
   padding: 0;

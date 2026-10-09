@@ -110,9 +110,11 @@
   filter: brightness(1.18);
 }
 
+/* Neighbors keep their own color at near full strength, so the political
+   map reads as three distinct countries, not "yours" and "grey". */
 .map-panel__province.is-foreign {
-  opacity: 0.55;
-  filter: saturate(0.75);
+  opacity: 0.85;
+  filter: saturate(0.95);
 }
 
 .map-panel__province.is-selected {
@@ -295,4 +297,58 @@
 .map-panel__tooltip-empty {
   font-size: 0.78rem;
   color: var(--text-muted);
+}
+
+.map-panel__nation-border {
+  opacity: 0.95;
+}
+
+.map-panel__nation-name {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  text-anchor: middle;
+  fill: rgba(244, 239, 226, 0.78);
+  paint-order: stroke;
+  stroke: rgba(6, 9, 13, 0.7);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+  user-select: none;
+}
+
+.map-panel__nation-name.is-you {
+  fill: #fff3cf;
+}
+
+.map-panel__nation-party {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: rgba(6, 9, 13, 0.75);
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
+  user-select: none;
+}
+
+.map-panel__broken-marker {
+  fill: var(--danger);
+  stroke: #06090d;
+  stroke-width: 1;
+}
+
+.map-panel__broken-count {
+  font-size: 10px;
+  font-weight: 800;
+  text-anchor: middle;
+  fill: #fff;
+}
+
+.map-panel__tooltip-broken {
+  color: var(--danger);
+  font-weight: 700;
 }

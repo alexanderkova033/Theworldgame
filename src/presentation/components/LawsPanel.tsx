@@ -150,7 +150,6 @@ export function LawsPanel({ state, dispatch }: LawsPanelProps) {
 
   const selectedNode = selectedId ? (LAW_NODES.find((n) => n.id === selectedId) ?? null) : null;
   const activeNode = state.activeLaw ? (LAW_NODES.find((n) => n.id === state.activeLaw?.nodeId) ?? null) : null;
-  const progress = state.activeLaw ? { nodeId: state.activeLaw.nodeId, ratio: 1 - state.activeLaw.daysRemaining / state.activeLaw.totalDays } : null;
 
   // The tree can run 4 tiers deep, well past the fold — without this, picking
   // a node (especially near the bottom of a branch) opens the inspector
@@ -177,7 +176,9 @@ export function LawsPanel({ state, dispatch }: LawsPanelProps) {
         categories={CATEGORIES}
         nodesFor={nodesFor}
         getStatus={(node) => getLawNodeStatus(state, node)}
-        progress={progress}
+        getProgress={(node) =>
+          state.activeLaw?.nodeId === node.id ? 1 - state.activeLaw.daysRemaining / state.activeLaw.totalDays : 0
+        }
         selectedId={selectedId}
         onSelect={(id) => setSelectedId(id === selectedId ? null : id)}
       />

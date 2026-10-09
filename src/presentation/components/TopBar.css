@@ -194,3 +194,8 @@
   line-height: 1.1rem;
   text-align: center;
 }
+
+/* Winter tints the date cold, so the season is noticed at a glance. */
+.top-bar__date--winter {
+  color: #bfe3f5;
+}

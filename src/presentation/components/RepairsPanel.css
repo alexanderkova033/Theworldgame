@@ -1,0 +1,112 @@
+.repairs-panel {
+  border-color: var(--danger);
+}
+
+.repairs-panel h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--danger);
+}
+
+.repairs-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.repairs-panel__item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.repairs-panel__item.is-broken {
+  border-color: rgba(194, 64, 47, 0.6);
+}
+
+.repairs-panel__icon {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: var(--panel-bg-raised);
+  border: 1px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.repairs-panel__icon svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+}
+
+.is-broken .repairs-panel__icon > svg {
+  filter: grayscale(0.7) brightness(0.75);
+}
+
+.repairs-panel__badge {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.repairs-panel__badge svg {
+  width: 11px;
+  height: 11px;
+}
+
+.repairs-panel__where {
+  flex: 1;
+  font-size: 0.85rem;
+}
+
+.repairs-panel__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.78rem;
+}
+
+.repairs-panel__button svg {
+  display: block;
+}
+
+.repairs-panel__progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 7rem;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.repairs-panel__progress .progress-bar {
+  display: block;
+  flex: 1;
+  margin: 0;
+}
+
+.repairs-panel__progress .progress-bar__fill {
+  display: block;
+}

@@ -1,16 +1,12 @@
 import type { ResearchNode } from "./types";
 
 // Three branches, four tiers each — the same fork structure as LAW_NODES,
-// including a tier-4 capstone. Unlike Laws, there's no stat quota here at
-// all: every node just costs a chunk of accumulated research points to
-// enact (enactCost.researchPoints, tier-based: 15/25/40/60), spent the
-// moment the vote passes — see researchRules.ts and enactResearch.ts.
-// researchPoints climb slowly and passively (see calculateDailyResearch),
-// so the tree's pace is set by how much you've invested in education and
-// how you choose to spend the resulting pool across competing branches, not
-// by the country's day-to-day condition — that's what the Law tree gates on
-// instead. A few advanced nodes also require a specific Law node already
-// enacted (crossRequirement) — the two trees aren't fully isolated.
+// including a tier-4 capstone. Unlike Laws, there's no stat quota and no
+// vote: an area just works its way toward the node you point it at, at a
+// pace set by its buildings and scientists (see researchRules.ts), and a
+// node costs RESEARCH_COST_BY_TIER points of that work. A few advanced nodes
+// also require a specific Law node already enacted (crossRequirement) — the
+// two trees aren't fully isolated.
 export const RESEARCH_NODES: ResearchNode[] = [
   // --- Industry --------------------------------------------------------
   {
@@ -21,9 +17,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "A proper institute, not a tinkerer's workshop — machinery gets designed instead of guessed at.",
     benefit: "+8% industry",
     cost: "-200 treasury (one-time)",
-    enactCost: { treasury: 350, researchPoints: 15 },
     effects: { industryMultiplier: 1.08, treasuryDelta: -200 },
-    passChance: 0.9,
     icon: "industry",
   },
   {
@@ -34,9 +28,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Work broken into repeatable steps along a moving line. Output climbs; the floor gets harder to work.",
     benefit: "+18% industry",
     cost: "-5 stability",
-    enactCost: { treasury: 1000, researchPoints: 25, resourceType: "ore", resourceAmount: 12 },
     effects: { industryMultiplier: 1.18, stabilityDelta: -5 },
-    passChance: 0.7,
     icon: "industry",
   },
   {
@@ -47,9 +39,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "A formal apprenticeship ladder instead of ad-hoc training. Slower gains, a workforce that trusts its trade.",
     benefit: "+8% industry, +6 stability",
     cost: "none",
-    enactCost: { treasury: 900, researchPoints: 25, resourceType: "fish", resourceAmount: 10 },
     effects: { industryMultiplier: 1.08, stabilityDelta: 6 },
-    passChance: 0.82,
     icon: "stability",
   },
   {
@@ -60,10 +50,8 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Steam-driven presses replace whole shifts of hand labor. Production soars; the floor empties out.",
     benefit: "+30% industry",
     cost: "-8 stability, -4 popularity",
-    enactCost: { treasury: 2800, researchPoints: 40, resourceType: "ore", resourceAmount: 22 },
     crossRequirement: { nodeId: "labor-overtime-shifts" },
     effects: { industryMultiplier: 1.3, stabilityDelta: -8, popularityDelta: -4 },
-    passChance: 0.55,
     icon: "industry",
   },
   {
@@ -74,9 +62,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Foundries reorganized as worker-run cooperatives. Slower to scale, and the floor actually believes in it.",
     benefit: "+12% industry, +5 stability, +10 popularity",
     cost: "none",
-    enactCost: { treasury: 2400, researchPoints: 40, resourceType: "fish", resourceAmount: 18 },
     effects: { industryMultiplier: 1.12, stabilityDelta: 5, popularityDelta: 10 },
-    passChance: 0.68,
     icon: "popularity",
   },
   {
@@ -87,9 +73,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Every foundry on the continent's map answers to one automated schedule. Nothing runs idle, ever.",
     benefit: "+45% industry",
     cost: "-10 stability, -6 popularity",
-    enactCost: { treasury: 4500, researchPoints: 60, resourceType: "ore", resourceAmount: 30 },
     effects: { industryMultiplier: 1.45, stabilityDelta: -10, popularityDelta: -6 },
-    passChance: 0.45,
     icon: "industry",
   },
   {
@@ -100,9 +84,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Every cooperative workshop federates under one charter, sharing tools, training, and profit alike.",
     benefit: "+15% industry, +8 stability, +14 popularity",
     cost: "none",
-    enactCost: { treasury: 3800, researchPoints: 60, resourceType: "fish", resourceAmount: 25 },
     effects: { industryMultiplier: 1.15, stabilityDelta: 8, popularityDelta: 14 },
-    passChance: 0.56,
     icon: "popularity",
   },
 
@@ -115,9 +97,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "The first learned society dedicated to the soil itself — crop yields stop being a matter of luck.",
     benefit: "+1,500 food (one-time), +3 popularity",
     cost: "none",
-    enactCost: { treasury: 350, researchPoints: 15 },
     effects: { foodDelta: 1500, popularityDelta: 3 },
-    passChance: 0.9,
     icon: "food",
   },
   {
@@ -128,9 +108,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Steam threshers replace flails and long harvest days. Grain comes in faster than the barns expected.",
     benefit: "+3,000 food (one-time)",
     cost: "-1,500 treasury (one-time)",
-    enactCost: { treasury: 1000, researchPoints: 25, resourceType: "grain", resourceAmount: 12 },
     effects: { foodDelta: 3000, treasuryDelta: -1500 },
-    passChance: 0.75,
     icon: "food",
   },
   {
@@ -141,9 +119,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Smallholders pool tools and seed stock through a chartered cooperative. Slower to scale, well-liked.",
     benefit: "+1,500 food, +8 stability, +5 popularity",
     cost: "-800 treasury (one-time)",
-    enactCost: { treasury: 1000, researchPoints: 25, resourceType: "fish", resourceAmount: 10 },
     effects: { foodDelta: 1500, stabilityDelta: 8, popularityDelta: 5, treasuryDelta: -800 },
-    passChance: 0.8,
     icon: "population",
   },
   {
@@ -154,9 +130,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Chartered mills that turn surplus grain into flour and hardtack instead of letting it rot in the silo.",
     benefit: "Unlocks the Granary (turns Grain into Food)",
     cost: "-600 treasury (one-time)",
-    enactCost: { treasury: 900, researchPoints: 25, resourceType: "wood", resourceAmount: 10 },
     effects: { treasuryDelta: -600 },
-    passChance: 0.78,
     icon: "food",
     unlocksBuildingType: "granary",
   },
@@ -168,10 +142,8 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Grain futures traded by wire across the continent. The treasury profits; the home granaries thin.",
     benefit: "+12% income",
     cost: "-1,000 food (one-time)",
-    enactCost: { treasury: 2400, researchPoints: 40, resourceType: "grain", resourceAmount: 18 },
     crossRequirement: { nodeId: "sustenance-export-charter" },
     effects: { incomeMultiplier: 1.12, foodDelta: -1000 },
-    passChance: 0.62,
     icon: "treasury",
   },
   {
@@ -182,9 +154,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "A guarded reserve of seed stock against the next bad harvest — expensive insurance, rarely regretted.",
     benefit: "+6,000 food (one-time reserve), +10 stability",
     cost: "-3,000 treasury (one-time)",
-    enactCost: { treasury: 2600, researchPoints: 40, resourceType: "wood", resourceAmount: 20 },
     effects: { foodDelta: 6000, stabilityDelta: 10, treasuryDelta: -3000 },
-    passChance: 0.68,
     icon: "food",
   },
   {
@@ -195,9 +165,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Steam-sealed tins keep a coastal catch edible for months instead of a single market day.",
     benefit: "Unlocks the Cannery (turns Fish into Food)",
     cost: "-1,200 treasury (one-time)",
-    enactCost: { treasury: 2200, researchPoints: 40, resourceType: "fish", resourceAmount: 18 },
     effects: { treasuryDelta: -1200 },
-    passChance: 0.65,
     icon: "food",
     unlocksBuildingType: "cannery",
   },
@@ -209,9 +177,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Nitrogen fixed straight out of the air, spread on every field the state can reach. The harvest stops being seasonal.",
     benefit: "+12,000 food (one-time reserve)",
     cost: "-4,000 treasury (one-time)",
-    enactCost: { treasury: 4200, researchPoints: 60, resourceType: "grain", resourceAmount: 30 },
     effects: { foodDelta: 12000, treasuryDelta: -4000 },
-    passChance: 0.5,
     icon: "food",
   },
   {
@@ -222,9 +188,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Every smallholder cooperative merges into a single land trust, held in common and worked in common.",
     benefit: "+4,000 food, +12 stability, +10 popularity",
     cost: "none",
-    enactCost: { treasury: 3800, researchPoints: 60, resourceType: "fish", resourceAmount: 25 },
     effects: { foodDelta: 4000, stabilityDelta: 12, popularityDelta: 10 },
-    passChance: 0.58,
     icon: "population",
   },
 
@@ -237,9 +201,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "The first proper census and land survey — the government finally knows what it's actually governing.",
     benefit: "+4 stability, +2 popularity",
     cost: "none",
-    enactCost: { treasury: 350, researchPoints: 15 },
     effects: { stabilityDelta: 4, popularityDelta: 2 },
-    passChance: 0.92,
     icon: "stability",
   },
   {
@@ -250,9 +212,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Wires strung between every township. Orders and tax receipts move at the speed of electricity.",
     benefit: "+10% income",
     cost: "-4 stability",
-    enactCost: { treasury: 1100, researchPoints: 25, resourceType: "wood", resourceAmount: 12 },
     effects: { incomeMultiplier: 1.1, stabilityDelta: -4 },
-    passChance: 0.76,
     icon: "treasury",
   },
   {
@@ -263,9 +223,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "A proper college to train schoolmasters, instead of whoever the parish could spare.",
     benefit: "+6 stability, +6 popularity",
     cost: "-1,200 treasury (one-time)",
-    enactCost: { treasury: 1000, researchPoints: 25, resourceType: "fish", resourceAmount: 10 },
     effects: { stabilityDelta: 6, popularityDelta: 6, treasuryDelta: -1200 },
-    passChance: 0.8,
     icon: "popularity",
   },
   {
@@ -276,9 +234,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Every deed and boundary filed in one office instead of a hundred parish ledgers. Disputes drop; so does patience for the paperwork.",
     benefit: "+7% income, +5 stability",
     cost: "-500 treasury (one-time)",
-    enactCost: { treasury: 900, researchPoints: 25, resourceType: "grain", resourceAmount: 10 },
     effects: { incomeMultiplier: 1.07, stabilityDelta: 5, treasuryDelta: -500 },
-    passChance: 0.8,
     icon: "treasury",
   },
   {
@@ -289,9 +245,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Every ledger in the nation cross-referenced in one office. Efficient, and faintly unsettling.",
     benefit: "+15% income, +8% industry",
     cost: "-10 popularity",
-    enactCost: { treasury: 2600, researchPoints: 40, resourceType: "wood", resourceAmount: 18 },
     effects: { incomeMultiplier: 1.15, industryMultiplier: 1.08, popularityDelta: -10 },
-    passChance: 0.58,
     icon: "treasury",
   },
   {
@@ -302,9 +256,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "A free primer and a seat in a schoolhouse guaranteed to every child in the nation.",
     benefit: "+14 popularity, +5 stability",
     cost: "-2,500 treasury (one-time)",
-    enactCost: { treasury: 2600, researchPoints: 40, resourceType: "fish", resourceAmount: 18 },
     effects: { popularityDelta: 14, stabilityDelta: 5, treasuryDelta: -2500 },
-    passChance: 0.66,
     icon: "popularity",
   },
   {
@@ -315,9 +267,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Every ledger, wire, and manifest in the nation now flows through one office, watching everything at once.",
     benefit: "+20% income, +10% industry",
     cost: "-14 popularity",
-    enactCost: { treasury: 4500, researchPoints: 60, resourceType: "wood", resourceAmount: 30 },
     effects: { incomeMultiplier: 1.2, industryMultiplier: 1.1, popularityDelta: -14 },
-    passChance: 0.42,
     icon: "treasury",
   },
   {
@@ -328,10 +278,8 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Every paper in the nation freed from the censor's office by charter, the promise from the Constitutional Reform made real in print.",
     benefit: "+20 popularity, +8 stability",
     cost: "-3,500 treasury (one-time)",
-    enactCost: { treasury: 4200, researchPoints: 60, resourceType: "fish", resourceAmount: 30 },
     crossRequirement: { nodeId: "order-constitutional-reform" },
     effects: { popularityDelta: 20, stabilityDelta: 8, treasuryDelta: -3500 },
-    passChance: 0.55,
     icon: "popularity",
   },
 ];

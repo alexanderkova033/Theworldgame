@@ -12,7 +12,8 @@ export type StatIconType =
   | "stability"
   | "research"
   | "popularity"
-  | "politicalPower";
+  | "politicalPower"
+  | "police";
 
 interface StatIconProps {
   type: StatIconType;
@@ -128,6 +129,17 @@ function renderShape(type: StatIconType) {
             <rect x={-2.6} y={-7.5} width={1.2} height={5.5} fill="#e6c56a" />
             <rect x={3.4} y={-7.5} width={1.2} height={5.5} fill="#e6c56a" />
           </g>
+        </g>
+      );
+    case "police":
+      // A constable's helmet, navy with a gold star badge.
+      return (
+        <g>
+          <path d="M-6,5 C-6,-3 -4,-8 0,-8.6 C4,-8 6,-3 6,5 Z" fill="#2c3e66" stroke="#16213a" strokeWidth={0.6} />
+          <path d="M-3.6,-5 C-2.4,-7 -0.8,-7.8 0.6,-7.9" stroke="#6f86b8" strokeWidth={0.9} fill="none" strokeLinecap="round" opacity={0.7} />
+          <rect x={-8.5} y={4.4} width={17} height={2.8} rx={1.3} fill="#1d2b4a" stroke="#0e1628" strokeWidth={0.5} />
+          <circle cx={0} cy={-8.9} r={1.2} fill="#c9ccd1" />
+          <polygon points={starPoints(0, -0.6, 3.3, 1.4)} fill="#e6c56a" stroke="#93731f" strokeWidth={0.3} />
         </g>
       );
     default:

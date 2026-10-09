@@ -8,7 +8,6 @@ import type { CountryStats } from "../../domain/country/types";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import { isDebtDangerous } from "../../domain/loans/loanRules";
 import { calculateDailyPoliticalPower } from "../../domain/politics/politicsRules";
-import { calculateDailyResearch } from "../../domain/research/researchRules";
 import { formatCompact } from "../formatNumber";
 import { RESOURCE_TYPES, type ResourceBundle } from "../../domain/resources/types";
 import { ResourceIcon } from "./ResourceIcon";
@@ -19,7 +18,6 @@ interface ResourceTickerProps {
   resources: ResourceBundle;
   production: DailyProductionSummary;
   debt: number;
-  educationLevel: number;
 }
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -56,7 +54,7 @@ function Delta({ value }: { value: number | undefined }) {
   return <span className={`resource-ticker__delta ${value >= 0 ? "is-positive" : "is-negative"}`}>{formatDelta(value)}</span>;
 }
 
-export function ResourceTicker({ stats, resources, production, debt, educationLevel }: ResourceTickerProps) {
+export function ResourceTicker({ stats, resources, production, debt }: ResourceTickerProps) {
   // Compact ("215k") in the chip itself so a big food stockpile doesn't turn
   // into an unreadable wall of digits; the exact figure is still one hover
   // away via the title/aria-label.
@@ -67,7 +65,7 @@ export function ResourceTicker({ stats, resources, production, debt, educationLe
     ["industry", "Industry", formatCompact(stats.industry), formatExact(stats.industry), undefined],
     ["stability", "Stability", `${formatExact(stats.stability)}/100`, `${formatExact(stats.stability)}/100`, undefined],
     ["popularity", "Popularity", `${formatExact(stats.popularity)}%`, `${formatExact(stats.popularity)}%`, undefined],
-    ["research", "Research points", formatExact(Math.floor(stats.researchPoints)), stats.researchPoints.toFixed(1), calculateDailyResearch(educationLevel)],
+    ["research", "Research (all areas)", `${production.researchPerDay.toFixed(1)}/d`, `${production.researchPerDay.toFixed(2)} per day`, undefined],
     ["politicalPower", "Political power", formatExact(Math.floor(stats.politicalPower)), stats.politicalPower.toFixed(1), calculateDailyPoliticalPower(stats.popularity)],
   ];
 

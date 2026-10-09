@@ -37,8 +37,12 @@ export interface MapGeometry {
 }
 
 // A completed building, remembered so the map can show where it is.
+// `condition` is absent while it works normally; a broken building produces
+// nothing until it's repaired (see domain/maintenance).
 export interface PlacedBuilding {
   id: string;
   provinceId: string;
   type: ProjectType;
+  condition?: "broken" | "repairing";
+  repairDaysRemaining?: number;
 }
