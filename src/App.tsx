@@ -27,6 +27,7 @@ import { RepairsPanel } from "./presentation/components/RepairsPanel";
 import { ReportsPanel } from "./presentation/components/ReportsPanel";
 import { ResearchPanel } from "./presentation/components/ResearchPanel";
 import { StartScreen } from "./presentation/components/StartScreen";
+import { TaxPanel } from "./presentation/components/TaxPanel";
 import { TopBar, type PanelKey } from "./presentation/components/TopBar";
 import { TradePanel } from "./presentation/components/TradePanel";
 import { WorkforcePanel } from "./presentation/components/WorkforcePanel";
@@ -257,6 +258,7 @@ function App() {
           <div className="economy-modal">
             <ActionsPanel state={state} selectedProvinceId={currentProvinceId} dispatch={dispatch} />
             <div className="economy-modal__side">
+              <TaxPanel state={state} production={dailyProduction} dispatch={dispatch} />
               <RepairsPanel state={state} dispatch={dispatch} />
               <WorkforcePanel state={state} dispatch={dispatch} />
               <ProjectsPanel state={state} />

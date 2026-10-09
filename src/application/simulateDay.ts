@@ -29,13 +29,13 @@ import { getNation } from "../domain/nations/nationRules";
 import { applyFactionEffects, getFactionWeights } from "../domain/parties/factionRules";
 import { getParty } from "../domain/parties/partyRules";
 import { getProvinceName } from "../domain/provinces/provinceRules";
-import { calculateDailyPoliticalPower, updateFactionPopularity } from "../domain/politics/politicsRules";
+import { calculateDailyPoliticalPower, getPopularityTarget, updateFactionPopularity } from "../domain/politics/politicsRules";
 import { updatePopulation } from "../domain/population/populationRules";
+import { updateMarket } from "../domain/market/marketRules";
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
 import { applyRandomEventEffect, pickRandomEvent } from "../domain/randomEvents/randomEventRules";
 import { getActiveResearchEffects } from "../domain/research/researchRules";
 import { addResources, calculateDailyProduction } from "../domain/resources/resourceRules";
-import { decayDemand } from "../domain/resources/tradeRules";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
 import { isCollapseRisk, updateStability } from "../domain/stability/stabilityRules";
 import { getActiveSynergyEffects } from "../domain/synergy/synergyRules";
@@ -44,7 +44,6 @@ import { advancePolicies } from "./advancePolicies";
 import { applyExpeditionCompletion } from "./applyExpeditionCompletion";
 import { applyProjectCompletion } from "./applyProjectCompletion";
 import { generateMonthlyReport } from "./generateMonthlyReport";
-import { runStandingOrders } from "./actions/standingOrders";
 import { pickRivalCampaignMove } from "./rivalCampaignMove";
 import {
   DECISION_CHANCE_PER_MONTH,
@@ -171,12 +170,6 @@ export function simulateDay(state: GameState): GameState {
   working = advancePolicies(working);
   events.unshift(...working.events.slice(0, working.events.length - eventCountBeforePolicies));
 
-  // 1c. Standing trade orders (see application/actions/standingOrders.ts)
-  // execute automatically, once each, against whatever's in stock at the
-  // start of the day — today's own production (step 2, below) lands
-  // afterward, so nothing is double-counted or skipped, just simply sequenced.
-  working = runStandingOrders(working);
-
   // 1d. Repairs in progress tick down; then any working building might
   // break (police deter some of it). Broken buildings stop producing until
   // repaired — everything below reads getWorkingCounts, not the raw counts.
@@ -207,7 +200,7 @@ export function simulateDay(state: GameState): GameState {
     (provinceId) => MAP_GEOMETRY.provinces.find((p) => p.id === provinceId)!.terrain,
   );
   const producedResources = addResources(working.resources, calculateDailyProduction(ownedTerrains, season));
-  const resourceDemand = decayDemand(working.resourceDemand);
+  const market = updateMarket(working.market, season, isFirstDayOfMonth(state.date));
 
   // 2b. Granaries/Canneries (research-gated — see domain/research) turn
   // today's Grain/Fish stock into Food, capped by both building count and
@@ -344,11 +337,19 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
-  // 8. Popularity drifts based on the current tax rate, and takes a hit too
-  // if debt is heavy — applied per-faction (see factionRules.ts), then
-  // re-aggregated into the single number everything else below still reads.
+  // 8. Popularity drifts toward a target built from how the country is run
+  // — taxes, food, homes, heat, order (see politicsRules.ts) — and takes a
+  // hit if debt is heavy. Applied per-faction, then re-aggregated into the
+  // single number everything else below still reads.
   const factionWeights = getFactionWeights(working.nationId);
-  const { factionApproval, popularity } = updateFactionPopularity(working.factionApproval, factionWeights, working.taxRate, getDebtPopularityPenalty(debt) + getHomelessStabilityPenalty(homelessShare) / 3);
+  const popularityTarget = getPopularityTarget({
+    taxRate: working.taxRate,
+    isFoodShortage: isShortage,
+    homelessShare,
+    unheatedShare: heating.unheatedShare,
+    stability,
+  });
+  const { factionApproval, popularity } = updateFactionPopularity(working.factionApproval, factionWeights, popularityTarget, getDebtPopularityPenalty(debt));
 
   // 9. Population grows or shrinks based on food, stability, housing and heat.
   const population = updatePopulation({ ...statsWithFood, stability }, isShortage, housingCapacity, heating.unheatedShare);
@@ -516,7 +517,7 @@ export function simulateDay(state: GameState): GameState {
     pendingDecisionId,
     stats: finalStats,
     resources: finalResources,
-    resourceDemand,
+    market,
     factionApproval: finalFactionApproval,
     workforce,
     foreignPolitics,

@@ -4,6 +4,7 @@
 // - Abroad: leaning on the neighbors' governments (see ForeignAffairs.tsx).
 import "./PoliticsPanel.css";
 import { useState, type CSSProperties } from "react";
+import { getPopularityOutlook } from "../../application/getPopularityOutlook";
 import { formatDate } from "../../domain/country/calendar";
 import { ELECTIONS_TO_WIN_GAME, ELECTION_WIN_THRESHOLD } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
@@ -19,6 +20,14 @@ interface PoliticsPanelProps {
   state: GameState;
   dispatch: (action: (state: GameState) => GameState) => void;
 }
+
+const DRIVER_ICONS: Record<string, StatIconType> = {
+  taxes: "treasury",
+  food: "food",
+  homes: "population",
+  heat: "stability",
+  order: "stability",
+};
 
 const IDEOLOGY_ICONS: Record<Ideology, StatIconType> = {
   Agrarian: "food",
@@ -57,6 +66,40 @@ function CrossIcon() {
         <line x1={5} y1={-5} x2={-5} y2={5} />
       </g>
     </svg>
+  );
+}
+
+// Where opinion is heading, and each thing pushing it there — sorted so the
+// biggest problem is at the top. Zero-value rows are left out.
+function MoodDrivers({ state }: { state: GameState }) {
+  const outlook = getPopularityOutlook(state);
+  const current = Math.round(state.stats.popularity);
+  const target = Math.round(outlook.target);
+  const drivers = outlook.drivers.filter((d) => Math.round(d.value) !== 0).sort((a, b) => a.value - b.value);
+  return (
+    <div className="politics-mood">
+      <h3>What moves your support</h3>
+      <p className="politics-mood__heading">
+        Support is drifting {target > current ? "up" : target < current ? "down" : "nowhere"} toward <strong>{target}%</strong>
+        {target > current ? " ↑" : target < current ? " ↓" : ""}
+      </p>
+      {drivers.length === 0 ? (
+        <p className="politics-mood__none">Nothing is helping or hurting you right now.</p>
+      ) : (
+        <ul>
+          {drivers.map((d) => (
+            <li key={d.key} className={d.value > 0 ? "is-gain" : "is-loss"}>
+              <StatIcon type={DRIVER_ICONS[d.key]} size={18} />
+              <span>{d.label}</span>
+              <strong>
+                {d.value > 0 ? "+" : "−"}
+                {Math.abs(Math.round(d.value))}
+              </strong>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -123,7 +166,10 @@ function ElectionsView({ state }: { state: GameState }) {
         </span>
       </div>
 
-      {/* 3. Who your support comes from. */}
+      {/* 3. What's moving support — the things you control. */}
+      <MoodDrivers state={state} />
+
+      {/* 4. Who your support comes from. */}
       <div className="politics-groups">
         <h3>Who backs you</h3>
         <p className="politics-groups__hint">Each group's approval of your party. Bigger groups count for more.</p>
@@ -159,7 +205,7 @@ function ElectionsView({ state }: { state: GameState }) {
           })}
       </div>
 
-      {/* 4. What you've decided lately. */}
+      {/* 5. What you've decided lately. */}
       {recentDecisions.length > 0 && (
         <div className="politics-decisions">
           <h3>Recent decisions</h3>

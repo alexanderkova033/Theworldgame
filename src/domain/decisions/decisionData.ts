@@ -1,6 +1,6 @@
 import type { DecisionDefinition } from "./types";
 
-// Nine short, two-option decisions. Kept deliberately terse — a title, one
+// Short, two-option decisions. Kept deliberately terse — a title, one
 // prompt sentence, and two option labels short enough to read at a glance —
 // since the popup is meant to be answered in a few seconds, not studied.
 export const DECISIONS: DecisionDefinition[] = [
@@ -136,6 +136,57 @@ export const DECISIONS: DecisionDefinition[] = [
     options: [
       { id: "subsidize", label: "Emergency heating subsidies", effects: { treasuryDelta: -700, stabilityDelta: 2 } },
       { id: "ration", label: "Ration fuel and endure it", effects: { stabilityDelta: -5, popularityDelta: -4 } },
+    ],
+  },
+  // --- Good for the economy, bad for the vote ----------------------------
+  {
+    id: "austerity-budget",
+    title: "Budget Shortfall",
+    prompt: "Treasury officials propose cutting public works to balance the books.",
+    icon: "treasury",
+    options: [
+      { id: "cut", label: "Cut spending", effects: { treasuryDelta: 1500, popularityDelta: -8 } },
+      { id: "spend", label: "Keep the works going", effects: { treasuryDelta: -300, popularityDelta: 2 } },
+    ],
+  },
+  {
+    id: "bread-prices",
+    title: "Bread Prices",
+    prompt: "Millers want to raise bread prices after a costly year.",
+    icon: "food",
+    options: [
+      { id: "allow", label: "Let prices rise", effects: { treasuryDelta: 700, popularityDelta: -6 } },
+      { id: "cap", label: "Cap prices, pay the millers", effects: { treasuryDelta: -800, popularityDelta: 4 } },
+    ],
+  },
+  {
+    id: "state-forests",
+    title: "Timber Offer",
+    prompt: "A timber company offers good money for the old state forests.",
+    icon: "treasury",
+    options: [
+      { id: "sell", label: "Sell the forests", effects: { treasuryDelta: 1800, popularityDelta: -7, stabilityDelta: -2 } },
+      { id: "keep", label: "Keep them for the people", effects: { popularityDelta: 3 } },
+    ],
+  },
+  {
+    id: "railway-concession",
+    title: "Railway Concession",
+    prompt: "Foreign investors will build a railway — if they get the tolls for twenty years.",
+    icon: "industry",
+    options: [
+      { id: "accept", label: "Accept their terms", effects: { treasuryDelta: 2200, popularityDelta: -9 } },
+      { id: "refuse", label: "Refuse, stay independent", effects: { popularityDelta: 4, stabilityDelta: 1 } },
+    ],
+  },
+  {
+    id: "long-shifts",
+    title: "Longer Shifts",
+    prompt: "Factory owners ask to extend the working day through the busy season.",
+    icon: "industry",
+    options: [
+      { id: "allow", label: "Allow longer shifts", effects: { treasuryDelta: 1000, popularityDelta: -6, stabilityDelta: -3 } },
+      { id: "forbid", label: "Protect the workers", effects: { treasuryDelta: -200, popularityDelta: 5 } },
     ],
   },
 ];

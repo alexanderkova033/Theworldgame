@@ -7,7 +7,9 @@
 import type { CountryStats, GameDate, GameState } from "../../domain/country/types";
 import { FACTIONS } from "../../domain/parties/factionData";
 import type { Ideology } from "../../domain/parties/types";
+import { getSeason } from "../../domain/country/calendar";
 import { createForeignPolitics } from "../../domain/diplomacy/diplomacyRules";
+import { createMarket } from "../../domain/market/marketRules";
 import { buildStartingHomes } from "../../domain/housing/housingRules";
 import { getResearchNode } from "../../domain/research/researchRules";
 import type { ResearchCategory } from "../../domain/research/types";
@@ -79,12 +81,11 @@ function hydrateGameState(raw: Partial<GameState>): GameState {
     researchProgress: raw.researchProgress ?? {},
     workforce: raw.workforce ? { ...raw.workforce, scientists: { ...emptyWorkforce().scientists, ...raw.workforce.scientists } } : emptyWorkforce(),
     foreignPolitics: raw.foreignPolitics ?? createForeignPolitics(raw.nationId!),
-    resourceDemand: raw.resourceDemand ?? emptyResourceBundle(),
+    market: raw.market ?? createMarket(getSeason(raw.date ?? { year: 1, month: 1, day: 1 })),
     // Pre-coalition saves have no per-faction breakdown — start every faction
     // exactly where the old flat popularity number already was, so resuming
     // doesn't jar the player with a sudden shift.
     factionApproval: raw.factionApproval ?? (Object.fromEntries(FACTIONS.map((f) => [f, stats.popularity])) as Record<Ideology, number>),
-    standingOrders: raw.standingOrders ?? [],
     expeditions: raw.expeditions ?? [],
     scoutedIslandIds: raw.scoutedIslandIds ?? [],
     events: raw.events ?? [],

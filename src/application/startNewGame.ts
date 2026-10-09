@@ -3,7 +3,9 @@
 // provinces (so different nations feel at least slightly different from day
 // one, even though the underlying economy math is the same for everyone).
 import { STARTING_RESOURCE_STOCK } from "../domain/constants";
+import { getSeason } from "../domain/country/calendar";
 import { createForeignPolitics } from "../domain/diplomacy/diplomacyRules";
+import { createMarket } from "../domain/market/marketRules";
 import { buildStartingHomes } from "../domain/housing/housingRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getNation } from "../domain/nations/nationRules";
@@ -11,7 +13,6 @@ import type { GameState } from "../domain/country/types";
 import { FACTIONS } from "../domain/parties/factionData";
 import type { Ideology } from "../domain/parties/types";
 import type { PlacedBuilding } from "../domain/provinces/types";
-import { emptyResourceBundle } from "../domain/resources/resourceRules";
 import { emptyWorkforce } from "../domain/workforce/workforceRules";
 
 // The reign opens on New Year's Day, in the dead of winter (see getSeason):
@@ -43,25 +44,22 @@ const STARTING_STABILITY_BONUS: Record<string, number> = { caldenreich: 10 }; //
 function buildStartingBuildings(nationId: string, farmCount: number): PlacedBuilding[] {
   const nation = getNation(nationId);
   const capital = nation.capitalProvinceId;
-  const otherProvinces = nation.provinceIds.filter((id) => id !== capital);
-  const secondProvince = otherProvinces[0] ?? capital;
-  const thirdProvince = otherProvinces[1] ?? secondProvince;
-  const fourthProvince = otherProvinces[2] ?? thirdProvince;
-
-  const buildings: PlacedBuilding[] = [
-    { id: "starting-farm-1", provinceId: capital, type: "farm" },
-    { id: "starting-farm-2", provinceId: secondProvince, type: "farm" },
-    { id: "starting-factory-1", provinceId: thirdProvince, type: "factory" },
-  ];
-  if (farmCount >= 3) {
-    buildings.push({ id: "starting-farm-3", provinceId: fourthProvince, type: "farm" });
-  }
+  const others = nation.provinceIds.filter((id) => id !== capital);
+  // Farms round-robin from the capital outward; the factory goes in the
+  // next province along.
+  const order = [capital, ...others];
+  const buildings: PlacedBuilding[] = Array.from({ length: farmCount }, (_, i) => ({
+    id: `starting-farm-${i + 1}`,
+    provinceId: order[i % order.length],
+    type: "farm" as const,
+  }));
+  buildings.push({ id: "starting-factory-1", provinceId: order[farmCount % order.length], type: "factory" });
   return buildings;
 }
 
 export function startNewGame(nationId: string, partyId: string): GameState {
   const nation = getNation(nationId);
-  const farmCount = EXTRA_STARTING_FARM_NATIONS.includes(nationId) ? 3 : 2;
+  const farmCount = EXTRA_STARTING_FARM_NATIONS.includes(nationId) ? 4 : 3;
   const factoryCount = 1;
   const roadCount = 0;
   const stability = 60 + (STARTING_STABILITY_BONUS[nationId] ?? 0);
@@ -113,8 +111,7 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     researchProgress: {},
     workforce: emptyWorkforce(),
     foreignPolitics: createForeignPolitics(nationId),
-    resourceDemand: emptyResourceBundle(),
-    standingOrders: [],
+    market: createMarket(getSeason(STARTING_DATE)),
     expeditions: [],
     scoutedIslandIds: [],
     events: [

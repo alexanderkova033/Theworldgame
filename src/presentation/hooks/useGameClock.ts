@@ -15,7 +15,7 @@ export type { SavedGamePreview, SaveSlotPreview } from "./gameSave";
 
 // Real milliseconds per in-game day at 1x speed. Higher speeds divide this,
 // so 5x means a day passes 5 times faster.
-const BASE_TICK_MS = 1000;
+const BASE_TICK_MS = 2000;
 
 // How long to wait after the last state change before writing to
 // localStorage — coalesces the burst of ticks at high game speed into one

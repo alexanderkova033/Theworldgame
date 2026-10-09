@@ -173,7 +173,59 @@
   white-space: nowrap;
 }
 
-/* --- 3. Voter groups --- */
+/* --- What moves support --- */
+.politics-mood {
+  margin-bottom: 1.2rem;
+}
+
+.politics-mood h3 {
+  margin-bottom: 0.2rem;
+}
+
+.politics-mood__heading,
+.politics-mood__none {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.politics-mood__heading strong {
+  color: var(--text);
+}
+
+.politics-mood ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.politics-mood li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--panel-border);
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 0.9rem;
+}
+
+.politics-mood li svg {
+  display: block;
+}
+
+.politics-mood li.is-gain strong {
+  color: var(--success);
+}
+
+.politics-mood li.is-loss strong {
+  color: var(--danger);
+}
+
+/* --- Voter groups --- */
 .politics-groups h3,
 .politics-decisions h3 {
   margin-bottom: 0.2rem;

@@ -2,12 +2,9 @@
 // primary source of new food in the MVP, with Granaries/Canneries (see
 // produceProcessedFood below) as a research-gated secondary source that
 // turns surplus Grain/Fish into food instead. A nation short on farms can
-// also import food directly from the continental market (see importFood.ts)
-// — cheaper with a coastal port, same idea as raw-resource trading.
+// also buy food on the continental market (see domain/market).
 import {
   FISH_PROCESSED_PER_CANNERY,
-  FOOD_IMPORT_COST_PER_UNIT,
-  FOOD_IMPORT_PORT_DISCOUNT,
   FARM_SEASON_MULTIPLIER,
   FOOD_PER_FARM,
   FOOD_PER_FISH,
@@ -17,8 +14,6 @@ import {
 } from "../constants";
 import type { Season } from "../country/calendar";
 import type { CountryStats } from "../country/types";
-import type { Nation } from "../nations/types";
-import { nationHasPort } from "../resources/tradeRules";
 import type { ResourceBundle } from "../resources/types";
 
 // Farms follow the seasons: a bumper autumn harvest, a lean winter (see
@@ -65,8 +60,4 @@ export function updateFood(stats: CountryStats, farmCount: number, season: Seaso
     newFoodStock: Math.max(0, rawStock),
     isShortage: rawStock < 0,
   };
-}
-
-export function getFoodImportCostPerUnit(nation: Nation): number {
-  return nationHasPort(nation) ? FOOD_IMPORT_COST_PER_UNIT * FOOD_IMPORT_PORT_DISCOUNT : FOOD_IMPORT_COST_PER_UNIT;
 }

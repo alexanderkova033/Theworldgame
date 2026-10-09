@@ -6,11 +6,7 @@ export { buildGranary } from "./buildGranary";
 export { buildCannery } from "./buildCannery";
 export { buildHousing } from "./buildHousing";
 export { countBuildingsInProvince } from "./createBuildAction";
-export { canTrade, getGiveAmount, tradeResources, type TradeableType } from "./tradeResources";
-export { canImportFood, getFoodImportCost, importFood } from "./importFood";
-export { canExportFood, getFoodExportRevenue, exportFood } from "./exportFood";
-export { canBuyResource, getBuyResourceCost, buyResource, canSellResource, getSellResourceRevenue, sellResource } from "./marketActions";
-export { canAddStandingOrder, addStandingOrder, removeStandingOrder } from "./standingOrders";
+export { buyGood, canBuyGood, canSellGood, getMarketBuyCost, getMarketSellRevenue, sellGood } from "./marketActions";
 export { canTakeLoan, canRepayLoan, getRepayAmount, repayLoan, takeLoan } from "./loanActions";
 export { canSendExpedition, sendExpedition } from "./sendExpedition";
 export { canEnactLaw, enactLaw } from "./enactLaw";
@@ -19,3 +15,4 @@ export { canHirePolice, canHireScientist, dismissPolice, dismissScientist, hireP
 export { canRepairBuilding, repairBuilding } from "./repairBuilding";
 export { canPressureGovernment, pressureGovernment } from "./pressureGovernment";
 export { resolveDecision, dismissDecision } from "./resolveDecision";
+export { setTaxRate } from "./setTaxRate";

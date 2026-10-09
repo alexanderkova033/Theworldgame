@@ -6,16 +6,11 @@ export const DAYS_PER_MONTH = 30;
 export const MONTHS_PER_YEAR = 12;
 
 // --- Food ---
-export const FOOD_PER_FARM = 4500; // food produced per farm per in-game day
+export const FOOD_PER_FARM = 3000; // food produced per farm per in-game day (before the season — see FARM_SEASON_MULTIPLIER)
 export const FOOD_PER_POP_CONSUMPTION = 1; // food eaten per person per in-game day
 export const FARM_COST = 800;
 export const FARM_BUILD_DAYS = 60;
 export const MAX_FARMS_PER_PROVINCE = 3;
-
-// --- Food imports (for nations without enough farmland) ---
-export const FOOD_IMPORT_BATCH_SIZE = 2000; // food received per import click
-export const FOOD_IMPORT_COST_PER_UNIT = 0.5; // Crowns per unit of food, without a port
-export const FOOD_IMPORT_PORT_DISCOUNT = 0.6; // multiplier on cost-per-unit with a coastal port (i.e. 40% cheaper)
 
 // --- Resources (Catan-inspired: terrain produces, provinces trade) ---
 export const RESOURCE_PER_PROVINCE = 1; // units of matching resource produced per owned province per day
@@ -23,45 +18,19 @@ export const STARTING_RESOURCE_STOCK = 0; // nothing in the stores — every log
 export const FARM_WOOD_COST = 15; // lumber for the barn
 export const FACTORY_ORE_COST = 22; // metal for machinery
 export const ROAD_ORE_COST = 10; // gravel for the roadbed
-export const BASE_TRADE_RATE = 4; // units given per unit received, without a port
-export const PORT_TRADE_RATE = 2; // units given per unit received, with a coastal province
-export const TRADE_BATCH_SIZE = 5; // units received per trade click (avoids one-at-a-time clicking)
 
-// --- Dynamic market (see domain/resources/tradeRules.ts) ---
-export const DEMAND_CAP = 5; // demand index per resource is clamped to +/- this
-export const DEMAND_PRICE_SENSITIVITY = 0.08; // price swing per point of demand index (at the cap: +/-40%)
-export const DEMAND_STEP = 0.4; // demand index moved per trade (give cheapens, receive dearens)
-export const DEMAND_DECAY_PER_DAY = 0.03; // fraction of the demand index that reverts toward 0 each day
-
-// --- Food trading (see application/actions/tradeResources.ts) ---
-// Food is abundant compared to the 4 crafted resources (farms can produce
-// thousands/day vs. ~1/province/day), so it trades at its own much larger
-// scale rather than joining the small-integer wood/ore/grain/fish batches —
-// 100 food is treated as worth about 1 crafted-resource unit, and it sits
-// outside the dynamic-demand system entirely (it isn't scarce the way the
-// terrain-based resources are).
-export const FOOD_TRADE_UNIT = 100; // food-per-crafted-resource-unit value ratio
-export const FOOD_TRADE_BATCH_SIZE = 500; // food received per trade click when food is the "receive" side
-
-// --- Money market (see application/actions/marketActions.ts) ---
-// A direct treasury <-> resource exchange, separate from the resource<->resource
-// barter above: spend Crowns to buy raw resources outright, or sell them for
-// Crowns. Price per unit floats with the same dynamic demand index as barter
-// (buying nudges demand up, selling nudges it down), and buying is cheaper with
-// a coastal port, mirroring food imports. The sell price is kept well below the
-// buy price so buying then immediately selling always loses money.
-export const RESOURCE_MARKET_BATCH_SIZE = 5; // units bought/sold per click
-export const RESOURCE_MARKET_BUY_PRICE_PER_UNIT = 30; // Crowns to buy one unit, at neutral demand, without a port
-export const RESOURCE_MARKET_SELL_PRICE_PER_UNIT = 15; // Crowns received selling one unit, at neutral demand
-export const RESOURCE_MARKET_PORT_DISCOUNT = 0.6; // buying is 40% cheaper with a coastal port
-
-// Selling food for cash, the reverse of importing it above. Priced well below
-// the import cost per unit — food is so abundant once a couple of farms are
-// running (thousands/day vs. the population's own consumption) that even a
-// modest per-unit price turned exporting into a primary income source rather
-// than a surplus dump, so this is kept low on purpose.
-export const FOOD_EXPORT_BATCH_SIZE = 2000; // food given up per export click
-export const FOOD_EXPORT_PRICE_PER_UNIT = 0.1; // Crowns received per unit of food exported
+// --- Market (see domain/market/marketRules.ts) ---
+// Supply and demand: the market holds a stock of every good, prices follow
+// how scarce that stock is, and it recovers toward a moving equilibrium.
+export const MARKET_BUY_MARKUP = 1.2; // buying pays this over the mid price...
+export const MARKET_PORT_BUY_MARKUP = 1.05; // ...less with a coastal port
+export const MARKET_SELL_FACTOR = 0.85; // selling gets this share of the mid price
+export const MARKET_RECOVERY_PER_DAY = 0.04; // share of the gap to normal stock closed each day
+export const MARKET_PRICE_FLOOR = 0.25; // mid price never below this × base...
+export const MARKET_PRICE_CEILING = 4; // ...or above this × base
+export const MARKET_OUTLOOK_SWING = 0.1; // monthly random step in each good's world outlook
+export const MARKET_OUTLOOK_MIN = 0.7;
+export const MARKET_OUTLOOK_MAX = 1.3;
 
 // --- Food processing (Granary/Cannery — research-gated, see domain/research)
 // Grain/fish trickle in at ~1/province/day (see RESOURCE_PER_PROVINCE above),
@@ -193,8 +162,21 @@ export const FACTION_SENSITIVITY = 3;
 
 // --- Economy / taxes ---
 export const BASE_TAX_INCOME_PER_POP = 0.014; // was 0.02 — tax alone covered ~80% of starting income, dwarfing industry; cut ~30% so factories matter more
-export const COMFORTABLE_TAX_RATE = 0.15; // above this, popularity starts to suffer
-export const POPULARITY_DRIFT_RATE = 0.05; // fraction of the gap to target popularity closed per day
+export const COMFORTABLE_TAX_RATE = 0.15; // the rate people accept without complaint
+export const MIN_TAX_RATE = 0.05;
+export const MAX_TAX_RATE = 0.4;
+export const TAX_RATE_STEP = 0.05;
+
+// --- Public opinion (see domain/politics/politicsRules.ts) ---
+// Popularity drifts toward a target built from how the country is run.
+// Slow on purpose: what you did two months ago still counts.
+export const POPULARITY_DRIFT_RATE = 0.012; // fraction of the gap to target closed per day
+export const POPULARITY_BASE_TARGET = 50; // where opinion settles if nothing is good or bad
+export const TAX_POPULARITY_PER_POINT = 1.2; // per percentage point of tax below (+) or above (−) the comfortable rate
+export const FOOD_SHORTAGE_POPULARITY_PENALTY = 15;
+export const HOMELESS_POPULARITY_PENALTY = 40; // times the homeless share
+export const COLD_POPULARITY_PENALTY = 20; // times the unheated share
+export const STABILITY_POPULARITY_WEIGHT = 0.2; // per point of stability above (+) or below (−) 50
 
 // --- Population ---
 export const POPULATION_GROWTH_RATE = 0.0003; // per day, scaled by stability
