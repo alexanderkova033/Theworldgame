@@ -551,8 +551,6 @@ export const MapPanel = memo(function MapPanel({
                         }
                       : undefined
                   }
-                  onFocus={isOwned ? () => setHoveredProvinceId(province.id) : undefined}
-                  onBlur={isOwned ? () => setHoveredProvinceId((prev) => (prev === province.id ? null : prev)) : undefined}
                   onMouseEnter={isOwned ? () => setHoveredProvinceId(province.id) : undefined}
                   onMouseLeave={isOwned ? () => setHoveredProvinceId((prev) => (prev === province.id ? null : prev)) : undefined}
                 >

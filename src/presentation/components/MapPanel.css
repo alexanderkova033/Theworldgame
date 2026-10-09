@@ -355,11 +355,16 @@
   fill: #000;
 }
 
-/* Keyboard focus on a province: the same gold edge as a selection, but
-   dashed, so focus and selection can be told apart. */
+/* An outline on an SVG shape draws as a rectangle around its whole bounding
+   box — never show one on a province. Keyboard focus gets a dashed gold edge
+   along the province itself instead (selection is the solid one). */
+.map-panel__province:focus,
 .map-panel__province:focus-visible {
   outline: none;
+}
+
+.map-panel__province:focus-visible {
   stroke: var(--accent-active);
-  stroke-width: 5;
+  stroke-width: 4.2;
   stroke-dasharray: 10 6;
 }

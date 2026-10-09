@@ -108,23 +108,22 @@ export function ForeignAffairs({ state, dispatch }: { state: GameState; dispatch
 
   return (
     <div className="foreign-affairs">
-      <h3>Foreign Affairs</h3>
+      <p className="foreign-affairs__intro">
+        Back a party in a neighboring country. If it takes power, trade improves: +{FRIENDLY_GOVERNMENT_INCOME_BONUS * 100}% income each.
+      </p>
       <div
         className={`foreign-affairs__strength ${strength >= 0 ? "is-gain" : "is-loss"}`}
-        title="How much one push moves a neighbor's vote — set by your popularity and stability at home. Below zero, meddling backfires."
+        title="Set by your popularity and stability at home. Below zero, meddling backfires."
       >
-        <span>Your sway abroad</span>
-        <StatIcon type="popularity" size={15} />
-        {Math.round(state.stats.popularity)}
-        <span className="foreign-affairs__plus">+</span>
-        <StatIcon type="stability" size={15} />
-        {Math.round(state.stats.stability)}
-        <span className="foreign-affairs__arrow">→</span>
+        <span>Each push moves their vote by</span>
         <strong>
           {strength >= 0 ? "+" : ""}
           {strength}
         </strong>
-        per push
+        <span className="foreign-affairs__why">
+          (from your <StatIcon type="popularity" size={15} /> {Math.round(state.stats.popularity)} popularity and{" "}
+          <StatIcon type="stability" size={15} /> {Math.round(state.stats.stability)} stability)
+        </span>
       </div>
       <div className="foreign-affairs__cards">
         {entries.map(([nationId, gov]) => (

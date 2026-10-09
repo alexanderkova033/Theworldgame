@@ -13,9 +13,15 @@ import type { PlacedBuilding } from "../domain/provinces/types";
 import { emptyResourceBundle } from "../domain/resources/resourceRules";
 import { emptyWorkforce } from "../domain/workforce/workforceRules";
 
-// The reign opens in early spring, so the first winter (see getSeason) is
-// most of a year off — time to build farms and stockpile the harvest.
-const STARTING_DATE = { year: 1, month: 3, day: 1 };
+// The reign opens on New Year's Day, in the dead of winter (see getSeason):
+// farms barely yield, so the very first thing the player sees is food
+// falling and why. Last autumn's harvest is in the granaries
+// (STARTING_FOOD) to carry the country through to spring.
+const STARTING_DATE = { year: 1, month: 1, day: 1 };
+
+// Enough for a 2-farm nation to reach spring without building anything —
+// just. A 2-farm nation eats ~5,000 more than it grows per winter day.
+const STARTING_FOOD = 400000;
 
 // One-time starting-stat nudges that back up each nation's Nation.startingBonus
 // blurb (nationData.ts) — keep the two in sync when tuning. Veldoria's bonus
@@ -77,7 +83,7 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     stats: {
       treasury: 1500,
       population: 10000,
-      food: 8000,
+      food: STARTING_FOOD,
       industry: calculateIndustryOutput(factoryCount),
       stability,
       politicalPower: 25, // enough for one tier-1 law straight away
@@ -109,7 +115,7 @@ export function startNewGame(nationId: string, partyId: string): GameState {
       {
         id: "event-start",
         date: STARTING_DATE,
-        message: `${nation.name} enters the new century amid rising industry and simmering tensions across the continent.`,
+        message: `${nation.name} enters the new century in the depth of winter. The fields lie fallow; the granaries hold last autumn's harvest until spring.`,
         severity: "info",
       },
     ],

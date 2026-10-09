@@ -1,9 +1,13 @@
-.foreign-affairs {
-  margin-top: 1.1rem;
+.foreign-affairs__intro {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
 }
 
-.foreign-affairs h3 {
-  margin-bottom: 0.4rem;
+.foreign-affairs__why {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.2rem;
 }
 
 .foreign-affairs__strength {
@@ -31,11 +35,6 @@
 
 .foreign-affairs__strength.is-loss strong {
   color: var(--danger);
-}
-
-.foreign-affairs__plus,
-.foreign-affairs__arrow {
-  opacity: 0.7;
 }
 
 .foreign-affairs__cards {
