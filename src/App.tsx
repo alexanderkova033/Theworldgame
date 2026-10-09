@@ -267,8 +267,8 @@ function App() {
       )}
 
       {openModal === "trade" && (
-        <Modal title="Trade" icon={<NavIcon type="trade" size={22} />} onClose={() => setOpenModal(null)}>
-          <TradePanel state={state} dispatch={dispatch} />
+        <Modal title="Trade" icon={<NavIcon type="trade" size={22} />} onClose={() => setOpenModal(null)} wide>
+          <TradePanel state={state} production={dailyProduction} dispatch={dispatch} />
         </Modal>
       )}
 
