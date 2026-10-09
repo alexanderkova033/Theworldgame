@@ -23,6 +23,11 @@ const STARTING_DATE = { year: 1, month: 1, day: 1 };
 // just. A 2-farm nation eats ~5,000 more than it grows per winter day.
 const STARTING_FOOD = 400000;
 
+// Everything else starts at zero: no money, no stockpiles, no political
+// capital, no research. Surviving the first winter — keeping people fed
+// and the government standing with nothing in hand — is the opening challenge.
+const STARTING_POPULATION = 10000;
+
 // One-time starting-stat nudges that back up each nation's Nation.startingBonus
 // blurb (nationData.ts) — keep the two in sync when tuning. Veldoria's bonus
 // is an ongoing multiplier instead; see nationEffects.ts.
@@ -81,12 +86,12 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     educationLevel: 0,
 
     stats: {
-      treasury: 1500,
-      population: 10000,
+      treasury: 0,
+      population: STARTING_POPULATION,
       food: STARTING_FOOD,
       industry: calculateIndustryOutput(factoryCount),
       stability,
-      politicalPower: 25, // enough for one tier-1 law straight away
+      politicalPower: 0,
       popularity: 55,
     },
     resources: {

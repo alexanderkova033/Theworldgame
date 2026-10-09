@@ -19,7 +19,7 @@ export const FOOD_IMPORT_PORT_DISCOUNT = 0.6; // multiplier on cost-per-unit wit
 
 // --- Resources (Catan-inspired: terrain produces, provinces trade) ---
 export const RESOURCE_PER_PROVINCE = 1; // units of matching resource produced per owned province per day
-export const STARTING_RESOURCE_STOCK = 5; // a small founding stockpile of each resource
+export const STARTING_RESOURCE_STOCK = 0; // nothing in the stores — every log and ingot has to be produced or bought
 export const FARM_WOOD_COST = 15; // lumber for the barn
 export const FACTORY_ORE_COST = 22; // metal for machinery
 export const ROAD_ORE_COST = 10; // gravel for the roadbed
