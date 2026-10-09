@@ -1,6 +1,6 @@
 import { generateId } from "../../domain/country/id";
 import type { GameState } from "../../domain/country/types";
-import { canEnactLaw, getEffectivePassChance, getLawNode } from "../../domain/laws/lawsRules";
+import { canEnactLaw, getEffectivePassChance, getLawDays, getLawNode } from "../../domain/laws/lawsRules";
 import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../../domain/parties/factionRules";
 import { deductResource } from "../../domain/resources/resourceRules";
 
@@ -10,11 +10,12 @@ export { canEnactLaw };
 // enough that spamming failed votes has a real cost.
 const FAILED_VOTE_POPULARITY_PENALTY = 5;
 
-// Enacting a law is now a vote, not a guarantee (see getEffectivePassChance).
-// On a "yes," it applies its one-time deltas immediately and is remembered
-// forever in enactedLawIds — there is no repeal action. On a "no," nothing
-// about the law takes effect and the node stays open to try again later;
-// only the popularity hit for the failed attempt is permanent.
+// Proposing a law is a vote, not a guarantee (see getEffectivePassChance).
+// On a "yes," its treasury/political power/resource cost is paid right away
+// and it goes into drafting (GameState.activeLaw) — it only takes effect
+// once that finishes, see completeLaw below. On a "no," nothing is spent and
+// the node stays open to try again later; only the popularity hit for the
+// failed attempt is permanent.
 export function enactLaw(state: GameState, lawId: string): GameState {
   if (!canEnactLaw(state, lawId)) return state;
   const law = getLawNode(lawId);
@@ -22,9 +23,9 @@ export function enactLaw(state: GameState, lawId: string): GameState {
 
   const passChance = getEffectivePassChance(state, law);
   const passed = Math.random() < passChance;
-  const weights = getFactionWeights(state.nationId);
 
   if (!passed) {
+    const weights = getFactionWeights(state.nationId);
     const { factionApproval, popularity } = applyUniformDelta(state.factionApproval, weights, -FAILED_VOTE_POPULARITY_PENALTY);
     return {
       ...state,
@@ -42,19 +43,46 @@ export function enactLaw(state: GameState, lawId: string): GameState {
     };
   }
 
-  const { effects, enactCost } = law;
+  const { enactCost } = law;
+  const days = getLawDays(law);
+  return {
+    ...state,
+    activeLaw: { nodeId: lawId, totalDays: days, daysRemaining: days },
+    resources: enactCost.resourceType ? deductResource(state.resources, enactCost.resourceType, enactCost.resourceAmount ?? 0) : state.resources,
+    stats: {
+      ...state.stats,
+      treasury: state.stats.treasury - enactCost.treasury,
+      politicalPower: state.stats.politicalPower - enactCost.politicalPower,
+    },
+    events: [
+      {
+        id: generateId("event"),
+        date: state.date,
+        message: `${law.name} passes the vote — it comes into force in ${days} days.`,
+        severity: "info",
+      },
+      ...state.events,
+    ],
+  };
+}
+
+// Drafting finished: the law's one-time deltas apply now and it's remembered
+// forever in enactedLawIds — there is no repeal action. Called from the
+// daily tick (see application/advancePolicies.ts), never by the player.
+export function completeLaw(state: GameState, lawId: string): GameState {
+  const law = getLawNode(lawId);
+  if (!law) return state;
+
+  const { effects } = law;
+  const weights = getFactionWeights(state.nationId);
   const { factionApproval, popularity } = applyFactionEffects(state.factionApproval, weights, effects, effects.popularityDelta ?? 0);
-  const resources = enactCost.resourceType
-    ? deductResource(state.resources, enactCost.resourceType, enactCost.resourceAmount ?? 0)
-    : state.resources;
   return {
     ...state,
     enactedLawIds: [...state.enactedLawIds, lawId],
     factionApproval,
-    resources,
     stats: {
       ...state.stats,
-      treasury: state.stats.treasury - enactCost.treasury + (effects.treasuryDelta ?? 0),
+      treasury: state.stats.treasury + (effects.treasuryDelta ?? 0),
       food: Math.max(0, state.stats.food + (effects.foodDelta ?? 0)),
       stability: Math.min(100, Math.max(0, state.stats.stability + (effects.stabilityDelta ?? 0))),
       population: Math.max(0, state.stats.population + (effects.populationDelta ?? 0)),
@@ -64,7 +92,7 @@ export function enactLaw(state: GameState, lawId: string): GameState {
       {
         id: generateId("event"),
         date: state.date,
-        message: `${law.name} passes: ${law.description}`,
+        message: `${law.name} comes into force: ${law.description}`,
         severity: "info",
       },
       ...state.events,

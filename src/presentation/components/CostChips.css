@@ -22,3 +22,8 @@
   display: block;
   flex-shrink: 0;
 }
+
+.cost-chip--days {
+  color: var(--text-muted);
+  font-weight: 600;
+}

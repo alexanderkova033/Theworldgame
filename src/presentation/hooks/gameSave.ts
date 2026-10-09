@@ -26,6 +26,7 @@ function hydrateStats(stats: Partial<CountryStats> | undefined): CountryStats {
     industry: stats?.industry ?? 0,
     stability: stats?.stability ?? 60,
     researchPoints: stats?.researchPoints ?? 0,
+    politicalPower: stats?.politicalPower ?? 25,
     popularity: stats?.popularity ?? 55,
   };
 }
@@ -57,6 +58,8 @@ function hydrateGameState(raw: Partial<GameState>): GameState {
     enactedLawIds: raw.enactedLawIds ?? [],
     enactedResearchIds: raw.enactedResearchIds ?? [],
     researchOutcomes: raw.researchOutcomes ?? {},
+    activeLaw: raw.activeLaw ?? null,
+    activeResearch: raw.activeResearch ?? null,
     resourceDemand: raw.resourceDemand ?? emptyResourceBundle(),
     // Pre-coalition saves have no per-faction breakdown — start every faction
     // exactly where the old flat popularity number already was, so resuming
@@ -70,7 +73,6 @@ function hydrateGameState(raw: Partial<GameState>): GameState {
     history: raw.history ?? [],
     pendingDecisionId: raw.pendingDecisionId ?? null,
     decisionHistory: raw.decisionHistory ?? [],
-    tutorialStep: raw.tutorialStep ?? null,
   };
 }
 

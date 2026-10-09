@@ -1,6 +1,6 @@
 // Tax policy and government popularity. Taxes above a "comfortable" rate
 // pull popularity down over time; popularity drifts toward that target daily.
-import { COMFORTABLE_TAX_RATE, POPULARITY_DRIFT_RATE } from "../constants";
+import { COMFORTABLE_TAX_RATE, POLITICAL_POWER_BASE_RATE, POLITICAL_POWER_PER_POPULARITY, POPULARITY_DRIFT_RATE } from "../constants";
 import { FACTIONS } from "../parties/factionData";
 import type { Ideology } from "../parties/types";
 import type { FactionUpdateResult } from "../parties/factionRules";
@@ -26,4 +26,11 @@ export function updateFactionPopularity(
     nextApproval[faction] = Math.min(100, Math.max(0, factionApproval[faction] + drift - debtPenalty));
   }
   return { factionApproval: nextApproval, popularity: getWeightedPopularity(nextApproval, weights) };
+}
+
+// Political power is the currency Laws spend (LawEnactCost.politicalPower).
+// A popular government has more capital to spend: at 50% popularity this is
+// 0.8/day, a tier-1 law roughly every month of saving.
+export function calculateDailyPoliticalPower(popularity: number): number {
+  return POLITICAL_POWER_BASE_RATE + Math.max(0, popularity) * POLITICAL_POWER_PER_POPULARITY;
 }

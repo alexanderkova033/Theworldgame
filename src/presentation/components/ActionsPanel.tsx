@@ -1,10 +1,11 @@
-// Build orders for the selected province. Every card is deliberately
-// glyph-first: what it makes, what it costs, and how many you already have
-// are all icons, chips, pips, and bars — the only prose left is the one-line
-// tooltip behind each of them.
+// Build orders for the selected province, as a grid of picture tiles. Each
+// tile *is* the build button: the building's illustration, what it yields,
+// and what it costs — all glyphs. Anything you're short on turns red right
+// on its chip; the explanations live in hover tooltips, not on the card.
 import "./ActionsPanel.css";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { buildCannery, buildEducation, buildFactory, buildFarm, buildGranary, buildRoad, countBuildingsInProvince } from "../../application/actions";
+import type { BuildAction } from "../../application/actions/createBuildAction";
 import {
   CANNERY_BUILD_DAYS,
   CANNERY_COST,
@@ -36,16 +37,14 @@ import {
 } from "../../domain/constants";
 import type { ProjectType } from "../../domain/construction/types";
 import type { GameState } from "../../domain/country/types";
-import { canAfford } from "../../domain/economy/economyRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { getResearchNode, isBuildingUnlocked } from "../../domain/research/researchRules";
-import { canAffordResource } from "../../domain/resources/resourceRules";
 import type { ResourceType } from "../../domain/resources/types";
 import { playConfirm } from "../audio/sound";
-import { BuildingIcon } from "./BuildingIcon";
-import { CostChips, ResourceChip, TreasuryChip } from "./CostChips";
+import { formatCompact } from "../formatNumber";
+import { BUILDING_COLORS, BuildingIcon } from "./BuildingIcon";
 import { ResourceIcon } from "./ResourceIcon";
-import { StatIcon, type StatIconType } from "./StatIcon";
+import { StatIcon } from "./StatIcon";
 
 interface ActionsPanelProps {
   state: GameState;
@@ -54,18 +53,12 @@ interface ActionsPanelProps {
 }
 
 // 60% of the cost is due now, the rest is drained daily over the build (see
-// createBuildAction.ts's own upfrontCost) — mirrored here so the schedule bar
-// and the affordability check match what's actually charged.
+// createBuildAction.ts's own upfrontCost) — mirrored here so the red
+// "can't afford" chips match what's actually charged on order.
 const UPFRONT_SHARE = 0.6;
 
 function upfront(value: number): number {
   return Math.round(value * UPFRONT_SHARE);
-}
-
-// Rounded to one decimal — most of these per-day rates are well under 1
-// unit/day, and a whole number would show "0" for a cost that's very real.
-function perDay(value: number, days: number): number {
-  return Math.round((value / days) * 10) / 10;
 }
 
 function PinIcon() {
@@ -82,25 +75,24 @@ function PinIcon() {
   );
 }
 
-function ClockIcon() {
+function HourglassIcon() {
   return (
-    <svg viewBox="-10 -10 20 20" width={13} height={13}>
-      <circle cx={0} cy={0} r={7.6} fill="none" stroke="currentColor" strokeWidth={1.4} />
-      <path d="M0,-4.4 L0,0.4 L3.4,2.6" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="-10 -10 20 20" width={12} height={12}>
+      <path d="M-5,-7 L5,-7 L5,-5.5 L1.2,0 L5,5.5 L5,7 L-5,7 L-5,5.5 L-1.2,0 L-5,-5.5 Z" fill="currentColor" />
     </svg>
   );
 }
 
 function LockIcon() {
   return (
-    <svg viewBox="-10 -10 20 20" width={12} height={12}>
+    <svg viewBox="-10 -10 20 20" width={18} height={18}>
       <rect x={-4.5} y={-1} width={9} height={7.5} rx={1.3} fill="currentColor" />
       <path d="M-2.8,-1 L-2.8,-3.8 A2.8,2.8 0 0 1 2.8,-3.8 L2.8,-1" fill="none" stroke="currentColor" strokeWidth={1.7} />
     </svg>
   );
 }
 
-function ResourceGlyph({ type, size = 15 }: { type: ResourceType; size?: number }) {
+function ResourceGlyph({ type, size = 14 }: { type: ResourceType; size?: number }) {
   return (
     <svg viewBox="-10 -10 20 20" width={size} height={size}>
       <ResourceIcon type={type} size={7.5} />
@@ -108,25 +100,24 @@ function ResourceGlyph({ type, size = 15 }: { type: ResourceType; size?: number 
   );
 }
 
-// What a building actually produces, as a glyph and a rate. Processors
-// (granary/cannery) show it as a conversion — grain in, food out — which is
-// the whole point of them and took a full sentence to say before.
-function Yield({ children, hint }: { children: ReactNode; hint: string }) {
+// How many of this building already stand here, out of the cap — filled vs
+// empty pips, so "room for more" is a shape, not a fraction to read.
+function CapPips({ count, max }: { count: number; max: number }) {
   return (
-    <span className="build-card__yield" title={hint}>
-      {children}
+    <span className="build-tile__pips" title={`${count} of ${max} built in this province`}>
+      {Array.from({ length: max }, (_, i) => (
+        <span key={i} className={`build-tile__pip ${i < count ? "is-filled" : ""}`} />
+      ))}
     </span>
   );
 }
 
-// How many of this building already stand here, out of the cap — drawn as
-// filled/empty pips so "room for more" is a shape, not a fraction to read.
-function CapPips({ count, max }: { count: number; max: number }) {
+// One cost on a tile, red when that's the thing you can't cover yet.
+function CostPip({ icon, amount, short, hint }: { icon: ReactNode; amount: string; short: boolean; hint: string }) {
   return (
-    <span className="build-card__pips" title={`${count} of ${max} built in this province`}>
-      {Array.from({ length: max }, (_, i) => (
-        <span key={i} className={`build-card__pip ${i < count ? "is-filled" : ""}`} />
-      ))}
+    <span className={`build-tile__cost ${short ? "is-short" : ""}`} title={hint}>
+      {icon}
+      {amount}
     </span>
   );
 }
@@ -134,259 +125,201 @@ function CapPips({ count, max }: { count: number; max: number }) {
 interface BuildItem {
   type: ProjectType;
   name: string;
+  action: BuildAction;
   cost: number;
   resourceCost: number;
   resourceType: ResourceType;
-  resourceLabel: string;
   buildDays: number;
-  yields: ReactNode;
-  count: number;
-  max: number;
-  canBuild: boolean;
-  onBuild: () => void;
-  lockedReason?: string;
+  yields: ReactNode; // glyph + a short number — the full sentence is `hint`
+  hint: string;
+  unlockedBy?: string; // research node name, for buildings still locked behind the Research tree
 }
 
+const BUILD_ITEMS: BuildItem[] = [
+  {
+    type: "farm",
+    name: "Farm",
+    action: buildFarm,
+    cost: FARM_COST,
+    resourceCost: FARM_WOOD_COST,
+    resourceType: "wood",
+    buildDays: FARM_BUILD_DAYS,
+    yields: (
+      <>
+        <StatIcon type="food" size={16} />+{formatCompact(FOOD_PER_FARM)}
+      </>
+    ),
+    hint: `Produces ${FOOD_PER_FARM.toLocaleString()} food per day`,
+  },
+  {
+    type: "factory",
+    name: "Factory",
+    action: buildFactory,
+    cost: FACTORY_COST,
+    resourceCost: FACTORY_ORE_COST,
+    resourceType: "ore",
+    buildDays: FACTORY_BUILD_DAYS,
+    yields: (
+      <>
+        <StatIcon type="industry" size={16} />+{INDUSTRY_PER_FACTORY}
+      </>
+    ),
+    hint: `Produces ${INDUSTRY_PER_FACTORY} industry per day, worth about ${INDUSTRY_PER_FACTORY * INCOME_PER_INDUSTRY} ${CURRENCY_SYMBOL}/day`,
+  },
+  {
+    type: "road",
+    name: "Road",
+    action: buildRoad,
+    cost: ROAD_COST,
+    resourceCost: ROAD_ORE_COST,
+    resourceType: "ore",
+    buildDays: ROAD_BUILD_DAYS,
+    yields: (
+      <>
+        <StatIcon type="treasury" size={16} />+{ROAD_EFFICIENCY_BONUS * 100}%
+      </>
+    ),
+    hint: `+${ROAD_EFFICIENCY_BONUS * 100}% income and construction speed nationwide, per road (stacks)`,
+  },
+  {
+    type: "education",
+    name: "School",
+    action: buildEducation,
+    cost: EDUCATION_COST,
+    resourceCost: EDUCATION_WOOD_COST,
+    resourceType: "wood",
+    buildDays: EDUCATION_BUILD_DAYS,
+    yields: (
+      <>
+        <StatIcon type="research" size={16} />+1
+      </>
+    ),
+    hint: "+1 education level: more research points per day and better odds on research votes",
+  },
+  {
+    type: "granary",
+    name: "Granary",
+    action: buildGranary,
+    cost: GRANARY_COST,
+    resourceCost: GRANARY_WOOD_COST,
+    resourceType: "wood",
+    buildDays: GRANARY_BUILD_DAYS,
+    yields: (
+      <>
+        <ResourceGlyph type="grain" />
+        <span className="build-tile__arrow">→</span>
+        <StatIcon type="food" size={16} />+{formatCompact(GRAIN_PROCESSED_PER_GRANARY * FOOD_PER_GRAIN)}
+      </>
+    ),
+    hint: `Turns up to ${GRAIN_PROCESSED_PER_GRANARY} Grain/day into ${(GRAIN_PROCESSED_PER_GRANARY * FOOD_PER_GRAIN).toLocaleString()} food/day, stock permitting`,
+    unlockedBy: "agriculture-grain-mills",
+  },
+  {
+    type: "cannery",
+    name: "Cannery",
+    action: buildCannery,
+    cost: CANNERY_COST,
+    resourceCost: CANNERY_ORE_COST,
+    resourceType: "ore",
+    buildDays: CANNERY_BUILD_DAYS,
+    yields: (
+      <>
+        <ResourceGlyph type="fish" />
+        <span className="build-tile__arrow">→</span>
+        <StatIcon type="food" size={16} />+{formatCompact(FISH_PROCESSED_PER_CANNERY * FOOD_PER_FISH)}
+      </>
+    ),
+    hint: `Turns up to ${FISH_PROCESSED_PER_CANNERY} Fish/day into ${(FISH_PROCESSED_PER_CANNERY * FOOD_PER_FISH).toLocaleString()} food/day, stock permitting`,
+    unlockedBy: "agriculture-cannery-works",
+  },
+];
+
 export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPanelProps) {
-  const provinceName = getProvinceName(selectedProvinceId);
-
-  const granaryUnlocked = isBuildingUnlocked(state.enactedResearchIds, "granary");
-  const canneryUnlocked = isBuildingUnlocked(state.enactedResearchIds, "cannery");
-
-  const buildItems: BuildItem[] = [
-    {
-      type: "farm",
-      name: "Farm",
-      cost: FARM_COST,
-      resourceCost: FARM_WOOD_COST,
-      resourceType: "wood",
-      resourceLabel: "Wood",
-      buildDays: FARM_BUILD_DAYS,
-      yields: (
-        <Yield hint={`Produces ${FOOD_PER_FARM.toLocaleString()} food per day`}>
-          <StatIcon type="food" size={15} />+{FOOD_PER_FARM.toLocaleString()}/d
-        </Yield>
-      ),
-      count: countBuildingsInProvince(state, "farm", selectedProvinceId),
-      max: buildFarm.maxPerProvince,
-      canBuild: buildFarm.canBuild(state, selectedProvinceId),
-      onBuild: () => dispatch((s) => buildFarm(s, selectedProvinceId)),
-    },
-    {
-      type: "factory",
-      name: "Factory",
-      cost: FACTORY_COST,
-      resourceCost: FACTORY_ORE_COST,
-      resourceType: "ore",
-      resourceLabel: "Ore",
-      buildDays: FACTORY_BUILD_DAYS,
-      yields: (
-        <>
-          <Yield hint={`Produces ${INDUSTRY_PER_FACTORY} industry per day`}>
-            <StatIcon type="industry" size={15} />+{INDUSTRY_PER_FACTORY}/d
-          </Yield>
-          <Yield
-            hint={`Worth about ${INDUSTRY_PER_FACTORY * INCOME_PER_INDUSTRY} ${CURRENCY_SYMBOL}/day — pays for itself in roughly ${Math.round(
-              FACTORY_COST / (INDUSTRY_PER_FACTORY * INCOME_PER_INDUSTRY),
-            ).toLocaleString()} days`}
-          >
-            <StatIcon type="treasury" size={15} />+{INDUSTRY_PER_FACTORY * INCOME_PER_INDUSTRY}/d
-          </Yield>
-        </>
-      ),
-      count: countBuildingsInProvince(state, "factory", selectedProvinceId),
-      max: buildFactory.maxPerProvince,
-      canBuild: buildFactory.canBuild(state, selectedProvinceId),
-      onBuild: () => dispatch((s) => buildFactory(s, selectedProvinceId)),
-    },
-    {
-      type: "road",
-      name: "Road",
-      cost: ROAD_COST,
-      resourceCost: ROAD_ORE_COST,
-      resourceType: "ore",
-      resourceLabel: "Ore",
-      buildDays: ROAD_BUILD_DAYS,
-      yields: (
-        <Yield hint={`+${ROAD_EFFICIENCY_BONUS * 100}% income and construction speed nationwide, per road (stacks)`}>
-          <StatIcon type="treasury" size={15} />+{ROAD_EFFICIENCY_BONUS * 100}% nationwide
-        </Yield>
-      ),
-      count: countBuildingsInProvince(state, "road", selectedProvinceId),
-      max: buildRoad.maxPerProvince,
-      canBuild: buildRoad.canBuild(state, selectedProvinceId),
-      onBuild: () => dispatch((s) => buildRoad(s, selectedProvinceId)),
-    },
-    {
-      type: "education",
-      name: "School",
-      cost: EDUCATION_COST,
-      resourceCost: EDUCATION_WOOD_COST,
-      resourceType: "wood",
-      resourceLabel: "Wood",
-      buildDays: EDUCATION_BUILD_DAYS,
-      yields: (
-        <Yield hint="Raises your education level: more research points per day and better odds on a research vote">
-          <StatIcon type="research" size={15} />+1 education
-        </Yield>
-      ),
-      count: countBuildingsInProvince(state, "education", selectedProvinceId),
-      max: buildEducation.maxPerProvince,
-      canBuild: buildEducation.canBuild(state, selectedProvinceId),
-      onBuild: () => dispatch((s) => buildEducation(s, selectedProvinceId)),
-    },
-    {
-      type: "granary",
-      name: "Granary",
-      cost: GRANARY_COST,
-      resourceCost: GRANARY_WOOD_COST,
-      resourceType: "wood",
-      resourceLabel: "Wood",
-      buildDays: GRANARY_BUILD_DAYS,
-      yields: (
-        <Yield
-          hint={`Processes up to ${GRAIN_PROCESSED_PER_GRANARY} Grain/day into ${(GRAIN_PROCESSED_PER_GRANARY * FOOD_PER_GRAIN).toLocaleString()} food/day, stock permitting`}
-        >
-          <ResourceGlyph type="grain" />
-          {GRAIN_PROCESSED_PER_GRANARY}
-          <span className="build-card__yield-arrow">→</span>
-          <StatIcon type="food" size={15} />
-          {(GRAIN_PROCESSED_PER_GRANARY * FOOD_PER_GRAIN).toLocaleString()}/d
-        </Yield>
-      ),
-      count: countBuildingsInProvince(state, "granary", selectedProvinceId),
-      max: buildGranary.maxPerProvince,
-      canBuild: buildGranary.canBuild(state, selectedProvinceId),
-      onBuild: () => dispatch((s) => buildGranary(s, selectedProvinceId)),
-      lockedReason: granaryUnlocked ? undefined : getResearchNode("agriculture-grain-mills")?.name,
-    },
-    {
-      type: "cannery",
-      name: "Cannery",
-      cost: CANNERY_COST,
-      resourceCost: CANNERY_ORE_COST,
-      resourceType: "ore",
-      resourceLabel: "Ore",
-      buildDays: CANNERY_BUILD_DAYS,
-      yields: (
-        <Yield
-          hint={`Processes up to ${FISH_PROCESSED_PER_CANNERY} Fish/day into ${(FISH_PROCESSED_PER_CANNERY * FOOD_PER_FISH).toLocaleString()} food/day, stock permitting`}
-        >
-          <ResourceGlyph type="fish" />
-          {FISH_PROCESSED_PER_CANNERY}
-          <span className="build-card__yield-arrow">→</span>
-          <StatIcon type="food" size={15} />
-          {(FISH_PROCESSED_PER_CANNERY * FOOD_PER_FISH).toLocaleString()}/d
-        </Yield>
-      ),
-      count: countBuildingsInProvince(state, "cannery", selectedProvinceId),
-      max: buildCannery.maxPerProvince,
-      canBuild: buildCannery.canBuild(state, selectedProvinceId),
-      onBuild: () => dispatch((s) => buildCannery(s, selectedProvinceId)),
-      lockedReason: canneryUnlocked ? undefined : getResearchNode("agriculture-cannery-works")?.name,
-    },
-  ];
-
-  // What's stopping this build, as an icon and a shortfall rather than a
-  // sentence. Only computed for unlocked cards, so it never competes with
-  // lockedReason.
-  function shortfall(item: BuildItem): { icon: StatIconType | null; resource: ResourceType | null; text: string } | null {
-    if (item.canBuild) return null;
-    if (item.count >= item.max) return { icon: null, resource: null, text: `No room here (${item.max} max)` };
-    if (!canAfford(state.stats, upfront(item.cost))) {
-      return { icon: "treasury", resource: null, text: `${Math.ceil(upfront(item.cost) - state.stats.treasury).toLocaleString()} short` };
-    }
-    if (!canAffordResource(state.resources, item.resourceType, upfront(item.resourceCost))) {
-      return {
-        icon: null,
-        resource: item.resourceType,
-        text: `${Math.ceil(upfront(item.resourceCost) - state.resources[item.resourceType])} short`,
-      };
-    }
-    return null;
-  }
-
   return (
     <section className="panel actions-panel">
-      <h2>Build</h2>
-      <p className="actions-panel__target" title="Click a province on the map to build somewhere else">
-        <PinIcon />
-        <strong>{provinceName}</strong>
-      </p>
+      <div className="actions-panel__header">
+        <h2>Build</h2>
+        <span className="actions-panel__target" title="Click a province on the map to build somewhere else">
+          <PinIcon />
+          {getProvinceName(selectedProvinceId)}
+        </span>
+      </div>
 
-      <div className="actions-panel__group">
-        {buildItems.map((item) => {
-          const isLocked = Boolean(item.lockedReason);
-          const missing = isLocked ? null : shortfall(item);
-          const dailyCost = perDay(item.cost - upfront(item.cost), item.buildDays);
-          const dailyResource = perDay(item.resourceCost - upfront(item.resourceCost), item.buildDays);
+      <div className="actions-panel__grid">
+        {BUILD_ITEMS.map((item) => {
+          const isLocked = item.unlockedBy !== undefined && !isBuildingUnlocked(state.enactedResearchIds, item.type);
+          const count = countBuildingsInProvince(state, item.type, selectedProvinceId);
+          const max = item.action.maxPerProvince;
+          const isFull = count >= max;
+          const canBuild = !isLocked && item.action.canBuild(state, selectedProvinceId);
+          const treasuryShort = state.stats.treasury < upfront(item.cost);
+          const resourceShort = state.resources[item.resourceType] < upfront(item.resourceCost);
+          const unlockName = item.unlockedBy ? getResearchNode(item.unlockedBy)?.name : undefined;
+
+          const title = isLocked
+            ? `${item.name} — unlocked by ${unlockName ?? "research"} (Research tab)`
+            : isFull
+              ? `${item.name} — no room left in this province (${max} max)`
+              : `Build ${item.name}: ${item.hint}. ${UPFRONT_SHARE * 100}% of the cost is due on order, the rest over ${item.buildDays} days.`;
 
           return (
-            <div className={`build-card ${!item.canBuild ? "is-disabled" : ""} ${isLocked ? "is-locked" : ""}`} key={item.type}>
-              <div className="build-card__icon" aria-hidden="true">
+            <button
+              type="button"
+              key={item.type}
+              className={`build-tile ${isLocked ? "is-locked" : ""} ${isFull ? "is-full" : ""}`}
+              style={{ "--tint": BUILDING_COLORS[item.type] } as CSSProperties}
+              disabled={!canBuild}
+              title={title}
+              aria-label={title}
+              onClick={() => {
+                playConfirm();
+                dispatch((s) => item.action(s, selectedProvinceId));
+              }}
+            >
+              {!isLocked && <CapPips count={count} max={max} />}
+
+              <span className="build-tile__art" aria-hidden="true">
                 <svg viewBox="-12 -16 24 24">
                   <BuildingIcon type={item.type} x={0} y={0} size={7} />
                 </svg>
-              </div>
-
-              <div className="build-card__body">
-                <div className="build-card__top">
-                  <span className="build-card__name">{item.name}</span>
-                  {!isLocked && <CapPips count={item.count} max={item.max} />}
-                </div>
-
-                {isLocked ? (
-                  <p className="build-card__locked" title={`Unlocked by ${item.lockedReason} on the Research tab`}>
+                {isLocked && (
+                  <span className="build-tile__lock">
                     <LockIcon />
-                    {item.lockedReason}
-                  </p>
-                ) : (
-                  <>
-                    <div className="build-card__yields">{item.yields}</div>
-
-                    <div className="build-card__cost">
-                      <CostChips>
-                        <TreasuryChip amount={item.cost.toLocaleString()} />
-                        <ResourceChip type={item.resourceType} amount={item.resourceCost} />
-                      </CostChips>
-                      <span
-                        className="build-card__schedule"
-                        title={`${UPFRONT_SHARE * 100}% due on order (${upfront(item.cost).toLocaleString()} ${CURRENCY_SYMBOL}, ${upfront(
-                          item.resourceCost,
-                        )} ${item.resourceLabel}); the rest drains at ${dailyCost} ${CURRENCY_SYMBOL} and ${dailyResource} ${item.resourceLabel} per day for ${
-                          item.buildDays
-                        } days`}
-                      >
-                        <span className="build-card__schedule-bar">
-                          <span className="build-card__schedule-upfront" style={{ width: `${UPFRONT_SHARE * 100}%` }} />
-                        </span>
-                        <ClockIcon />
-                        {item.buildDays}d
-                      </span>
-                    </div>
-
-                    <button
-                      className="build-card__button btn-primary"
-                      disabled={!item.canBuild}
-                      onClick={() => {
-                        playConfirm();
-                        item.onBuild();
-                      }}
-                    >
-                      {missing ? (
-                        <span className="build-card__missing">
-                          {missing.icon && <StatIcon type={missing.icon} size={16} />}
-                          {missing.resource && <ResourceGlyph type={missing.resource} size={16} />}
-                          {missing.text}
-                        </span>
-                      ) : (
-                        `Build ${item.name}`
-                      )}
-                    </button>
-                  </>
+                  </span>
                 )}
-              </div>
-            </div>
+              </span>
+
+              <span className="build-tile__name">{item.name}</span>
+
+              {isLocked ? (
+                <span className="build-tile__unlock">
+                  <StatIcon type="research" size={16} />
+                  {unlockName}
+                </span>
+              ) : (
+                <>
+                  <span className="build-tile__yield">{item.yields}</span>
+                  <span className="build-tile__costs">
+                    <CostPip
+                      icon={<StatIcon type="treasury" size={14} />}
+                      amount={formatCompact(item.cost)}
+                      short={treasuryShort}
+                      hint={`${item.cost.toLocaleString()} ${CURRENCY_SYMBOL} (${upfront(item.cost).toLocaleString()} up front)`}
+                    />
+                    <CostPip
+                      icon={<ResourceGlyph type={item.resourceType} />}
+                      amount={String(item.resourceCost)}
+                      short={resourceShort}
+                      hint={`${item.resourceCost} ${item.resourceType} (${upfront(item.resourceCost)} up front)`}
+                    />
+                    <span className="build-tile__cost build-tile__cost--days" title={`${item.buildDays} days to build`}>
+                      <HourglassIcon />
+                      {item.buildDays}d
+                    </span>
+                  </span>
+                </>
+              )}
+            </button>
           );
         })}
       </div>

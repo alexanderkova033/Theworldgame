@@ -77,6 +77,7 @@ export function startNewGame(nationId: string, partyId: string): GameState {
       industry: calculateIndustryOutput(factoryCount),
       stability,
       researchPoints: 0,
+      politicalPower: 25, // enough for one tier-1 law straight away
       popularity: 55,
     },
     resources: {
@@ -92,6 +93,8 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     enactedLawIds: [],
     enactedResearchIds: [],
     researchOutcomes: {},
+    activeLaw: null,
+    activeResearch: null,
     resourceDemand: emptyResourceBundle(),
     standingOrders: [],
     expeditions: [],
@@ -108,6 +111,5 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     history: [],
     pendingDecisionId: null,
     decisionHistory: [],
-    tutorialStep: 0,
   };
 }

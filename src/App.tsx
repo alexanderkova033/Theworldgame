@@ -28,7 +28,6 @@ import { ResearchPanel } from "./presentation/components/ResearchPanel";
 import { StartScreen } from "./presentation/components/StartScreen";
 import { TopBar, type PanelKey } from "./presentation/components/TopBar";
 import { TradePanel } from "./presentation/components/TradePanel";
-import { TUTORIAL_STEPS, TutorialOverlay } from "./presentation/components/TutorialOverlay";
 import { useGameClock } from "./presentation/hooks/useGameClock";
 
 const SPEED_KEYS: Record<string, GameSpeed> = { "1": 1, "2": 2, "3": 3, "5": 5 };
@@ -135,19 +134,6 @@ function App() {
     if (state?.pendingDecisionId) setOpenModal(null);
   }, [state?.pendingDecisionId]);
 
-  // The first-run spotlight tour (see TutorialOverlay.tsx) drives which
-  // panel is open for any step that targets a tab — so e.g. the "Laws" step
-  // actually shows the Laws panel behind the spotlight, not just points at
-  // a closed tab. A decision popup takes priority: the tour never fights it
-  // for the screen (see the guard on TutorialOverlay's `step` prop below).
-  useEffect(() => {
-    const tutorialStep = state?.tutorialStep;
-    if (typeof tutorialStep !== "number") return;
-    const step = TUTORIAL_STEPS[tutorialStep];
-    if (!step) return;
-    setOpenModal(step.panel);
-  }, [state?.tutorialStep]);
-
   // No game yet: pick a save slot, then a nation, then a party, then the
   // game itself starts. Nation/party are permanent — there is no
   // "change nation/party" control anywhere in the game UI below.
@@ -226,17 +212,17 @@ function App() {
         resources={state.resources}
         production={dailyProduction}
         debt={state.debt}
+        educationLevel={state.educationLevel}
         activePanel={openModal}
         reportsBadgeCount={unseenEventCount}
         onPause={pause}
         onResume={resume}
         onSetSpeed={setSpeed}
         onOpenPanel={openPanel}
-        onReplayTutorial={() => dispatch((s) => ({ ...s, tutorialStep: 0 }))}
       />
 
       <main className="game-layout__main">
-        <div className="game-layout__map-stage" data-tutorial="map">
+        <div className="game-layout__map-stage">
           <MapPanel
             nation={nation}
             placedBuildings={state.placedBuildings}
@@ -314,15 +300,6 @@ function App() {
         onDismiss={() => {
           dispatch(dismissDecision);
           resume();
-        }}
-      />
-
-      <TutorialOverlay
-        step={state.pendingDecisionId ? null : state.tutorialStep}
-        onAdvance={(nextStep) => dispatch((s) => ({ ...s, tutorialStep: nextStep }))}
-        onSkip={() => {
-          dispatch((s) => ({ ...s, tutorialStep: null }));
-          setOpenModal(null);
         }}
       />
     </div>

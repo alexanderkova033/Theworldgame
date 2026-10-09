@@ -7,18 +7,20 @@ import { LAW_NODES } from "../../domain/laws/lawData";
 import {
   canAffordLawEnactCost,
   getEffectivePassChance,
+  getLawDays,
   getLawNodeStatus,
   getRivalStance,
   getQuotaProgress,
 } from "../../domain/laws/lawsRules";
 import type { LawCategory, LawNode, QuotaStat } from "../../domain/laws/types";
 import { getRivalParty } from "../../domain/parties/partyRules";
+import { calculateDailyPoliticalPower } from "../../domain/politics/politicsRules";
 import { getResearchNode } from "../../domain/research/researchRules";
 import { getSynergiesForLaw } from "../../domain/synergy/synergyRules";
 import { playConfirm } from "../audio/sound";
-import { CostChips, ResourceChip, TreasuryChip } from "./CostChips";
+import { CostChips, DaysChip, ResourceChip, StatChip, TreasuryChip } from "./CostChips";
 import { StatIcon } from "./StatIcon";
-import { InspectorHeader, StatusLine, SynergyLine, TreeColumns, VoteRow, type TreeNodeStatus } from "./TechTree";
+import { InspectorHeader, StatusLine, SynergyLine, TreeBank, TreeColumns, VoteRow, WorkInProgress, type TreeNodeStatus } from "./TechTree";
 
 interface LawsPanelProps {
   state: GameState;
@@ -82,8 +84,10 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
       <div className="law-inspector__enact-cost">
         <span className="law-inspector__enact-cost-label">To put to a vote</span>
         <CostChips>
+          <StatChip type="politicalPower" amount={node.enactCost.politicalPower} />
           <TreasuryChip amount={node.enactCost.treasury.toLocaleString()} />
           {node.enactCost.resourceType && <ResourceChip type={node.enactCost.resourceType} amount={node.enactCost.resourceAmount ?? 0} />}
+          <DaysChip days={getLawDays(node)} />
         </CostChips>
       </div>
 
@@ -103,6 +107,9 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
       )}
 
       {status === "enacted" && <StatusLine status="enacted">Enacted.</StatusLine>}
+      {status === "in-progress" && state.activeLaw && (
+        <StatusLine status="in-progress">Passed — in force in {state.activeLaw.daysRemaining} days.</StatusLine>
+      )}
       {status === "foreclosed" && <StatusLine status="foreclosed">A rival law took this branch.</StatusLine>}
       {status === "locked-prerequisite" && <StatusLine status="locked">Enact the law above it first.</StatusLine>}
       {status === "locked-cross" && <StatusLine status="locked">Needs {crossNodeName ?? "a Research node"} (Research).</StatusLine>}
@@ -123,6 +130,7 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
         <VoteRow
           passChance={passChance}
           affordable={canAffordLawEnactCost(state, node.enactCost)}
+          busy={state.activeLaw !== null}
           isArmed={isArmed}
           onArm={onArm}
           onConfirm={() => {
@@ -141,6 +149,8 @@ export function LawsPanel({ state, dispatch }: LawsPanelProps) {
   const inspectorRef = useRef<HTMLDivElement>(null);
 
   const selectedNode = selectedId ? (LAW_NODES.find((n) => n.id === selectedId) ?? null) : null;
+  const activeNode = state.activeLaw ? (LAW_NODES.find((n) => n.id === state.activeLaw?.nodeId) ?? null) : null;
+  const progress = state.activeLaw ? { nodeId: state.activeLaw.nodeId, ratio: 1 - state.activeLaw.daysRemaining / state.activeLaw.totalDays } : null;
 
   // The tree can run 4 tiers deep, well past the fold — without this, picking
   // a node (especially near the bottom of a branch) opens the inspector
@@ -151,10 +161,23 @@ export function LawsPanel({ state, dispatch }: LawsPanelProps) {
 
   return (
     <div className="law-tree">
+      <div className="law-tree__header">
+        <TreeBank icon="politicalPower" label="Political power" value={state.stats.politicalPower} rate={calculateDailyPoliticalPower(state.stats.popularity)} />
+        {activeNode && state.activeLaw && (
+          <WorkInProgress
+            node={activeNode}
+            daysRemaining={state.activeLaw.daysRemaining}
+            totalDays={state.activeLaw.totalDays}
+            onSelect={() => setSelectedId(activeNode.id)}
+          />
+        )}
+      </div>
+
       <TreeColumns
         categories={CATEGORIES}
         nodesFor={nodesFor}
         getStatus={(node) => getLawNodeStatus(state, node)}
+        progress={progress}
         selectedId={selectedId}
         onSelect={(id) => setSelectedId(id === selectedId ? null : id)}
       />

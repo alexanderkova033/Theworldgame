@@ -111,6 +111,17 @@ export const RESEARCH_PER_EDUCATION_LEVEL = 0.05; // extra research points/day p
 export const FAILED_RESEARCH_VOTE_POPULARITY_PENALTY = 2; // smaller than a failed law vote — a research setback is less politically charged
 export const EDUCATION_PASS_CHANCE_PER_LEVEL = 0.03; // +3% research pass chance per education level...
 export const EDUCATION_PASS_CHANCE_CAP = 0.2; // ...capped at +20%
+// Passing the vote only funds the work — the node takes effect once this
+// many days of lab time have run (one technology at a time).
+export const RESEARCH_DAYS_BY_TIER: Record<1 | 2 | 3 | 4, number> = { 1: 30, 2: 45, 3: 60, 4: 90 };
+
+// --- Laws & political power (see domain/laws, domain/politics) ---
+// Political power trickles in daily — faster the more popular the government
+// — and every law spends a tier-scaled chunk of it (LawEnactCost.politicalPower).
+export const POLITICAL_POWER_BASE_RATE = 0.4; // per day, even at zero popularity
+export const POLITICAL_POWER_PER_POPULARITY = 0.008; // extra per day per popularity point (+0.4/day at 50%)
+// A passed law is drafted into force over this many days (one law at a time).
+export const LAW_DAYS_BY_TIER: Record<1 | 2 | 3 | 4, number> = { 1: 20, 2: 30, 3: 45, 4: 60 };
 
 // --- Rival party stances (see domain/parties/rivalRules.ts) ---
 export const RIVAL_OPPOSE_PASS_CHANCE_PENALTY = 0.08; // a law/research vote the rival opposes is harder to pass

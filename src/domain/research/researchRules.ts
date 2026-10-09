@@ -1,7 +1,7 @@
 // Research points accumulate passively every day, boosted by education
 // investment. They gate starting research projects (see domain/construction)
 // and every node in the research tree below.
-import { EDUCATION_PASS_CHANCE_CAP, EDUCATION_PASS_CHANCE_PER_LEVEL, RESEARCH_BASE_RATE, RESEARCH_PER_EDUCATION_LEVEL, RIVAL_OPPOSE_PASS_CHANCE_PENALTY, RIVAL_SUPPORT_PASS_CHANCE_BONUS } from "../constants";
+import { EDUCATION_PASS_CHANCE_CAP, EDUCATION_PASS_CHANCE_PER_LEVEL, RESEARCH_BASE_RATE, RESEARCH_DAYS_BY_TIER, RESEARCH_PER_EDUCATION_LEVEL, RIVAL_OPPOSE_PASS_CHANCE_PENALTY, RIVAL_SUPPORT_PASS_CHANCE_BONUS } from "../constants";
 import type { ProjectType } from "../construction/types";
 import type { GameState } from "../country/types";
 import { getRivalParty } from "../parties/partyRules";
@@ -93,6 +93,7 @@ export function getActiveResearchEffects(
 // button, not a hard lock icon.
 export type ResearchNodeStatus =
   | "enacted"
+  | "in-progress" // funded, still in the lab — see GameState.activeResearch
   | "foreclosed"
   | "locked-prerequisite"
   | "locked-cross" // a required node in the Law tree isn't enacted yet
@@ -100,6 +101,7 @@ export type ResearchNodeStatus =
 
 export function getResearchNodeStatus(state: GameState, node: ResearchNode): ResearchNodeStatus {
   if (state.enactedResearchIds.includes(node.id)) return "enacted";
+  if (state.activeResearch?.nodeId === node.id) return "in-progress";
 
   const siblingEnacted = RESEARCH_NODES.some(
     (n) => n.category === node.category && n.tier === node.tier && n.id !== node.id && state.enactedResearchIds.includes(n.id),
@@ -128,7 +130,13 @@ export function canAffordResearchEnactCost(state: GameState, cost: ResearchEnact
 export function canEnactResearch(state: GameState, id: string): boolean {
   const node = getResearchNode(id);
   if (!node) return false;
-  return getResearchNodeStatus(state, node) === "available" && canAffordResearchEnactCost(state, node.enactCost);
+  // One technology in the lab at a time — see GameState.activeResearch.
+  return getResearchNodeStatus(state, node) === "available" && !state.activeResearch && canAffordResearchEnactCost(state, node.enactCost);
+}
+
+// How long a funded technology spends in the lab before it takes effect.
+export function getResearchDays(node: ResearchNode): number {
+  return RESEARCH_DAYS_BY_TIER[node.tier];
 }
 
 // A better-educated population runs more successful trials (a capped bonus,

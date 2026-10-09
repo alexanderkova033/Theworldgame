@@ -1,4 +1,4 @@
-import { RIVAL_OPPOSE_PASS_CHANCE_PENALTY, RIVAL_SUPPORT_PASS_CHANCE_BONUS } from "../constants";
+import { LAW_DAYS_BY_TIER, RIVAL_OPPOSE_PASS_CHANCE_PENALTY, RIVAL_SUPPORT_PASS_CHANCE_BONUS } from "../constants";
 import type { GameState } from "../country/types";
 import { getRivalParty } from "../parties/partyRules";
 import { getPartyStance } from "../parties/rivalRules";
@@ -24,7 +24,8 @@ export function getActiveLawEffects(enactedLawIds: string[]): { incomeMultiplier
 }
 
 export type LawNodeStatus =
-  | "enacted" // this exact node was voted through
+  | "enacted" // this exact node was voted through and has taken effect
+  | "in-progress" // voted through, still being drafted into force — see GameState.activeLaw
   | "foreclosed" // a sibling at the same tier was enacted instead — permanent
   | "locked-prerequisite" // the tier above it in this branch isn't enacted yet
   | "locked-cross" // a required node in the Research tree isn't enacted yet
@@ -33,6 +34,7 @@ export type LawNodeStatus =
 
 export function getLawNodeStatus(state: GameState, node: LawNode): LawNodeStatus {
   if (state.enactedLawIds.includes(node.id)) return "enacted";
+  if (state.activeLaw?.nodeId === node.id) return "in-progress";
 
   const siblingEnacted = LAW_NODES.some(
     (n) => n.category === node.category && n.tier === node.tier && n.id !== node.id && state.enactedLawIds.includes(n.id),
@@ -55,6 +57,7 @@ export function getLawNodeStatus(state: GameState, node: LawNode): LawNodeStatus
 
 export function canAffordLawEnactCost(state: GameState, cost: LawEnactCost): boolean {
   if (state.stats.treasury < cost.treasury) return false;
+  if (state.stats.politicalPower < cost.politicalPower) return false;
   if (cost.resourceType && (cost.resourceAmount ?? 0) > state.resources[cost.resourceType]) return false;
   return true;
 }
@@ -62,7 +65,13 @@ export function canAffordLawEnactCost(state: GameState, cost: LawEnactCost): boo
 export function canEnactLaw(state: GameState, lawId: string): boolean {
   const node = getLawNode(lawId);
   if (!node) return false;
-  return getLawNodeStatus(state, node) === "available" && canAffordLawEnactCost(state, node.enactCost);
+  // One law in the drafting room at a time — see GameState.activeLaw.
+  return getLawNodeStatus(state, node) === "available" && !state.activeLaw && canAffordLawEnactCost(state, node.enactCost);
+}
+
+// How long a passed law takes to come into force.
+export function getLawDays(node: LawNode): number {
+  return LAW_DAYS_BY_TIER[node.tier];
 }
 
 // Popular parties get the benefit of the doubt in a vote; unpopular ones

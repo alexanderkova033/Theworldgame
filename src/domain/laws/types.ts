@@ -39,6 +39,7 @@ export interface LawEffects {
 // stays the existing popularity penalty, no double punishment for bad luck.
 export interface LawEnactCost {
   treasury: number;
+  politicalPower: number; // tier-scaled: 20/40/60/90 — see POLITICAL_POWER_* in constants.ts
   resourceType?: ResourceType;
   resourceAmount?: number;
 }

@@ -18,7 +18,7 @@ import { getNationEffects } from "../domain/nations/nationEffects";
 import { getNation } from "../domain/nations/nationRules";
 import { applyFactionEffects, getFactionWeights } from "../domain/parties/factionRules";
 import { getParty } from "../domain/parties/partyRules";
-import { updateFactionPopularity } from "../domain/politics/politicsRules";
+import { calculateDailyPoliticalPower, updateFactionPopularity } from "../domain/politics/politicsRules";
 import { updatePopulation } from "../domain/population/populationRules";
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
 import { applyRandomEventEffect, pickRandomEvent } from "../domain/randomEvents/randomEventRules";
@@ -28,6 +28,7 @@ import { decayDemand } from "../domain/resources/tradeRules";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
 import { isCollapseRisk, updateStability } from "../domain/stability/stabilityRules";
 import { getActiveSynergyEffects } from "../domain/synergy/synergyRules";
+import { advancePolicies } from "./advancePolicies";
 import { applyExpeditionCompletion } from "./applyExpeditionCompletion";
 import { applyProjectCompletion } from "./applyProjectCompletion";
 import { generateMonthlyReport } from "./generateMonthlyReport";
@@ -131,6 +132,14 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
+  // 1b'. A law being drafted and a technology in the lab each move one day
+  // closer to taking effect (see advancePolicies.ts). Completion logs its
+  // own event onto working.events — lift those into today's log here, since
+  // the final state's events come from the local array, not working.events.
+  const eventCountBeforePolicies = working.events.length;
+  working = advancePolicies(working);
+  events.unshift(...working.events.slice(0, working.events.length - eventCountBeforePolicies));
+
   // 1c. Standing trade orders (see application/actions/standingOrders.ts)
   // execute automatically, once each, against whatever's in stock at the
   // start of the day — today's own production (step 2, below) lands
@@ -205,6 +214,9 @@ export function simulateDay(state: GameState): GameState {
   // 6. Research points accumulate passively.
   const researchPoints = working.stats.researchPoints + calculateDailyResearch(working.educationLevel);
 
+  // 6b. Political power accumulates too, faster for a popular government.
+  const politicalPower = working.stats.politicalPower + calculateDailyPoliticalPower(working.stats.popularity);
+
   // 7. Stability reacts to food shortages, popularity, and heavy debt.
   const statsWithFood: CountryStats = { ...working.stats, food: newFoodStock };
   const stability = updateStability(statsWithFood, isShortage, getDebtStabilityPenalty(debt));
@@ -251,6 +263,7 @@ export function simulateDay(state: GameState): GameState {
     industry,
     stability,
     researchPoints,
+    politicalPower,
     popularity,
   };
 

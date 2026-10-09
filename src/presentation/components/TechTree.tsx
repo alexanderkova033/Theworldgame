@@ -6,7 +6,7 @@
 // and hands the rest over.
 //
 // Styling for all of it is LawsPanel.css, which both panels import.
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import type { Synergy } from "../../domain/synergy/synergyData";
 
@@ -16,6 +16,7 @@ export const TIERS = [1, 2, 3, 4] as const;
 // produces "locked-quota" (it has no country-condition gate).
 export type TreeNodeStatus =
   | "enacted"
+  | "in-progress"
   | "available"
   | "foreclosed"
   | "locked-prerequisite"
@@ -59,6 +60,14 @@ function LockBadge() {
   );
 }
 
+function HourglassBadge() {
+  return (
+    <svg viewBox="-10 -10 20 20" width={11} height={11}>
+      <path d="M-5,-7 L5,-7 L5,-5.5 L1.2,0 L5,5.5 L5,7 L-5,7 L-5,5.5 L-1.2,0 L-5,-5.5 Z" fill="currentColor" />
+    </svg>
+  );
+}
+
 function XBadge() {
   return (
     <svg viewBox="-10 -10 20 20" width={11} height={11}>
@@ -87,7 +96,22 @@ function TierConnector({ legCount }: { legCount: number }) {
   );
 }
 
-function NodeBadge({ node, status, isSelected, onSelect }: { node: TreeNode; status: TreeNodeStatus; isSelected: boolean; onSelect: () => void }) {
+// `progress` (0..1) only matters for an in-progress node — it fills the
+// ring drawn around its badge, so how far along it is reads straight off the
+// tree without opening the inspector.
+function NodeBadge({
+  node,
+  status,
+  progress,
+  isSelected,
+  onSelect,
+}: {
+  node: TreeNode;
+  status: TreeNodeStatus;
+  progress: number;
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
   const isLocked = status.startsWith("locked-");
   return (
     <button
@@ -96,11 +120,16 @@ function NodeBadge({ node, status, isSelected, onSelect }: { node: TreeNode; sta
       onClick={onSelect}
       title={node.name}
     >
-      <span className="law-node__icon">
+      <span className="law-node__icon" style={{ "--progress": `${Math.round(progress * 100)}%` } as CSSProperties}>
         <StatIcon type={node.icon as StatIconType} size={26} />
         {status === "enacted" && (
           <span className="law-node__badge law-node__badge--enacted">
             <CheckBadge />
+          </span>
+        )}
+        {status === "in-progress" && (
+          <span className="law-node__badge law-node__badge--in-progress">
+            <HourglassBadge />
           </span>
         )}
         {status === "foreclosed" && (
@@ -123,13 +152,14 @@ interface TreeColumnsProps<N extends TreeNode> {
   categories: Array<{ key: string; label: string; icon: StatIconType }>;
   nodesFor: (categoryKey: string, tier: number) => N[];
   getStatus: (node: N) => TreeNodeStatus;
+  progress: { nodeId: string; ratio: number } | null; // the one node currently underway, if any
   selectedId: string | null;
   onSelect: (nodeId: string) => void;
 }
 
 // The tree proper: one column per category, one row per tier, forks drawn
 // between them.
-export function TreeColumns<N extends TreeNode>({ categories, nodesFor, getStatus, selectedId, onSelect }: TreeColumnsProps<N>) {
+export function TreeColumns<N extends TreeNode>({ categories, nodesFor, getStatus, progress, selectedId, onSelect }: TreeColumnsProps<N>) {
   return (
     <div className="law-tree__columns">
       {categories.map((category) => (
@@ -151,6 +181,7 @@ export function TreeColumns<N extends TreeNode>({ categories, nodesFor, getStatu
                       key={node.id}
                       node={node}
                       status={getStatus(node)}
+                      progress={progress?.nodeId === node.id ? progress.ratio : 0}
                       isSelected={selectedId === node.id}
                       onSelect={() => onSelect(node.id)}
                     />
@@ -261,12 +292,14 @@ export function SynergyLine({ synergy, partnerName, isActive }: { synergy: Syner
 export function VoteRow({
   passChance,
   affordable,
+  busy,
   isArmed,
   onArm,
   onConfirm,
 }: {
   passChance: number; // 0-100
   affordable: boolean;
+  busy: boolean; // something else in this tree is already underway — one at a time
   isArmed: boolean;
   onArm: () => void;
   onConfirm: () => void;
@@ -280,8 +313,12 @@ export function VoteRow({
         </span>
         {passChance}%
       </span>
-      <button className="btn-primary law-inspector__vote-button" disabled={!affordable} onClick={isArmed ? onConfirm : onArm}>
-        {!affordable ? (
+      <button className="btn-primary law-inspector__vote-button" disabled={busy || !affordable} onClick={isArmed ? onConfirm : onArm}>
+        {busy ? (
+          <>
+            <HourglassBadge /> Busy
+          </>
+        ) : !affordable ? (
           "Can't afford it"
         ) : isArmed ? (
           <>
@@ -297,12 +334,54 @@ export function VoteRow({
 
 // A locked/foreclosed/enacted status line, with the padlock or tick that
 // matches the badge on the node itself.
-export function StatusLine({ status, children }: { status: "enacted" | "foreclosed" | "locked"; children: ReactNode }) {
+export function StatusLine({ status, children }: { status: "enacted" | "in-progress" | "foreclosed" | "locked"; children: ReactNode }) {
   return (
     <p className={`law-inspector__status is-${status}`}>
       {status === "locked" && <LockBadge />}
+      {status === "in-progress" && <HourglassBadge />}
       {status === "foreclosed" && <XBadge />}
       {children}
     </p>
+  );
+}
+
+// The pool a tree spends from, and how fast it refills — research points for
+// Research, political power for Laws.
+export function TreeBank({ icon, value, rate, label }: { icon: StatIconType; value: number; rate: number; label: string }) {
+  return (
+    <div className="law-tree__bank" title={`${label}: ${value.toFixed(1)}, +${rate.toFixed(2)} per day`}>
+      <StatIcon type={icon} size={22} />
+      <span className="law-tree__bank-value">{Math.floor(value)}</span>
+      <span className="law-tree__bank-rate">+{rate.toFixed(1)}/d</span>
+    </div>
+  );
+}
+
+// What's underway right now in this tree, as a progress bar with the days
+// left — shown above the tree, and clicking it jumps to that node.
+export function WorkInProgress({
+  node,
+  daysRemaining,
+  totalDays,
+  onSelect,
+}: {
+  node: TreeNode;
+  daysRemaining: number;
+  totalDays: number;
+  onSelect: () => void;
+}) {
+  const ratio = 1 - daysRemaining / totalDays;
+  return (
+    <button type="button" className="law-tree__work" onClick={onSelect} title={`${node.name}: ${daysRemaining} of ${totalDays} days left`}>
+      <StatIcon type={node.icon as StatIconType} size={20} />
+      <span className="law-tree__work-name">{node.name}</span>
+      <span className="law-tree__work-bar">
+        <span className="law-tree__work-fill" style={{ width: `${Math.round(ratio * 100)}%` }} />
+      </span>
+      <span className="law-tree__work-days">
+        <HourglassBadge />
+        {daysRemaining}d
+      </span>
+    </button>
   );
 }

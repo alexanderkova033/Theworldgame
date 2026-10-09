@@ -1,15 +1,27 @@
-.actions-panel__target {
+.actions-panel__header {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.actions-panel__header h2 {
+  margin: 0;
+}
+
+.actions-panel__target {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-display);
+  font-weight: 700;
   font-size: 0.9rem;
-  margin: 0 0 0.75rem 0;
-  color: var(--text-muted);
+  color: var(--accent-active);
   background: var(--accent-soft);
   border: 1px solid var(--panel-border);
-  border-radius: 6px;
-  padding: 0.45rem 0.65rem;
-  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.3);
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem 0.25rem 0.5rem;
   cursor: help;
 }
 
@@ -17,100 +29,148 @@
   flex-shrink: 0;
 }
 
-.actions-panel__target strong {
-  color: var(--accent-active);
-  font-family: var(--font-display);
-}
-
-.actions-panel__group {
-  display: flex;
-  flex-direction: column;
+.actions-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
   gap: 0.6rem;
 }
 
-.build-card {
+/* --- One building, one tile, one click --- */
+.build-tile {
+  position: relative;
   display: flex;
-  gap: 0.7rem;
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid var(--panel-border);
-  border-radius: 10px;
-  padding: 0.65rem 0.75rem;
-  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.4);
-  transition: border-color 0.15s ease;
-}
-
-.build-card.is-disabled {
-  opacity: 0.6;
-}
-
-.build-card.is-locked {
-  opacity: 0.75;
-}
-
-.build-card__locked {
-  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  background: rgba(0, 0, 0, 0.22);
-  border: 1px dashed var(--panel-border);
-  border-radius: 6px;
-  padding: 0.35rem 0.55rem;
-  margin: 0.25rem 0 0;
-  cursor: help;
-}
-
-.build-card__locked svg {
-  flex-shrink: 0;
-}
-
-.build-card__icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.1), transparent 65%), var(--panel-bg-raised);
+  gap: 0.4rem;
+  padding: 0.7rem 0.5rem 0.6rem;
   border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.25)), rgba(0, 0, 0, 0.18);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.4);
+  color: var(--text);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.build-tile:not(:disabled):hover {
+  transform: translateY(-2px);
+  border-color: var(--tint);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.45),
+    0 0 0 1px var(--tint),
+    inset 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.build-tile:not(:disabled):active {
+  transform: translateY(0);
+}
+
+/* Overrides the global button:disabled fade — a disabled tile still has to
+   show which cost chip is red. */
+.build-tile:disabled {
+  opacity: 0.9;
+  cursor: not-allowed;
+}
+
+/* The building itself, big, on a backdrop washed in its map color. */
+.build-tile__art {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  background:
+    radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--tint) 32%, transparent), transparent 70%),
+    var(--panel-bg-raised);
+  border: 2px solid color-mix(in srgb, var(--tint) 55%, var(--panel-border));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.4);
+}
+
+.build-tile__art svg {
+  width: 54px;
+  height: 54px;
+  display: block;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+}
+
+.build-tile__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* What it makes: a single glyph + number badge. */
+.build-tile__yield {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--success);
+  background: rgba(111, 174, 124, 0.12);
+  border: 1px solid rgba(111, 174, 124, 0.35);
+  border-radius: 999px;
+  padding: 0.12rem 0.55rem;
+}
+
+.build-tile__yield svg,
+.build-tile__cost svg,
+.build-tile__unlock svg {
+  display: block;
   flex-shrink: 0;
 }
 
-.build-card__icon svg {
-  width: 32px;
-  height: 32px;
-  display: block;
+.build-tile__arrow {
+  color: var(--text-muted);
 }
 
-.build-card__body {
-  flex: 1;
-  min-width: 0;
-}
-
-.build-card__top {
+.build-tile__costs {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.5rem;
+  font-size: 0.75rem;
 }
 
-.build-card__name {
-  font-family: var(--font-display);
+.build-tile__cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
   color: var(--text);
 }
 
-/* Filled/empty pips instead of a "2/4 here" fraction — how much room is
-   left in this province is a shape you glance at, not a number you read. */
-.build-card__pips {
-  display: inline-flex;
-  gap: 3px;
-  flex-shrink: 0;
-  cursor: help;
+.build-tile__cost.is-short {
+  color: var(--danger);
 }
 
-.build-card__pip {
+.build-tile__cost--days {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Room left in this province, top-right corner. */
+.build-tile__pips {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.5rem;
+  display: inline-flex;
+  gap: 3px;
+}
+
+.build-tile__pip {
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -118,102 +178,56 @@
   background: rgba(0, 0, 0, 0.45);
 }
 
-.build-card__pip.is-filled {
+.build-tile__pip.is-filled {
   background: linear-gradient(180deg, var(--accent-active), var(--accent));
   border-color: #fff0c2;
   box-shadow: 0 0 4px rgba(240, 200, 105, 0.5);
 }
 
-/* What it makes, as glyphs and rates — this replaced a full sentence per
-   building. Processors read as a conversion: grain in, food out. */
-.build-card__yields {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  margin: 0.35rem 0;
+/* Can't afford it: the red chip says why, the tile just sits back a little. */
+.build-tile:disabled .build-tile__art {
+  filter: saturate(0.6);
 }
 
-.build-card__yield {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2rem;
-  font-size: 0.76rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--success);
-  background: rgba(111, 174, 124, 0.12);
-  border: 1px solid rgba(111, 174, 124, 0.35);
-  border-radius: 999px;
-  padding: 0.12rem 0.45rem;
-  cursor: help;
+/* No room left here: everything but the full pips fades. */
+.build-tile.is-full > :not(.build-tile__pips) {
+  opacity: 0.45;
 }
 
-.build-card__yield svg {
-  display: block;
-  flex-shrink: 0;
+/* Still behind the Research tree. */
+.build-tile.is-locked {
+  border-style: dashed;
+  background: rgba(0, 0, 0, 0.25);
 }
 
-.build-card__yield-arrow {
+.build-tile.is-locked .build-tile__art svg {
+  filter: grayscale(1) brightness(0.6);
+}
+
+.build-tile.is-locked .build-tile__name {
   color: var(--text-muted);
-  margin: 0 0.05rem;
 }
 
-.build-card__cost {
+.build-tile__lock {
+  position: absolute;
+  inset: 0;
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.4rem 0.6rem;
-  margin-bottom: 0.5rem;
-}
-
-/* The payment schedule as a filled bar (what's due on order) plus the build
-   duration — the exact per-day drip is one hover away rather than three
-   labeled rows of numbers. */
-.build-card__schedule {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.72rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-muted);
-  cursor: help;
-}
-
-.build-card__schedule svg {
-  display: block;
-  flex-shrink: 0;
-}
-
-.build-card__schedule-bar {
-  display: block;
-  width: 2.6rem;
-  height: 6px;
-  border-radius: 999px;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid var(--panel-border);
-}
-
-.build-card__schedule-upfront {
-  display: block;
-  height: 100%;
-  background: linear-gradient(180deg, var(--accent-active), var(--accent));
-}
-
-.build-card__button {
-  width: 100%;
-}
-
-/* A disabled build says what's missing right on the button — an icon and a
-   shortfall, in place of the sentence that used to sit above it. */
-.build-card__missing {
-  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
-  color: var(--danger);
-  font-variant-numeric: tabular-nums;
+  color: var(--text);
 }
 
-.build-card__missing svg {
-  display: block;
+.build-tile__lock svg {
+  width: 26px;
+  height: 26px;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.8));
+}
+
+.build-tile__unlock {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.2;
 }

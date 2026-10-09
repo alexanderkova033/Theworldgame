@@ -24,6 +24,7 @@ export interface CountryStats {
   industry: number;
   stability: number; // 0-100
   researchPoints: number;
+  politicalPower: number; // accrues daily, spent to put Laws to a vote — see politicsRules.ts
   popularity: number; // 0-100
 }
 
@@ -34,6 +35,16 @@ export type EventSeverity = "info" | "warning" | "danger";
 // "voted-out": lost a general election to the rival party.
 // "victory": won enough elections in a row to cement outright rule.
 export type GameOutcome = "collapsed" | "voted-out" | "victory";
+
+// A Law or Research node that has already passed its vote but hasn't taken
+// effect yet — a law still being drafted into force, a technology still in
+// the lab. Only one of each runs at a time (GameState.activeLaw /
+// activeResearch); see application/advancePolicies.ts for the daily tick.
+export interface PolicyInProgress {
+  nodeId: string;
+  totalDays: number;
+  daysRemaining: number;
+}
 
 export interface GameEvent {
   id: string;
@@ -87,6 +98,8 @@ export interface GameState {
   enactedLawIds: string[]; // permanent policy choices, one per category — see domain/laws
   enactedResearchIds: string[]; // permanent tech choices, one per category — see domain/research
   researchOutcomes: Record<string, ResearchOutcomeTier>; // rolled once per enacted node — see researchRules.ts
+  activeLaw: PolicyInProgress | null; // a passed law still being drafted into force — see domain/laws
+  activeResearch: PolicyInProgress | null; // a funded technology still in the lab — see domain/research
   resourceDemand: ResourceBundle; // dynamic-market demand index per resource, drifts toward 0 — see domain/resources/tradeRules.ts
   factionApproval: Record<Ideology, number>; // per-ideology approval (0-100); stats.popularity is their electorate-weighted average — see domain/parties/factionRules.ts
   standingOrders: StandingOrder[]; // automated daily trades, capped at MAX_STANDING_ORDERS — see application/actions/standingOrders.ts
@@ -98,8 +111,4 @@ export interface GameState {
 
   pendingDecisionId: string | null; // a decision popup waiting on the player — see domain/decisions
   decisionHistory: DecisionHistoryEntry[];
-
-  // The first-run spotlight tour's current step; null once finished/skipped
-  // (or for any save from before this field existed — see TutorialOverlay).
-  tutorialStep: number | null;
 }

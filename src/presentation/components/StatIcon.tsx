@@ -11,7 +11,8 @@ export type StatIconType =
   | "industry"
   | "stability"
   | "research"
-  | "popularity";
+  | "popularity"
+  | "politicalPower";
 
 interface StatIconProps {
   type: StatIconType;
@@ -114,6 +115,19 @@ function renderShape(type: StatIconType) {
         <g>
           <polygon points={starPoints(0, 0.5, 8.5, 3.5)} fill="#93731f" />
           <polygon points={starPoints(0, 0, 8, 3.3)} fill="#e6c56a" stroke="#93731f" strokeWidth={0.4} />
+        </g>
+      );
+    case "politicalPower":
+      // A judge's gavel over its sounding block — the currency of lawmaking.
+      return (
+        <g>
+          <rect x={-9} y={5.6} width={10} height={3} rx={0.8} fill="#6e4a26" stroke="#3f2a14" strokeWidth={0.5} />
+          <g transform="rotate(-40 1 -1)">
+            <rect x={0.1} y={-2} width={1.8} height={11} rx={0.6} fill="#c9a24a" stroke="#93731f" strokeWidth={0.4} />
+            <rect x={-4} y={-7.5} width={10} height={5.5} rx={1.2} fill="#a9773f" stroke="#6e4a26" strokeWidth={0.5} />
+            <rect x={-2.6} y={-7.5} width={1.2} height={5.5} fill="#e6c56a" />
+            <rect x={3.4} y={-7.5} width={1.2} height={5.5} fill="#e6c56a" />
+          </g>
         </g>
       );
     default:

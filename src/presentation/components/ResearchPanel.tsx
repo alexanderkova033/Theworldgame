@@ -13,6 +13,7 @@ import {
   calculateDailyResearch,
   canAffordResearchEnactCost,
   getEffectivePassChance,
+  getResearchDays,
   getResearchNodeStatus,
   getResearchOutcomeFlavor,
   getRivalStance,
@@ -20,9 +21,8 @@ import {
 import type { ResearchCategory, ResearchNode } from "../../domain/research/types";
 import { getSynergiesForResearch } from "../../domain/synergy/synergyRules";
 import { playConfirm } from "../audio/sound";
-import { CostChips, ResourceChip, StatChip, TreasuryChip } from "./CostChips";
-import { StatIcon } from "./StatIcon";
-import { InspectorHeader, StatusLine, SynergyLine, TreeColumns, VoteRow, type TreeNodeStatus } from "./TechTree";
+import { CostChips, DaysChip, ResourceChip, StatChip, TreasuryChip } from "./CostChips";
+import { InspectorHeader, StatusLine, SynergyLine, TreeBank, TreeColumns, VoteRow, WorkInProgress, type TreeNodeStatus } from "./TechTree";
 
 interface ResearchPanelProps {
   state: GameState;
@@ -64,6 +64,7 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
           <StatChip type="research" amount={node.enactCost.researchPoints} />
           <TreasuryChip amount={node.enactCost.treasury.toLocaleString()} />
           {node.enactCost.resourceType && <ResourceChip type={node.enactCost.resourceType} amount={node.enactCost.resourceAmount ?? 0} />}
+          <DaysChip days={getResearchDays(node)} />
         </CostChips>
       </div>
 
@@ -85,6 +86,9 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
       {status === "enacted" && (
         <StatusLine status="enacted">Adopted — {getResearchOutcomeFlavor(state.researchOutcomes[node.id]) ?? "as projected"}.</StatusLine>
       )}
+      {status === "in-progress" && state.activeResearch && (
+        <StatusLine status="in-progress">In the lab — {state.activeResearch.daysRemaining} days left.</StatusLine>
+      )}
       {status === "foreclosed" && <StatusLine status="foreclosed">A rival technology took this branch.</StatusLine>}
       {status === "locked-prerequisite" && <StatusLine status="locked">Adopt the technology above it first.</StatusLine>}
       {status === "locked-cross" && <StatusLine status="locked">Needs {crossNodeName ?? "a Law"} (Laws).</StatusLine>}
@@ -93,6 +97,7 @@ function ResearchInspector({ node, state, status, isArmed, onArm, onConfirm }: R
         <VoteRow
           passChance={passChance}
           affordable={canAffordResearchEnactCost(state, node.enactCost)}
+          busy={state.activeResearch !== null}
           isArmed={isArmed}
           onArm={onArm}
           onConfirm={() => {
@@ -111,6 +116,10 @@ export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
   const inspectorRef = useRef<HTMLDivElement>(null);
 
   const selectedNode = selectedId ? (RESEARCH_NODES.find((n) => n.id === selectedId) ?? null) : null;
+  const activeNode = state.activeResearch ? (RESEARCH_NODES.find((n) => n.id === state.activeResearch?.nodeId) ?? null) : null;
+  const progress = state.activeResearch
+    ? { nodeId: state.activeResearch.nodeId, ratio: 1 - state.activeResearch.daysRemaining / state.activeResearch.totalDays }
+    : null;
 
   // The tree can run 4 tiers deep, well past the fold — without this, picking
   // a node (especially near the bottom of a branch) opens the inspector
@@ -121,18 +130,25 @@ export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
 
   return (
     <div className="law-tree research-tree">
-      {/* The one thing the tree itself can't show: the pool every node
-          spends from, and how fast it refills. */}
-      <div className="law-tree__bank">
-        <StatIcon type="research" size={22} />
-        <span className="law-tree__bank-value">{state.stats.researchPoints.toFixed(1)}</span>
-        <span className="law-tree__bank-rate">+{calculateDailyResearch(state.educationLevel).toFixed(2)}/d</span>
+      {/* What the tree itself can't show: the pool every node spends from,
+          and whatever is in the lab right now. */}
+      <div className="law-tree__header">
+        <TreeBank icon="research" label="Research points" value={state.stats.researchPoints} rate={calculateDailyResearch(state.educationLevel)} />
+        {activeNode && state.activeResearch && (
+          <WorkInProgress
+            node={activeNode}
+            daysRemaining={state.activeResearch.daysRemaining}
+            totalDays={state.activeResearch.totalDays}
+            onSelect={() => setSelectedId(activeNode.id)}
+          />
+        )}
       </div>
 
       <TreeColumns
         categories={CATEGORIES}
         nodesFor={nodesFor}
         getStatus={(node) => getResearchNodeStatus(state, node)}
+        progress={progress}
         selectedId={selectedId}
         onSelect={(id) => setSelectedId(id === selectedId ? null : id)}
       />
