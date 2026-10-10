@@ -9,6 +9,7 @@
 import { JOBS_PER_BUILDING, LABOUR_SHARE } from "../constants";
 import type { GameState } from "../country/types";
 import { getWorkingCounts } from "../maintenance/maintenanceRules";
+import { getResearchEffectsFor } from "../research/researchRules";
 
 export interface LabourSituation {
   workers: number; // people of working age
@@ -26,12 +27,25 @@ function fill(available: number, jobs: number): { staffing: number; left: number
   return { staffing: hired / jobs, left: available - hired };
 }
 
+export type JobBuilding = keyof typeof JOBS_PER_BUILDING;
+
+// Workers each kind of building needs — fewer on farms and in factories
+// once research has found ways to do the work with fewer hands.
+export function getJobsPerBuilding(state: GameState): Record<JobBuilding, number> {
+  const research = getResearchEffectsFor(state);
+  return {
+    ...JOBS_PER_BUILDING,
+    farm: Math.round(JOBS_PER_BUILDING.farm * research.farmJobsMultiplier),
+    factory: Math.round(JOBS_PER_BUILDING.factory * research.factoryJobsMultiplier),
+  };
+}
+
 export function getLabourSituation(state: GameState): LabourSituation {
   const working = getWorkingCounts(state);
-  const foodJobs =
-    working.farms * JOBS_PER_BUILDING.farm + working.granaries * JOBS_PER_BUILDING.granary + working.canneries * JOBS_PER_BUILDING.cannery;
-  const schoolJobs = working.schools * JOBS_PER_BUILDING.education;
-  const industryJobs = working.factories * JOBS_PER_BUILDING.factory;
+  const jobsPer = getJobsPerBuilding(state);
+  const foodJobs = working.farms * jobsPer.farm + working.granaries * jobsPer.granary + working.canneries * jobsPer.cannery;
+  const schoolJobs = working.schools * jobsPer.education;
+  const industryJobs = working.factories * jobsPer.factory;
 
   const workers = state.stats.population * LABOUR_SHARE;
   const food = fill(workers, foodJobs);

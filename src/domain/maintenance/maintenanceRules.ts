@@ -44,12 +44,13 @@ export interface RepairCost {
   resourceAmount: number;
 }
 
-export function getRepairCost(type: ProjectType): RepairCost {
+// costMultiplier: cheaper with research (ResearchEffects.repairCostMultiplier).
+export function getRepairCost(type: ProjectType, costMultiplier = 1): RepairCost {
   const price = BUILD_PRICES[type];
   return {
-    treasury: Math.round(price.treasury * REPAIR_COST_SHARE),
+    treasury: Math.round(price.treasury * REPAIR_COST_SHARE * costMultiplier),
     resourceType: price.resourceType,
-    resourceAmount: Math.ceil(price.resourceAmount * REPAIR_COST_SHARE),
+    resourceAmount: Math.ceil(price.resourceAmount * REPAIR_COST_SHARE * costMultiplier),
   };
 }
 
@@ -91,8 +92,9 @@ export function getWorkingCounts(state: GameState): WorkingCounts {
 export function rollBreakdowns(
   placedBuildings: PlacedBuilding[],
   breakdownReduction: number, // 0..1, from police — see workforceRules.ts
+  breakdownMultiplier = 1, // from research (ResearchEffects.breakdownMultiplier)
 ): { placedBuildings: PlacedBuilding[]; broken: PlacedBuilding[] } {
-  const chance = BREAKDOWN_CHANCE_PER_DAY * (1 - breakdownReduction);
+  const chance = BREAKDOWN_CHANCE_PER_DAY * (1 - breakdownReduction) * breakdownMultiplier;
   const broken: PlacedBuilding[] = [];
   const next = placedBuildings.map((building) => {
     if (!isWorking(building) || Math.random() >= chance) return building;

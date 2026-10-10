@@ -7,6 +7,9 @@
 //
 // Styling for all of it is LawsPanel.css, which both panels import.
 import type { CSSProperties, ReactNode } from "react";
+import { BuildingGlyph, FlameIcon, SnowflakeIcon } from "./CauseIcon";
+import { NavIcon } from "./NavIcon";
+import { WrenchIcon } from "./RepairsPanel";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import type { Synergy } from "../../domain/synergy/synergyData";
 
@@ -38,6 +41,14 @@ export interface TreeEffects {
   industryMultiplier?: number;
   housingCapacityMultiplier?: number;
   heatingMultiplier?: number;
+  farmJobsMultiplier?: number;
+  factoryJobsMultiplier?: number;
+  winterFarmMultiplier?: number;
+  breakdownMultiplier?: number;
+  repairCostMultiplier?: number;
+  buyPriceMultiplier?: number;
+  politicalPowerMultiplier?: number;
+  pressureMultiplier?: number;
   treasuryDelta?: number;
   foodDelta?: number;
   stabilityDelta?: number;
@@ -208,33 +219,68 @@ export function TreeColumns<N extends TreeNode>({
   );
 }
 
-// Turns a node's numeric effects into the stat glyphs they touch, split into
+// What an effect is drawn as: a stat, or the building/thing it changes.
+type EffectIconKey = StatIconType | "farm" | "factory" | "heat" | "winter" | "repairs" | "trade" | "neighbours";
+
+// A multiplier where less is better (fewer workers, less coal, cheaper),
+// flipped so "above 1" always means "helps".
+function flipped(multiplier: number | undefined): number {
+  return multiplier !== undefined ? 2 - multiplier : NaN;
+}
+
+// Turns a node's numeric effects into the glyphs they touch, split into
 // the ones it helps and the ones it costs — so the benefit/cost lines carry
 // matching icons instead of being two undifferentiated runs of prose.
-function effectIcons(effects: TreeEffects, wantPositive: boolean): StatIconType[] {
-  const entries: Array<[StatIconType, number, number]> = [
+function effectIcons(effects: TreeEffects, wantPositive: boolean): EffectIconKey[] {
+  const entries: Array<[EffectIconKey, number, number]> = [
     ["industry", effects.industryMultiplier ?? NaN, 1],
     ["treasury", effects.incomeMultiplier ?? NaN, 1],
     ["population", effects.housingCapacityMultiplier ?? NaN, 1],
-    // Less fuel burned is the good direction, so flip it.
-    ["stability", effects.heatingMultiplier !== undefined ? 2 - effects.heatingMultiplier : NaN, 1],
+    ["heat", flipped(effects.heatingMultiplier), 1],
+    ["farm", flipped(effects.farmJobsMultiplier), 1],
+    ["factory", flipped(effects.factoryJobsMultiplier), 1],
+    ["winter", effects.winterFarmMultiplier ?? NaN, 1],
+    ["repairs", flipped(effects.breakdownMultiplier), 1],
+    ["repairs", flipped(effects.repairCostMultiplier), 1],
+    ["trade", flipped(effects.buyPriceMultiplier), 1],
+    ["politicalPower", effects.politicalPowerMultiplier ?? NaN, 1],
+    ["neighbours", effects.pressureMultiplier ?? NaN, 1],
     ["treasury", effects.treasuryDelta ?? NaN, 0],
     ["food", effects.foodDelta ?? NaN, 0],
     ["stability", effects.stabilityDelta ?? NaN, 0],
     ["population", effects.populationDelta ?? NaN, 0],
     ["popularity", effects.popularityDelta ?? NaN, 0],
   ];
-  return entries
-    .filter(([, value, neutral]) => !Number.isNaN(value) && value >= neutral === wantPositive)
-    .map(([icon]) => icon);
+  const icons = entries.filter(([, value, neutral]) => !Number.isNaN(value) && value >= neutral === wantPositive).map(([icon]) => icon);
+  return icons.filter((icon, i) => icons.indexOf(icon) === i);
 }
 
-function EffectIcons({ icons }: { icons: StatIconType[] }) {
+function EffectIcon({ icon }: { icon: EffectIconKey }) {
+  switch (icon) {
+    case "farm":
+    case "factory":
+      return <BuildingGlyph type={icon} size={15} />;
+    case "heat":
+      return <FlameIcon size={15} />;
+    case "winter":
+      return <SnowflakeIcon size={15} />;
+    case "repairs":
+      return <WrenchIcon size={14} />;
+    case "trade":
+      return <NavIcon type="trade" size={15} />;
+    case "neighbours":
+      return <NavIcon type="ventures" size={15} />;
+    default:
+      return <StatIcon type={icon} size={15} />;
+  }
+}
+
+function EffectIcons({ icons }: { icons: EffectIconKey[] }) {
   if (icons.length === 0) return null;
   return (
     <span className="law-effect-icons">
-      {icons.map((icon, i) => (
-        <StatIcon type={icon} size={15} key={`${icon}-${i}`} />
+      {icons.map((icon) => (
+        <EffectIcon icon={icon} key={icon} />
       ))}
     </span>
   );

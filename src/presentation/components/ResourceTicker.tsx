@@ -9,7 +9,6 @@ import type { CountryStats } from "../../domain/country/types";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import type { HeatingOutlook } from "../../application/getHeatingOutlook";
 import { isDebtDangerous } from "../../domain/loans/loanRules";
-import { calculateDailyPoliticalPower } from "../../domain/politics/politicsRules";
 import { formatCompact } from "../formatNumber";
 import { RESOURCE_TYPES, type ResourceBundle } from "../../domain/resources/types";
 import type { UnrestStage } from "../../domain/unrest/types";
@@ -97,7 +96,7 @@ export function ResourceTicker({ stats, unrestStage, resources, production, heat
     ["stability", "Stability", `${formatExact(stats.stability)}/100`, `${formatExact(stats.stability)}/100`, undefined],
     ["popularity", "Popularity", `${formatExact(stats.popularity)}%`, `${formatExact(stats.popularity)}%`, undefined],
     ["research", "Research (all areas)", `${production.researchPerDay.toFixed(1)}/d`, `${production.researchPerDay.toFixed(2)} per day`, undefined],
-    ["politicalPower", "Political power", formatExact(Math.floor(stats.politicalPower)), stats.politicalPower.toFixed(1), calculateDailyPoliticalPower(stats.popularity)],
+    ["politicalPower", "Political power", formatExact(Math.floor(stats.politicalPower)), stats.politicalPower.toFixed(1), production.politicalPowerPerDay],
   ];
 
   return (

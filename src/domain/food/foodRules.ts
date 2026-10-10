@@ -17,10 +17,12 @@ import type { CountryStats } from "../country/types";
 import type { ResourceBundle } from "../resources/types";
 
 // Farms follow the seasons: a bumper autumn harvest, a lean winter (see
-// FARM_SEASON_MULTIPLIER). Granaries/canneries below don't — they work from
+// FARM_SEASON_MULTIPLIER) — less lean with agricultural research
+// (winterYieldMultiplier, see ResearchEffects.winterFarmMultiplier).
+// Granaries/canneries below don't follow the seasons — they work from
 // whatever grain/fish is already in stock.
-export function produceFood(farmCount: number, season: Season): number {
-  return farmCount * FOOD_PER_FARM * FARM_SEASON_MULTIPLIER[season];
+export function produceFood(farmCount: number, season: Season, winterYieldMultiplier = 1): number {
+  return farmCount * FOOD_PER_FARM * FARM_SEASON_MULTIPLIER[season] * (season === "winter" ? winterYieldMultiplier : 1);
 }
 
 export function consumeFood(stats: CountryStats): number {
@@ -52,8 +54,8 @@ export interface FoodUpdateResult {
   isShortage: boolean;
 }
 
-export function updateFood(stats: CountryStats, farmCount: number, season: Season, extraFoodProduced = 0): FoodUpdateResult {
-  const produced = produceFood(farmCount, season) + extraFoodProduced;
+export function updateFood(stats: CountryStats, farmCount: number, season: Season, extraFoodProduced = 0, winterYieldMultiplier = 1): FoodUpdateResult {
+  const produced = produceFood(farmCount, season, winterYieldMultiplier) + extraFoodProduced;
   const consumed = consumeFood(stats);
   const rawStock = stats.food + produced - consumed;
   return {

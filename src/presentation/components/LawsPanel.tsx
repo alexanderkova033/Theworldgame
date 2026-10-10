@@ -14,7 +14,7 @@ import {
 } from "../../domain/laws/lawsRules";
 import type { LawCategory, LawNode, QuotaStat } from "../../domain/laws/types";
 import { getRivalParty } from "../../domain/parties/partyRules";
-import { calculateDailyPoliticalPower } from "../../domain/politics/politicsRules";
+import { getDailyPoliticalPower } from "../../domain/politics/politicsRules";
 import { getResearchNode } from "../../domain/research/researchRules";
 import { getSynergiesForLaw } from "../../domain/synergy/synergyRules";
 import { playConfirm } from "../audio/sound";
@@ -161,7 +161,7 @@ export function LawsPanel({ state, dispatch }: LawsPanelProps) {
   return (
     <div className="law-tree">
       <div className="law-tree__header">
-        <TreeBank icon="politicalPower" label="Political power" value={state.stats.politicalPower} rate={calculateDailyPoliticalPower(state.stats.popularity)} />
+        <TreeBank icon="politicalPower" label="Political power" value={state.stats.politicalPower} rate={getDailyPoliticalPower(state)} />
         {activeNode && state.activeLaw && (
           <WorkInProgress
             node={activeNode}

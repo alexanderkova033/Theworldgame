@@ -17,10 +17,12 @@ import {
   TAX_POPULARITY_PER_POINT,
   UNEMPLOYMENT_POPULARITY_PENALTY,
 } from "../constants";
+import type { GameState } from "../country/types";
 import { FACTIONS } from "../parties/factionData";
 import type { Ideology } from "../parties/types";
 import type { FactionUpdateResult } from "../parties/factionRules";
 import { getWeightedPopularity } from "../parties/factionRules";
+import { getResearchEffectsFor } from "../research/researchRules";
 
 export interface PopularityConditions {
   taxRate: number;
@@ -75,6 +77,11 @@ export function updateFactionPopularity(
 // Political power is the currency Laws spend (LawEnactCost.politicalPower).
 // A popular government has more capital to spend: at 50% popularity this is
 // 0.8/day, a tier-1 law roughly every month of saving.
-export function calculateDailyPoliticalPower(popularity: number): number {
-  return POLITICAL_POWER_BASE_RATE + Math.max(0, popularity) * POLITICAL_POWER_PER_POPULARITY;
+// multiplier: administrative research (ResearchEffects.politicalPowerMultiplier).
+export function calculateDailyPoliticalPower(popularity: number, multiplier = 1): number {
+  return (POLITICAL_POWER_BASE_RATE + Math.max(0, popularity) * POLITICAL_POWER_PER_POPULARITY) * multiplier;
+}
+
+export function getDailyPoliticalPower(state: GameState): number {
+  return calculateDailyPoliticalPower(state.stats.popularity, getResearchEffectsFor(state).politicalPowerMultiplier);
 }

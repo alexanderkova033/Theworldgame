@@ -47,10 +47,12 @@ export function createForeignPolitics(playerNationId: string): Record<string, Fo
 }
 
 // How much one push moves a neighbor's electorate, from how strong your own
-// government looks at home.
-export function getPressureStrength(stats: CountryStats): number {
-  const raw = (PRESSURE_BASE * (stats.popularity + stats.stability)) / 100 - PRESSURE_OFFSET;
-  return Math.min(PRESSURE_MAX, Math.max(PRESSURE_MIN, Math.round(raw * 10) / 10));
+// government looks at home. Research can make a push land harder
+// (ResearchEffects.pressureMultiplier) — a backfire stays a backfire.
+export function getPressureStrength(stats: CountryStats, multiplier = 1): number {
+  const base = (PRESSURE_BASE * (stats.popularity + stats.stability)) / 100 - PRESSURE_OFFSET;
+  const raw = base > 0 ? base * multiplier : base;
+  return Math.min(PRESSURE_MAX * multiplier, Math.max(PRESSURE_MIN, Math.round(raw * 10) / 10));
 }
 
 export function applyPressure(gov: ForeignGovernment, partyId: string, strength: number): ForeignGovernment {

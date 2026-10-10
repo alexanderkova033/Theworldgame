@@ -8,6 +8,7 @@ import type { GameState } from "../../domain/country/types";
 import { applyPressure, getPressureStrength } from "../../domain/diplomacy/diplomacyRules";
 import { getNation } from "../../domain/nations/nationRules";
 import { getParty } from "../../domain/parties/partyRules";
+import { getResearchEffectsFor } from "../../domain/research/researchRules";
 
 export function canPressureGovernment(state: GameState, nationId: string): boolean {
   return nationId in state.foreignPolitics && state.stats.politicalPower >= PRESSURE_POLITICAL_POWER_COST;
@@ -18,7 +19,7 @@ export function pressureGovernment(state: GameState, nationId: string, partyId: 
   const gov = state.foreignPolitics[nationId];
   if (!(partyId in gov.support)) return state;
 
-  const strength = getPressureStrength(state.stats);
+  const strength = getPressureStrength(state.stats, getResearchEffectsFor(state).pressureMultiplier);
   const nation = getNation(nationId);
   const party = getParty(partyId);
   const message =

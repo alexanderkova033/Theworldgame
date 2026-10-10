@@ -34,7 +34,7 @@ import { FACTIONS, getFactionWeights } from "../../domain/parties/factionData";
 import { getParty, getRivalParty } from "../../domain/parties/partyRules";
 import type { Ideology } from "../../domain/parties/types";
 import type { PopularityDriver } from "../../domain/politics/politicsRules";
-import { calculateDailyPoliticalPower } from "../../domain/politics/politicsRules";
+import { getDailyPoliticalPower } from "../../domain/politics/politicsRules";
 import { getCrackdownStability } from "../../domain/unrest/unrestRules";
 import { playConfirm } from "../audio/sound";
 import { UNREST_INFO, UNREST_STEPS } from "../unrestStages";
@@ -133,7 +133,7 @@ function Benefits({ state }: { state: GameState }) {
         caption={`elections need ${ELECTION_WIN_THRESHOLD}%`}
         good={popularity >= ELECTION_WIN_THRESHOLD}
       />
-      <BenefitTile icon="politicalPower" value={`+${calculateDailyPoliticalPower(popularity).toFixed(2)}/d`} caption="political power" good={null} />
+      <BenefitTile icon="politicalPower" value={`+${getDailyPoliticalPower(state).toFixed(2)}/d`} caption="political power" good={null} />
       <BenefitTile icon="stability" value={`${signed(order, 2)}/d`} caption="stability" good={order > 0 ? true : order < 0 ? false : null} />
     </div>
   );

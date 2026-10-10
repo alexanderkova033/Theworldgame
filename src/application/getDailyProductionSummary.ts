@@ -13,6 +13,7 @@ import { getLabourSituation } from "../domain/labour/labourRules";
 import { getActiveLawEffects } from "../domain/laws/lawsRules";
 import { getWorkingCounts } from "../domain/maintenance/maintenanceRules";
 import { getNationEffects } from "../domain/nations/nationEffects";
+import { calculateDailyPoliticalPower } from "../domain/politics/politicsRules";
 import { getNation } from "../domain/nations/nationRules";
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
 import { getActiveResearchEffects, getResearchRates } from "../domain/research/researchRules";
@@ -40,6 +41,7 @@ export interface DailyProductionSummary {
   housingCapacity: number; // people the working homes can hold
   heatingFuel: number; // fuel the homes burn per day (winter only)
   unheatedShare: number; // 0..1 of homes that can't be heated from current stock
+  politicalPowerPerDay: number;
 }
 
 export function getDailyProductionSummary(state: GameState): DailyProductionSummary {
@@ -64,7 +66,7 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const salaries = getDailySalaries(state.workforce);
 
   const { foodProduced: processedFood } = produceProcessedFood(working.granaries * staffing, working.canneries * staffing, state.resources);
-  const farmFood = produceFood(working.farms * staffing, season);
+  const farmFood = produceFood(working.farms * staffing, season, researchEffects.winterFarmMultiplier);
   const foodProduced = farmFood + processedFood;
   const foodConsumed = consumeFood(state.stats);
 
@@ -100,5 +102,6 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
     housingCapacity: getHousingCapacity(state),
     heatingFuel,
     unheatedShare: heating.unheatedShare,
+    politicalPowerPerDay: calculateDailyPoliticalPower(state.stats.popularity, researchEffects.politicalPowerMultiplier),
   };
 }

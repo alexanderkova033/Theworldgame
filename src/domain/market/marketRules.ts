@@ -93,10 +93,11 @@ export function getBatchSize(good: MarketGood, multiplier: number): number {
 }
 
 // A batch is priced at the stock level halfway through it, so a big order
-// moves its own price.
-export function getBuyCost(market: MarketState, good: MarketGood, amount: number, hasPort: boolean): number {
+// moves its own price. priceMultiplier: research that narrows the spread
+// (ResearchEffects.buyPriceMultiplier).
+export function getBuyCost(market: MarketState, good: MarketGood, amount: number, hasPort: boolean, priceMultiplier = 1): number {
   const mid = getMidPrice(good, market.supply[good] - amount / 2);
-  return amount * mid * (hasPort ? MARKET_PORT_BUY_MARKUP : MARKET_BUY_MARKUP);
+  return amount * mid * (hasPort ? MARKET_PORT_BUY_MARKUP : MARKET_BUY_MARKUP) * priceMultiplier;
 }
 
 export function getSellRevenue(market: MarketState, good: MarketGood, amount: number): number {

@@ -8,6 +8,7 @@ import { canPressureGovernment, pressureGovernment } from "../../application/act
 import { FOREIGN_TAKEOVER_THRESHOLD, FRIENDLY_GOVERNMENT_INCOME_BONUS, PRESSURE_POLITICAL_POWER_COST } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getPressureStrength, isFriendly } from "../../domain/diplomacy/diplomacyRules";
+import { getResearchEffectsFor } from "../../domain/research/researchRules";
 import type { ForeignGovernment } from "../../domain/diplomacy/types";
 import { getNation } from "../../domain/nations/nationRules";
 import { getParty } from "../../domain/parties/partyRules";
@@ -102,7 +103,7 @@ function ForeignCard({ state, nationId, gov, strength, dispatch }: { state: Game
 }
 
 export function ForeignAffairs({ state, dispatch }: { state: GameState; dispatch: Dispatch }) {
-  const strength = getPressureStrength(state.stats);
+  const strength = getPressureStrength(state.stats, getResearchEffectsFor(state).pressureMultiplier);
   const entries = Object.entries(state.foreignPolitics);
   if (entries.length === 0) return null;
 

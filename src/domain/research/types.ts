@@ -15,6 +15,14 @@ export interface ResearchEffects {
   industryMultiplier?: number;
   housingCapacityMultiplier?: number; // people per home
   heatingMultiplier?: number; // fuel burned per home in winter
+  farmJobsMultiplier?: number; // workers each farm needs — see labourRules.ts
+  factoryJobsMultiplier?: number; // workers each factory needs
+  winterFarmMultiplier?: number; // what farms yield in winter — see foodRules.ts
+  breakdownMultiplier?: number; // chance a building breaks down — see maintenanceRules.ts
+  repairCostMultiplier?: number; // price of a repair
+  buyPriceMultiplier?: number; // what buying on the market costs — see marketRules.ts
+  politicalPowerMultiplier?: number; // political power earned each day — see politicsRules.ts
+  pressureMultiplier?: number; // how hard a push on a neighbour lands — see diplomacyRules.ts
   // One-time, applied once when the node completes.
   treasuryDelta?: number;
   foodDelta?: number;

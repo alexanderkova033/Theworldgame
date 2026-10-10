@@ -100,3 +100,19 @@ export function UnrestStageIcon({ stage, size }: { stage: "calm" | "discontent" 
     </svg>
   );
 }
+
+export function SnowflakeIcon({ size }: { size: number }) {
+  return (
+    <svg viewBox="-10 -10 20 20" width={size} height={size} aria-hidden="true">
+      <g stroke="#bfe3f5" strokeWidth={1.6} strokeLinecap="round">
+        {[0, 60, 120].map((angle) => (
+          <g key={angle} transform={`rotate(${angle})`}>
+            <line x1={0} y1={-8} x2={0} y2={8} />
+            <polyline points="-2.4,-6.2 0,-4 2.4,-6.2" fill="none" />
+            <polyline points="-2.4,6.2 0,4 2.4,6.2" fill="none" />
+          </g>
+        ))}
+      </g>
+    </svg>
+  );
+}

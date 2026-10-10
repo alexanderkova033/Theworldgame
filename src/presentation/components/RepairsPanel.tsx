@@ -5,6 +5,7 @@ import { canRepairBuilding, repairBuilding } from "../../application/actions";
 import { REPAIR_DAYS } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getRepairCost, isWorking } from "../../domain/maintenance/maintenanceRules";
+import { getResearchEffectsFor } from "../../domain/research/researchRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { playConfirm } from "../audio/sound";
 import { BuildingIcon } from "./BuildingIcon";
@@ -24,6 +25,7 @@ export function WrenchIcon({ size = 14 }: { size?: number }) {
 export function RepairsPanel({ state, dispatch }: { state: GameState; dispatch: (action: (state: GameState) => GameState) => void }) {
   const damaged = state.placedBuildings.filter((b) => !isWorking(b));
   if (damaged.length === 0) return null;
+  const repairCostMultiplier = getResearchEffectsFor(state).repairCostMultiplier;
 
   return (
     <section className="panel repairs-panel">
@@ -32,7 +34,7 @@ export function RepairsPanel({ state, dispatch }: { state: GameState; dispatch: 
       </h2>
       <ul className="repairs-panel__list">
         {damaged.map((building) => {
-          const cost = getRepairCost(building.type);
+          const cost = getRepairCost(building.type, repairCostMultiplier);
           const isRepairing = building.condition === "repairing";
           const daysLeft = building.repairDaysRemaining ?? REPAIR_DAYS;
           return (

@@ -11,7 +11,6 @@ import {
   CANNERY_COST,
   CANNERY_ORE_COST,
   CURRENCY_SYMBOL,
-  FARM_SEASON_MULTIPLIER,
   EDUCATION_BUILD_DAYS,
   EDUCATION_COST,
   EDUCATION_WOOD_COST,
@@ -36,7 +35,6 @@ import {
   PEOPLE_PER_HOME,
   INCOME_PER_INDUSTRY,
   INDUSTRY_PER_FACTORY,
-  JOBS_PER_BUILDING,
   ROAD_BUILD_DAYS,
   ROAD_COST,
   ROAD_EFFICIENCY_BONUS,
@@ -45,9 +43,11 @@ import {
 import type { ProjectType } from "../../domain/construction/types";
 import { getSeason, type Season } from "../../domain/country/calendar";
 import type { GameState } from "../../domain/country/types";
+import { produceFood } from "../../domain/food/foodRules";
+import { getJobsPerBuilding, type JobBuilding } from "../../domain/labour/labourRules";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
-import { getResearchNode, isBuildingUnlocked } from "../../domain/research/researchRules";
+import { getResearchEffectsFor, getResearchNode, isBuildingUnlocked } from "../../domain/research/researchRules";
 import type { ResourceType } from "../../domain/resources/types";
 import { playConfirm } from "../audio/sound";
 import { formatCompact } from "../formatNumber";
@@ -147,7 +147,7 @@ interface BuildItem {
   resourceCost: number;
   resourceType: ResourceType;
   buildDays: number;
-  yields: ReactNode | ((season: Season) => ReactNode); // glyph + a short number — the full sentence is `hint`
+  yields: ReactNode | ((season: Season, winterYield: number) => ReactNode); // glyph + a short number — the full sentence is `hint`
   hint: string;
   unlockedBy?: string; // research node name, for buildings still locked behind the Research tree
 }
@@ -178,9 +178,9 @@ const BUILD_ITEMS: BuildItem[] = [
     buildDays: FARM_BUILD_DAYS,
     // Today's seasonal yield, not the nominal one — a farm built in winter
     // should say so.
-    yields: (season) => (
+    yields: (season, winterYield) => (
       <>
-        <StatIcon type="food" size={16} />+{formatCompact(FOOD_PER_FARM * FARM_SEASON_MULTIPLIER[season])}
+        <StatIcon type="food" size={16} />+{formatCompact(produceFood(1, season, winterYield))}
         {season === "winter" && <span className="build-tile__season">❄</span>}
       </>
     ),
@@ -271,6 +271,8 @@ const BUILD_ITEMS: BuildItem[] = [
 
 export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPanelProps) {
   const season = getSeason(state.date);
+  const research = getResearchEffectsFor(state);
+  const jobsPer = getJobsPerBuilding(state);
   return (
     <section className="panel actions-panel">
       <div className="actions-panel__header">
@@ -341,7 +343,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
                 </span>
               ) : (
                 <>
-                  <span className="build-tile__yield">{typeof item.yields === "function" ? item.yields(season) : item.yields}</span>
+                  <span className="build-tile__yield">{typeof item.yields === "function" ? item.yields(season, research.winterFarmMultiplier) : item.yields}</span>
                   <span className="build-tile__costs">
                     <CostPip
                       icon={<StatIcon type="treasury" size={14} />}
@@ -355,13 +357,13 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPan
                       short={resourceShort}
                       hint={`${item.resourceCost} ${item.resourceType} (${upfront(item.resourceCost)} up front)`}
                     />
-                    {item.type in JOBS_PER_BUILDING && (
+                    {item.type in jobsPer && (
                       <span
                         className="build-tile__cost build-tile__cost--jobs"
-                        title={`Needs ${JOBS_PER_BUILDING[item.type as keyof typeof JOBS_PER_BUILDING]} workers from your population — without them it runs below capacity`}
+                        title={`Needs ${jobsPer[item.type as JobBuilding]} workers from your population — without them it runs below capacity`}
                       >
                         <StatIcon type="population" size={14} />
-                        {formatCompact(JOBS_PER_BUILDING[item.type as keyof typeof JOBS_PER_BUILDING])}
+                        {formatCompact(jobsPer[item.type as JobBuilding])}
                       </span>
                     )}
                     <span className="build-tile__cost build-tile__cost--days" title={`${item.buildDays} days to build`}>

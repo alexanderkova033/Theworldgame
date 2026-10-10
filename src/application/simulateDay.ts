@@ -224,7 +224,7 @@ export function simulateDay(state: GameState): GameState {
       severity: "info",
     });
   }
-  const breakdowns = rollBreakdowns(repairs.placedBuildings, getPoliceBreakdownReduction(working.workforce.police));
+  const breakdowns = rollBreakdowns(repairs.placedBuildings, getPoliceBreakdownReduction(working.workforce.police), researchEffects.breakdownMultiplier);
   for (const building of breakdowns.broken) {
     events.unshift({
       id: generateId("event"),
@@ -338,8 +338,8 @@ export function simulateDay(state: GameState): GameState {
   ledger = book(ledger, "treasury", { taxes: taxIncome, industry: industryIncome, salaries: -salaries });
 
   // 4. Food: production (farms + processed Grain/Fish) vs consumption.
-  const { newFoodStock, isShortage } = updateFood(working.stats, workingCounts.farms * labour.foodStaffing, season, processedFood);
-  const farmFood = produceFood(workingCounts.farms * labour.foodStaffing, season);
+  const { newFoodStock, isShortage } = updateFood(working.stats, workingCounts.farms * labour.foodStaffing, season, processedFood, researchEffects.winterFarmMultiplier);
+  const farmFood = produceFood(workingCounts.farms * labour.foodStaffing, season, researchEffects.winterFarmMultiplier);
   // What was actually eaten — in a shortage, less than people needed.
   const eaten = working.stats.food + farmFood + processedFood - newFoodStock;
   ledger = book(ledger, "food", { farms: farmFood, processing: processedFood, eating: -eaten });
@@ -363,7 +363,7 @@ export function simulateDay(state: GameState): GameState {
     getUnrestIndustryMultiplier(working.unrestStage, workforce.police);
 
   // 6. Political power accumulates, faster for a popular government.
-  const politicalPower = working.stats.politicalPower + calculateDailyPoliticalPower(working.stats.popularity);
+  const politicalPower = working.stats.politicalPower + calculateDailyPoliticalPower(working.stats.popularity, researchEffects.politicalPowerMultiplier);
 
   // 7. Stability reacts to food shortages, popularity, heavy debt, people
   // without homes and homes without heat; police on the payroll steady it.
