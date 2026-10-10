@@ -13,6 +13,7 @@ import { createMarket } from "../../domain/market/marketRules";
 import { buildStartingHomes } from "../../domain/housing/housingRules";
 import { getResearchNode } from "../../domain/research/researchRules";
 import type { ResearchCategory } from "../../domain/research/types";
+import { emptyLedger } from "../../domain/ledger/ledgerRules";
 import { emptyResourceBundle } from "../../domain/resources/resourceRules";
 import { emptyWorkforce } from "../../domain/workforce/workforceRules";
 
@@ -102,6 +103,7 @@ function hydrateGameState(raw: Partial<GameState>): GameState {
     events: raw.events ?? [],
     monthlyReports: raw.monthlyReports ?? [],
     history: raw.history ?? [],
+    pendingLedger: raw.pendingLedger ?? emptyLedger(),
     pendingDecisionId: raw.pendingDecisionId ?? null,
     decisionHistory: raw.decisionHistory ?? [],
   };

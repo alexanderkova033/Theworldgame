@@ -51,6 +51,14 @@ export function formatDate(date: GameDate): string {
   return `${MONTH_NAMES[date.month - 1]} ${date.day}, Year ${date.year}`;
 }
 
+// A monthly report is written on the 1st of the next month — this is the
+// month it actually covers.
+export function getReportedMonth(reportDate: GameDate): GameDate {
+  return reportDate.month === 1
+    ? { year: reportDate.year - 1, month: MONTHS_PER_YEAR, day: 1 }
+    : { year: reportDate.year, month: reportDate.month - 1, day: 1 };
+}
+
 export function formatMonthYear(date: GameDate): string {
   return `${MONTH_NAMES[date.month - 1]} Year ${date.year}`;
 }

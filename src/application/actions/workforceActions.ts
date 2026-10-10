@@ -5,6 +5,7 @@ import { POLICE_HIRE_COST, SCIENTIST_HIRE_COST } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import type { ResearchCategory } from "../../domain/research/types";
 import { getPoliceCap, getScientistCap, getTotalScientists } from "../../domain/workforce/workforceRules";
+import { recordAction } from "./recordAction";
 
 export function canHireScientist(state: GameState): boolean {
   return state.stats.treasury >= SCIENTIST_HIRE_COST && getTotalScientists(state.workforce) < getScientistCap(state.educationLevel);
@@ -12,11 +13,11 @@ export function canHireScientist(state: GameState): boolean {
 
 export function hireScientist(state: GameState, category: ResearchCategory): GameState {
   if (!canHireScientist(state)) return state;
-  return {
+  return recordAction(state, {
     ...state,
     stats: { ...state.stats, treasury: state.stats.treasury - SCIENTIST_HIRE_COST },
     workforce: { ...state.workforce, scientists: { ...state.workforce.scientists, [category]: state.workforce.scientists[category] + 1 } },
-  };
+  }, { treasury: "salaries" });
 }
 
 export function dismissScientist(state: GameState, category: ResearchCategory): GameState {
@@ -33,11 +34,11 @@ export function canHirePolice(state: GameState): boolean {
 
 export function hirePolice(state: GameState): GameState {
   if (!canHirePolice(state)) return state;
-  return {
+  return recordAction(state, {
     ...state,
     stats: { ...state.stats, treasury: state.stats.treasury - POLICE_HIRE_COST },
     workforce: { ...state.workforce, police: state.workforce.police + 1 },
-  };
+  }, { treasury: "salaries" });
 }
 
 export function dismissPolice(state: GameState): GameState {

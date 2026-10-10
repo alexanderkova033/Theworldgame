@@ -14,3 +14,11 @@ export function formatCompact(value: number): string {
 function trimTrailingZero(value: string): string {
   return value.endsWith(".0") ? value.slice(0, -2) : value;
 }
+
+// A signed change with a real minus sign: "+320", "−1.2k". `fine` keeps a
+// tenth under 10 — for points of support or stability, where 0.4 matters.
+export function formatSignedChange(value: number, fine = false): string {
+  const rounded = (fine && Math.abs(value) < 10 ? Math.round(value * 10) / 10 : Math.round(value)) || 0;
+  const abs = Math.abs(rounded);
+  return `${rounded > 0 ? "+" : rounded < 0 ? "−" : ""}${fine && abs < 10 ? String(abs) : formatCompact(abs)}`;
+}

@@ -5,6 +5,7 @@ import type { DecisionHistoryEntry } from "../decisions/types";
 import type { ForeignGovernment } from "../diplomacy/types";
 import type { MarketState } from "../market/types";
 import type { Expedition } from "../expeditions/types";
+import type { Ledger } from "../ledger/types";
 import type { Ideology } from "../parties/types";
 import type { PlacedBuilding } from "../provinces/types";
 import type { ResearchCategory, ResearchOutcomeTier } from "../research/types";
@@ -58,6 +59,7 @@ export interface DailyDelta {
   income: number;
   populationChange: number;
   stabilityChange: number;
+  ledger?: Ledger; // what moved each number that day, and why — absent on days from older saves
 }
 
 export interface MonthlyReport {
@@ -66,6 +68,7 @@ export interface MonthlyReport {
   totalIncome: number;
   populationChange: number;
   stabilityChange: number;
+  ledger?: Ledger; // the month's causes, summed from each day's ledger — absent on reports from older saves
 }
 
 export interface GameState {
@@ -110,6 +113,7 @@ export interface GameState {
   events: GameEvent[];
   monthlyReports: MonthlyReport[];
   history: DailyDelta[]; // daily deltas since the last monthly report
+  pendingLedger: Ledger; // what player actions changed since the last tick — folded into the next day's DailyDelta
 
   pendingDecisionId: string | null; // a decision popup waiting on the player — see domain/decisions
   decisionHistory: DecisionHistoryEntry[];

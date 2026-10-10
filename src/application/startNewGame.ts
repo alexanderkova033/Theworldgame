@@ -13,6 +13,7 @@ import type { GameState } from "../domain/country/types";
 import { FACTIONS } from "../domain/parties/factionData";
 import type { Ideology } from "../domain/parties/types";
 import type { PlacedBuilding } from "../domain/provinces/types";
+import { emptyLedger } from "../domain/ledger/ledgerRules";
 import { emptyWorkforce } from "../domain/workforce/workforceRules";
 
 // The reign opens on New Year's Day, in the dead of winter (see getSeason):
@@ -125,6 +126,7 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     ],
     monthlyReports: [],
     history: [],
+    pendingLedger: emptyLedger(),
     pendingDecisionId: null,
     decisionHistory: [],
   };

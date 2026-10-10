@@ -16,6 +16,7 @@ import { generateId } from "../../domain/country/id";
 import type { GameState, GameEvent } from "../../domain/country/types";
 import { applyUniformDelta, getFactionWeights, getWeightedPopularity } from "../../domain/parties/factionRules";
 import type { Ideology } from "../../domain/parties/types";
+import { ONE_OFF, recordAction } from "./recordAction";
 
 function logged(state: GameState, message: string, severity: GameEvent["severity"] = "info"): GameEvent[] {
   return [{ id: generateId("event"), date: state.date, message, severity }, ...state.events];
@@ -28,7 +29,7 @@ export function canHoldRally(state: GameState): boolean {
 export function holdRally(state: GameState): GameState {
   if (!canHoldRally(state)) return state;
   const { factionApproval, popularity } = applyUniformDelta(state.factionApproval, getFactionWeights(state.nationId), RALLY_SUPPORT);
-  return {
+  return recordAction(state, {
     ...state,
     factionApproval,
     stats: {
@@ -38,7 +39,7 @@ export function holdRally(state: GameState): GameState {
       treasury: state.stats.treasury - RALLY_TREASURY_COST,
     },
     events: logged(state, `You hold a rally across the country — support +${RALLY_SUPPORT} with every group.`),
-  };
+  }, ONE_OFF);
 }
 
 export function canCourtGroup(state: GameState): boolean {
@@ -48,7 +49,7 @@ export function canCourtGroup(state: GameState): boolean {
 export function courtGroup(state: GameState, ideology: Ideology): GameState {
   if (!canCourtGroup(state)) return state;
   const factionApproval = { ...state.factionApproval, [ideology]: Math.min(100, state.factionApproval[ideology] + COURT_SUPPORT) };
-  return {
+  return recordAction(state, {
     ...state,
     factionApproval,
     stats: {
@@ -58,7 +59,7 @@ export function courtGroup(state: GameState, ideology: Ideology): GameState {
       treasury: state.stats.treasury - COURT_TREASURY_COST,
     },
     events: logged(state, `You court the ${ideology} vote with favours and promises — their support +${COURT_SUPPORT}.`),
-  };
+  }, ONE_OFF);
 }
 
 export function canCrackDown(state: GameState): boolean {
@@ -68,7 +69,7 @@ export function canCrackDown(state: GameState): boolean {
 export function crackDown(state: GameState): GameState {
   if (!canCrackDown(state)) return state;
   const { factionApproval, popularity } = applyUniformDelta(state.factionApproval, getFactionWeights(state.nationId), CRACKDOWN_SUPPORT);
-  return {
+  return recordAction(state, {
     ...state,
     factionApproval,
     stats: {
@@ -78,5 +79,5 @@ export function crackDown(state: GameState): GameState {
       politicalPower: state.stats.politicalPower - CRACKDOWN_POLITICAL_POWER_COST,
     },
     events: logged(state, `You order a crackdown on unrest — stability +${CRACKDOWN_STABILITY}, support ${CRACKDOWN_SUPPORT}.`, "warning"),
-  };
+  }, ONE_OFF);
 }

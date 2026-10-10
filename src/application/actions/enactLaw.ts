@@ -3,6 +3,7 @@ import type { GameState } from "../../domain/country/types";
 import { canEnactLaw, getEffectivePassChance, getLawDays, getLawNode } from "../../domain/laws/lawsRules";
 import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../../domain/parties/factionRules";
 import { deductResource } from "../../domain/resources/resourceRules";
+import { ONE_OFF, recordAction } from "./recordAction";
 
 export { canEnactLaw };
 
@@ -27,7 +28,7 @@ export function enactLaw(state: GameState, lawId: string): GameState {
   if (!passed) {
     const weights = getFactionWeights(state.nationId);
     const { factionApproval, popularity } = applyUniformDelta(state.factionApproval, weights, -FAILED_VOTE_POPULARITY_PENALTY);
-    return {
+    return recordAction(state, {
       ...state,
       factionApproval,
       stats: { ...state.stats, popularity },
@@ -40,12 +41,12 @@ export function enactLaw(state: GameState, lawId: string): GameState {
         },
         ...state.events,
       ],
-    };
+    }, ONE_OFF);
   }
 
   const { enactCost } = law;
   const days = getLawDays(law);
-  return {
+  return recordAction(state, {
     ...state,
     activeLaw: { nodeId: lawId, totalDays: days, daysRemaining: days },
     resources: enactCost.resourceType ? deductResource(state.resources, enactCost.resourceType, enactCost.resourceAmount ?? 0) : state.resources,
@@ -63,7 +64,7 @@ export function enactLaw(state: GameState, lawId: string): GameState {
       },
       ...state.events,
     ],
-  };
+  }, ONE_OFF);
 }
 
 // Drafting finished: the law's one-time deltas apply now and it's remembered

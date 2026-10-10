@@ -1,5 +1,6 @@
 import { LOAN_BATCH_SIZE, LOAN_MAX_DEBT, LOAN_REPAY_BATCH_SIZE } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
+import { recordAction } from "./recordAction";
 
 export function canTakeLoan(state: GameState): boolean {
   return state.debt + LOAN_BATCH_SIZE <= LOAN_MAX_DEBT;
@@ -7,11 +8,12 @@ export function canTakeLoan(state: GameState): boolean {
 
 export function takeLoan(state: GameState): GameState {
   if (!canTakeLoan(state)) return state;
-  return {
+  const next: GameState = {
     ...state,
     debt: state.debt + LOAN_BATCH_SIZE,
     stats: { ...state.stats, treasury: state.stats.treasury + LOAN_BATCH_SIZE },
   };
+  return recordAction(state, next, { treasury: "loans" });
 }
 
 export function canRepayLoan(state: GameState): boolean {
@@ -25,9 +27,10 @@ export function getRepayAmount(state: GameState): number {
 export function repayLoan(state: GameState): GameState {
   if (!canRepayLoan(state)) return state;
   const amount = getRepayAmount(state);
-  return {
+  const next: GameState = {
     ...state,
     debt: state.debt - amount,
     stats: { ...state.stats, treasury: state.stats.treasury - amount },
   };
+  return recordAction(state, next, { treasury: "loans" });
 }

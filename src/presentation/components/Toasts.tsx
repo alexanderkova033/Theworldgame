@@ -8,8 +8,11 @@
 import "./Toasts.css";
 import { useEffect, useRef, useState } from "react";
 import type { GameEvent, MonthlyReport } from "../../domain/country/types";
-import { formatMonthYear } from "../../domain/country/calendar";
+import { formatMonthYear, getReportedMonth } from "../../domain/country/calendar";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
+import { getLedgerHeadline } from "../../domain/ledger/ledgerRules";
+import { formatSignedChange } from "../formatNumber";
+import { getCauseInfo, METRIC_LABELS } from "../causes";
 import { WrenchIcon } from "./RepairsPanel";
 import type { PanelKey } from "./TopBar";
 
@@ -43,17 +46,27 @@ function toastFromEvent(event: GameEvent): Toast | null {
   };
 }
 
+// One line: the number that moved most last month, and what moved it —
+// "Treasury −320: wages and building".
+function reportHeadline(report: MonthlyReport): string {
+  const headline = report.ledger ? getLedgerHeadline(report.ledger) : null;
+  if (!headline) {
+    const signed = (n: number) => formatSignedChange(n);
+    return `Treasury ${signed(report.totalIncome)} ${CURRENCY_SYMBOL}, population ${signed(report.populationChange)}, stability ${signed(report.stabilityChange)}.`;
+  }
+  const { metric, total, causes } = headline;
+  const amount = formatSignedChange(total, metric === "support" || metric === "stability");
+  const why = causes.map((c) => getCauseInfo(metric, c.cause).label.toLowerCase()).join(" and ");
+  return `${METRIC_LABELS[metric]} ${amount}${metric === "treasury" ? ` ${CURRENCY_SYMBOL}` : ""}${why ? `: ${why}` : ""}`;
+}
+
 function toastFromReport(report: MonthlyReport): Toast {
-  const income = Math.round(report.totalIncome);
-  const pop = Math.round(report.populationChange);
-  const stability = Math.round(report.stabilityChange);
-  const signed = (n: number) => (n > 0 ? `+${n.toLocaleString()}` : n.toLocaleString());
   return {
     key: report.id,
     kind: "report",
-    title: `Report — ${formatMonthYear(report.date)}`,
-    message: `Treasury ${signed(income)} ${CURRENCY_SYMBOL}, population ${signed(pop)}, stability ${signed(stability)}.`,
-    action: { label: "Open", panel: "reports" },
+    title: `Report — ${formatMonthYear(getReportedMonth(report.date))}`,
+    message: reportHeadline(report),
+    action: { label: "Why?", panel: "reports" },
   };
 }
 

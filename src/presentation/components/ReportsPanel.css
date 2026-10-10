@@ -7,19 +7,174 @@
   gap: 0.35rem;
 }
 
-/* One month per row, not one month per card: month label, then three
-   icon+figure cells on a fixed grid so the columns line up down the panel
-   and can be compared vertically at a glance. */
+/* One month per row, not one month per card: month label, then an
+   icon+figure cell per number on a fixed grid so the columns line up down
+   the panel and can be compared vertically at a glance. Clicking the row
+   opens the causes underneath. */
 .reports-panel__item {
-  display: grid;
-  grid-template-columns: minmax(5.5rem, 1fr) repeat(3, minmax(4.5rem, auto));
-  align-items: center;
-  gap: 0.5rem;
   border: 1px solid var(--panel-border);
   border-radius: 6px;
-  padding: 0.4rem 0.6rem;
   background: rgba(0, 0, 0, 0.15);
   box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.reports-panel__item.is-expanded {
+  border-color: var(--accent);
+}
+
+.reports-panel__summary {
+  display: grid;
+  grid-template-columns: 5.6rem 1.1fr 1.45fr 1fr 1fr 1fr 0.8rem;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+}
+
+/* The row is a plain strip, not a wooden button — only its hover/focus
+   says it opens. */
+button.reports-panel__summary {
+  background: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 6px;
+  text-shadow: none;
+  font-weight: 400;
+}
+
+button.reports-panel__summary:hover:not(:disabled) {
+  background: rgba(240, 200, 105, 0.08);
+  box-shadow: none;
+}
+
+.reports-panel__chevron {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.reports-panel__causes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem 1rem;
+  padding: 0.3rem 0.7rem 0.7rem;
+  border-top: 1px solid rgba(122, 83, 31, 0.5);
+}
+
+@media (max-width: 700px) {
+  .reports-panel__causes {
+    grid-template-columns: 1fr;
+  }
+}
+
+.reports-cause__head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0 0.25rem;
+}
+
+.reports-cause__head svg {
+  display: block;
+}
+
+.reports-cause__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.reports-cause__total {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+}
+
+.reports-cause__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+/* icon · label · bar growing from the centre line · figure */
+.reports-cause__row {
+  display: grid;
+  grid-template-columns: 1rem minmax(5.6rem, auto) minmax(2.5rem, 1fr) 3.2rem;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  cursor: help;
+}
+
+.reports-cause__icon svg {
+  display: block;
+}
+
+.reports-cause__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reports-cause__bar {
+  position: relative;
+  height: 0.6rem;
+  border-radius: 2px;
+  background: var(--bg-deep);
+}
+
+.reports-cause__bar::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  bottom: -2px;
+  width: 1px;
+  background: var(--text-muted);
+}
+
+.reports-cause__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 2px;
+  border-radius: 2px;
+}
+
+.reports-cause__fill.is-gain {
+  left: 50%;
+  background: var(--success);
+}
+
+.reports-cause__fill.is-loss {
+  right: 50%;
+  background: var(--danger);
+}
+
+.reports-cause__value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.reports-cause__value.is-gain,
+.reports-cause__total.is-gain {
+  color: var(--success);
+}
+
+.reports-cause__value.is-loss,
+.reports-cause__total.is-loss {
+  color: var(--danger);
+}
+
+.reports-cause__empty {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
 }
 
 .reports-panel__month {
@@ -32,7 +187,9 @@
 .reports-panel__metric {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
+  min-width: 0;
+  white-space: nowrap;
   gap: 0.3rem;
 }
 

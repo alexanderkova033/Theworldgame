@@ -2,7 +2,7 @@
 // place allowed to call across every domain module, in order, to advance the
 // whole country by one day. Never mutates the state it's given; always
 // returns a new GameState.
-import { calculateDailyIncome } from "../domain/economy/economyRules";
+import { getDailyIncomeParts } from "../domain/economy/economyRules";
 import { advanceProject, isProjectComplete } from "../domain/construction/constructionRules";
 import { advanceDay, getSeason, isEveryNMonths, isFirstDayOfMonth } from "../domain/country/calendar";
 import { generateId } from "../domain/country/id";
@@ -11,7 +11,7 @@ import { pickRandomDecision } from "../domain/decisions/decisionRules";
 import { getDiplomacyIncomeMultiplier, isFriendly, rollForeignMeddling, updateForeignPolitics } from "../domain/diplomacy/diplomacyRules";
 import { getIslandExpeditionData } from "../domain/expeditions/expeditionData";
 import { advanceExpedition, isExpeditionComplete } from "../domain/expeditions/expeditionRules";
-import { produceProcessedFood, updateFood } from "../domain/food/foodRules";
+import { produceFood, produceProcessedFood, updateFood } from "../domain/food/foodRules";
 import {
   burnHeatingFuel,
   getColdStabilityPenalty,
@@ -23,6 +23,8 @@ import {
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getLabourSituation } from "../domain/labour/labourRules";
 import { getActiveLawEffects } from "../domain/laws/lawsRules";
+import { emptyLedger, fitCauses, isLedgerEmpty, ledgerFromStatsChange, mergeLedgers } from "../domain/ledger/ledgerRules";
+import type { Ledger, LedgerCauses } from "../domain/ledger/types";
 import { accrueInterest, getDebtPopularityPenalty, getDebtStabilityPenalty, isDebtDangerous } from "../domain/loans/loanRules";
 import { advanceRepairs, getWorkingCounts, rollBreakdowns } from "../domain/maintenance/maintenanceRules";
 import { getNationEffects } from "../domain/nations/nationEffects";
@@ -30,7 +32,13 @@ import { getNation } from "../domain/nations/nationRules";
 import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../domain/parties/factionRules";
 import { getParty } from "../domain/parties/partyRules";
 import { getProvinceName } from "../domain/provinces/provinceRules";
-import { calculateDailyPoliticalPower, getPopularityTarget, updateFactionPopularity } from "../domain/politics/politicsRules";
+import {
+  calculateDailyPoliticalPower,
+  getPopularityDrivers,
+  getPopularityTarget,
+  updateFactionPopularity,
+  type PopularityConditions,
+} from "../domain/politics/politicsRules";
 import { updatePopulation } from "../domain/population/populationRules";
 import { updateMarket } from "../domain/market/marketRules";
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
@@ -38,9 +46,10 @@ import { applyRandomEventEffect, pickRandomEvent } from "../domain/randomEvents/
 import { getActiveResearchEffects } from "../domain/research/researchRules";
 import { addResources, calculateDailyProduction } from "../domain/resources/resourceRules";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
-import { isCollapseRisk, updateStability } from "../domain/stability/stabilityRules";
+import { getStabilityPressures, isCollapseRisk, updateStability } from "../domain/stability/stabilityRules";
 import { getActiveSynergyEffects } from "../domain/synergy/synergyRules";
 import { getDailySalaries, getPoliceBreakdownReduction, getPoliceStabilityBonus, layOffUntilAffordable } from "../domain/workforce/workforceRules";
+import { ONE_OFF } from "./actions/recordAction";
 import { advancePolicies } from "./advancePolicies";
 import { applyExpeditionCompletion } from "./applyExpeditionCompletion";
 import { applyProjectCompletion } from "./applyProjectCompletion";
@@ -53,6 +62,8 @@ import {
   ELECTION_WIN_STABILITY_BONUS,
   ELECTION_WIN_THRESHOLD,
   MAX_EVENT_LOG_LENGTH,
+  POPULARITY_BASE_TARGET,
+  POPULARITY_DRIFT_RATE,
   RANDOM_EVENT_INTERVAL_MONTHS,
   RIVAL_CAMPAIGN_CHANCE_PER_MONTH,
 } from "../domain/constants";
@@ -85,6 +96,16 @@ export function simulateDay(state: GameState): GameState {
   const synergyEffects = getActiveSynergyEffects(state.enactedLawIds, state.enactedResearchIds);
   const nationEffects = getNationEffects(state.nationId);
   const events: GameEvent[] = [...state.events];
+
+  // Why today's numbers moved, cause by cause, for the monthly report (see
+  // domain/ledger). `late` holds what happens after the calendar turns —
+  // the monthly rival/foreign/event/election rolls — which belongs to the
+  // new month, not the one being reported on.
+  let ledger: Ledger = emptyLedger();
+  let lateLedger: Ledger = emptyLedger();
+  const book = (into: Ledger, metric: keyof Ledger, causes: Record<string, number>): Ledger => mergeLedgers(into, { ...emptyLedger(), [metric]: causes });
+  const bookChange = (into: Ledger, before: CountryStats, after: CountryStats, causes: LedgerCauses): Ledger =>
+    mergeLedgers(into, ledgerFromStatsChange(before, after, causes));
 
   // 1. Advance every active project. Each one pays its daily installment if
   // the treasury/stockpile can cover it (checked against a running balance,
@@ -128,6 +149,7 @@ export function simulateDay(state: GameState): GameState {
 
   const completedProjects = advancedProjects.filter(isProjectComplete);
   const remainingProjects = advancedProjects.filter((p) => !isProjectComplete(p));
+  ledger = book(ledger, "treasury", { construction: runningTreasury - state.stats.treasury });
 
   let working: GameState = {
     ...state,
@@ -151,6 +173,7 @@ export function simulateDay(state: GameState): GameState {
   const remainingExpeditions = advancedExpeditions.filter((e) => !isExpeditionComplete(e));
 
   working = { ...working, expeditions: remainingExpeditions };
+  const statsBeforeVentures = working.stats;
   for (const expedition of completedExpeditions) {
     working = applyExpeditionCompletion(working, expedition);
     const islandName = getIslandExpeditionData(expedition.islandId)?.islandName ?? "The venture";
@@ -167,9 +190,12 @@ export function simulateDay(state: GameState): GameState {
   // closer to taking effect (see advancePolicies.ts). Completion logs its
   // own event onto working.events — lift those into today's log here, since
   // the final state's events come from the local array, not working.events.
+  ledger = bookChange(ledger, statsBeforeVentures, working.stats, { treasury: "events", stability: "events" });
   const eventCountBeforePolicies = working.events.length;
+  const statsBeforePolicies = working.stats;
   working = advancePolicies(working);
   events.unshift(...working.events.slice(0, working.events.length - eventCountBeforePolicies));
+  ledger = bookChange(ledger, statsBeforePolicies, working.stats, ONE_OFF);
 
   // 1d. Repairs in progress tick down; then any working building might
   // break (police deter some of it). Broken buildings stop producing until
@@ -258,7 +284,7 @@ export function simulateDay(state: GameState): GameState {
   // step 1, so this is the only other thing moving the treasury on a tick),
   // with a bonus for every neighbor ruled by the party you backed — then
   // the workforce's salaries. Staff who can't be paid walk out.
-  const grossIncome = calculateDailyIncome(
+  const { taxIncome, industryIncome } = getDailyIncomeParts(
     working.stats,
     working.taxRate,
     efficiencyMultiplier *
@@ -268,6 +294,7 @@ export function simulateDay(state: GameState): GameState {
       synergyEffects.incomeMultiplier *
       getDiplomacyIncomeMultiplier(working.foreignPolitics),
   );
+  const grossIncome = taxIncome + industryIncome;
   const { workforce, laidOff } = layOffUntilAffordable(working.workforce, working.stats.treasury + grossIncome);
   if (laidOff > 0) {
     events.unshift({
@@ -277,11 +304,17 @@ export function simulateDay(state: GameState): GameState {
       severity: "warning",
     });
   }
-  const income = grossIncome - getDailySalaries(workforce);
+  const salaries = getDailySalaries(workforce);
+  const income = grossIncome - salaries;
   const treasury = working.stats.treasury + income;
+  ledger = book(ledger, "treasury", { taxes: taxIncome, industry: industryIncome, salaries: -salaries });
 
   // 4. Food: production (farms + processed Grain/Fish) vs consumption.
   const { newFoodStock, isShortage } = updateFood(working.stats, workingCounts.farms * labour.foodStaffing, season, processedFood);
+  const farmFood = produceFood(workingCounts.farms * labour.foodStaffing, season);
+  // What was actually eaten — in a shortage, less than people needed.
+  const eaten = working.stats.food + farmFood + processedFood - newFoodStock;
+  ledger = book(ledger, "food", { farms: farmFood, processing: processedFood, eating: -eaten });
   if (isShortage) {
     events.unshift({
       id: generateId("event"),
@@ -305,13 +338,29 @@ export function simulateDay(state: GameState): GameState {
   // 7. Stability reacts to food shortages, popularity, heavy debt, people
   // without homes and homes without heat; police on the payroll steady it.
   const statsWithFood: CountryStats = { ...working.stats, food: newFoodStock };
+  const debtStabilityPenalty = getDebtStabilityPenalty(debt);
+  const homelessStabilityPenalty = getHomelessStabilityPenalty(homelessShare);
+  const coldStabilityPenalty = getColdStabilityPenalty(heating.unheatedShare);
+  const policeStabilityBonus = getPoliceStabilityBonus(workforce.police);
   const stability = Math.min(
     100,
-    updateStability(
-      statsWithFood,
-      isShortage,
-      getDebtStabilityPenalty(debt) + getHomelessStabilityPenalty(homelessShare) + getColdStabilityPenalty(heating.unheatedShare),
-    ) + getPoliceStabilityBonus(workforce.police),
+    updateStability(statsWithFood, isShortage, debtStabilityPenalty + homelessStabilityPenalty + coldStabilityPenalty) + policeStabilityBonus,
+  );
+  const stabilityPressures = getStabilityPressures(statsWithFood, isShortage);
+  ledger = book(
+    ledger,
+    "stability",
+    fitCauses(
+      {
+        food: stabilityPressures.food,
+        support: stabilityPressures.support,
+        debt: -debtStabilityPenalty,
+        homes: -homelessStabilityPenalty,
+        cold: -coldStabilityPenalty,
+        police: policeStabilityBonus,
+      },
+      stability - working.stats.stability,
+    ),
   );
   if (isCollapseRisk({ ...statsWithFood, stability })) {
     events.unshift({
@@ -345,15 +394,35 @@ export function simulateDay(state: GameState): GameState {
   // hit if debt is heavy. Applied per-faction, then re-aggregated into the
   // single number everything else below still reads.
   const factionWeights = getFactionWeights(working.nationId);
-  const popularityTarget = getPopularityTarget({
+  const popularityConditions: PopularityConditions = {
     taxRate: working.taxRate,
     isFoodShortage: isShortage,
     homelessShare,
     unheatedShare: heating.unheatedShare,
     unemploymentShare: labour.unemploymentShare,
     stability,
-  });
-  const { factionApproval, popularity } = updateFactionPopularity(working.factionApproval, factionWeights, popularityTarget, getDebtPopularityPenalty(debt));
+  };
+  const popularityTarget = getPopularityTarget(popularityConditions);
+  const debtPopularityPenalty = getDebtPopularityPenalty(debt);
+  const { factionApproval, popularity } = updateFactionPopularity(working.factionApproval, factionWeights, popularityTarget, debtPopularityPenalty);
+  // Opinion moves a share of the way to its target each day, so each driver
+  // moves it by that share of what it adds to the target (scaled down if the
+  // target was capped). What's left is opinion easing back toward neutral.
+  const drivers = getPopularityDrivers(popularityConditions);
+  const rawPush = drivers.reduce((sum, d) => sum + d.value, 0);
+  const pushScale = rawPush !== 0 ? (popularityTarget - POPULARITY_BASE_TARGET) / rawPush : 0;
+  ledger = book(
+    ledger,
+    "support",
+    fitCauses(
+      {
+        ...Object.fromEntries(drivers.map((d) => [d.key, d.value * pushScale * POPULARITY_DRIFT_RATE])),
+        settling: (POPULARITY_BASE_TARGET - working.stats.popularity) * POPULARITY_DRIFT_RATE,
+        debt: -debtPopularityPenalty,
+      },
+      popularity - working.stats.popularity,
+    ),
+  );
 
   // 9. Population grows or shrinks based on food, stability, housing and heat.
   const population = updatePopulation({ ...statsWithFood, stability }, isShortage, housingCapacity, heating.unheatedShare);
@@ -383,6 +452,8 @@ export function simulateDay(state: GameState): GameState {
     income,
     populationChange: population - state.stats.population,
     stabilityChange: stability - state.stats.stability,
+    // Player actions since the last tick count toward today.
+    ledger: mergeLedgers(state.pendingLedger, ledger),
   };
   const history = [...working.history, delta];
 
@@ -402,6 +473,7 @@ export function simulateDay(state: GameState): GameState {
   if (isEveryNMonths(date, RANDOM_EVENT_INTERVAL_MONTHS)) {
     const randomEvent = pickRandomEvent();
     const applied = applyRandomEventEffect(finalStats, finalResources, randomEvent.effect);
+    lateLedger = bookChange(lateLedger, finalStats, applied.stats, { treasury: "events", food: "events", stability: "events" });
     finalStats = applied.stats;
     finalResources = applied.resources;
     events.unshift({
@@ -423,6 +495,7 @@ export function simulateDay(state: GameState): GameState {
     const move = pickRivalCampaignMove(working);
     const applied = applyFactionEffects(finalFactionApproval, factionWeights, move.effects ?? {}, move.popularityDelta);
     finalFactionApproval = applied.factionApproval;
+    lateLedger = book(lateLedger, "support", { rival: applied.popularity - finalStats.popularity });
     finalStats = { ...finalStats, popularity: applied.popularity };
     events.unshift({
       id: generateId("event"),
@@ -454,6 +527,7 @@ export function simulateDay(state: GameState): GameState {
     for (const move of rollForeignMeddling(foreignPolitics)) {
       const applied = applyUniformDelta(finalFactionApproval, factionWeights, move.supportDelta);
       finalFactionApproval = applied.factionApproval;
+      lateLedger = book(lateLedger, "support", { foreign: applied.popularity - finalStats.popularity });
       finalStats = { ...finalStats, popularity: applied.popularity };
       const nation = getNation(move.nationId);
       const party = getParty(move.partyId);
@@ -487,7 +561,9 @@ export function simulateDay(state: GameState): GameState {
     const popularity = finalStats.popularity;
     if (popularity >= ELECTION_WIN_THRESHOLD) {
       electionsWon += 1;
-      finalStats = { ...finalStats, stability: Math.min(100, finalStats.stability + ELECTION_WIN_STABILITY_BONUS) };
+      const mandate = Math.min(100, finalStats.stability + ELECTION_WIN_STABILITY_BONUS);
+      lateLedger = book(lateLedger, "stability", { election: mandate - finalStats.stability });
+      finalStats = { ...finalStats, stability: mandate };
       if (electionsWon >= ELECTIONS_TO_WIN_GAME) {
         isGameOver = true;
         outcome = "victory";
@@ -528,6 +604,21 @@ export function simulateDay(state: GameState): GameState {
     pendingDecisionId = pickRandomDecision().id;
   }
 
+  // The new month's own changes open its history, after the report on the
+  // old one has been written.
+  if (!isLedgerEmpty(lateLedger) || finalStats.population !== updatedStats.population) {
+    finalHistory = [
+      ...finalHistory,
+      {
+        date,
+        income: 0,
+        populationChange: finalStats.population - updatedStats.population,
+        stabilityChange: finalStats.stability - updatedStats.stability,
+        ledger: lateLedger,
+      },
+    ];
+  }
+
   return {
     ...working,
     date,
@@ -546,6 +637,7 @@ export function simulateDay(state: GameState): GameState {
     debt,
     events: events.slice(0, MAX_EVENT_LOG_LENGTH),
     history: finalHistory,
+    pendingLedger: emptyLedger(),
     monthlyReports,
   };
 }

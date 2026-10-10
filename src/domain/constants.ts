@@ -256,6 +256,13 @@ export const FOREIGN_MEDDLING_CHANCE_PER_MONTH = 0.2;
 export const FOREIGN_MEDDLING_SUPPORT = 3; // support swing from one push
 export const FRIENDLY_GOVERNMENT_INCOME_BONUS = 0.05; // +5% income per neighbor ruled by the party you backed
 
+// --- Monthly reports (see domain/ledger) ---
+// What counts as a big monthly change for each number, so the report's
+// headline can weigh crowns against food against support points.
+export const REPORT_NOTABLE_CHANGE = { treasury: 300, food: 100000, support: 2, stability: 2 } as const;
+export const REPORT_LOSS_WEIGHT = 2; // a fall makes the headline well before a rise of the same size...
+export const REPORT_GAIN_WEIGHT = 0.75; // ...a full granary is rarely the month's news
+
 // --- Misc ---
 export const MAX_EVENT_LOG_LENGTH = 100;
 export const CURRENCY_SYMBOL = "Cr"; // "Crowns" — the shared continental currency

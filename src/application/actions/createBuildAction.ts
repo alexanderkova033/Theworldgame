@@ -9,6 +9,7 @@ import type { GameState } from "../../domain/country/types";
 import type { Project, ProjectType } from "../../domain/construction/types";
 import { isBuildingUnlocked } from "../../domain/research/researchRules";
 import type { ResourceType } from "../../domain/resources/types";
+import { recordAction } from "./recordAction";
 
 interface BuildActionConfig {
   type: ProjectType;
@@ -85,12 +86,13 @@ export function createBuildAction(config: BuildActionConfig): BuildAction {
       isStalled: false,
     };
 
-    return {
+    const next: GameState = {
       ...state,
       stats: { ...state.stats, treasury: state.stats.treasury - treasuryUpfront },
       resources: deductResource(state.resources, config.resourceType, resourceUpfront),
       projects: [...state.projects, project],
     };
+    return recordAction(state, next, { treasury: "construction" });
   }
 
   const action = build as BuildAction;

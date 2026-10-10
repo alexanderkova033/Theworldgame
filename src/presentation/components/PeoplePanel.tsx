@@ -9,18 +9,10 @@ import type { DailyProductionSummary } from "../../application/getDailyProductio
 import type { GameState } from "../../domain/country/types";
 import { getLabourSituation } from "../../domain/labour/labourRules";
 import { formatCompact } from "../formatNumber";
+import { FlameIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 import type { PanelKey } from "./TopBar";
-
-function FlameIcon({ size = 22 }: { size?: number }) {
-  return (
-    <svg viewBox="-10 -10 20 20" width={size} height={size} aria-hidden="true">
-      <path d="M0,-9 C4,-4 7,-1 7,3 C7,7 4,9.5 0,9.5 C-4,9.5 -7,7 -7,3 C-7,-1 -3,-2 -2,-6 C-1,-3 1,-2 0,-9 Z" fill="#e0703a" />
-      <path d="M0,-1 C2.5,2 3.5,3.5 3.5,5.5 C3.5,7.6 2,9 0,9 C-2,9 -3.5,7.6 -3.5,5.5 C-3.5,3.5 -1.5,2.5 0,-1 Z" fill="#f0c869" />
-    </svg>
-  );
-}
 
 function Meter({
   icon,
