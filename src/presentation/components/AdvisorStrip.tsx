@@ -6,7 +6,7 @@
 import "./AdvisorStrip.css";
 import type { ReactNode } from "react";
 import type { AdvisorAlertKind, AdvisorOutlook, ObjectiveKind } from "../../application/getAdvisorOutlook";
-import { BuildingGlyph, FlameIcon, LoanIcon } from "./CauseIcon";
+import { BuildingGlyph, FlameIcon, LoanIcon, UnrestStageIcon } from "./CauseIcon";
 import { NavIcon } from "./NavIcon";
 import { WrenchIcon } from "./RepairsPanel";
 import { ResourceIcon } from "./ResourceIcon";
@@ -24,6 +24,7 @@ function CoalIcon() {
 }
 
 const ALERT_ICONS: Record<AdvisorAlertKind, () => ReactNode> = {
+  unrest: () => <UnrestStageIcon stage="strikes" size={ICON_SIZE} />,
   coal: () => <CoalIcon />,
   food: () => <StatIcon type="food" size={ICON_SIZE} />,
   farmWorkers: () => <BuildingGlyph type="farm" size={ICON_SIZE} />,
@@ -83,7 +84,9 @@ export function AdvisorStrip({ outlook, onOpenPanel }: AdvisorStripProps) {
               !
             </span>
           )}
-          <span className="advisor-chip__icon">{ALERT_ICONS[alert.kind]()}</span>
+          <span className="advisor-chip__icon">
+            {alert.stage ? <UnrestStageIcon stage={alert.stage} size={ICON_SIZE} /> : ALERT_ICONS[alert.kind]()}
+          </span>
           <span>{alert.text}</span>
         </button>
       ))}

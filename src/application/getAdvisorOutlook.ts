@@ -32,6 +32,7 @@ import type { HeatingOutlook } from "./getHeatingOutlook";
 export type AdvisorPanel = "politics" | "economy" | "trade" | "research";
 
 export type AdvisorAlertKind =
+  | "unrest"
   | "coal"
   | "food"
   | "farmWorkers"
@@ -49,6 +50,7 @@ export interface AdvisorAlert {
   detail: string; // tooltip: what's wrong and what to do
   critical: boolean;
   panel: AdvisorPanel;
+  stage?: GameState["unrestStage"]; // for the unrest alert
 }
 
 export type ObjectiveKind = "winter" | "farm" | "homes" | "election";
@@ -68,7 +70,9 @@ export interface AdvisorOutlook {
 
 // Most urgent first when equally critical — the order the problems are
 // checked in below.
-const ALERT_ORDER: AdvisorAlertKind[] = ["coal", "food", "farmWorkers", "factoryWorkers", "homeless", "broken", "debt", "election", "stalled", "research"];
+const ALERT_ORDER: AdvisorAlertKind[] = ["unrest", "coal", "food", "farmWorkers", "factoryWorkers", "homeless", "broken", "debt", "election", "stalled", "research"];
+
+const UNREST_NAMES: Record<GameState["unrestStage"], string> = { calm: "Calm", discontent: "Discontent", strikes: "Strikes", riots: "Riots" };
 
 function percent(share: number): string {
   return `${Math.round(share * 100)}%`;
@@ -80,6 +84,18 @@ function compact(value: number): string {
 
 function getAlerts(state: GameState, production: DailyProductionSummary, heating: HeatingOutlook): AdvisorAlert[] {
   const alerts: AdvisorAlert[] = [];
+
+  // Unrest: strikes and riots are a step from collapse.
+  if (state.unrestStage !== "calm") {
+    alerts.push({
+      kind: "unrest",
+      stage: state.unrestStage,
+      text: `Unrest: ${UNREST_NAMES[state.unrestStage]}`,
+      detail: `Stability ${Math.round(state.stats.stability)}. A crackdown on the Politics tab pulls the country back a stage; police soften strikes and riots.`,
+      critical: state.unrestStage !== "discontent",
+      panel: "politics",
+    });
+  }
 
   // Heating: days of fuel left this winter, or how ready the stock is for the next one.
   if (heating.isWinter && heating.fuelPerDay > 0 && heating.daysOfFuel < heating.winterDaysLeft) {

@@ -51,3 +51,52 @@ export function BuildingGlyph({ type, size }: { type: ProjectType; size: number 
     </svg>
   );
 }
+
+// One shape per unrest stage, so the stage reads without its colour: a calm
+// olive sprig, a frown, a picket sign, a torch, a broken crown.
+export function UnrestStageIcon({ stage, size }: { stage: "calm" | "discontent" | "strikes" | "riots" | "collapse"; size: number }) {
+  return (
+    <svg viewBox="-10 -10 20 20" width={size} height={size} aria-hidden="true">
+      {stage === "calm" && (
+        <g>
+          <path d="M-7,7 C-3,3 2,-2 7,-8" fill="none" stroke="#6fae7c" strokeWidth={1.6} strokeLinecap="round" />
+          <ellipse cx={-3} cy={0.5} rx={1.6} ry={3.2} transform="rotate(-50 -3 0.5)" fill="#8bc34a" />
+          <ellipse cx={0.5} cy={-4} rx={1.6} ry={3.2} transform="rotate(-50 0.5 -4)" fill="#8bc34a" />
+          <ellipse cx={1.5} cy={2.5} rx={1.6} ry={3.2} transform="rotate(40 1.5 2.5)" fill="#6fae7c" />
+          <ellipse cx={5} cy={-2} rx={1.5} ry={3} transform="rotate(40 5 -2)" fill="#6fae7c" />
+        </g>
+      )}
+      {stage === "discontent" && (
+        <g>
+          <circle r={8} fill="#d9a24f" stroke="#7a4a14" strokeWidth={1} />
+          <circle cx={-3} cy={-2.2} r={1.2} fill="#2a1506" />
+          <circle cx={3} cy={-2.2} r={1.2} fill="#2a1506" />
+          <path d="M-4,4.5 Q0,1 4,4.5" fill="none" stroke="#2a1506" strokeWidth={1.4} strokeLinecap="round" />
+        </g>
+      )}
+      {stage === "strikes" && (
+        <g>
+          <rect x={-0.9} y={-1} width={1.8} height={10} fill="#8a5a2b" />
+          <rect x={-7.5} y={-8.5} width={15} height={8.5} rx={1} fill="#e8d9ab" stroke="#c0582f" strokeWidth={1.2} />
+          <g stroke="#c0582f" strokeWidth={1.8} strokeLinecap="round">
+            <line x1={-3} y1={-6.6} x2={3} y2={-2} />
+            <line x1={3} y1={-6.6} x2={-3} y2={-2} />
+          </g>
+        </g>
+      )}
+      {stage === "riots" && (
+        <g>
+          <rect x={-1.2} y={0} width={2.4} height={9.5} rx={0.8} fill="#8a5a2b" transform="rotate(15 0 4)" />
+          <path d="M0,-9.5 C3.5,-6 5.5,-3.5 5.5,-0.5 C5.5,2.5 3,3.8 0,3.8 C-3,3.8 -5.5,2.5 -5.5,-0.5 C-5.5,-3.5 -2.5,-4 -1.5,-7 C-0.8,-5 0.8,-4.5 0,-9.5 Z" fill="#ea6a52" />
+          <path d="M0,-3.5 C1.8,-1.8 2.6,-0.8 2.6,0.6 C2.6,2 1.4,2.8 0,2.8 C-1.4,2.8 -2.6,2 -2.6,0.6 C-2.6,-0.8 -1,-1.6 0,-3.5 Z" fill="#f0c869" />
+        </g>
+      )}
+      {stage === "collapse" && (
+        <g>
+          <path d="M-8,6 L-8,-3 L-4,1 L-1,-6 L0.5,-1 L-1.5,6 Z" fill="#b3987a" stroke="#5a4630" strokeWidth={0.8} strokeLinejoin="round" />
+          <path d="M1.5,6 L3,0 L1.8,-4 L4,1 L8,-3 L8,6 Z" fill="#b3987a" stroke="#5a4630" strokeWidth={0.8} strokeLinejoin="round" transform="translate(1 1) rotate(8)" />
+        </g>
+      )}
+    </svg>
+  );
+}

@@ -3,6 +3,7 @@
 // "you can always see where you stand" bar, as opposed to the full Stats
 // and Resources panels which are occasional lookups now (see App.tsx).
 import "./ResourceTicker.css";
+import { Fragment } from "react";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { CountryStats } from "../../domain/country/types";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
@@ -11,11 +12,15 @@ import { isDebtDangerous } from "../../domain/loans/loanRules";
 import { calculateDailyPoliticalPower } from "../../domain/politics/politicsRules";
 import { formatCompact } from "../formatNumber";
 import { RESOURCE_TYPES, type ResourceBundle } from "../../domain/resources/types";
+import type { UnrestStage } from "../../domain/unrest/types";
+import { UNREST_INFO } from "../unrestStages";
+import { UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
 interface ResourceTickerProps {
   stats: CountryStats;
+  unrestStage: UnrestStage;
   resources: ResourceBundle;
   production: DailyProductionSummary;
   heating: HeatingOutlook;
@@ -57,7 +62,24 @@ function Delta({ value }: { value: number | undefined }) {
   return <span className={`resource-ticker__delta ${value >= 0 ? "is-positive" : "is-negative"}`}>{formatDelta(value)}</span>;
 }
 
-export function ResourceTicker({ stats, resources, production, heating, debt }: ResourceTickerProps) {
+function UnrestChip({ stage }: { stage: UnrestStage }) {
+  const info = UNREST_INFO[stage];
+  const urgent = stage === "strikes" || stage === "riots";
+  const tip = `Unrest: ${info.name} (${info.range}) — ${info.effect}${stage === "calm" ? "" : " A crackdown on the Politics tab pulls the country back a stage."}`;
+  return (
+    <div className={`resource-ticker__chip resource-ticker__unrest is-${stage} ${urgent ? "is-danger" : ""}`} title={tip} aria-label={tip}>
+      <UnrestStageIcon stage={stage} size={20} />
+      <span>{info.name}</span>
+      {urgent && (
+        <span className="resource-ticker__alert" aria-hidden="true">
+          !
+        </span>
+      )}
+    </div>
+  );
+}
+
+export function ResourceTicker({ stats, unrestStage, resources, production, heating, debt }: ResourceTickerProps) {
   // Compact ("215k") in the chip itself so a big food stockpile doesn't turn
   // into an unreadable wall of digits; the exact figure is still one hover
   // away via the title/aria-label.
@@ -81,21 +103,24 @@ export function ResourceTicker({ stats, resources, production, heating, debt }: 
   return (
     <div className="resource-ticker">
       {statItems.map(([icon, label, displayValue, exactValue, delta]) => (
-        <div
-          className={`resource-ticker__chip ${icon === "population" && (stats.population > production.housingCapacity || production.unheatedShare > 0) ? "is-danger" : ""}`}
-          key={label}
-          title={delta !== undefined ? `${label}: ${exactValue} (${formatDelta(delta)})` : `${label}: ${exactValue}`}
-          aria-label={delta !== undefined ? `${label}: ${exactValue}, ${formatDelta(delta)}` : `${label}: ${exactValue}`}
-        >
-          <StatIcon type={icon} size={20} />
-          <span>{displayValue}</span>
-          {icon === "population" && (stats.population > production.housingCapacity || production.unheatedShare > 0) && (
-            <span className="resource-ticker__alert" aria-hidden="true">
-              !
-            </span>
-          )}
-          <Delta value={delta} />
-        </div>
+        <Fragment key={label}>
+          <div
+            className={`resource-ticker__chip ${icon === "population" && (stats.population > production.housingCapacity || production.unheatedShare > 0) ? "is-danger" : ""}`}
+            title={delta !== undefined ? `${label}: ${exactValue} (${formatDelta(delta)})` : `${label}: ${exactValue}`}
+            aria-label={delta !== undefined ? `${label}: ${exactValue}, ${formatDelta(delta)}` : `${label}: ${exactValue}`}
+          >
+            <StatIcon type={icon} size={20} />
+            <span>{displayValue}</span>
+            {icon === "population" && (stats.population > production.housingCapacity || production.unheatedShare > 0) && (
+              <span className="resource-ticker__alert" aria-hidden="true">
+                !
+              </span>
+            )}
+            <Delta value={delta} />
+          </div>
+          {/* Beside stability: how far its fall has escalated (see domain/unrest). */}
+          {icon === "stability" && <UnrestChip stage={unrestStage} />}
+        </Fragment>
       ))}
       {debt > 0 && (
         <div

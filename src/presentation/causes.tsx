@@ -64,6 +64,7 @@ export const CAUSES: Record<LedgerMetric, Record<string, CauseInfo>> = {
     homes: { label: "Homeless", hint: "People without a home", icon: (size) => <BuildingGlyph type="housing" size={size} /> },
     cold: { label: "Cold", hint: "Homes left cold in winter", icon: (size) => <FlameIcon size={size} /> },
     police: { label: "Police", hint: "Police on the payroll", icon: (size) => <StatIcon type="police" size={size} /> },
+    crackdown: { label: "Crackdowns", hint: "Crackdowns ordered from the Politics tab", icon: (size) => <StatIcon type="police" size={size} /> },
     election: { label: "Election", hint: "A won election's mandate", icon: (size) => <NavIcon type="politics" size={size} /> },
     oneOffs: ONE_OFFS,
     events: EVENTS,

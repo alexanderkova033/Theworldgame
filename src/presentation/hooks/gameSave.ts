@@ -15,6 +15,7 @@ import { getResearchNode } from "../../domain/research/researchRules";
 import type { ResearchCategory } from "../../domain/research/types";
 import { emptyLedger } from "../../domain/ledger/ledgerRules";
 import { emptyResourceBundle } from "../../domain/resources/resourceRules";
+import { getStageForStability } from "../../domain/unrest/unrestRules";
 import { emptyWorkforce } from "../../domain/workforce/workforceRules";
 
 // GameState has grown fields release over release (debt, researchOutcomes,
@@ -72,6 +73,7 @@ function hydrateGameState(raw: Partial<GameState>): GameState {
     outcome: raw.outcome ?? null,
     gameOverReason: raw.gameOverReason ?? null,
     stats,
+    unrestStage: raw.unrestStage ?? getStageForStability(stats.stability),
     resources: { ...emptyResourceBundle(), ...raw.resources }, // saves from before coal get an empty coal store
     taxRate: raw.taxRate ?? 0.15,
     debt: raw.debt ?? 0,

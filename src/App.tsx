@@ -228,6 +228,7 @@ function App() {
         isPaused={state.isPaused}
         speed={state.speed}
         stats={state.stats}
+        unrestStage={state.unrestStage}
         resources={state.resources}
         production={dailyProduction}
         heating={heating!}

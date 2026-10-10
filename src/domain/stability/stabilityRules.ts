@@ -2,7 +2,6 @@
 // shortages and low popularity, and slowly recovers when things are going well.
 import type { CountryStats } from "../country/types";
 import {
-  STABILITY_COLLAPSE_THRESHOLD,
   STABILITY_FOOD_SHORTAGE_PENALTY,
   STABILITY_GOOD_POPULARITY_THRESHOLD,
   STABILITY_LOW_POPULARITY_PENALTY,
@@ -23,8 +22,4 @@ export function updateStability(stats: CountryStats, isFoodShortage: boolean, de
   const { food, support } = getStabilityPressures(stats, isFoodShortage);
   const change = food + support - debtPenalty;
   return Math.min(100, Math.max(0, stats.stability + change));
-}
-
-export function isCollapseRisk(stats: CountryStats): boolean {
-  return stats.stability <= STABILITY_COLLAPSE_THRESHOLD;
 }

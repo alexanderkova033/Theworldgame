@@ -94,6 +94,7 @@ export function startNewGame(nationId: string, partyId: string): GameState {
       politicalPower: 0,
       popularity: 55,
     },
+    unrestStage: "calm",
     resources: {
       wood: STARTING_RESOURCE_STOCK,
       ore: STARTING_RESOURCE_STOCK,

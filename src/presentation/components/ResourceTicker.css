@@ -67,3 +67,14 @@
   font-weight: 800;
   font-size: 0.8125rem;
 }
+
+/* The unrest stage beside stability: muted while calm, amber in discontent,
+   red (with a "!") in strikes and riots. */
+.resource-ticker__unrest.is-calm {
+  color: var(--text-muted);
+}
+
+.resource-ticker__unrest.is-discontent {
+  border-color: var(--warning);
+  color: var(--warning);
+}

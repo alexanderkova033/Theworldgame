@@ -5,6 +5,7 @@ import type { CountryStats, GameDate, GameSpeed } from "../../domain/country/typ
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import type { HeatingOutlook } from "../../application/getHeatingOutlook";
 import type { ResourceBundle } from "../../domain/resources/types";
+import type { UnrestStage } from "../../domain/unrest/types";
 import { isMuted, setMuted } from "../audio/sound";
 import { NavIcon, type NavIconType } from "./NavIcon";
 import { ResourceTicker } from "./ResourceTicker";
@@ -132,6 +133,7 @@ interface TopBarProps {
   isPaused: boolean;
   speed: GameSpeed;
   stats: CountryStats;
+  unrestStage: UnrestStage;
   resources: ResourceBundle;
   production: DailyProductionSummary;
   heating: HeatingOutlook;
@@ -153,6 +155,7 @@ export function TopBar({
   isPaused,
   speed,
   stats,
+  unrestStage,
   resources,
   production,
   heating,
@@ -175,7 +178,7 @@ export function TopBar({
           <span className="top-bar__party">{partyName}</span>
         </span>
 
-        <ResourceTicker stats={stats} resources={resources} production={production} debt={debt} heating={heating} />
+        <ResourceTicker stats={stats} unrestStage={unrestStage} resources={resources} production={production} debt={debt} heating={heating} />
 
         <div className="top-bar__spacer" />
 

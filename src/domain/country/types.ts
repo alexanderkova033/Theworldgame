@@ -10,6 +10,7 @@ import type { Ideology } from "../parties/types";
 import type { PlacedBuilding } from "../provinces/types";
 import type { ResearchCategory, ResearchOutcomeTier } from "../research/types";
 import type { ResourceBundle } from "../resources/types";
+import type { UnrestStage } from "../unrest/types";
 import type { Workforce } from "../workforce/types";
 
 export interface GameDate {
@@ -82,6 +83,7 @@ export interface GameState {
   outcome: GameOutcome | null;
   gameOverReason: string | null;
   stats: CountryStats;
+  unrestStage: UnrestStage; // how far falling stability has escalated — see domain/unrest
   resources: ResourceBundle; // wood/ore/grain/fish, produced by terrain, spent on building or traded
   taxRate: number; // 0..1
   debt: number; // outstanding loan balance, compounds daily — see domain/loans/loanRules.ts

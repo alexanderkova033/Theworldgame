@@ -22,7 +22,7 @@ export type SupportCause =
   | "foreign"
   | "oneOffs";
 
-export type StabilityCause = "food" | "support" | "debt" | "homes" | "cold" | "police" | "election" | "oneOffs" | "events";
+export type StabilityCause = "food" | "support" | "debt" | "homes" | "cold" | "police" | "crackdown" | "election" | "oneOffs" | "events";
 
 export interface Ledger {
   treasury: Partial<Record<TreasuryCause, number>>;

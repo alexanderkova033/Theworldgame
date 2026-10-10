@@ -46,8 +46,10 @@ import { applyRandomEventEffect, pickRandomEvent } from "../domain/randomEvents/
 import { getActiveResearchEffects } from "../domain/research/researchRules";
 import { addResources, calculateDailyProduction } from "../domain/resources/resourceRules";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
-import { getStabilityPressures, isCollapseRisk, updateStability } from "../domain/stability/stabilityRules";
+import { getStabilityPressures, updateStability } from "../domain/stability/stabilityRules";
 import { getActiveSynergyEffects } from "../domain/synergy/synergyRules";
+import type { UnrestStage } from "../domain/unrest/types";
+import { getUnrestIndustryMultiplier, isWorseStage, rollRiotDamage, updateUnrestStage } from "../domain/unrest/unrestRules";
 import { getDailySalaries, getPoliceBreakdownReduction, getPoliceStabilityBonus, layOffUntilAffordable } from "../domain/workforce/workforceRules";
 import { ONE_OFF } from "./actions/recordAction";
 import { advancePolicies } from "./advancePolicies";
@@ -75,6 +77,20 @@ const BUILDING_NAMES: Record<string, string> = {
   granary: "Granary",
   cannery: "Cannery",
   housing: "Homes",
+};
+
+// Unrest moving a stage either way — see domain/unrest.
+const UNREST_WORSENS: Record<UnrestStage, string> = {
+  calm: "",
+  discontent: "Discontent is spreading — stability is under 40 and industry slows.",
+  strikes: "Strikes! Stability is under 25 and factories are stopping. Police keep more of them open; a crackdown calms things a stage.",
+  riots: "Riots! Stability is under 12 and mobs are wrecking buildings. Crack down before the government falls.",
+};
+const UNREST_EASES: Record<UnrestStage, string> = {
+  calm: "The country is calm again.",
+  discontent: "The strikes end — discontent lingers.",
+  strikes: "The riots die down — strikes go on.",
+  riots: "",
 };
 
 // The turn of the season, announced on its first day — winter especially,
@@ -218,6 +234,19 @@ export function simulateDay(state: GameState): GameState {
     });
   }
   working = { ...working, placedBuildings: breakdowns.placedBuildings };
+  // Rioting mobs wreck buildings too, through the same repair system.
+  if (working.unrestStage === "riots") {
+    const riot = rollRiotDamage(working.placedBuildings, working.workforce.police);
+    if (riot.wrecked) {
+      working = { ...working, placedBuildings: riot.placedBuildings };
+      events.unshift({
+        id: generateId("event"),
+        date: state.date,
+        message: `Rioters in ${getProvinceName(riot.wrecked.provinceId)}: a ${BUILDING_NAMES[riot.wrecked.type]} has broken down — repair it from the Economy tab.`,
+        severity: "danger",
+      });
+    }
+  }
   const workingCounts = getWorkingCounts(working);
   // Staffed buildings run at the share of their jobs that can be filled —
   // food first, then schools, then factories (see labourRules.ts).
@@ -323,13 +352,15 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
-  // 5. Industry output (derived from factories, scaled by laws + the research tree).
+  // 5. Industry output (derived from factories, scaled by laws + the research
+  // tree) — and by unrest: discontent slows it, strikes stop factories.
   const industry =
     calculateIndustryOutput(workingCounts.factories * labour.industryStaffing) *
     lawEffects.industryMultiplier *
     nationEffects.industryMultiplier *
     researchEffects.industryMultiplier *
-    synergyEffects.industryMultiplier;
+    synergyEffects.industryMultiplier *
+    getUnrestIndustryMultiplier(working.unrestStage, workforce.police);
 
   // 6. Political power accumulates, faster for a popular government.
   const politicalPower = working.stats.politicalPower + calculateDailyPoliticalPower(working.stats.popularity);
@@ -361,18 +392,21 @@ export function simulateDay(state: GameState): GameState {
       stability - working.stats.stability,
     ),
   );
-  if (isCollapseRisk({ ...statsWithFood, stability })) {
+  // 7a. Unrest escalates (or eases) with stability — announced once per
+  // change of stage, not every day it lasts (see domain/unrest).
+  const unrestStage = updateUnrestStage(working.unrestStage, stability);
+  if (unrestStage !== working.unrestStage) {
+    const worse = isWorseStage(unrestStage, working.unrestStage);
     events.unshift({
       id: generateId("event"),
       date: state.date,
-      message: "Stability is critically low — the government risks collapse!",
-      severity: "danger",
+      message: worse ? UNREST_WORSENS[unrestStage] : UNREST_EASES[unrestStage],
+      severity: !worse ? "info" : unrestStage === "discontent" ? "warning" : "danger",
     });
   }
 
-  // 7b. Stability bottoming out at zero is a hard loss, not just a risk
-  // warning — the "collapse risk" event above can repeat every day while
-  // things are merely bad; this only fires once, when they've fully failed.
+  // 7b. Stability bottoming out at zero is a hard loss, the last stage
+  // after riots; this only fires once, when things have fully failed.
   let isGameOver = working.isGameOver;
   let outcome = working.outcome;
   let gameOverReason = working.gameOverReason;
@@ -631,6 +665,7 @@ export function simulateDay(state: GameState): GameState {
     electionsWon,
     pendingDecisionId,
     stats: finalStats,
+    unrestStage,
     resources: finalResources,
     market,
     factionApproval: finalFactionApproval,

@@ -6,7 +6,6 @@ import {
   COURT_SUPPORT,
   COURT_TREASURY_COST,
   CRACKDOWN_POLITICAL_POWER_COST,
-  CRACKDOWN_STABILITY,
   CRACKDOWN_SUPPORT,
   RALLY_POLITICAL_POWER_COST,
   RALLY_SUPPORT,
@@ -16,6 +15,7 @@ import { generateId } from "../../domain/country/id";
 import type { GameState, GameEvent } from "../../domain/country/types";
 import { applyUniformDelta, getFactionWeights, getWeightedPopularity } from "../../domain/parties/factionRules";
 import type { Ideology } from "../../domain/parties/types";
+import { applyCrackdown } from "../../domain/unrest/unrestRules";
 import { ONE_OFF, recordAction } from "./recordAction";
 
 function logged(state: GameState, message: string, severity: GameEvent["severity"] = "info"): GameEvent[] {
@@ -69,15 +69,20 @@ export function canCrackDown(state: GameState): boolean {
 export function crackDown(state: GameState): GameState {
   if (!canCrackDown(state)) return state;
   const { factionApproval, popularity } = applyUniformDelta(state.factionApproval, getFactionWeights(state.nationId), CRACKDOWN_SUPPORT);
+  // Police make it bite harder, and it always pulls unrest back a stage.
+  const { stage, stability } = applyCrackdown(state.unrestStage, state.stats.stability, state.workforce.police);
+  const gain = Math.round(stability - state.stats.stability);
+  const calmed = stage !== state.unrestStage ? ` Unrest eases to ${stage}.` : "";
   return recordAction(state, {
     ...state,
     factionApproval,
+    unrestStage: stage,
     stats: {
       ...state.stats,
       popularity,
-      stability: Math.min(100, state.stats.stability + CRACKDOWN_STABILITY),
+      stability,
       politicalPower: state.stats.politicalPower - CRACKDOWN_POLITICAL_POWER_COST,
     },
-    events: logged(state, `You order a crackdown on unrest — stability +${CRACKDOWN_STABILITY}, support ${CRACKDOWN_SUPPORT}.`, "warning"),
-  }, ONE_OFF);
+    events: logged(state, `You order a crackdown on unrest — stability +${gain}, support ${CRACKDOWN_SUPPORT}.${calmed}`, "warning"),
+  }, { ...ONE_OFF, stability: "crackdown" });
 }

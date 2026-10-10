@@ -521,3 +521,71 @@
     grid-row: 2;
   }
 }
+
+/* --- Unrest: the stages from calm to collapse, the current one marked --- */
+.politics-unrest {
+  margin-bottom: 1.2rem;
+}
+
+.politics-unrest__ladder {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.35rem;
+}
+
+.politics-unrest__step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.5rem 0.3rem 0.45rem;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  background: rgba(0, 0, 0, 0.22);
+  text-align: center;
+  cursor: help;
+}
+
+.politics-unrest__step svg {
+  display: block;
+}
+
+.politics-unrest__step strong {
+  font-size: 0.875rem;
+}
+
+.politics-unrest__step span {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* Stages already passed through dim; the current one is outlined thick and
+   labelled, so it doesn't depend on colour. */
+.politics-unrest__step.is-past {
+  opacity: 0.6;
+}
+
+.politics-unrest__step.is-current {
+  border-width: 3px;
+  border-color: var(--accent-active);
+  background: rgba(240, 200, 105, 0.1);
+}
+
+.politics-unrest__step.is-current.is-discontent {
+  border-color: var(--warning);
+}
+
+.politics-unrest__step.is-current.is-strikes,
+.politics-unrest__step.is-current.is-riots {
+  border-color: var(--danger);
+}
+
+.politics-unrest__here {
+  margin-top: 0.15rem;
+  font-weight: 700;
+  color: var(--text) !important;
+}

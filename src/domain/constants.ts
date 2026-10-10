@@ -85,7 +85,7 @@ export const COURT_POLITICAL_POWER_COST = 15;
 export const COURT_TREASURY_COST = 300;
 export const COURT_SUPPORT = 8; // one group
 export const CRACKDOWN_POLITICAL_POWER_COST = 20;
-export const CRACKDOWN_STABILITY = 8;
+export const CRACKDOWN_STABILITY = 6; // plus CRACKDOWN_STABILITY_PER_POLICE per officer — see domain/unrest
 export const CRACKDOWN_SUPPORT = -4; // every group
 
 // --- Housing (see domain/housing) ---
@@ -208,7 +208,25 @@ export const STABILITY_FOOD_SHORTAGE_PENALTY = 0.8;
 export const STABILITY_LOW_POPULARITY_PENALTY = 0.3;
 export const STABILITY_LOW_POPULARITY_THRESHOLD = 30;
 export const STABILITY_GOOD_POPULARITY_THRESHOLD = 50;
-export const STABILITY_COLLAPSE_THRESHOLD = 15;
+
+// --- Unrest (see domain/unrest) ---
+// Falling stability escalates in stages before the government collapses at
+// zero, each one worse than the last and each announced, so a struggling
+// country gets warnings — and costs — while there's still time to act.
+export const UNREST_DISCONTENT_BELOW = 40; // stability under this: discontent...
+export const UNREST_STRIKES_BELOW = 25; // ...strikes...
+export const UNREST_RIOTS_BELOW = 12; // ...riots (collapse at 0)
+export const UNREST_EASE_MARGIN = 3; // a stage only eases once stability is this far back above its line
+export const DISCONTENT_INDUSTRY_PENALTY = 0.1; // discontent and worse: -10% industry
+export const STRIKE_FACTORY_STOPPAGE = 0.5; // strikes and worse: share of factory work that stops...
+export const STRIKE_STOPPAGE_PER_POLICE = 0.06; // ...less this for every officer on the payroll...
+export const STRIKE_STOPPAGE_MIN = 0.15; // ...but never less than this
+export const RIOT_DAMAGE_CHANCE_PER_DAY = 0.12; // riots: chance a mob wrecks a working building each day (police deter some, as with breakdowns)
+// A crackdown is how you pull the country back a stage: it always lifts
+// stability at least clear of the current stage's line, and hits harder
+// with police behind it.
+export const CRACKDOWN_STABILITY_PER_POLICE = 0.5;
+export const CRACKDOWN_POLICE_BONUS_CAP = 4;
 
 // --- Random world events ---
 export const RANDOM_EVENT_INTERVAL_MONTHS = 6; // a random event fires every N in-game months

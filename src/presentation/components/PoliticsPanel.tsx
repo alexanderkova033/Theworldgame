@@ -13,7 +13,6 @@ import {
   COURT_SUPPORT,
   COURT_TREASURY_COST,
   CRACKDOWN_POLITICAL_POWER_COST,
-  CRACKDOWN_STABILITY,
   CRACKDOWN_SUPPORT,
   ELECTIONS_TO_WIN_GAME,
   ELECTION_WIN_THRESHOLD,
@@ -36,7 +35,10 @@ import { getParty, getRivalParty } from "../../domain/parties/partyRules";
 import type { Ideology } from "../../domain/parties/types";
 import type { PopularityDriver } from "../../domain/politics/politicsRules";
 import { calculateDailyPoliticalPower } from "../../domain/politics/politicsRules";
+import { getCrackdownStability } from "../../domain/unrest/unrestRules";
 import { playConfirm } from "../audio/sound";
+import { UNREST_INFO, UNREST_STEPS } from "../unrestStages";
+import { UnrestStageIcon } from "./CauseIcon";
 import { DecisionIcon } from "./DecisionModal";
 import { ForeignAffairs } from "./ForeignAffairs";
 import { StatIcon, type StatIconType } from "./StatIcon";
@@ -197,6 +199,40 @@ function Drivers({ state, dispatch, onOpenPanel }: { state: GameState; dispatch:
   );
 }
 
+// --- How far unrest has gone: the stages, this one marked ------------------
+function Unrest({ state }: { state: GameState }) {
+  const current = UNREST_STEPS.indexOf(state.unrestStage);
+  return (
+    <div className="politics-unrest">
+      <div className="politics-section-head">
+        <h3>Unrest</h3>
+        <span className="politics-bank" title="Stability — unrest grows as it falls">
+          <StatIcon type="stability" size={18} />
+          {Math.round(state.stats.stability)}
+        </span>
+      </div>
+      <ol className="politics-unrest__ladder">
+        {UNREST_STEPS.map((step, i) => {
+          const info = UNREST_INFO[step];
+          return (
+            <li
+              key={step}
+              className={`politics-unrest__step is-${step} ${i === current ? "is-current" : i < current ? "is-past" : ""}`}
+              aria-current={i === current ? "step" : undefined}
+              title={`${info.name} (${info.range}): ${info.effect}`}
+            >
+              <UnrestStageIcon stage={step} size={26} />
+              <strong>{info.name}</strong>
+              <span>{info.range}</span>
+              {i === current && <span className="politics-unrest__here">You are here</span>}
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
 // --- Spend political power on the mood of the country ---------------------
 function ActionCard({
   icon,
@@ -280,7 +316,8 @@ function Actions({ state, dispatch }: { state: GameState; dispatch: Dispatch }) 
           title="Crack down"
           effect={
             <>
-              <StatIcon type="stability" size={14} />+{CRACKDOWN_STABILITY} · everyone {CRACKDOWN_SUPPORT}
+              <StatIcon type="stability" size={14} />+{getCrackdownStability(state.workforce.police)}
+              {state.unrestStage !== "calm" && " · calms a stage"} · everyone {CRACKDOWN_SUPPORT}
             </>
           }
           cost={<Cost pp={CRACKDOWN_POLITICAL_POWER_COST} />}
@@ -382,10 +419,13 @@ function ElectionsView({ state, dispatch, onOpenPanel }: { state: GameState; dis
       {/* 4. What's moving it — each with a fix. */}
       <Drivers state={state} dispatch={dispatch} onOpenPanel={onOpenPanel} />
 
-      {/* 5. Spend political power on it directly. */}
+      {/* 5. How far unrest has gone, and what each stage does. */}
+      <Unrest state={state} />
+
+      {/* 6. Spend political power on it directly. */}
       <Actions state={state} dispatch={dispatch} />
 
-      {/* 6. Who your support comes from. */}
+      {/* 7. Who your support comes from. */}
       <div className="politics-groups">
         <h3>Who backs you</h3>
         {[...FACTIONS]
@@ -420,7 +460,7 @@ function ElectionsView({ state, dispatch, onOpenPanel }: { state: GameState; dis
           })}
       </div>
 
-      {/* 7. What you've decided lately. */}
+      {/* 8. What you've decided lately. */}
       {recentDecisions.length > 0 && (
         <div className="politics-decisions">
           <h3>Recent decisions</h3>
