@@ -1,5 +1,5 @@
 import "./TopBar.css";
-import { useState, type CSSProperties } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { formatDate, type Season } from "../../domain/country/calendar";
 import type { CountryStats, GameDate, GameSpeed } from "../../domain/country/types";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
@@ -138,6 +138,7 @@ interface TopBarProps {
   debt: number;
   activePanel: PanelKey | null;
   reportsBadgeCount: number;
+  advisor?: ReactNode; // the "what needs you now" row, see AdvisorStrip
   onPause: () => void;
   onResume: () => void;
   onSetSpeed: (speed: GameSpeed) => void;
@@ -158,6 +159,7 @@ export function TopBar({
   debt,
   activePanel,
   reportsBadgeCount,
+  advisor,
   onPause,
   onResume,
   onSetSpeed,
@@ -237,6 +239,8 @@ export function TopBar({
           </button>
         ))}
       </div>
+
+      {advisor}
     </header>
   );
 }

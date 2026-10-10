@@ -8,10 +8,12 @@ import { NATIONS } from "./domain/nations/nationData";
 import type { GameSpeed } from "./domain/country/types";
 import { getPartiesForNation, getParty } from "./domain/parties/partyRules";
 import { dismissDecision, resolveDecision } from "./application/actions";
+import { getAdvisorOutlook } from "./application/getAdvisorOutlook";
 import { getDailyProductionSummary } from "./application/getDailyProductionSummary";
 import { getHeatingOutlook } from "./application/getHeatingOutlook";
 import { playDanger, playGameOver } from "./presentation/audio/sound";
 import { ActionsPanel } from "./presentation/components/ActionsPanel";
+import { AdvisorStrip } from "./presentation/components/AdvisorStrip";
 import { DecisionModal } from "./presentation/components/DecisionModal";
 import { EventLog } from "./presentation/components/EventLog";
 import { ExpeditionPanel } from "./presentation/components/ExpeditionPanel";
@@ -77,6 +79,8 @@ function App() {
   // re-renders App.
   const production = useMemo(() => (state ? getDailyProductionSummary(state) : null), [state]);
   const heating = useMemo(() => (state ? getHeatingOutlook(state) : null), [state]);
+  // What needs the player now — ranked once per day, never inside the map.
+  const advisor = useMemo(() => (state && production && heating ? getAdvisorOutlook(state, production, heating) : null), [state, production, heating]);
 
   // MapPanel is memoized (it's the heaviest thing on screen), so its props
   // have to keep stable identities across a tick or the memo buys nothing.
@@ -230,6 +234,7 @@ function App() {
         debt={state.debt}
         activePanel={openModal}
         reportsBadgeCount={unseenEventCount}
+        advisor={advisor && <AdvisorStrip outlook={advisor} onOpenPanel={openPanel} />}
         onPause={pause}
         onResume={resume}
         onSetSpeed={setSpeed}

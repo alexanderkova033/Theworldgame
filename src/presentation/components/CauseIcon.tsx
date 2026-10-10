@@ -1,4 +1,5 @@
 // Small glyphs for the causes in the monthly report (see presentation/causes.tsx).
+import type { ProjectType } from "../../domain/construction/types";
 import { BuildingIcon } from "./BuildingIcon";
 
 export function FlameIcon({ size = 22 }: { size?: number }) {
@@ -43,7 +44,7 @@ export function SettlingIcon({ size }: { size: number }) {
   );
 }
 
-export function BuildingGlyph({ type, size }: { type: "farm" | "granary" | "housing"; size: number }) {
+export function BuildingGlyph({ type, size }: { type: ProjectType; size: number }) {
   return (
     <svg viewBox="-10 -10 20 20" width={size} height={size} aria-hidden="true">
       <BuildingIcon type={type} x={0} y={1.5} size={6.5} />

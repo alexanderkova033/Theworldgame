@@ -256,6 +256,20 @@ export const FOREIGN_MEDDLING_CHANCE_PER_MONTH = 0.2;
 export const FOREIGN_MEDDLING_SUPPORT = 3; // support swing from one push
 export const FRIENDLY_GOVERNMENT_INCOME_BONUS = 0.05; // +5% income per neighbor ruled by the party you backed
 
+// --- Advisor strip (see application/getAdvisorOutlook.ts) ---
+// When a problem is worth flagging under the top bar, and when it turns red.
+export const ADVISOR_MAX_ALERTS = 3;
+export const ADVISOR_COAL_CRITICAL_DAYS = 10; // winter: fuel left for fewer days than this
+export const ADVISOR_WINTER_PREP_DAYS = 60; // start warning about winter fuel this long before winter...
+export const ADVISOR_WINTER_PREP_CRITICAL_DAYS = 15; // ...and urgently this close to it
+export const ADVISOR_FOOD_WARN_DAYS = 60; // food runs out within this many days at today's net
+export const ADVISOR_FOOD_CRITICAL_DAYS = 20;
+export const ADVISOR_FARM_STAFF_CRITICAL = 0.85; // farms below this share staffed
+export const ADVISOR_HOMELESS_WARN_SHARE = 0.01;
+export const ADVISOR_HOMELESS_CRITICAL_SHARE = 0.05;
+export const ADVISOR_ELECTION_WARN_MONTHS = 6; // losing with an election this close
+export const ADVISOR_ELECTION_CRITICAL_MONTHS = 2;
+
 // --- Monthly reports (see domain/ledger) ---
 // What counts as a big monthly change for each number, so the report's
 // headline can weigh crowns against food against support points.

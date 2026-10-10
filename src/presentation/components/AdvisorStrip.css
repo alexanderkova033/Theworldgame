@@ -1,0 +1,101 @@
+/* A slim third row of the top bar: chips, not sentences. */
+.advisor-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0.3rem 1.25rem;
+  background: rgba(0, 0, 0, 0.32);
+  border-top: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+.advisor-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 1.85rem;
+  padding: 0.2rem 0.7rem 0.2rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--panel-bg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+.advisor-chip svg {
+  display: block;
+}
+
+.advisor-chip__icon {
+  display: inline-flex;
+}
+
+.advisor-chip.is-warning {
+  border-color: var(--warning);
+}
+
+.advisor-chip.is-critical {
+  border-color: var(--danger);
+  color: #ffd9d0;
+  background: linear-gradient(180deg, #4a1a12, #2a0e08);
+}
+
+/* The "!" carries "urgent" without relying on the red. */
+.advisor-chip__alert {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #1a0d06;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  text-shadow: none;
+}
+
+.advisor-chip.is-objective {
+  border-color: var(--accent);
+  border-style: dashed;
+}
+
+.advisor-chip__flag {
+  display: inline-flex;
+  color: var(--accent-active);
+}
+
+.advisor-chip__ticks {
+  display: inline-flex;
+  gap: 0.2rem;
+  margin-left: 0.2rem;
+}
+
+.advisor-chip__tick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 2px solid var(--text-muted);
+}
+
+.advisor-chip__tick.is-done {
+  border-color: var(--success);
+  background: var(--success);
+  color: #0f2414;
+}
+
+.advisor-chip__tick svg {
+  width: 0.7rem;
+  height: 0.7rem;
+}
+
+.advisor-chip.is-quiet {
+  border: 2px solid var(--success);
+  color: var(--success);
+  cursor: default;
+}
