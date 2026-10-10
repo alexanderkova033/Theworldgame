@@ -1,4 +1,38 @@
+import {
+  DECISION_COAL_SHORTAGE_DAYS,
+  DECISION_GLUT_FOOD_DAYS,
+  DECISION_HOUSING_PROTEST_SHARE,
+  DECISION_STRIKE_FACTORY_STAFFING,
+  DECISION_STRIKE_UNEMPLOYMENT,
+  DECISION_UNREST_STABILITY,
+  FOOD_PER_POP_CONSUMPTION,
+} from "../constants";
+import { getSeason } from "../country/calendar";
+import type { GameState } from "../country/types";
+import { getHeatingDemand, getHomelessShare, getHousingCapacity } from "../housing/housingRules";
+import { getLabourSituation } from "../labour/labourRules";
+import { isDebtDangerous } from "../loans/loanRules";
 import type { DecisionDefinition } from "./types";
+
+// What the situational decisions below react to.
+function coalRunningOut(state: GameState): boolean {
+  if (getSeason(state.date) !== "winter") return false;
+  const demand = getHeatingDemand(state, "winter");
+  return demand > 0 && (state.resources.coal + state.resources.wood) / demand < DECISION_COAL_SHORTAGE_DAYS;
+}
+
+function manyHomeless(state: GameState): boolean {
+  return getHomelessShare(state.stats.population, getHousingCapacity(state)) >= DECISION_HOUSING_PROTEST_SHARE;
+}
+
+function workersRestless(state: GameState): boolean {
+  const labour = getLabourSituation(state);
+  return (state.factoryCount > 0 && labour.industryStaffing < DECISION_STRIKE_FACTORY_STAFFING) || labour.unemploymentShare >= DECISION_STRIKE_UNEMPLOYMENT;
+}
+
+function harvestGlut(state: GameState): boolean {
+  return getSeason(state.date) === "autumn" && state.stats.food > state.stats.population * FOOD_PER_POP_CONSUMPTION * DECISION_GLUT_FOOD_DAYS;
+}
 
 // Short, two-option decisions. Kept deliberately terse — a title, one
 // prompt sentence, and two option labels short enough to read at a glance —
@@ -187,6 +221,75 @@ export const DECISIONS: DecisionDefinition[] = [
     options: [
       { id: "allow", label: "Allow longer shifts", effects: { treasuryDelta: 1000, popularityDelta: -6, stabilityDelta: -3 } },
       { id: "forbid", label: "Protect the workers", effects: { treasuryDelta: -200, popularityDelta: 5 } },
+    ],
+  },
+  // --- Situational: these only come up when the country is actually in
+  // that trouble (see each condition), and win the monthly pick over the
+  // generic ones above when they can (see pickDecision).
+  {
+    id: "coal-shortage",
+    title: "Coal Runs Low",
+    prompt: "Families are burning their furniture to stay warm.",
+    icon: "coal",
+    condition: coalRunningOut,
+    options: [
+      { id: "subsidise", label: "Subsidise fuel for the poor", effects: { treasuryDelta: -900, stabilityDelta: 4, popularityDelta: 2 } },
+      { id: "forests", label: "Open the state forests", effects: { popularityDelta: 3, stabilityDelta: -5 } },
+    ],
+  },
+  {
+    id: "housing-protest",
+    title: "Housing Protest",
+    prompt: "Families without a roof are camping outside parliament.",
+    icon: "housing",
+    condition: manyHomeless,
+    options: [
+      { id: "shelters", label: "Fund emergency shelters", effects: { treasuryDelta: -800, popularityDelta: 5, stabilityDelta: 2 } },
+      { id: "clear", label: "Clear the camps", effects: { stabilityDelta: 3, popularityDelta: -7, populationDelta: -200 } },
+    ],
+  },
+  {
+    id: "general-strike",
+    title: "General Strike",
+    prompt: "Unions threaten to shut every works in the country over jobs and hours.",
+    icon: "industry",
+    condition: workersRestless,
+    options: [
+      { id: "concede", label: "Meet their demands", effects: { treasuryDelta: -700, popularityDelta: 5 } },
+      { id: "break", label: "Break the strike", effects: { stabilityDelta: -5, popularityDelta: -4, treasuryDelta: 300 } },
+    ],
+  },
+  {
+    id: "harvest-glut",
+    title: "Harvest Glut",
+    prompt: "The granaries overflow and grain prices collapse for the farmers.",
+    icon: "food",
+    condition: harvestGlut,
+    options: [
+      { id: "buy", label: "Buy the surplus at fair prices", effects: { treasuryDelta: -600, popularityDelta: 5 } },
+      { id: "export", label: "Ship it abroad cheaply", effects: { treasuryDelta: 800, foodDelta: -40000, popularityDelta: -3 } },
+    ],
+  },
+  {
+    id: "debt-crisis",
+    title: "Creditors at the Door",
+    prompt: "The banks want money back before they roll over your loans.",
+    icon: "treasury",
+    condition: (state) => isDebtDangerous(state.debt),
+    options: [
+      { id: "sell", label: "Sell state assets", effects: { treasuryDelta: 2000, popularityDelta: -7 } },
+      { id: "levy", label: "Raise an emergency levy", effects: { treasuryDelta: 1300, stabilityDelta: -5 } },
+    ],
+  },
+  {
+    id: "street-unrest",
+    title: "Unrest in the Streets",
+    prompt: "Angry crowds fill the squares of the capital.",
+    icon: "stability",
+    condition: (state) => state.stats.stability < DECISION_UNREST_STABILITY,
+    options: [
+      { id: "reform", label: "Promise reforms", effects: { treasuryDelta: -600, popularityDelta: 4, stabilityDelta: 3 } },
+      { id: "curfew", label: "Declare a curfew", effects: { stabilityDelta: 7, popularityDelta: -7 } },
     ],
   },
 ];

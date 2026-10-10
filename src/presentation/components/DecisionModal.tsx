@@ -3,7 +3,9 @@ import type { GameState } from "../../domain/country/types";
 import { getDecision } from "../../domain/decisions/decisionRules";
 import type { DecisionEffects } from "../../domain/decisions/types";
 import { playConfirm } from "../audio/sound";
+import { BuildingGlyph } from "./CauseIcon";
 import { Modal } from "./Modal";
+import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
 interface DecisionModalProps {
@@ -36,6 +38,20 @@ function formatEffects(effects: DecisionEffects): string {
   return parts.join(" · ");
 }
 
+// A decision's icon: a stat, or for the situational ones about coal and
+// homes, that resource or building.
+export function DecisionIcon({ icon, size }: { icon: string; size: number }) {
+  if (icon === "coal") {
+    return (
+      <svg viewBox="-10 -10 20 20" width={size} height={size} aria-hidden="true">
+        <ResourceIcon type="coal" size={8} />
+      </svg>
+    );
+  }
+  if (icon === "housing") return <BuildingGlyph type="housing" size={size} />;
+  return <StatIcon type={icon as StatIconType} size={size} />;
+}
+
 // A decision that popped up on its own (see simulateDay.ts step 14) rather
 // than one the player opened — rendered unconditionally in App.tsx and
 // self-guards on there being nothing pending, so it's a no-op most ticks.
@@ -48,7 +64,7 @@ export function DecisionModal({ state, onResolve, onDismiss }: DecisionModalProp
     <Modal title={decision.title} onClose={onDismiss}>
       <div className="decision-modal">
         <div className="decision-modal__icon">
-          <StatIcon type={decision.icon as StatIconType} size={36} />
+          <DecisionIcon icon={decision.icon} size={36} />
         </div>
         <p className="decision-modal__prompt">{decision.prompt}</p>
         <div className="decision-modal__options">

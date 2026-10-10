@@ -216,6 +216,17 @@ export const RANDOM_EVENT_INTERVAL_MONTHS = 6; // a random event fires every N i
 // --- Political decisions (see domain/decisions) ---
 export const DECISION_CHANCE_PER_MONTH = 0.18; // rolled on the first day of every month; ~1 every 5-6 months on average
 export const MAX_DECISION_HISTORY = 20;
+// Situational decisions (see decisionData.ts): the country's own troubles
+// come knocking more often than chance does, and win the pick when they can.
+export const SITUATIONAL_DECISION_CHANCE_PER_MONTH = 0.4; // the monthly roll, while any situational decision applies
+export const SITUATIONAL_DECISION_SHARE = 0.75; // share of picks that go to an applicable situational decision
+export const DECISION_REPEAT_COOLDOWN = 3; // a decision doesn't come back while it's among the last few answered
+export const DECISION_COAL_SHORTAGE_DAYS = 15; // winter: coal and wood last fewer days than this
+export const DECISION_HOUSING_PROTEST_SHARE = 0.05; // homeless share
+export const DECISION_STRIKE_FACTORY_STAFFING = 0.75; // factories this short of hands...
+export const DECISION_STRIKE_UNEMPLOYMENT = 0.1; // ...or this many workers without a job
+export const DECISION_GLUT_FOOD_DAYS = 45; // autumn: food in store for more days of eating than this
+export const DECISION_UNREST_STABILITY = 30;
 
 // --- Politics: parties & elections ---
 export const ELECTION_INTERVAL_MONTHS = 24; // a general election is held every N in-game months

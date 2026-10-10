@@ -37,6 +37,7 @@ import type { Ideology } from "../../domain/parties/types";
 import type { PopularityDriver } from "../../domain/politics/politicsRules";
 import { calculateDailyPoliticalPower } from "../../domain/politics/politicsRules";
 import { playConfirm } from "../audio/sound";
+import { DecisionIcon } from "./DecisionModal";
 import { ForeignAffairs } from "./ForeignAffairs";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import type { PanelKey } from "./TopBar";
@@ -430,7 +431,7 @@ function ElectionsView({ state, dispatch, onOpenPanel }: { state: GameState; dis
               if (!decision || !option) return null;
               return (
                 <li key={entry.id}>
-                  <StatIcon type={decision.icon as StatIconType} size={20} />
+                  <DecisionIcon icon={decision.icon} size={20} />
                   <span className="politics-decisions__text">
                     <strong>{decision.title}</strong> — {option.label}
                   </span>

@@ -7,7 +7,7 @@ import { advanceProject, isProjectComplete } from "../domain/construction/constr
 import { advanceDay, getSeason, isEveryNMonths, isFirstDayOfMonth } from "../domain/country/calendar";
 import { generateId } from "../domain/country/id";
 import type { CountryStats, DailyDelta, GameEvent, GameState } from "../domain/country/types";
-import { pickRandomDecision } from "../domain/decisions/decisionRules";
+import { getDecisionChance, pickDecision } from "../domain/decisions/decisionRules";
 import { getDiplomacyIncomeMultiplier, isFriendly, rollForeignMeddling, updateForeignPolitics } from "../domain/diplomacy/diplomacyRules";
 import { getIslandExpeditionData } from "../domain/expeditions/expeditionData";
 import { advanceExpedition, isExpeditionComplete } from "../domain/expeditions/expeditionRules";
@@ -56,7 +56,6 @@ import { applyProjectCompletion } from "./applyProjectCompletion";
 import { generateMonthlyReport } from "./generateMonthlyReport";
 import { pickRivalCampaignMove } from "./rivalCampaignMove";
 import {
-  DECISION_CHANCE_PER_MONTH,
   ELECTIONS_TO_WIN_GAME,
   ELECTION_INTERVAL_MONTHS,
   ELECTION_WIN_STABILITY_BONUS,
@@ -595,13 +594,16 @@ export function simulateDay(state: GameState): GameState {
     }
   }
 
-  // 14. A political decision, unpredictably — see domain/decisions. Rolled
-  // on the first day of every month; skipped if one is already pending or
-  // the game just ended some other way. Popping up pauses the game (see the
-  // isPaused line below) until the player picks an option.
+  // 14. A political decision — see domain/decisions. Rolled on the first
+  // day of every month, more often while the country is in a trouble that
+  // has its own decision (a coal shortage, a housing protest...), judged on
+  // the country as it stands at the end of today. Skipped if one is already
+  // pending or the game just ended some other way. Popping up pauses the
+  // game (see the isPaused line below) until the player picks an option.
   let pendingDecisionId = working.pendingDecisionId;
-  if (!isGameOver && !pendingDecisionId && isFirstDayOfMonth(date) && Math.random() < DECISION_CHANCE_PER_MONTH) {
-    pendingDecisionId = pickRandomDecision().id;
+  if (!isGameOver && !pendingDecisionId && isFirstDayOfMonth(date)) {
+    const today: GameState = { ...working, date, debt, stats: finalStats, resources: finalResources };
+    if (Math.random() < getDecisionChance(today)) pendingDecisionId = pickDecision(today).id;
   }
 
   // The new month's own changes open its history, after the report on the
