@@ -1,8 +1,8 @@
 // Housing: every working home shelters PEOPLE_PER_HOME people (more with
 // housing research). Population doesn't stop at that number — it keeps
 // growing, more slowly — and the share of people without a roof drags on
-// stability every day. In winter every working home also burns fuel: wood
-// first, then ore burned as coal; whatever can't be heated is a second,
+// stability every day. In winter every working home also burns coal, then
+// firewood once the coal is gone; whatever can't be heated is a second,
 // harsher penalty (people freezing).
 import {
   HEATING_FUEL_PER_HOME,
@@ -46,21 +46,21 @@ export function getHeatingDemand(state: GameState, season: Season): number {
 
 export interface HeatingResult {
   resources: ResourceBundle;
+  coalBurned: number;
   woodBurned: number;
-  oreBurned: number;
   unheatedShare: number; // 0..1 of the demand that couldn't be met
 }
 
-// Wood first; ore burned as coal once the wood is gone.
+// Coal first; firewood once the coal is gone.
 export function burnHeatingFuel(resources: ResourceBundle, demand: number): HeatingResult {
-  if (demand <= 0) return { resources, woodBurned: 0, oreBurned: 0, unheatedShare: 0 };
-  const woodBurned = Math.min(resources.wood, demand);
-  const oreBurned = Math.min(resources.ore, demand - woodBurned);
-  const shortfall = demand - woodBurned - oreBurned;
+  if (demand <= 0) return { resources, coalBurned: 0, woodBurned: 0, unheatedShare: 0 };
+  const coalBurned = Math.min(resources.coal, demand);
+  const woodBurned = Math.min(resources.wood, demand - coalBurned);
+  const shortfall = demand - coalBurned - woodBurned;
   return {
-    resources: { ...resources, wood: resources.wood - woodBurned, ore: resources.ore - oreBurned },
+    resources: { ...resources, coal: resources.coal - coalBurned, wood: resources.wood - woodBurned },
+    coalBurned,
     woodBurned,
-    oreBurned,
     unheatedShare: shortfall / demand,
   };
 }

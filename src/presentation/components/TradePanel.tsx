@@ -32,6 +32,7 @@ const QUANTITIES = [1, 5, 10];
 const LABELS: Record<MarketGood, string> = {
   wood: "Wood",
   ore: "Ore",
+  coal: "Coal",
   grain: "Grain",
   fish: "Fish",
   food: "Food",

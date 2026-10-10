@@ -1,10 +1,11 @@
-// Pictorial glyphs for the four raw resources — parametric by (x, y, size)
+// Pictorial glyphs for the raw resources — parametric by (x, y, size)
 // so the same shapes work small on the map and large in the panels.
 import type { ResourceType } from "../../domain/resources/types";
 
 export const RESOURCE_COLORS: Record<ResourceType, string> = {
   wood: "#a9773f",
   ore: "#8c93a0",
+  coal: "#4a4c55",
   grain: "#d9b64e",
   fish: "#5b9bd6",
 };
@@ -64,6 +65,17 @@ export function ResourceIcon({ type, x = 0, y = 0, size = 7 }: ResourceIconProps
             <ellipse cx={x - size * 0.5} cy={y - size} rx={size * 0.14} ry={size * 0.22} transform={`rotate(-35 ${x - size * 0.5} ${y - size})`} />
             <ellipse cx={x + size * 0.5} cy={y - size} rx={size * 0.14} ry={size * 0.22} transform={`rotate(35 ${x + size * 0.5} ${y - size})`} />
           </g>
+        </g>
+      );
+    case "coal":
+      // A heap of coal: three dark, faceted lumps with a cold sheen.
+      return (
+        <g stroke="#a4aab8" strokeWidth={size * 0.07} strokeLinejoin="round">
+          <polygon points={`${x - size},${y + size * 0.6} ${x - size * 0.75},${y - size * 0.1} ${x - size * 0.15},${y - size * 0.3} ${x + size * 0.1},${y + size * 0.6}`} fill={color} />
+          <polygon points={`${x - size * 0.05},${y + size * 0.6} ${x + size * 0.2},${y - size * 0.25} ${x + size * 0.8},${y - size * 0.05} ${x + size},${y + size * 0.6}`} fill="#5a5d68" />
+          <polygon points={`${x - size * 0.55},${y - size * 0.15} ${x - size * 0.3},${y - size * 0.85} ${x + size * 0.3},${y - size * 0.75} ${x + size * 0.45},${y - size * 0.1}`} fill="#3c3e46" />
+          <line x1={x - size * 0.35} y1={y - size * 0.65} x2={x + size * 0.15} y2={y - size * 0.6} stroke="#dfe4ee" strokeWidth={size * 0.08} opacity={0.6} />
+          <line x1={x + size * 0.3} y1={y + size * 0.05} x2={x + size * 0.65} y2={y + size * 0.1} stroke="#dfe4ee" strokeWidth={size * 0.07} opacity={0.5} />
         </g>
       );
     case "fish":

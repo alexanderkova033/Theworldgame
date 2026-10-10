@@ -96,6 +96,7 @@ export function startNewGame(nationId: string, partyId: string): GameState {
     resources: {
       wood: STARTING_RESOURCE_STOCK,
       ore: STARTING_RESOURCE_STOCK,
+      coal: STARTING_RESOURCE_STOCK,
       grain: STARTING_RESOURCE_STOCK,
       fish: STARTING_RESOURCE_STOCK,
     },

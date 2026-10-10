@@ -25,6 +25,7 @@ interface ResourceTickerProps {
 const RESOURCE_LABELS: Record<string, string> = {
   wood: "Wood",
   ore: "Ore",
+  coal: "Coal",
   grain: "Grain",
   fish: "Fish",
 };
@@ -106,11 +107,11 @@ export function ResourceTicker({ stats, resources, production, heating, debt }: 
           <span>{formatCompact(debt)} owed</span>
         </div>
       )}
-      {/* All winter: how many days the fuel in stock keeps homes warm. */}
+      {/* All winter: how many days the coal and wood in stock keep homes warm. */}
       {heating.isWinter && heating.fuelPerDay > 0 && (
         <div
           className={`resource-ticker__chip ${heating.daysOfFuel < 10 ? "is-danger" : ""}`}
-          title={`Heating: ${Math.floor(heating.fuel)} wood + ore in stock, homes burn ${heating.fuelPerDay.toFixed(1)} a day — lasts ${Math.floor(heating.daysOfFuel)} days`}
+          title={`Heating: ${Math.floor(heating.fuel)} coal + wood in stock, homes burn ${heating.fuelPerDay.toFixed(1)} a day — lasts ${Math.floor(heating.daysOfFuel)} days`}
         >
           <svg width={20} height={20} viewBox="-10 -10 20 20" aria-hidden="true">
             <path d="M0,-9 C4,-4 7,-1 7,3 C7,7 4,9.5 0,9.5 C-4,9.5 -7,7 -7,3 C-7,-1 -3,-2 -2,-6 C-1,-3 1,-2 0,-9 Z" fill="#e0703a" />

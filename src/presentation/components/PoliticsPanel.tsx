@@ -172,7 +172,7 @@ function Drivers({ state, dispatch, onOpenPanel }: { state: GameState; dispatch:
     ),
     food: go("trade", "Buy food"),
     homes: go("economy", "Build"),
-    heat: go("trade", "Buy fuel"),
+    heat: go("trade", "Buy coal"),
     jobs: go("economy", "Jobs"),
     order: go("economy", "Police"),
   };

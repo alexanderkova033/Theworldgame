@@ -26,7 +26,7 @@ import type { Nation } from "../nations/types";
 import { MAP_GEOMETRY } from "../provinces/provinceData";
 import type { MarketGood, MarketState } from "./types";
 
-export const MARKET_GOODS: MarketGood[] = ["wood", "ore", "grain", "fish", "food"];
+export const MARKET_GOODS: MarketGood[] = ["wood", "ore", "coal", "grain", "fish", "food"];
 
 interface GoodSpec {
   basePrice: number; // mid price per unit when the market holds exactly its normal stock
@@ -39,6 +39,7 @@ interface GoodSpec {
 export const GOOD_SPECS: Record<MarketGood, GoodSpec> = {
   wood: { basePrice: 25, equilibrium: 120, batch: 5 },
   ore: { basePrice: 28, equilibrium: 120, batch: 5 },
+  coal: { basePrice: 22, equilibrium: 120, batch: 5 },
   grain: { basePrice: 20, equilibrium: 120, batch: 5 },
   fish: { basePrice: 20, equilibrium: 120, batch: 5 },
   // Food moves in cartloads and is cheap per unit — but the market only
@@ -50,7 +51,7 @@ export const GOOD_SPECS: Record<MarketGood, GoodSpec> = {
 
 // How the season shifts each good's normal stock (1 = unchanged).
 const SEASONAL_SUPPLY: Record<Season, Partial<Record<MarketGood, number>>> = {
-  winter: { food: 0.6, grain: 0.5, wood: 0.75 },
+  winter: { food: 0.6, grain: 0.5, coal: 0.55, wood: 0.75 },
   spring: { food: 0.9 },
   summer: { fish: 1.2 },
   autumn: { food: 1.4, grain: 1.4 },

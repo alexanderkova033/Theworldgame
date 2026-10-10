@@ -106,3 +106,10 @@
   font-size: 0.85rem;
   white-space: nowrap;
 }
+
+.people-meter__fuel > span[title] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  cursor: help;
+}

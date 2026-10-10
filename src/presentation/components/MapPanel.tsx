@@ -25,6 +25,7 @@ const TERRAIN_LABELS: Record<Terrain, string> = {
 const RESOURCE_LABELS: Record<string, string> = {
   wood: "Wood",
   ore: "Ore",
+  coal: "Coal",
   grain: "Grain",
   fish: "Fish",
 };
@@ -881,6 +882,7 @@ export const MapPanel = memo(function MapPanel({
                   </svg>
                   <span>
                     {TERRAIN_LABELS[province.terrain]} — produces {RESOURCE_LABELS[resourceType]}
+                    {province.terrain === "hills" ? " and Coal" : ""}
                   </span>
                 </div>
                 {[...counts.entries()].map(([type, count]) => (

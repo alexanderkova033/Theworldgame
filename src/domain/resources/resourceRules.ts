@@ -1,4 +1,4 @@
-import { RESOURCE_PER_PROVINCE } from "../constants";
+import { COAL_PER_HILLS_PROVINCE, RESOURCE_PER_PROVINCE } from "../constants";
 import type { Season } from "../country/calendar";
 import type { Terrain } from "../provinces/types";
 import type { ResourceBundle, ResourceType } from "./types";
@@ -14,17 +14,19 @@ export const RESOURCE_BY_TERRAIN: Record<Terrain, ResourceType> = {
 };
 
 export function emptyResourceBundle(): ResourceBundle {
-  return { wood: 0, ore: 0, grain: 0, fish: 0 };
+  return { wood: 0, ore: 0, coal: 0, grain: 0, fish: 0 };
 }
 
 // One day's production across every owned province, given their terrains.
-// Grain fields lie fallow in winter; forests, mines and the sea don't stop.
+// Hills mine coal alongside their ore. Grain fields lie fallow in winter;
+// forests, mines and the sea don't stop.
 export function calculateDailyProduction(terrains: Terrain[], season: Season): ResourceBundle {
   const production = emptyResourceBundle();
   for (const terrain of terrains) {
     const type = RESOURCE_BY_TERRAIN[terrain];
     if (type === "grain" && season === "winter") continue;
     production[type] += RESOURCE_PER_PROVINCE;
+    if (terrain === "hills") production.coal += COAL_PER_HILLS_PROVINCE;
   }
   return production;
 }
@@ -33,6 +35,7 @@ export function addResources(a: ResourceBundle, b: ResourceBundle): ResourceBund
   return {
     wood: a.wood + b.wood,
     ore: a.ore + b.ore,
+    coal: a.coal + b.coal,
     grain: a.grain + b.grain,
     fish: a.fish + b.fish,
   };

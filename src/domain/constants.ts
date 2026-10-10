@@ -14,6 +14,7 @@ export const MAX_FARMS_PER_PROVINCE = 3;
 
 // --- Resources (Catan-inspired: terrain produces, provinces trade) ---
 export const RESOURCE_PER_PROVINCE = 0.6; // units of matching resource produced per owned province per day
+export const COAL_PER_HILLS_PROVINCE = 0.4; // hills mine coal as well as ore — the fuel homes burn in winter
 export const STARTING_RESOURCE_STOCK = 0; // nothing in the stores — every log and ingot has to be produced or bought
 export const FARM_WOOD_COST = 15; // lumber for the barn
 export const FACTORY_ORE_COST = 22; // metal for machinery
@@ -100,9 +101,9 @@ export const HOMELESS_STABILITY_PENALTY = 1.5; // per day, times the share of pe
 export const HOMELESS_PENALTY_CAP = 0.4; // ...capped
 export const HOMELESS_GROWTH_FACTOR = 0.5; // past capacity, population still grows, at half the usual rate
 
-// Heating: every working home burns fuel each winter day — wood, or ore
-// burned as coal once the wood runs out. Run out of both and people freeze.
-export const HEATING_FUEL_PER_HOME = 0.12; // units per home per winter day
+// Heating: every working home burns coal each winter day — or firewood
+// once the coal runs out. Run out of both and people freeze.
+export const HEATING_FUEL_PER_HOME = 0.12; // coal (or wood) per home per winter day
 export const COLD_STABILITY_PENALTY = 0.5; // per winter day, times the unheated share of homes
 export const COLD_POPULATION_DECLINE_RATE = 0.0004; // per winter day, times the unheated share
 

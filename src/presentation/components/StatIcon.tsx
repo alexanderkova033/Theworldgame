@@ -52,21 +52,16 @@ function renderShape(type: StatIconType) {
         </g>
       );
     case "food":
-      // A wheat sheaf with visible grain heads and a tied band.
+      // A loaf of bread — baked food, so it can't be mistaken for raw grain
+      // (a wheat ear, see ResourceIcon).
       return (
         <g>
-          <g stroke="#c9a03f" strokeWidth={1.3} strokeLinecap="round" fill="none">
-            <line x1={0} y1={-8.5} x2={0} y2={7} />
-            <line x1={0} y1={-6} x2={-4.3} y2={-8} />
-            <line x1={0} y1={-6} x2={4.3} y2={-8} />
-            <line x1={0} y1={-1.8} x2={-5} y2={-4.3} />
-            <line x1={0} y1={-1.8} x2={5} y2={-4.3} />
-            <line x1={-3.8} y1={6} x2={3.8} y2={6} strokeWidth={1.6} />
-          </g>
-          <g fill="#e6c56a" stroke="#93731f" strokeWidth={0.3}>
-            <ellipse cx={0} cy={-9} rx={1.3} ry={2.1} />
-            <ellipse cx={-4.6} cy={-8.6} rx={1.1} ry={1.8} transform="rotate(-35 -4.6 -8.6)" />
-            <ellipse cx={4.6} cy={-8.6} rx={1.1} ry={1.8} transform="rotate(35 4.6 -8.6)" />
+          <path d="M-8.5,4.5 C-9.5,-1 -6,-6.5 0,-6.5 C6,-6.5 9.5,-1 8.5,4.5 C8.2,6.4 6.8,7 5,7 L-5,7 C-6.8,7 -8.2,6.4 -8.5,4.5 Z" fill="#c98a3c" stroke="#7a4a1a" strokeWidth={0.7} />
+          <path d="M-6.5,-1.5 C-5,-4.6 -2,-5.6 0.5,-5.6" fill="none" stroke="#f0c98a" strokeWidth={1.1} strokeLinecap="round" opacity={0.8} />
+          <g stroke="#7a4a1a" strokeWidth={1.1} strokeLinecap="round">
+            <line x1={-4.8} y1={1.8} x2={-2.6} y2={-2.4} />
+            <line x1={-1.1} y1={2.2} x2={1.1} y2={-2.2} />
+            <line x1={2.6} y1={2.4} x2={4.8} y2={-1.8} />
           </g>
         </g>
       );

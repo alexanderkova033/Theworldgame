@@ -222,18 +222,17 @@ export function simulateDay(state: GameState): GameState {
     fish: producedResources.fish - fishConsumed,
   };
 
-  // 2b'. Winter heating: every working home burns fuel — wood first, then
-  // ore as coal. Whatever can't be heated hits stability (step 7) and
+  // 2b'. Winter heating: every working home burns coal, then firewood. Whatever can't be heated hits stability (step 7) and
   // population (step 9). Logged once when the fuel first runs out, and again
   // at the start of each winter month it's still out.
   const heating = burnHeatingFuel(processedResources, getHeatingDemand(working, season));
   const resources = heating.resources;
-  const wasHeatedYesterday = working.resources.wood + working.resources.ore >= getHeatingDemand(working, season);
+  const wasHeatedYesterday = working.resources.coal + working.resources.wood >= getHeatingDemand(working, season);
   if (heating.unheatedShare > 0 && (wasHeatedYesterday || isFirstDayOfMonth(state.date))) {
     events.unshift({
       id: generateId("event"),
       date: state.date,
-      message: "No wood or ore left to heat homes — people are freezing. Buy fuel on the Trade tab.",
+      message: "No coal or wood left to heat homes — people are freezing. Buy coal on the Trade tab.",
       severity: "danger",
     });
   }

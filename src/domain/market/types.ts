@@ -1,6 +1,6 @@
 import type { ResourceType } from "../resources/types";
 
-// Everything the continental market deals in: the four raw resources, and
+// Everything the continental market deals in: the raw resources, and
 // food (see marketRules.ts).
 export type MarketGood = ResourceType | "food";
 

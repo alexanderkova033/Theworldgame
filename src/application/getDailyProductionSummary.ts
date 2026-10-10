@@ -73,13 +73,13 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
     (provinceId) => MAP_GEOMETRY.provinces.find((p) => p.id === provinceId)!.terrain,
   );
   const rawProduction = calculateDailyProduction(ownedTerrains, season);
-  // Today's net, after winter heating is burned (wood first, then ore).
+  // Today's net, after winter heating is burned (coal first, then wood).
   const heatingFuel = getHeatingDemand(state, season);
   const heating = burnHeatingFuel(
-    { ...state.resources, wood: state.resources.wood + rawProduction.wood, ore: state.resources.ore + rawProduction.ore },
+    { ...state.resources, coal: state.resources.coal + rawProduction.coal, wood: state.resources.wood + rawProduction.wood },
     heatingFuel,
   );
-  const resourceProduction = { ...rawProduction, wood: rawProduction.wood - heating.woodBurned, ore: rawProduction.ore - heating.oreBurned };
+  const resourceProduction = { ...rawProduction, coal: rawProduction.coal - heating.coalBurned, wood: rawProduction.wood - heating.woodBurned };
 
   const researchRates = getResearchRates(state);
 

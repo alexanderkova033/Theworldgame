@@ -107,21 +107,25 @@ export function PeoplePanel({ state, production, onOpenPanel }: PeoplePanelProps
 
       <Meter
         icon={<FlameIcon />}
-        label={heating.isWinter ? "Heating" : "Winter fuel"}
+        label={heating.isWinter ? "Heating" : "Coal for winter"}
         fill={heating.fuelNeeded > 0 ? heating.fuel / heating.fuelNeeded : 1}
         danger={fuelShort && (heating.isWinter || heating.daysUntilWinter < 60)}
         value={heating.isWinter ? `${Number.isFinite(heating.daysOfFuel) ? Math.floor(heating.daysOfFuel) : "∞"} days` : `${Math.floor(heating.fuel)} / ${Math.ceil(heating.fuelNeeded)}`}
         detail={
           <span className="people-meter__fuel">
-            <svg viewBox="-10 -10 20 20" width={14} height={14}>
-              <ResourceIcon type="wood" size={8} />
-            </svg>
-            {Math.floor(state.resources.wood)}
+            <span title="Coal — burned first">
+              <svg viewBox="-10 -10 20 20" width={14} height={14}>
+                <ResourceIcon type="coal" size={8} />
+              </svg>
+              {Math.floor(state.resources.coal)}
+            </span>
             <span>+</span>
-            <svg viewBox="-10 -10 20 20" width={14} height={14}>
-              <ResourceIcon type="ore" size={8} />
-            </svg>
-            {Math.floor(state.resources.ore)}
+            <span title="Firewood — burned once the coal runs out">
+              <svg viewBox="-10 -10 20 20" width={14} height={14}>
+                <ResourceIcon type="wood" size={8} />
+              </svg>
+              {Math.floor(state.resources.wood)}
+            </span>
             <span className="people-meter__fuel-rate">
               {heating.fuelPerDay.toFixed(1)}/day in winter{heating.isWinter ? "" : ` · in ${heating.daysUntilWinter} days`}
             </span>
@@ -130,7 +134,7 @@ export function PeoplePanel({ state, production, onOpenPanel }: PeoplePanelProps
         action={
           fuelShort ? (
             <button type="button" className="btn-primary people-meter__action" onClick={() => onOpenPanel("trade")}>
-              Buy fuel
+              Buy coal
             </button>
           ) : undefined
         }
