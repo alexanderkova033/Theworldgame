@@ -196,6 +196,7 @@ interface MapLayersProps {
   selectedIslandId: string | null;
   foreignRulers: Record<string, string>;
   provinceStatus: Record<string, ProvinceStatus>;
+  mapMode: MapMode;
   onProvinceClick: (provinceId: string) => void;
   onProvinceKeySelect: (provinceId: string) => void;
   onIslandClick: (islandId: string) => void;
@@ -228,6 +229,46 @@ function StatusFlag({ kind, level, cx, cy }: { kind: "homes" | "jobs"; level: "w
         </>
       )}
     </g>
+  );
+}
+
+type MapMode = "political" | "homes" | "jobs" | "unrest";
+type ModeLevel = "ok" | "warn" | "alert";
+
+const MODE_COLORS: Record<ModeLevel, string> = { ok: "#6fae7c", warn: "#d9a24f", alert: "#ea6a52" };
+
+// Each mode's three steps, and what they mean.
+const MAP_MODES: Array<{ key: MapMode; label: string; levels?: Record<ModeLevel, string> }> = [
+  { key: "political", label: "Nations" },
+  { key: "homes", label: "Homes", levels: { ok: "Room to grow", warn: "Nearly full", alert: "People without a home" } },
+  { key: "jobs", label: "Jobs", levels: { ok: "Work for all", warn: "Jobs unfilled", alert: "Out of work" } },
+  { key: "unrest", label: "Unrest", levels: { ok: "Calm", warn: "Discontent", alert: "Strikes or riots" } },
+];
+
+function getModeLevel(mode: MapMode, status: ProvinceStatus): ModeLevel {
+  if (mode === "homes") return status.homes === "over" ? "alert" : status.homes === "full" ? "warn" : "ok";
+  if (mode === "jobs") return status.jobs === "jobless" ? "alert" : status.jobs === "short" ? "warn" : "ok";
+  return status.stage === "calm" ? "ok" : status.stage === "discontent" ? "warn" : "alert";
+}
+
+// A legend swatch drawing the same colour and hatching as the map.
+function ModeSwatch({ level }: { level: ModeLevel }) {
+  return (
+    <svg width={18} height={14} viewBox="0 0 18 14" aria-hidden="true">
+      <rect x={0.5} y={0.5} width={17} height={13} rx={2} fill={MODE_COLORS[level]} stroke="#1a0d06" />
+      {level !== "ok" && (
+        <g stroke="#1a0d06" strokeWidth={1.6} opacity={0.6}>
+          <line x1={-2} y1={14} x2={12} y2={0} />
+          <line x1={6} y1={14} x2={20} y2={0} />
+          {level === "alert" && (
+            <>
+              <line x1={-2} y1={0} x2={12} y2={14} />
+              <line x1={6} y1={0} x2={20} y2={14} />
+            </>
+          )}
+        </g>
+      )}
+    </svg>
   );
 }
 
@@ -278,6 +319,7 @@ const MapLayers = memo(function MapLayers({
   selectedIslandId,
   foreignRulers,
   provinceStatus,
+  mapMode,
   onProvinceClick,
   onProvinceKeySelect,
   onIslandClick,
@@ -331,6 +373,15 @@ const MapLayers = memo(function MapLayers({
       <pattern id="terrain-coast" width={40} height={22} patternUnits="userSpaceOnUse">
         <path d="M0,11 Q10,3 20,11 T40,11" stroke="#d8f2fa" strokeWidth={1.6} fill="none" opacity={0.35} strokeLinecap="round" />
         <path d="M0,18 Q10,12 20,18 T40,18" stroke="#d8f2fa" strokeWidth={1.2} fill="none" opacity={0.2} strokeLinecap="round" />
+      </pattern>
+      {/* Map-mode hatching: diagonal lines for "tight", a cross-hatch for
+          "trouble" — so the shading never relies on colour alone. */}
+      <pattern id="mode-hatch-warn" width={14} height={14} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <line x1={0} y1={0} x2={0} y2={14} stroke="#1a0d06" strokeWidth={2.4} opacity={0.5} />
+      </pattern>
+      <pattern id="mode-hatch-alert" width={11} height={11} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <line x1={0} y1={0} x2={0} y2={11} stroke="#1a0d06" strokeWidth={2.2} opacity={0.55} />
+        <line x1={0} y1={0} x2={11} y2={0} stroke="#1a0d06" strokeWidth={2.2} opacity={0.55} />
       </pattern>
       <pattern id="terrain-plains" width={50} height={50} patternUnits="userSpaceOnUse">
         <path d="M10,30 Q7,22 5,14" stroke="#c9a23a" strokeWidth={1} fill="none" strokeLinecap="round" opacity={0.65} />
@@ -492,6 +543,25 @@ const MapLayers = memo(function MapLayers({
           />
         );
       })}
+
+      {/* Map modes (HOI4-style): your provinces shaded by how their homes,
+          jobs or order stand — three steps, each with its own hatching.
+          Driven by the same coarse province status as the info-bar flags,
+          so this only redraws when a province tips from one step to the
+          next. No filters, just fills. */}
+      {mapMode !== "political" &&
+        provinces.map((province) => {
+          const status = provinceStatus[province.id];
+          // Other nations fade back, so their colours can't be read as a step.
+          if (!status) return <path key={`${province.id}-mode`} d={province.path} fill="#0b0704" opacity={0.55} pointerEvents="none" />;
+          const level = getModeLevel(mapMode, status);
+          return (
+            <g key={`${province.id}-mode`} pointerEvents="none">
+              <path d={province.path} fill={MODE_COLORS[level]} opacity={0.6} />
+              {level !== "ok" && <path d={province.path} fill={`url(#mode-hatch-${level})`} />}
+            </g>
+          );
+        })}
     </g>
 
     {/* National frontiers: a band in each nation's (brightened) color
@@ -760,6 +830,8 @@ export const MapPanel = memo(function MapPanel({
   // Until the legend has been opened once this session, the button points
   // at it with a "!" whenever a province flag is on the map.
   const [legendSeen, setLegendSeen] = useState(false);
+  // Which map mode is showing — a view choice, not simulation truth.
+  const [mapMode, setMapMode] = useState<MapMode>("political");
   const flagCounts = useMemo(() => countFlags(provinceStatus), [provinceStatus]);
   const anyFlags = Object.values(flagCounts).some((n) => n > 0);
 
@@ -936,6 +1008,7 @@ export const MapPanel = memo(function MapPanel({
             selectedIslandId={selectedIslandId}
             foreignRulers={foreignRulers}
             provinceStatus={provinceStatus}
+            mapMode={mapMode}
             onProvinceClick={handleProvinceClick}
             onProvinceKeySelect={onSelectProvince}
             onIslandClick={handleIslandClick}
@@ -1064,6 +1137,37 @@ export const MapPanel = memo(function MapPanel({
             </span>
           )}
         </button>
+
+        {/* Map modes: a segmented switch, with the active mode's key. */}
+        <div className="map-panel__modes">
+          <div className="map-panel__mode-switch" role="group" aria-label="Map mode">
+            {MAP_MODES.map((mode) => (
+              <button
+                key={mode.key}
+                type="button"
+                className={mapMode === mode.key ? "is-active" : ""}
+                aria-pressed={mapMode === mode.key}
+                onClick={() => setMapMode(mode.key)}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
+          {(() => {
+            const levels = MAP_MODES.find((m) => m.key === mapMode)?.levels;
+            if (!levels) return null;
+            return (
+              <div className="map-panel__mode-key">
+                {(["ok", "warn", "alert"] as ModeLevel[]).map((level) => (
+                  <span key={level}>
+                    <ModeSwatch level={level} />
+                    {levels[level]}
+                  </span>
+                ))}
+              </div>
+            );
+          })()}
+        </div>
 
         {showLegend && (
           <div className="map-panel__legend">
