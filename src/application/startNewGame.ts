@@ -6,12 +6,13 @@ import { STARTING_RESOURCE_STOCK } from "../domain/constants";
 import { getSeason } from "../domain/country/calendar";
 import { createForeignPolitics } from "../domain/diplomacy/diplomacyRules";
 import { createMarket } from "../domain/market/marketRules";
-import { buildStartingHomes } from "../domain/housing/housingRules";
+import { buildStartingHomes, getHousingCapacityByProvince } from "../domain/housing/housingRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getNation } from "../domain/nations/nationRules";
 import type { GameState } from "../domain/country/types";
 import { FACTIONS } from "../domain/parties/factionData";
 import type { Ideology } from "../domain/parties/types";
+import { createProvinceStates } from "../domain/provinces/provincePopulation";
 import type { PlacedBuilding } from "../domain/provinces/types";
 import { emptyLedger } from "../domain/ledger/ledgerRules";
 import { emptyWorkforce } from "../domain/workforce/workforceRules";
@@ -59,6 +60,15 @@ function buildStartingBuildings(nationId: string, farmCount: number): PlacedBuil
 }
 
 export function startNewGame(nationId: string, partyId: string): GameState {
+  const state = createInitialState(nationId, partyId);
+  // Everyone starts out living where the homes are.
+  return {
+    ...state,
+    provinces: createProvinceStates(getNation(nationId).provinceIds, state.stats.population, getHousingCapacityByProvince(state), state.stats.stability),
+  };
+}
+
+function createInitialState(nationId: string, partyId: string): GameState {
   const nation = getNation(nationId);
   const farmCount = EXTRA_STARTING_FARM_NATIONS.includes(nationId) ? 4 : 3;
   const factoryCount = 1;
@@ -106,6 +116,7 @@ export function startNewGame(nationId: string, partyId: string): GameState {
 
     projects: [],
     placedBuildings: [...buildStartingBuildings(nationId, farmCount), ...buildStartingHomes(nationId, STARTING_POPULATION)],
+    provinces: {},
     enactedLawIds: [],
     enactedResearchIds: [],
     researchOutcomes: {},

@@ -13,7 +13,7 @@ import {
 } from "../constants";
 import type { Season } from "../country/calendar";
 import type { GameState } from "../country/types";
-import { getWorkingCounts } from "../maintenance/maintenanceRules";
+import { getWorkingCounts, isWorking } from "../maintenance/maintenanceRules";
 import { getNation } from "../nations/nationRules";
 import type { PlacedBuilding } from "../provinces/types";
 import { getActiveResearchEffects } from "../research/researchRules";
@@ -25,6 +25,17 @@ export function getPeoplePerHome(state: GameState): number {
 
 export function getHousingCapacity(state: GameState): number {
   return getWorkingCounts(state).homes * getPeoplePerHome(state);
+}
+
+// The same homes, province by province (every owned province listed, even
+// one with none). Sums to getHousingCapacity.
+export function getHousingCapacityByProvince(state: GameState): Record<string, number> {
+  const perHome = getPeoplePerHome(state);
+  const capacity: Record<string, number> = Object.fromEntries(getNation(state.nationId).provinceIds.map((id) => [id, 0]));
+  for (const building of state.placedBuildings) {
+    if (building.type === "housing" && isWorking(building) && building.provinceId in capacity) capacity[building.provinceId] += perHome;
+  }
+  return capacity;
 }
 
 // 0..1 — the share of the population without a home.

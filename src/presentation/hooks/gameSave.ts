@@ -10,7 +10,9 @@ import type { Ideology } from "../../domain/parties/types";
 import { getSeason } from "../../domain/country/calendar";
 import { createForeignPolitics } from "../../domain/diplomacy/diplomacyRules";
 import { createMarket } from "../../domain/market/marketRules";
-import { buildStartingHomes } from "../../domain/housing/housingRules";
+import { buildStartingHomes, getHousingCapacityByProvince } from "../../domain/housing/housingRules";
+import { getNation } from "../../domain/nations/nationRules";
+import { createProvinceStates } from "../../domain/provinces/provincePopulation";
 import { getResearchNode } from "../../domain/research/researchRules";
 import type { ResearchCategory } from "../../domain/research/types";
 import { emptyLedger } from "../../domain/ledger/ledgerRules";
@@ -62,7 +64,7 @@ function hydrateMarket(raw: Partial<GameState>): GameState["market"] {
 
 function hydrateGameState(raw: Partial<GameState>): GameState {
   const stats = hydrateStats(raw.stats);
-  return {
+  const state: GameState = {
     nationId: raw.nationId!,
     partyId: raw.partyId!,
     electionsWon: raw.electionsWon ?? 0,
@@ -108,7 +110,13 @@ function hydrateGameState(raw: Partial<GameState>): GameState {
     pendingLedger: raw.pendingLedger ?? emptyLedger(),
     pendingDecisionId: raw.pendingDecisionId ?? null,
     decisionHistory: raw.decisionHistory ?? [],
+    provinces: raw.provinces ?? {},
   };
+  // Saves from before provinces had people: everyone lives where the homes are.
+  if (!raw.provinces) {
+    state.provinces = createProvinceStates(getNation(state.nationId).provinceIds, stats.population, getHousingCapacityByProvince(state), stats.stability);
+  }
+  return state;
 }
 
 export const SAVE_SLOT_COUNT = 3;

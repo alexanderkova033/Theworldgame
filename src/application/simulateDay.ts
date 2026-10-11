@@ -19,6 +19,7 @@ import {
   getHomelessShare,
   getHomelessStabilityPenalty,
   getHousingCapacity,
+  getHousingCapacityByProvince,
 } from "../domain/housing/housingRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getLabourSituation } from "../domain/labour/labourRules";
@@ -31,6 +32,7 @@ import { getNationEffects } from "../domain/nations/nationEffects";
 import { getNation } from "../domain/nations/nationRules";
 import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../domain/parties/factionRules";
 import { getParty } from "../domain/parties/partyRules";
+import { reconcileProvinces } from "../domain/provinces/provincePopulation";
 import { getProvinceName } from "../domain/provinces/provinceRules";
 import {
   calculateDailyPoliticalPower,
@@ -674,6 +676,8 @@ export function simulateDay(state: GameState): GameState {
     debt,
     events: events.slice(0, MAX_EVENT_LOG_LENGTH),
     history: finalHistory,
+    // The provinces always add up to the national population.
+    provinces: reconcileProvinces(working.provinces, nation.provinceIds, finalStats.population, getHousingCapacityByProvince(working), finalStats.stability),
     pendingLedger: emptyLedger(),
     monthlyReports,
   };

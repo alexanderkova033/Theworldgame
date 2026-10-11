@@ -7,7 +7,7 @@ import type { MarketState } from "../market/types";
 import type { Expedition } from "../expeditions/types";
 import type { Ledger } from "../ledger/types";
 import type { Ideology } from "../parties/types";
-import type { PlacedBuilding } from "../provinces/types";
+import type { PlacedBuilding, ProvinceState } from "../provinces/types";
 import type { ResearchCategory, ResearchOutcomeTier } from "../research/types";
 import type { ResourceBundle } from "../resources/types";
 import type { UnrestStage } from "../unrest/types";
@@ -100,6 +100,7 @@ export interface GameState {
 
   projects: Project[];
   placedBuildings: PlacedBuilding[]; // completed buildings, for the map
+  provinces: Record<string, ProvinceState>; // the player's provinces as places people live; their populations sum to stats.population — see domain/provinces
   enactedLawIds: string[]; // permanent policy choices, one per category — see domain/laws
   enactedResearchIds: string[]; // permanent tech choices, one per category — see domain/research
   researchOutcomes: Record<string, ResearchOutcomeTier>; // rolled once per enacted node — see researchRules.ts
