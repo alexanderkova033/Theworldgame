@@ -3,7 +3,8 @@
 // and its jobless — and climbs the same unrest stages as the nation (see
 // domain/unrest). So one neglected province can strike or riot while the
 // country at large is calm; a province rioting on its own wrecks its own
-// buildings and drags national stability down (see simulateDay.ts).
+// buildings and drags national stability down — more so the more people
+// live there (see simulateDay.ts).
 import {
   PROVINCE_HOMELESS_UNREST,
   PROVINCE_JOBLESS_UNREST,
@@ -57,8 +58,31 @@ export function getProvincesRiotingAlone(provinces: Record<string, ProvinceState
     .map(([id]) => id);
 }
 
+// Where today's riot damage can land: anywhere when the whole country
+// riots; otherwise one of the provinces rioting alone (picked by how many
+// live there), at a chance scaled by their share of the people — so a few
+// rioting provinces never wreck more than a national riot would.
+export function pickRiotZone(
+  provinces: Record<string, ProvinceState>,
+  nationalStage: UnrestStage,
+): { provinceId: string | undefined; chanceScale: number } | null {
+  if (nationalStage === "riots") return { provinceId: undefined, chanceScale: 1 };
+  const alone = getProvincesRiotingAlone(provinces, nationalStage);
+  const total = Object.values(provinces).reduce((sum, p) => sum + p.population, 0);
+  const rioting = alone.reduce((sum, id) => sum + provinces[id].population, 0);
+  if (rioting <= 0 || total <= 0) return null;
+  let pick = Math.random() * rioting;
+  const provinceId = alone.find((id) => (pick -= provinces[id].population) < 0) ?? alone[alone.length - 1];
+  return { provinceId, chanceScale: rioting / total };
+}
+
+// Weighted by how many people live there: an emptied province's riots
+// barely register nationally.
 export function getProvinceRiotDrag(provinces: Record<string, ProvinceState>, nationalStage: UnrestStage): number {
-  return getProvincesRiotingAlone(provinces, nationalStage).length * PROVINCE_RIOT_STABILITY_DRAG;
+  const total = Object.values(provinces).reduce((sum, p) => sum + p.population, 0);
+  if (total <= 0) return 0;
+  const rioting = getProvincesRiotingAlone(provinces, nationalStage).reduce((sum, id) => sum + provinces[id].population, 0);
+  return (rioting / total) * PROVINCE_RIOT_STABILITY_DRAG;
 }
 
 // Worse than the nation as a whole — worth telling the player about.

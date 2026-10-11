@@ -77,7 +77,7 @@ export const JOBS_PER_BUILDING = { farm: 450, factory: 1000, granary: 300, canne
 export const UNEMPLOYMENT_POPULARITY_PENALTY = 30; // times the share of workers without a job
 // Each province is its own job market; of the people left without work in
 // theirs, this share will travel to fill open jobs in another.
-export const COMMUTE_SHARE = 0.5;
+export const COMMUTE_SHARE = 0.7;
 
 // --- Migration between provinces (see domain/provinces/provinceMigration.ts) ---
 export const MIGRATION_SHARE_PER_DAY = 0.02; // of a province's homeless (and of its jobless households) who move each day
@@ -88,8 +88,11 @@ export const MIGRATION_UNREST_PULL = { calm: 1, discontent: 0.75, strikes: 0.4, 
 // A province's own order heads for national stability minus its own troubles.
 export const PROVINCE_STABILITY_DRIFT = 0.05; // share of the gap to that target closed each day
 export const PROVINCE_HOMELESS_UNREST = 80; // points off, times the province's homeless share
-export const PROVINCE_JOBLESS_UNREST = 60; // points off, times the province's jobless share
-export const PROVINCE_RIOT_STABILITY_DRAG = 0.2; // national stability lost per day for each province rioting on its own
+export const PROVINCE_JOBLESS_UNREST = 35; // points off, times the province's jobless share (gentler: some provinces start with no jobs at all)
+// National stability lost per day to provinces rioting on their own, times
+// their share of the population — a province with 1/6 of the people costs
+// 0.2 a day, an emptied one next to nothing.
+export const PROVINCE_RIOT_STABILITY_DRAG = 1.2;
 
 // When the map flags a province (see application/getProvinceOverview.ts).
 export const PROVINCE_FLAG_HOMELESS_SHARE = 0.01; // homes: over — this share or more without a home (red "!")

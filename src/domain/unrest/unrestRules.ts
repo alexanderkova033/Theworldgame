@@ -90,8 +90,9 @@ export function rollRiotDamage(
   placedBuildings: PlacedBuilding[],
   police: number,
   provinceId?: string,
+  chanceScale = 1, // less than 1 when only part of the country riots
 ): { placedBuildings: PlacedBuilding[]; wrecked: PlacedBuilding | null } {
-  if (Math.random() >= getRiotDamageChance(police)) return { placedBuildings, wrecked: null };
+  if (Math.random() >= getRiotDamageChance(police) * chanceScale) return { placedBuildings, wrecked: null };
   const targets = placedBuildings.filter((b) => isWorking(b) && (provinceId === undefined || b.provinceId === provinceId));
   if (targets.length === 0) return { placedBuildings, wrecked: null };
   const target = targets[Math.floor(Math.random() * targets.length)];

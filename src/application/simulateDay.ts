@@ -33,7 +33,7 @@ import { getNation } from "../domain/nations/nationRules";
 import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../domain/parties/factionRules";
 import { getParty } from "../domain/parties/partyRules";
 import { applyMigration, planMigration } from "../domain/provinces/provinceMigration";
-import { getProvinceRiotDrag, getProvincesRiotingAlone, isLocalTrouble, updateProvinceOrder } from "../domain/provinces/provinceOrder";
+import { getProvinceRiotDrag, isLocalTrouble, pickRiotZone, updateProvinceOrder } from "../domain/provinces/provinceOrder";
 import { getProvincePopulationTotal, reconcileProvinces, syncProvinces } from "../domain/provinces/provincePopulation";
 import { getProvinceName } from "../domain/provinces/provinceRules";
 import {
@@ -242,9 +242,9 @@ export function simulateDay(state: GameState): GameState {
   working = { ...working, placedBuildings: breakdowns.placedBuildings };
   // Rioting mobs wreck buildings too, through the same repair system —
   // anywhere when the whole country riots, or in a province rioting alone.
-  const riotZones = working.unrestStage === "riots" ? [undefined] : getProvincesRiotingAlone(working.provinces, working.unrestStage);
-  for (const zone of riotZones) {
-    const riot = rollRiotDamage(working.placedBuildings, working.workforce.police, zone);
+  const riotZone = pickRiotZone(working.provinces, working.unrestStage);
+  if (riotZone) {
+    const riot = rollRiotDamage(working.placedBuildings, working.workforce.police, riotZone.provinceId, riotZone.chanceScale);
     if (riot.wrecked) {
       working = { ...working, placedBuildings: riot.placedBuildings };
       events.unshift({
