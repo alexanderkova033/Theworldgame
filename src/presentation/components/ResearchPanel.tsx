@@ -27,7 +27,7 @@ import { getScientistCap, getTotalScientists, RESEARCH_CATEGORIES } from "../../
 import { playConfirm } from "../audio/sound";
 import { CostChips, StatChip } from "./CostChips";
 import { StatIcon } from "./StatIcon";
-import { InspectorHeader, StatusLine, SynergyLine, TreeColumns, type TreeNodeStatus } from "./TechTree";
+import { InspectorHeader, StatusLine, SynergyLine, TreeColumns, TreeTabs, type TreeNodeStatus, type TreeTab } from "./TechTree";
 import { AREA_ICONS, AREA_LABELS } from "../researchAreas";
 import { ScientistStepper } from "./WorkforcePanel";
 
@@ -167,8 +167,34 @@ function ResearchInspector({ node, state, status, onFocus, onStop }: ResearchIns
   );
 }
 
+// Each area's tab: how far its current direction is, or a "!" when it's
+// idle with something to research.
+function areaTab(state: GameState, category: ResearchCategory): TreeTab {
+  const focusId = state.researchFocus[category];
+  const focusNode = focusId ? getResearchNode(focusId) : undefined;
+  const done = RESEARCH_NODES.filter((n) => n.category === category && state.enactedResearchIds.includes(n.id)).length;
+  const total = new Set(RESEARCH_NODES.filter((n) => n.category === category).map((n) => n.tier)).size;
+  const idle = !focusNode && RESEARCH_NODES.some((n) => n.category === category && getResearchNodeStatus(state, n) === "available");
+  return {
+    key: category,
+    label: AREA_LABELS[category],
+    icon: AREA_ICONS[category],
+    alert: idle,
+    badge: focusNode ? `${Math.round(getResearchProgressRatio(state, focusNode) * 100)}%` : `${done}/${total}`,
+    hint: focusNode
+      ? `Researching ${focusNode.name} — ${Math.round(getResearchProgressRatio(state, focusNode) * 100)}% done`
+      : idle
+        ? "Idle — no direction chosen, so no progress"
+        : `${done} of ${total} tiers done`,
+  };
+}
+
 export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // One area at a time; opens on the first one sitting idle, if any.
+  const [area, setArea] = useState<ResearchCategory>(
+    () => RESEARCH_CATEGORIES.find((c) => areaTab(state, c).alert) ?? RESEARCH_CATEGORIES[0],
+  );
   const inspectorRef = useRef<HTMLDivElement>(null);
 
   const selectedNode = selectedId ? (RESEARCH_NODES.find((n) => n.id === selectedId) ?? null) : null;
@@ -198,8 +224,18 @@ export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
         </span>
       </div>
 
+      <TreeTabs
+        label="Research areas"
+        tabs={RESEARCH_CATEGORIES.map((c) => areaTab(state, c))}
+        active={area}
+        onSelect={(key) => {
+          setArea(key as ResearchCategory);
+          setSelectedId(null);
+        }}
+      />
+
       <TreeColumns
-        categories={CATEGORIES}
+        categories={CATEGORIES.filter((c) => c.key === area)}
         nodesFor={nodesFor}
         getStatus={(node) => getResearchNodeStatus(state, node)}
         getProgress={(node) => getResearchProgressRatio(state, node)}

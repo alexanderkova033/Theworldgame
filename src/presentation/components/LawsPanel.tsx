@@ -8,6 +8,7 @@ import {
   canAffordLawEnactCost,
   getEffectivePassChance,
   getLawDays,
+  getLawNode,
   getLawNodeStatus,
   getRivalStance,
   getQuotaProgress,
@@ -20,7 +21,7 @@ import { getSynergiesForLaw } from "../../domain/synergy/synergyRules";
 import { playConfirm } from "../audio/sound";
 import { CostChips, DaysChip, ResourceChip, StatChip, TreasuryChip } from "./CostChips";
 import { StatIcon } from "./StatIcon";
-import { InspectorHeader, StatusLine, SynergyLine, TreeBank, TreeColumns, VoteRow, WorkInProgress, type TreeNodeStatus } from "./TechTree";
+import { InspectorHeader, StatusLine, SynergyLine, TreeBank, TreeColumns, TreeTabs, VoteRow, WorkInProgress, type TreeNodeStatus } from "./TechTree";
 
 interface LawsPanelProps {
   state: GameState;
@@ -146,6 +147,10 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
 export function LawsPanel({ state, dispatch }: LawsPanelProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [armedId, setArmedId] = useState<string | null>(null);
+  // One category at a time; opens on the one whose law is being drafted.
+  const [category, setCategory] = useState<LawCategory>(
+    () => (state.activeLaw ? getLawNode(state.activeLaw.nodeId)?.category : undefined) ?? "labor",
+  );
   const inspectorRef = useRef<HTMLDivElement>(null);
 
   const selectedNode = selectedId ? (LAW_NODES.find((n) => n.id === selectedId) ?? null) : null;
@@ -172,8 +177,31 @@ export function LawsPanel({ state, dispatch }: LawsPanelProps) {
         )}
       </div>
 
+      <TreeTabs
+        label="Law categories"
+        tabs={CATEGORIES.map((c) => {
+          const nodes = LAW_NODES.filter((n) => n.category === c.key);
+          const tiers = new Set(nodes.map((n) => n.tier)).size;
+          const done = nodes.filter((n) => state.enactedLawIds.includes(n.id)).length;
+          const drafting = state.activeLaw ? getLawNode(state.activeLaw.nodeId) : undefined;
+          const isDrafting = drafting?.category === c.key;
+          return {
+            key: c.key,
+            label: c.label,
+            icon: c.icon,
+            badge: isDrafting ? `⧗ ${done}/${tiers}` : `${done}/${tiers}`,
+            hint: isDrafting ? `${drafting!.name} is being drafted · ${done} of ${tiers} tiers passed` : `${done} of ${tiers} tiers passed`,
+          };
+        })}
+        active={category}
+        onSelect={(key) => {
+          setCategory(key as LawCategory);
+          setSelectedId(null);
+        }}
+      />
+
       <TreeColumns
-        categories={CATEGORIES}
+        categories={CATEGORIES.filter((c) => c.key === category)}
         nodesFor={nodesFor}
         getStatus={(node) => getLawNodeStatus(state, node)}
         getProgress={(node) =>

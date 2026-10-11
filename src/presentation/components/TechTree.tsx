@@ -173,6 +173,44 @@ interface TreeColumnsProps<N extends TreeNode> {
 
 // The tree proper: one column per category, one row per tier, forks drawn
 // between them.
+export interface TreeTab {
+  key: string;
+  label: string;
+  icon: StatIconType;
+  badge?: ReactNode; // a short status: progress, a count, a mark
+  alert?: boolean; // needs attention — drawn with a "!" as well as colour
+  hint?: string; // tooltip
+}
+
+// HOI4-style branch tabs above a tree: one branch at a time, each tab
+// carrying a glance of how that branch stands.
+export function TreeTabs({ tabs, active, onSelect, label }: { tabs: TreeTab[]; active: string; onSelect: (key: string) => void; label: string }) {
+  return (
+    <div className="tree-tabs" role="tablist" aria-label={label}>
+      {tabs.map((tab) => (
+        <button
+          key={tab.key}
+          type="button"
+          role="tab"
+          aria-selected={tab.key === active}
+          className={`tree-tab ${tab.key === active ? "is-active" : ""} ${tab.alert ? "is-alert" : ""}`}
+          title={tab.hint}
+          onClick={() => onSelect(tab.key)}
+        >
+          <StatIcon type={tab.icon} size={22} />
+          <span className="tree-tab__label">{tab.label}</span>
+          {tab.alert && (
+            <span className="tree-tab__alert" aria-label="Needs attention">
+              !
+            </span>
+          )}
+          {tab.badge !== undefined && <span className="tree-tab__badge">{tab.badge}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function TreeColumns<N extends TreeNode>({
   categories,
   nodesFor,
@@ -183,7 +221,7 @@ export function TreeColumns<N extends TreeNode>({
   onSelect,
 }: TreeColumnsProps<N>) {
   return (
-    <div className="law-tree__columns">
+    <div className={`law-tree__columns ${categories.length === 1 ? "law-tree__columns--single" : ""}`}>
       {categories.map((category) => (
         <div className="law-tree__column" key={category.key}>
           <h3 className="law-tree__column-title">
