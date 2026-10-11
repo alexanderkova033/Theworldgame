@@ -43,7 +43,7 @@
      Modal.css uses this so a tall panel's header can never end up rendered
      underneath the top bar (which deliberately sits above Modal's overlay
      in z-index, so its tabs stay clickable while a panel is open). */
-  --top-bar-height: 12rem;
+  --top-bar-height: 10.8rem;
 
   font-family: var(--font-body);
   line-height: 1.5;

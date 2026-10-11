@@ -323,6 +323,10 @@ export const ADVISOR_HOMELESS_CRITICAL_SHARE = 0.05;
 export const ADVISOR_ELECTION_WARN_MONTHS = 6; // losing with an election this close
 export const ADVISOR_ELECTION_CRITICAL_MONTHS = 2;
 
+// Top bar: a building material comes out of the Stores list when the
+// projects drawing on it would use it up within this many days.
+export const MATERIAL_SHORTAGE_DAYS = 5;
+
 // --- Monthly reports (see domain/ledger) ---
 // What counts as a big monthly change for each number, so the report's
 // headline can weigh crowns against food against support points.

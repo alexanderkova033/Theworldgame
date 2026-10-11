@@ -4,6 +4,7 @@ import { formatDate, type Season } from "../../domain/country/calendar";
 import type { CountryStats, GameDate, GameSpeed } from "../../domain/country/types";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import type { HeatingOutlook } from "../../application/getHeatingOutlook";
+import type { MaterialShortage } from "../../application/getMaterialShortages";
 import type { ResourceBundle } from "../../domain/resources/types";
 import type { UnrestStage } from "../../domain/unrest/types";
 import { isMuted, setMuted } from "../audio/sound";
@@ -135,6 +136,7 @@ interface TopBarProps {
   stats: CountryStats;
   unrestStage: UnrestStage;
   resources: ResourceBundle;
+  shortages: MaterialShortage[]; // building materials about to run out — see getMaterialShortages
   production: DailyProductionSummary;
   heating: HeatingOutlook;
   debt: number;
@@ -157,6 +159,7 @@ export function TopBar({
   stats,
   unrestStage,
   resources,
+  shortages,
   production,
   heating,
   debt,
@@ -178,7 +181,15 @@ export function TopBar({
           <span className="top-bar__party">{partyName}</span>
         </span>
 
-        <ResourceTicker stats={stats} unrestStage={unrestStage} resources={resources} production={production} debt={debt} heating={heating} />
+        <ResourceTicker
+          stats={stats}
+          unrestStage={unrestStage}
+          resources={resources}
+          production={production}
+          debt={debt}
+          heating={heating}
+          shortages={shortages}
+        />
 
         <div className="top-bar__spacer" />
 

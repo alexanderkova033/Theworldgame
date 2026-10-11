@@ -78,3 +78,69 @@
   border-color: var(--warning);
   color: var(--warning);
 }
+
+/* Tight but not yet critical (discontent, winter coal running low). */
+.resource-ticker__chip.is-warn {
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+/* --- Stores: every resource behind one button --- */
+.resource-ticker__stores {
+  position: relative;
+}
+
+button.resource-ticker__stores-button {
+  min-height: 1.9rem;
+  cursor: pointer;
+  text-shadow: none;
+}
+
+button.resource-ticker__stores-button.is-open,
+button.resource-ticker__stores-button:hover:not(:disabled) {
+  border-color: var(--accent-active);
+}
+
+.resource-ticker__stores-panel {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  z-index: 70;
+  min-width: 15rem;
+  padding: 0.6rem 0.7rem;
+  border: 2px solid var(--panel-border);
+  border-radius: 8px;
+  background:
+    var(--grain) 0 0/90px 90px repeat,
+    linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg)) no-repeat;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
+}
+
+.resource-ticker__store-row {
+  display: grid;
+  grid-template-columns: 20px 1fr auto auto auto;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.2rem 0;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.resource-ticker__store-row svg {
+  display: block;
+}
+
+.resource-ticker__store-row.is-short {
+  color: var(--danger);
+}
+
+.resource-ticker__store-amount {
+  font-weight: 700;
+  text-align: right;
+}
+
+.resource-ticker__store-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}

@@ -11,6 +11,7 @@ import { dismissDecision, resolveDecision } from "./application/actions";
 import { getAdvisorOutlook } from "./application/getAdvisorOutlook";
 import { getDailyProductionSummary } from "./application/getDailyProductionSummary";
 import { getHeatingOutlook } from "./application/getHeatingOutlook";
+import { getMaterialShortages } from "./application/getMaterialShortages";
 import { getProvinceOverview, getProvinceStatus, type ProvinceStatus } from "./application/getProvinceOverview";
 import { playDanger, playGameOver } from "./presentation/audio/sound";
 import { ActionsPanel } from "./presentation/components/ActionsPanel";
@@ -80,6 +81,7 @@ function App() {
   // re-renders App.
   const production = useMemo(() => (state ? getDailyProductionSummary(state) : null), [state]);
   const heating = useMemo(() => (state ? getHeatingOutlook(state) : null), [state]);
+  const shortages = useMemo(() => (state && production ? getMaterialShortages(state, production) : []), [state, production]);
   // What needs the player now — ranked once per day, never inside the map.
   const advisor = useMemo(() => (state && production && heating ? getAdvisorOutlook(state, production, heating) : null), [state, production, heating]);
 
@@ -247,6 +249,7 @@ function App() {
         stats={state.stats}
         unrestStage={state.unrestStage}
         resources={state.resources}
+        shortages={shortages}
         production={dailyProduction}
         heating={heating!}
         debt={state.debt}
