@@ -110,6 +110,7 @@ function hydrateGameState(raw: Partial<GameState>): GameState {
     pendingLedger: raw.pendingLedger ?? emptyLedger(),
     lastDayLedger: raw.lastDayLedger ?? emptyLedger(),
     pendingDecisionId: raw.pendingDecisionId ?? null,
+    dangerPauses: raw.dangerPauses ?? [],
     decisionHistory: raw.decisionHistory ?? [],
     provinces: raw.provinces ?? {},
   };

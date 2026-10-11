@@ -99,10 +99,11 @@ function ToastIcon({ kind }: { kind: Toast["kind"] }) {
 interface ToastsProps {
   events: GameEvent[];
   monthlyReports: MonthlyReport[];
+  isPaused: boolean;
   onOpenPanel: OpenPanel;
 }
 
-export function Toasts({ events, monthlyReports, onOpenPanel }: ToastsProps) {
+export function Toasts({ events, monthlyReports, isPaused, onOpenPanel }: ToastsProps) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   // What's already been seen, so loading a save or re-rendering never pops
   // up the whole history — only what arrives from here on.
@@ -131,13 +132,14 @@ export function Toasts({ events, monthlyReports, onOpenPanel }: ToastsProps) {
     });
   }, [events, monthlyReports]);
 
-  // Each toast leaves on its own after a while.
+  // Each toast leaves on its own after a while — but not while the game is
+  // paused: time has stopped, and a pause's reason mustn't vanish unread.
   useEffect(() => {
-    if (toasts.length === 0) return;
+    if (toasts.length === 0 || isPaused) return;
     const oldest = toasts[toasts.length - 1];
     const id = setTimeout(() => setToasts((current) => current.filter((t) => t.key !== oldest.key)), TOAST_LIFETIME_MS);
     return () => clearTimeout(id);
-  }, [toasts]);
+  }, [toasts, isPaused]);
 
   if (toasts.length === 0) return null;
 

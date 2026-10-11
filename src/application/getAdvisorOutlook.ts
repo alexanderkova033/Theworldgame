@@ -100,6 +100,10 @@ const ALERT_ORDER: AdvisorAlertKind[] = ["unrest", "provinceUnrest", "coal", "fo
 
 const UNREST_NAMES: Record<GameState["unrestStage"], string> = { calm: "Calm", discontent: "Discontent", strikes: "Strikes", riots: "Riots" };
 
+function dayCount(days: number): string {
+  return `${days} day${days === 1 ? "" : "s"}`;
+}
+
 function percent(share: number): string {
   return `${Math.round(share * 100)}%`;
 }
@@ -145,7 +149,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     const days = Math.floor(heating.daysOfFuel);
     alerts.push({
       kind: "coal",
-      text: `Coal: ${days} days`,
+      text: `Coal: ${dayCount(days)}`,
       detail: `Coal and firewood last ${days} more days, with ${heating.winterDaysLeft} days of winter left. Buy coal on the Trade tab.`,
       critical: days < ADVISOR_COAL_CRITICAL_DAYS,
       panel: "trade",
@@ -166,7 +170,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     const critical = days < ADVISOR_FOOD_CRITICAL_DAYS;
     alerts.push({
       kind: "food",
-      text: `Food: ${days} days`,
+      text: `Food: ${dayCount(days)}`,
       detail: `If nothing changes, the food runs out around ${formatDate(date)}. Build farms, or buy food on the Trade tab.`,
       critical,
       panel: critical ? "trade" : "economy",
@@ -179,7 +183,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     const { days, date } = forecasts.treasury;
     alerts.push({
       kind: "money",
-      text: `Money: ${days} days`,
+      text: `Money: ${dayCount(days)}`,
       detail: `If nothing changes, the treasury runs dry around ${formatDate(date)}: raise taxes, cut staff, pause building, or take a loan.`,
       critical: days < ADVISOR_MONEY_CRITICAL_DAYS,
       panel: "economy",

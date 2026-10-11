@@ -19,6 +19,12 @@ export interface EventKind {
 }
 
 const RULES: Array<{ test: RegExp; kind: EventKind }> = [
+  // A danger pause (see application/playDay.ts): the button goes to the fix.
+  { test: /^Paused: .*food has run out/, kind: { kind: "paused", plural: "pauses", foldable: false, action: { label: "Buy food", panel: "trade" } } },
+  { test: /^Paused: .*out of coal/, kind: { kind: "paused", plural: "pauses", foldable: false, action: { label: "Buy coal", panel: "trade" } } },
+  { test: /^Paused: .*debt is past/, kind: { kind: "paused", plural: "pauses", foldable: false, action: { label: "Budget", panel: "economy", section: "budget" } } },
+  { test: /^Paused: (strikes|the country)/, kind: { kind: "paused", plural: "pauses", foldable: false, action: { label: "Politics", panel: "politics" } } },
+  { test: /^Paused: .* is rioting/, kind: { kind: "paused", plural: "pauses", foldable: false, action: { label: "People", panel: "economy", section: "people" } } },
   { test: /has broken down/, kind: { kind: "breakdown", plural: "breakdowns", foldable: true, action: { label: "Repair", panel: "economy", section: "build" } } },
   { test: /is repaired and back in service/, kind: { kind: "repaired", plural: "repairs finished", foldable: true } },
   { test: /construction (has stalled|resumes)/, kind: { kind: "stall", plural: "construction stalls", foldable: true, action: { label: "Build", panel: "economy", section: "build" } } },

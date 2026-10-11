@@ -141,6 +141,7 @@ function createInitialState(nationId: string, partyId: string): GameState {
     pendingLedger: emptyLedger(),
     lastDayLedger: emptyLedger(),
     pendingDecisionId: null,
+    dangerPauses: [],
     decisionHistory: [],
   };
 }

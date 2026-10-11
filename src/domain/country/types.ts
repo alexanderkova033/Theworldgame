@@ -120,5 +120,6 @@ export interface GameState {
   lastDayLedger: Ledger; // everything that moved the numbers in the last day (tick, actions, monthly rolls) — for the top bar's "why" popovers
 
   pendingDecisionId: string | null; // a decision popup waiting on the player — see domain/decisions
+  dangerPauses: string[]; // "season:danger" keys already paused for this season — see application/playDay.ts
   decisionHistory: DecisionHistoryEntry[];
 }

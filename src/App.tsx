@@ -368,7 +368,7 @@ function App() {
         </Modal>
       )}
 
-      <Toasts events={state.events} monthlyReports={state.monthlyReports} onOpenPanel={openPanel} />
+      <Toasts events={state.events} monthlyReports={state.monthlyReports} isPaused={state.isPaused} onOpenPanel={openPanel} />
 
       <DecisionModal
         state={state}

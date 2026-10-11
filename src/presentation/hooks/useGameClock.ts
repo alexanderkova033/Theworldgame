@@ -1,12 +1,13 @@
 // Drives the day-by-day simulation loop. This is the only place that owns a
-// setInterval — it calls the simulateDay use case once per tick, and exposes
+// setInterval — it calls the playDay use case (simulateDay, then a pause if
+// a danger appeared for the first time this season) once per tick, and exposes
 // pause/resume/speed controls plus a generic way to dispatch player actions.
 //
 // `state` starts out `null`: there's no game to simulate until the player has
 // chosen a save slot, nation, and party on the start screen and called
 // `startGame`.
 import { useCallback, useEffect, useRef, useState } from "react";
-import { simulateDay } from "../../application/simulateDay";
+import { playDay } from "../../application/playDay";
 import { startNewGame } from "../../application/startNewGame";
 import type { GameSpeed, GameState } from "../../domain/country/types";
 import { clearSlot, getSlotPreviews, loadSlot, persistSlot, renameSlot as renameSlotStorage, type SaveSlotPreview } from "./gameSave";
@@ -39,7 +40,7 @@ export function useGameClock() {
 
     const intervalMs = BASE_TICK_MS / state.speed;
     const id = setInterval(() => {
-      setState((prev) => (prev ? simulateDay(prev) : prev));
+      setState((prev) => (prev ? playDay(prev) : prev));
     }, intervalMs);
 
     return () => clearInterval(id);
