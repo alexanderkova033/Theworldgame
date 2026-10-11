@@ -9,7 +9,9 @@ import type { DailyProductionSummary } from "../../application/getDailyProductio
 import type { GameState } from "../../domain/country/types";
 import { getLabourSituation } from "../../domain/labour/labourRules";
 import { formatCompact } from "../formatNumber";
-import { FlameIcon } from "./CauseIcon";
+import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
+import { UNREST_INFO } from "../unrestStages";
+import { BuildingGlyph, FlameIcon, UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 import type { PanelKey } from "./TopBar";
@@ -52,13 +54,71 @@ function Meter({
   );
 }
 
+// One province per row: its homes, its jobs, its mood. Picking a row makes
+// it the province the Build panel builds in.
+function ProvinceRows({
+  provinces,
+  selectedProvinceId,
+  onSelectProvince,
+}: {
+  provinces: ProvinceOverview[];
+  selectedProvinceId: string;
+  onSelectProvince: (provinceId: string) => void;
+}) {
+  return (
+    <div className="people-provinces">
+      <h3>Provinces</h3>
+      <ul className="people-provinces__list">
+        {provinces.map((p) => {
+          const status = getProvinceStatus(p);
+          const homesAlert = status.homes === "over";
+          const jobsAlert = status.jobs === "jobless";
+          const selected = p.id === selectedProvinceId;
+          return (
+            <li key={p.id}>
+              <button
+                type="button"
+                className={`people-province ${selected ? "is-selected" : ""}`}
+                aria-pressed={selected}
+                title={`${p.name}: ${Math.round(p.population)} people, homes for ${Math.round(p.capacity)}; ${Math.round(p.workers)} workers for ${Math.round(p.jobs)} jobs (${Math.round(p.unemployed)} jobless, ${Math.round(p.openJobs)} jobs unfilled); ${UNREST_INFO[p.unrestStage].name}, stability ${Math.round(p.stability)}. Click to build here.`}
+                onClick={() => onSelectProvince(p.id)}
+              >
+                <span className="people-province__name">
+                  {p.isCapital && <span aria-label="Capital">★ </span>}
+                  {p.name}
+                </span>
+                <span className={`people-province__cell ${homesAlert ? "is-alert" : ""}`}>
+                  <BuildingGlyph type="housing" size={16} />
+                  {formatCompact(p.population)}/{formatCompact(p.capacity)}
+                  {homesAlert && <span className="people-meter__alert">!</span>}
+                </span>
+                <span className={`people-province__cell ${jobsAlert ? "is-alert" : ""}`}>
+                  <StatIcon type="industry" size={16} />
+                  {formatCompact(p.workers)}/{formatCompact(p.jobs)}
+                  {jobsAlert && <span className="people-meter__alert">!</span>}
+                </span>
+                <span className="people-province__stage">
+                  <UnrestStageIcon stage={p.unrestStage} size={18} />
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 interface PeoplePanelProps {
   state: GameState;
   production: DailyProductionSummary;
+  provinces: ProvinceOverview[];
+  selectedProvinceId: string;
+  onSelectProvince: (provinceId: string) => void;
   onOpenPanel: (panel: PanelKey) => void;
 }
 
-export function PeoplePanel({ state, production, onOpenPanel }: PeoplePanelProps) {
+export function PeoplePanel({ state, production, provinces, selectedProvinceId, onSelectProvince, onOpenPanel }: PeoplePanelProps) {
   const population = state.stats.population;
   const capacity = production.housingCapacity;
   const homeless = production.homeless; // summed over provinces — a free home elsewhere doesn't help
@@ -131,6 +191,8 @@ export function PeoplePanel({ state, production, onOpenPanel }: PeoplePanelProps
           ) : undefined
         }
       />
+
+      <ProvinceRows provinces={provinces} selectedProvinceId={selectedProvinceId} onSelectProvince={onSelectProvince} />
     </section>
   );
 }

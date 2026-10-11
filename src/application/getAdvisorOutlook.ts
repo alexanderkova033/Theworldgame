@@ -21,6 +21,8 @@ import type { GameState } from "../domain/country/types";
 import { getLabourSituation } from "../domain/labour/labourRules";
 import { isDebtDangerous } from "../domain/loans/loanRules";
 import { monthsUntilNextElection } from "../domain/parties/electionRules";
+import { isLocalTrouble } from "../domain/provinces/provinceOrder";
+import { getProvinceName } from "../domain/provinces/provinceRules";
 import { getResearchNodeStatus } from "../domain/research/researchRules";
 import { RESEARCH_NODES } from "../domain/research/researchData";
 import { RESEARCH_CATEGORIES } from "../domain/workforce/workforceRules";
@@ -32,6 +34,7 @@ export type AdvisorPanel = "politics" | "economy" | "trade" | "research";
 
 export type AdvisorAlertKind =
   | "unrest"
+  | "provinceUnrest"
   | "coal"
   | "food"
   | "farmWorkers"
@@ -69,7 +72,7 @@ export interface AdvisorOutlook {
 
 // Most urgent first when equally critical — the order the problems are
 // checked in below.
-const ALERT_ORDER: AdvisorAlertKind[] = ["unrest", "coal", "food", "farmWorkers", "factoryWorkers", "homeless", "broken", "debt", "election", "stalled", "research"];
+const ALERT_ORDER: AdvisorAlertKind[] = ["unrest", "provinceUnrest", "coal", "food", "farmWorkers", "factoryWorkers", "homeless", "broken", "debt", "election", "stalled", "research"];
 
 const UNREST_NAMES: Record<GameState["unrestStage"], string> = { calm: "Calm", discontent: "Discontent", strikes: "Strikes", riots: "Riots" };
 
@@ -93,6 +96,23 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       detail: `Stability ${Math.round(state.stats.stability)}. A crackdown on the Politics tab pulls the country back a stage; police soften strikes and riots.`,
       critical: state.unrestStage !== "discontent",
       panel: "politics",
+    });
+  }
+
+  // A province striking or rioting worse than the rest of the country.
+  const troubled = Object.entries(state.provinces)
+    .filter(([, p]) => isLocalTrouble(p.unrestStage, state.unrestStage))
+    .sort(([, a], [, b]) => a.stability - b.stability);
+  if (troubled.length > 0) {
+    const [id, worst] = troubled[0];
+    const others = troubled.length > 1 ? ` +${troubled.length - 1}` : "";
+    alerts.push({
+      kind: "provinceUnrest",
+      stage: worst.unrestStage,
+      text: `${UNREST_NAMES[worst.unrestStage]}: ${getProvinceName(id)}${others}`,
+      detail: `${getProvinceName(id)} is ${worst.unrestStage === "riots" ? "rioting — wrecking its buildings and dragging national stability down" : "on strike"}. Too many there have no home or no work: build homes or jobs there, or crack down.`,
+      critical: worst.unrestStage === "riots",
+      panel: "economy",
     });
   }
 

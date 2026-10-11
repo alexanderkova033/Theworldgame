@@ -113,3 +113,71 @@
   gap: 0.2rem;
   cursor: help;
 }
+
+/* --- Provinces: one row each, homes · jobs · mood --- */
+.people-provinces h3 {
+  margin: 0.4rem 0 0.35rem;
+}
+
+.people-provinces__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* A plain strip, not a wooden button — the build location is the one
+   outlined in gold. */
+button.people-province {
+  display: grid;
+  grid-template-columns: minmax(7rem, 1fr) auto auto 1.4rem;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2rem;
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+  font-weight: 400;
+  font-size: 0.875rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid transparent;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+button.people-province:hover:not(:disabled) {
+  background: rgba(240, 200, 105, 0.08);
+  box-shadow: none;
+}
+
+button.people-province.is-selected {
+  border-color: var(--accent-active);
+  background: rgba(240, 200, 105, 0.12);
+}
+
+.people-province__name {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.people-province__cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.people-province__cell svg,
+.people-province__stage svg {
+  display: block;
+}
+
+.people-province__cell.is-alert {
+  color: var(--danger);
+}
+

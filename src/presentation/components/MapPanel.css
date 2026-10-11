@@ -376,3 +376,50 @@
   stroke-width: 4.2;
   stroke-dasharray: 10 6;
 }
+
+/* Province flags in the info bar: homes and jobs, amber when tight, red
+   with a "!" badge when people there have no home or no work. */
+.map-panel__status-flag {
+  stroke: #1a0d06;
+  stroke-width: 0.8;
+}
+
+.map-panel__status-flag.is-warn {
+  fill: var(--warning);
+}
+
+.map-panel__status-flag.is-alert {
+  fill: var(--danger);
+}
+
+.map-panel__status-alert {
+  fill: #1a0d06;
+  stroke: var(--danger);
+  stroke-width: 0.8;
+}
+
+.map-panel__status-alert-mark {
+  font-size: 7px;
+  font-weight: 800;
+  text-anchor: middle;
+  fill: #fff;
+}
+
+/* The tooltip's "this province as a place" block. */
+.map-panel__tooltip-place {
+  margin: 0.2rem 0;
+  padding: 0.2rem 0;
+  border-top: 1px solid var(--panel-border);
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.map-panel__tooltip-row.is-alert {
+  color: var(--danger);
+}
+
+.map-panel__tooltip-arrow {
+  display: inline-flex;
+  justify-content: center;
+  width: 18px;
+  font-weight: 800;
+}

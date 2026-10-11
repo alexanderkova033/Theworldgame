@@ -25,6 +25,7 @@ function CoalIcon() {
 
 const ALERT_ICONS: Record<AdvisorAlertKind, () => ReactNode> = {
   unrest: () => <UnrestStageIcon stage="strikes" size={ICON_SIZE} />,
+  provinceUnrest: () => <UnrestStageIcon stage="riots" size={ICON_SIZE} />,
   coal: () => <CoalIcon />,
   food: () => <StatIcon type="food" size={ICON_SIZE} />,
   farmWorkers: () => <BuildingGlyph type="farm" size={ICON_SIZE} />,

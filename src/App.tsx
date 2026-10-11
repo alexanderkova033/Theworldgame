@@ -11,6 +11,7 @@ import { dismissDecision, resolveDecision } from "./application/actions";
 import { getAdvisorOutlook } from "./application/getAdvisorOutlook";
 import { getDailyProductionSummary } from "./application/getDailyProductionSummary";
 import { getHeatingOutlook } from "./application/getHeatingOutlook";
+import { getProvinceOverview, getProvinceStatus, type ProvinceStatus } from "./application/getProvinceOverview";
 import { playDanger, playGameOver } from "./presentation/audio/sound";
 import { ActionsPanel } from "./presentation/components/ActionsPanel";
 import { AdvisorStrip } from "./presentation/components/AdvisorStrip";
@@ -95,6 +96,22 @@ function App() {
   const foreignRulers = useMemo(
     () => Object.fromEntries(foreignRulersKey ? foreignRulersKey.split(",").map((pair) => pair.split(":")) : []) as Record<string, string>,
     [foreignRulersKey],
+  );
+
+  // Each province as a place, once per day — and the map's coarse flags
+  // from it, through a string key so they only change identity when a
+  // province actually tips (keeps the memoized map from redrawing daily).
+  const provinceOverview = useMemo(() => (state ? getProvinceOverview(state) : []), [state]);
+  const provinceStatusKey = provinceOverview.map((o) => { const s = getProvinceStatus(o); return `${o.id}:${s.homes}:${s.jobs}:${s.stage}`; }).join(",");
+  const provinceStatus = useMemo(
+    () =>
+      Object.fromEntries(
+        (provinceStatusKey ? provinceStatusKey.split(",") : []).map((entry) => {
+          const [id, homes, jobs, stage] = entry.split(":");
+          return [id, { homes, jobs, stage } as ProvinceStatus];
+        }),
+      ),
+    [provinceStatusKey],
   );
 
   const handleSelectIsland = useCallback((islandId: string) => {
@@ -254,6 +271,8 @@ function App() {
             selectedIslandId={selectedIslandId}
             onSelectIsland={handleSelectIsland}
             foreignRulers={foreignRulers}
+            provinceStatus={provinceStatus}
+            provinceOverview={provinceOverview}
           />
         </div>
       </main>
@@ -270,7 +289,14 @@ function App() {
             <ActionsPanel state={state} selectedProvinceId={currentProvinceId} dispatch={dispatch} />
             <div className="economy-modal__side">
               <TaxPanel state={state} production={dailyProduction} dispatch={dispatch} />
-              <PeoplePanel state={state} production={dailyProduction} onOpenPanel={openPanel} />
+              <PeoplePanel
+                state={state}
+                production={dailyProduction}
+                provinces={provinceOverview}
+                selectedProvinceId={currentProvinceId}
+                onSelectProvince={setSelectedProvinceId}
+                onOpenPanel={openPanel}
+              />
               <RepairsPanel state={state} dispatch={dispatch} />
               <WorkforcePanel state={state} dispatch={dispatch} />
               <ProjectsPanel state={state} />

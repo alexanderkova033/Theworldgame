@@ -91,6 +91,12 @@ export const PROVINCE_HOMELESS_UNREST = 80; // points off, times the province's 
 export const PROVINCE_JOBLESS_UNREST = 60; // points off, times the province's jobless share
 export const PROVINCE_RIOT_STABILITY_DRAG = 0.2; // national stability lost per day for each province rioting on its own
 
+// When the map flags a province (see application/getProvinceOverview.ts).
+export const PROVINCE_FLAG_HOMELESS_SHARE = 0.01; // homes: over — this share or more without a home (red "!")
+export const PROVINCE_FLAG_FULL_SHARE = 0.95; // homes: full — this share of places taken
+export const PROVINCE_FLAG_JOBLESS_SHARE = 0.1; // jobs: jobless — this share of workers without work (red "!")
+export const PROVINCE_FLAG_SHORT_SHARE = 0.05; // jobs: short — this share of jobs nobody fills
+
 // --- Political actions (see application/actions/politicalActions.ts) ---
 // Ways to spend political power directly on support and order.
 export const RALLY_POLITICAL_POWER_COST = 25;

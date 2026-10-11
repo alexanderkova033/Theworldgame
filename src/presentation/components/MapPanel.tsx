@@ -13,7 +13,12 @@ import { RESOURCE_TYPES } from "../../domain/resources/types";
 import { BUILDING_COLORS, BuildingIcon } from "./BuildingIcon";
 import { NATION_SHAPES } from "../nationFrontiers";
 import { starPoints } from "./iconShapes";
+import type { ProvinceOverview, ProvinceStatus } from "../../application/getProvinceOverview";
+import { formatCompact } from "../formatNumber";
+import { UNREST_INFO } from "../unrestStages";
+import { UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
+import { StatIcon } from "./StatIcon";
 
 const TERRAIN_LABELS: Record<Terrain, string> = {
   hills: "Hills",
@@ -50,6 +55,8 @@ interface MapPanelProps {
   selectedIslandId: string | null;
   onSelectIsland: (islandId: string) => void;
   foreignRulers: Record<string, string>; // nationId -> ruling party id, for every nation but the player's
+  provinceStatus: Record<string, ProvinceStatus>; // coarse flags for the info bars — stable between flips, so the map isn't redrawn daily
+  provinceOverview: ProvinceOverview[]; // today's numbers, for the tooltip only
 }
 
 // Every terrain gets a decorative texture, drawn on top of the province's
@@ -188,10 +195,40 @@ interface MapLayersProps {
   expeditionIslandIds: string[];
   selectedIslandId: string | null;
   foreignRulers: Record<string, string>;
+  provinceStatus: Record<string, ProvinceStatus>;
   onProvinceClick: (provinceId: string) => void;
   onProvinceKeySelect: (provinceId: string) => void;
   onIslandClick: (islandId: string) => void;
   onHoverProvince: Dispatch<SetStateAction<string | null>>;
+}
+
+// A homes or jobs flag in a province's info bar: amber when it's tight,
+// red with a "!" when people there are without a home or without work.
+function StatusFlag({ kind, level, cx, cy }: { kind: "homes" | "jobs"; level: "warn" | "alert"; cx: number; cy: number }) {
+  const className = `map-panel__status-flag is-${level}`;
+  return (
+    <g>
+      {kind === "homes" ? (
+        <>
+          <polygon points={`${cx - 6},${cy - 0.5} ${cx},${cy - 6.5} ${cx + 6},${cy - 0.5}`} className={className} />
+          <rect x={cx - 4.5} y={cy - 0.5} width={9} height={6.5} className={className} />
+        </>
+      ) : (
+        <>
+          <circle cx={cx} cy={cy - 3.5} r={2.7} className={className} />
+          <path d={`M${cx - 5},${cy + 6} C${cx - 5},${cy - 0.5} ${cx + 5},${cy - 0.5} ${cx + 5},${cy + 6} Z`} className={className} />
+        </>
+      )}
+      {level === "alert" && (
+        <>
+          <circle cx={cx + 5.5} cy={cy - 5} r={4} className="map-panel__status-alert" />
+          <text x={cx + 5.5} y={cy - 2} className="map-panel__status-alert-mark">
+            !
+          </text>
+        </>
+      )}
+    </g>
+  );
 }
 
 // Everything drawn on the map, as its own memoized component: panning and
@@ -209,6 +246,7 @@ const MapLayers = memo(function MapLayers({
   expeditionIslandIds,
   selectedIslandId,
   foreignRulers,
+  provinceStatus,
   onProvinceClick,
   onProvinceKeySelect,
   onIslandClick,
@@ -571,9 +609,16 @@ const MapLayers = memo(function MapLayers({
       }
       const buildingTypes = [...counts.keys()];
       const brokenCount = buildings.filter((b) => !isWorking(b)).length;
+      // Only what's wrong gets a flag: tight or overflowing homes, short
+      // or idle hands, unrest. A quiet province shows none.
+      const status = provinceStatus[province.id];
+      const flags: Array<"homes" | "jobs" | "stage"> = [];
+      if (status && status.homes !== "ok") flags.push("homes");
+      if (status && status.jobs !== "ok") flags.push("jobs");
+      if (status && status.stage !== "calm") flags.push("stage");
 
       const itemWidth = 20;
-      const itemCount = 1 + buildingTypes.length + (brokenCount > 0 ? 1 : 0); // resource + one slot per building type present + a broken marker
+      const itemCount = 1 + buildingTypes.length + (brokenCount > 0 ? 1 : 0) + flags.length; // resource + one slot per building type present + a broken marker + the flags
       const barWidth = itemCount * itemWidth + 6;
       const barX = province.labelX - barWidth / 2;
       const barY = province.labelY + 10;
@@ -610,6 +655,18 @@ const MapLayers = memo(function MapLayers({
               </text>
             </g>
           )}
+          {flags.map((flag, index) => {
+            const cx = barX + itemWidth * (1 + buildingTypes.length + (brokenCount > 0 ? 1 : 0) + index) + itemWidth / 2 + 3;
+            if (flag === "stage") {
+              return (
+                <g key={flag} transform={`translate(${cx - 7} ${itemCenterY - 7})`}>
+                  <UnrestStageIcon stage={status.stage} size={14} />
+                </g>
+              );
+            }
+            const level = flag === "homes" ? (status.homes === "over" ? "alert" : "warn") : status.jobs === "jobless" ? "alert" : "warn";
+            return <StatusFlag key={flag} kind={flag} level={level} cx={cx} cy={itemCenterY} />;
+          })}
         </g>
       );
     })}
@@ -632,6 +689,8 @@ export const MapPanel = memo(function MapPanel({
   selectedIslandId,
   onSelectIsland,
   foreignRulers,
+  provinceStatus,
+  provinceOverview,
 }: MapPanelProps) {
   const { provinces } = MAP_GEOMETRY;
 
@@ -840,6 +899,7 @@ export const MapPanel = memo(function MapPanel({
             expeditionIslandIds={expeditionIslandIds}
             selectedIslandId={selectedIslandId}
             foreignRulers={foreignRulers}
+            provinceStatus={provinceStatus}
             onProvinceClick={handleProvinceClick}
             onProvinceKeySelect={onSelectProvince}
             onIslandClick={handleIslandClick}
@@ -869,6 +929,7 @@ export const MapPanel = memo(function MapPanel({
             const counts = new Map<ProjectType, number>();
             for (const b of buildings) counts.set(b.type, (counts.get(b.type) ?? 0) + 1);
             const resourceType = RESOURCE_BY_TERRAIN[province.terrain];
+            const place = provinceOverview.find((o) => o.id === province.id);
 
             return (
               <div className="map-panel__tooltip" ref={tooltipRef} style={{ left: tooltipPos.current.x + 18, top: tooltipPos.current.y + 18 }}>
@@ -885,6 +946,41 @@ export const MapPanel = memo(function MapPanel({
                     {province.terrain === "hills" ? " and Coal" : ""}
                   </span>
                 </div>
+                {place && (
+                  <div className="map-panel__tooltip-place">
+                    <div className={`map-panel__tooltip-row ${place.homeless >= 1 ? "is-alert" : ""}`}>
+                      <StatIcon type="population" size={18} />
+                      <span>
+                        {formatCompact(place.population)} people · homes for {formatCompact(place.capacity)}
+                        {place.homeless >= 1 ? ` · ${formatCompact(place.homeless)} homeless` : ""}
+                      </span>
+                    </div>
+                    <div className={`map-panel__tooltip-row ${place.workers > 0 && place.unemployed / place.workers >= 0.1 ? "is-alert" : ""}`}>
+                      <StatIcon type="industry" size={18} />
+                      <span>
+                        {formatCompact(place.workers)} workers · {formatCompact(place.jobs)} jobs
+                        {place.unemployed >= 1 ? ` · ${formatCompact(place.unemployed)} jobless` : ""}
+                        {place.openJobs >= 1 ? ` · ${formatCompact(place.openJobs)} unfilled` : ""}
+                      </span>
+                    </div>
+                    <div className="map-panel__tooltip-row">
+                      <UnrestStageIcon stage={place.unrestStage} size={18} />
+                      <span>
+                        {UNREST_INFO[place.unrestStage].name} · stability {Math.round(place.stability)}
+                      </span>
+                    </div>
+                    {Math.abs(place.migration) >= 1 && (
+                      <div className="map-panel__tooltip-row">
+                        <span className="map-panel__tooltip-arrow" aria-hidden="true">
+                          {place.migration > 0 ? "→" : "←"}
+                        </span>
+                        <span>
+                          {place.migration > 0 ? "Moving in" : "Moving out"}: {formatCompact(Math.abs(place.migration))} a day
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
                 {[...counts.entries()].map(([type, count]) => (
                   <div className="map-panel__tooltip-row" key={type}>
                     <svg viewBox="-12 -16 24 24" width={18} height={18}>

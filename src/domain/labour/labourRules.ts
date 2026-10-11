@@ -48,6 +48,7 @@ export interface ProvinceLabour {
   industryStaffing: number;
   unemployed: number; // workers living here with no job here or elsewhere
   commutersOut: number; // workers living here who work in another province
+  openJobs: number; // jobs here nobody fills, from here or elsewhere
 }
 
 export interface LabourSituation {
@@ -126,6 +127,7 @@ export function getLabourSituation(state: GameState): LabourSituation {
       industryStaffing: staffing(hired[id].industry, jobs[id].industry),
       unemployed: idle[id] - commutersOut,
       commutersOut,
+      openJobs: SECTORS.reduce((sum, sector) => sum + jobs[id][sector] - hired[id][sector], 0),
     };
     provinces[id] = p;
     const here = buildings[id];
