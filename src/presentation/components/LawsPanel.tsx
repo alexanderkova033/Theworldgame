@@ -21,6 +21,7 @@ import { getSynergiesForLaw } from "../../domain/synergy/synergyRules";
 import { playConfirm } from "../audio/sound";
 import { CostChips, DaysChip, ResourceChip, StatChip, TreasuryChip } from "./CostChips";
 import { StatIcon } from "./StatIcon";
+import { HourglassIcon } from "./CauseIcon";
 import { SubTabs } from "./SubTabs";
 import { InspectorHeader, StatusLine, SynergyLine, TreeBank, TreeColumns, VoteRow, WorkInProgress, type TreeNodeStatus } from "./TechTree";
 
@@ -190,7 +191,14 @@ export function LawsPanel({ state, dispatch }: LawsPanelProps) {
             key: c.key,
             label: c.label,
             icon: <StatIcon type={c.icon} size={22} />,
-            badge: isDrafting ? `⧗ ${done}/${tiers}` : `${done}/${tiers}`,
+            badge: isDrafting ? (
+              <span className="tree-badge-drafting">
+                <HourglassIcon size={13} />
+                {done}/{tiers}
+              </span>
+            ) : (
+              `${done}/${tiers}`
+            ),
             hint: isDrafting ? `${drafting!.name} is being drafted · ${done} of ${tiers} tiers passed` : `${done} of ${tiers} tiers passed`,
           };
         })}

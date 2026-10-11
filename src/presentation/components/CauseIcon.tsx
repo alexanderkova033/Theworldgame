@@ -101,6 +101,16 @@ export function UnrestStageIcon({ stage, size }: { stage: "calm" | "discontent" 
   );
 }
 
+// Time running out (a forecast) or time passing (a law being drafted).
+export function HourglassIcon({ size }: { size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="-10 -10 20 20" aria-hidden="true">
+      <path d="M-6,-8 L6,-8 L6,-6 L1.5,0 L6,6 L6,8 L-6,8 L-6,6 L-1.5,0 L-6,-6 Z" fill="#e6c56a" stroke="#93731f" strokeWidth={0.7} />
+      <path d="M-4,-6.3 L4,-6.3 L1,-0.4 L-1,-0.4 Z" fill="#c9a24a" opacity={0.85} />
+    </svg>
+  );
+}
+
 export function SnowflakeIcon({ size }: { size: number }) {
   return (
     <svg viewBox="-10 -10 20 20" width={size} height={size} aria-hidden="true">

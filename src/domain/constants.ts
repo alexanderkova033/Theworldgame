@@ -317,6 +317,10 @@ export const ADVISOR_WINTER_PREP_DAYS = 60; // start warning about winter fuel t
 export const ADVISOR_WINTER_PREP_CRITICAL_DAYS = 15; // ...and urgently this close to it
 export const ADVISOR_FOOD_WARN_DAYS = 60; // food runs out within this many days at today's net
 export const ADVISOR_FOOD_CRITICAL_DAYS = 20;
+export const ADVISOR_MONEY_WARN_DAYS = 30; // the treasury runs dry within this many days...
+export const ADVISOR_MONEY_CRITICAL_DAYS = 10;
+// How far ahead food and money are projected (see application/getForecasts.ts).
+export const FORECAST_DAYS = 90;
 export const ADVISOR_FARM_STAFF_CRITICAL = 0.85; // farms below this share staffed
 export const ADVISOR_HOMELESS_WARN_SHARE = 0.01;
 export const ADVISOR_HOMELESS_CRITICAL_SHARE = 0.05;

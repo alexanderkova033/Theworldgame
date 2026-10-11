@@ -12,7 +12,9 @@ import { ADVISOR_WINTER_PREP_DAYS, CURRENCY_SYMBOL } from "../../domain/constant
 import type { CountryStats } from "../../domain/country/types";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import type { HeatingOutlook } from "../../application/getHeatingOutlook";
+import type { Forecasts, RunOut } from "../../application/getForecasts";
 import type { MaterialShortage } from "../../application/getMaterialShortages";
+import { formatDate } from "../../domain/country/calendar";
 import { isDebtDangerous } from "../../domain/loans/loanRules";
 import { formatCompact } from "../formatNumber";
 import { RESOURCE_TYPES, type ResourceBundle, type ResourceType } from "../../domain/resources/types";
@@ -22,7 +24,7 @@ import { getLedgerTotal } from "../../domain/ledger/ledgerRules";
 import type { Ledger, LedgerMetric } from "../../domain/ledger/types";
 import { formatChange, METRIC_LABELS } from "../causes";
 import { CauseBreakdown } from "./CauseBreakdown";
-import { FlameIcon, UnrestStageIcon } from "./CauseIcon";
+import { FlameIcon, HourglassIcon, UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 
@@ -36,6 +38,7 @@ interface ResourceTickerProps {
   shortages: MaterialShortage[];
   lastDayLedger: Ledger; // what moved the numbers yesterday — see GameState.lastDayLedger
   monthLedger: Ledger; // the same, for the month so far
+  forecasts: Forecasts; // when food and money run out if nothing changes
   onOpenReports: () => void;
 }
 
@@ -139,10 +142,12 @@ function WhyChip({
   lastDay,
   month,
   onOpenReports,
+  runOut,
   children,
 }: {
   label: string;
   metric: LedgerMetric;
+  runOut?: RunOut | null;
   danger?: boolean;
   warn?: boolean;
   lastDay: Ledger;
@@ -158,15 +163,30 @@ function WhyChip({
         className={`resource-ticker__chip resource-ticker__why-button ${danger ? "is-danger" : warn ? "is-warn" : ""} ${open ? "is-open" : ""}`}
         aria-expanded={open}
         aria-haspopup="true"
-        aria-label={`${label}. Show why it changed.`}
-        title={`${label} — click to see why it's moving`}
+        aria-label={`${label}${runOut ? `. Runs out in ${runOut.days} days if nothing changes` : ""}. Show why it changed.`}
+        title={`${label}${runOut ? ` — runs out around ${formatDate(runOut.date)} if nothing changes` : ""} — click to see why it's moving`}
         onClick={() => setOpen((v) => !v)}
       >
         {children}
+        {/* Runs out within the forecast window: an hourglass and the days left. */}
+        {runOut && (
+          <span className={`resource-ticker__runout ${runOut.days < 30 ? "is-soon" : ""}`} aria-hidden="true">
+            <HourglassIcon size={13} />
+            {runOut.days}d
+          </span>
+        )}
       </button>
       {open && (
         <div className="resource-ticker__popover resource-ticker__why-panel" role="dialog" aria-label={`Why ${METRIC_LABELS[metric].toLowerCase()} changed`}>
           <CauseBreakdown ledger={lastDay} metric={metric} title={`${METRIC_LABELS[metric]} — last day`} perDay />
+          {runOut && (
+            <p className="resource-ticker__runout-line">
+              <span className="resource-ticker__alert" aria-hidden="true">
+                !
+              </span>
+              Runs out around <strong>{formatDate(runOut.date)}</strong> ({runOut.days} days) if nothing changes — winter harvests included.
+            </p>
+          )}
           <div className="resource-ticker__why-month">
             <span>
               This month so far: <strong>{formatChange(metric, getLedgerTotal(month, metric))}</strong>
@@ -225,7 +245,7 @@ function Stores({ resources, production, shortages }: { resources: ResourceBundl
   );
 }
 
-export function ResourceTicker({ stats, unrestStage, resources, production, heating, debt, shortages, lastDayLedger, monthLedger, onOpenReports }: ResourceTickerProps) {
+export function ResourceTicker({ stats, unrestStage, resources, production, heating, debt, shortages, lastDayLedger, monthLedger, forecasts, onOpenReports }: ResourceTickerProps) {
   const why = { lastDay: lastDayLedger, month: monthLedger, onOpenReports };
   const homesTrouble = production.homeless >= 1 || production.unheatedShare > 0;
   const stage = UNREST_INFO[unrestStage];
@@ -237,7 +257,13 @@ export function ResourceTicker({ stats, unrestStage, resources, production, heat
 
   return (
     <div className="resource-ticker">
-      <WhyChip {...why} metric="treasury" label={`Treasury: ${formatExact(stats.treasury)} ${CURRENCY_SYMBOL} (${formatDelta(production.totalIncome)})`} danger={stats.treasury < 0}>
+      <WhyChip
+        {...why}
+        metric="treasury"
+        runOut={forecasts.treasury}
+        label={`Treasury: ${formatExact(stats.treasury)} ${CURRENCY_SYMBOL} (${formatDelta(production.totalIncome)})`}
+        danger={stats.treasury < 0}
+      >
         <StatIcon type="treasury" size={20} />
         <span>
           {formatCompact(stats.treasury)} {CURRENCY_SYMBOL}
@@ -256,7 +282,7 @@ export function ResourceTicker({ stats, unrestStage, resources, production, heat
         {homesTrouble && <Alert />}
       </Chip>
 
-      <WhyChip {...why} metric="food" label={`Food: ${formatExact(stats.food)} (${formatDelta(production.netFood)})`}>
+      <WhyChip {...why} metric="food" runOut={forecasts.food} label={`Food: ${formatExact(stats.food)} (${formatDelta(production.netFood)})`}>
         <StatIcon type="food" size={20} />
         <span>{formatCompact(stats.food)}</span>
         <Delta value={production.netFood} />

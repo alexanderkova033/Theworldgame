@@ -11,6 +11,7 @@ import { getPartiesForNation, getParty } from "./domain/parties/partyRules";
 import { dismissDecision, resolveDecision } from "./application/actions";
 import { getAdvisorOutlook, type EconomySection } from "./application/getAdvisorOutlook";
 import { getDailyProductionSummary } from "./application/getDailyProductionSummary";
+import { getForecasts } from "./application/getForecasts";
 import { getHeatingOutlook } from "./application/getHeatingOutlook";
 import { getMaterialShortages } from "./application/getMaterialShortages";
 import { getProvinceOverview, getProvinceStatus, type ProvinceStatus } from "./application/getProvinceOverview";
@@ -95,7 +96,12 @@ function App() {
   );
   const shortages = useMemo(() => (state && production ? getMaterialShortages(state, production) : []), [state, production]);
   // What needs the player now — ranked once per day, never inside the map.
-  const advisor = useMemo(() => (state && production && heating ? getAdvisorOutlook(state, production, heating) : null), [state, production, heating]);
+  // When food and money run out if nothing changes — once per day.
+  const forecasts = useMemo(() => (state && production ? getForecasts(state, production) : { food: null, treasury: null }), [state, production]);
+  const advisor = useMemo(
+    () => (state && production && heating ? getAdvisorOutlook(state, production, heating, forecasts) : null),
+    [state, production, heating, forecasts],
+  );
 
   // MapPanel is memoized (it's the heaviest thing on screen), so its props
   // have to keep stable identities across a tick or the memo buys nothing.
@@ -265,6 +271,7 @@ function App() {
         shortages={shortages}
         lastDayLedger={state.lastDayLedger}
         monthLedger={monthLedger}
+        forecasts={forecasts}
         production={dailyProduction}
         heating={heating!}
         debt={state.debt}

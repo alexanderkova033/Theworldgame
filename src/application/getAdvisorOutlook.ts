@@ -13,6 +13,8 @@ import {
   ADVISOR_HOMELESS_CRITICAL_SHARE,
   ADVISOR_HOMELESS_WARN_SHARE,
   ADVISOR_MAX_ALERTS,
+  ADVISOR_MONEY_CRITICAL_DAYS,
+  ADVISOR_MONEY_WARN_DAYS,
   ADVISOR_WINTER_PREP_CRITICAL_DAYS,
   ADVISOR_WINTER_PREP_DAYS,
   ELECTION_WIN_THRESHOLD,
@@ -26,7 +28,9 @@ import { getProvinceName } from "../domain/provinces/provinceRules";
 import { getResearchNodeStatus } from "../domain/research/researchRules";
 import { RESEARCH_NODES } from "../domain/research/researchData";
 import { RESEARCH_CATEGORIES } from "../domain/workforce/workforceRules";
+import { formatDate } from "../domain/country/calendar";
 import type { DailyProductionSummary } from "./getDailyProductionSummary";
+import type { Forecasts } from "./getForecasts";
 import type { HeatingOutlook } from "./getHeatingOutlook";
 
 // Which tab fixes it — the same keys as the top bar's tabs.
@@ -39,6 +43,7 @@ export type EconomySection = "build" | "people" | "staff" | "budget";
 const ECONOMY_SECTION: Partial<Record<AdvisorAlertKind | ObjectiveKind, EconomySection>> = {
   provinceUnrest: "people",
   food: "build",
+  money: "budget",
   farmWorkers: "people",
   factoryWorkers: "people",
   homeless: "people",
@@ -53,6 +58,7 @@ export type AdvisorAlertKind =
   | "provinceUnrest"
   | "coal"
   | "food"
+  | "money"
   | "farmWorkers"
   | "factoryWorkers"
   | "homeless"
@@ -90,7 +96,7 @@ export interface AdvisorOutlook {
 
 // Most urgent first when equally critical — the order the problems are
 // checked in below.
-const ALERT_ORDER: AdvisorAlertKind[] = ["unrest", "provinceUnrest", "coal", "food", "farmWorkers", "factoryWorkers", "homeless", "broken", "debt", "election", "stalled", "research"];
+const ALERT_ORDER: AdvisorAlertKind[] = ["unrest", "provinceUnrest", "coal", "food", "money", "farmWorkers", "factoryWorkers", "homeless", "broken", "debt", "election", "stalled", "research"];
 
 const UNREST_NAMES: Record<GameState["unrestStage"], string> = { calm: "Calm", discontent: "Discontent", strikes: "Strikes", riots: "Riots" };
 
@@ -102,7 +108,7 @@ function compact(value: number): string {
   return value >= 1000 ? `${(value / 1000).toFixed(1).replace(/\.0$/, "")}k` : `${Math.round(value)}`;
 }
 
-function getAlerts(state: GameState, production: DailyProductionSummary, heating: HeatingOutlook): AdvisorAlert[] {
+function getAlerts(state: GameState, production: DailyProductionSummary, heating: HeatingOutlook, forecasts: Forecasts): AdvisorAlert[] {
   const alerts: AdvisorAlert[] = [];
 
   // Unrest: strikes and riots are a step from collapse.
@@ -154,19 +160,30 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     });
   }
 
-  // Food: how long the stock lasts at today's net.
-  if (production.netFood < 0) {
-    const days = Math.floor(state.stats.food / -production.netFood);
-    if (days < ADVISOR_FOOD_WARN_DAYS) {
-      const critical = days < ADVISOR_FOOD_CRITICAL_DAYS;
-      alerts.push({
-        kind: "food",
-        text: `Food: ${days} days`,
-        detail: `At today's harvest and appetite the food runs out in ${days} days. Build farms, or buy food on the Trade tab.`,
-        critical,
-        panel: critical ? "trade" : "economy",
-      });
-    }
+  // Food: when the stock runs out, season by season (see getForecasts).
+  if (forecasts.food && forecasts.food.days < ADVISOR_FOOD_WARN_DAYS) {
+    const { days, date } = forecasts.food;
+    const critical = days < ADVISOR_FOOD_CRITICAL_DAYS;
+    alerts.push({
+      kind: "food",
+      text: `Food: ${days} days`,
+      detail: `If nothing changes, the food runs out around ${formatDate(date)}. Build farms, or buy food on the Trade tab.`,
+      critical,
+      panel: critical ? "trade" : "economy",
+    });
+  }
+
+  // Money: when the treasury goes into the red, counting what the
+  // projects underway still have to draw.
+  if (forecasts.treasury && forecasts.treasury.days < ADVISOR_MONEY_WARN_DAYS) {
+    const { days, date } = forecasts.treasury;
+    alerts.push({
+      kind: "money",
+      text: `Money: ${days} days`,
+      detail: `If nothing changes, the treasury runs dry around ${formatDate(date)}: raise taxes, cut staff, pause building, or take a loan.`,
+      critical: days < ADVISOR_MONEY_CRITICAL_DAYS,
+      panel: "economy",
+    });
   }
 
   // Hands: farms are staffed first, so short farms are the serious case.
@@ -309,8 +326,8 @@ function getObjective(state: GameState): AdvisorObjective | null {
   }
 }
 
-export function getAdvisorOutlook(state: GameState, production: DailyProductionSummary, heating: HeatingOutlook): AdvisorOutlook {
-  const alerts = getAlerts(state, production, heating);
+export function getAdvisorOutlook(state: GameState, production: DailyProductionSummary, heating: HeatingOutlook, forecasts: Forecasts): AdvisorOutlook {
+  const alerts = getAlerts(state, production, heating, forecasts);
   const objective = alerts.length === 0 ? getObjective(state) : null;
   return { alerts, objective: objective && objective.panel === "economy" ? { ...objective, section: ECONOMY_SECTION[objective.kind] } : objective };
 }

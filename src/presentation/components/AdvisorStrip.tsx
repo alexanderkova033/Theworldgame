@@ -34,6 +34,7 @@ const ALERT_ICONS: Record<AdvisorAlertKind, () => ReactNode> = {
   provinceUnrest: () => <UnrestStageIcon stage="riots" size={ICON_SIZE} />,
   coal: () => <CoalIcon />,
   food: () => <StatIcon type="food" size={ICON_SIZE} />,
+  money: () => <StatIcon type="treasury" size={ICON_SIZE} />,
   farmWorkers: () => <BuildingGlyph type="farm" size={ICON_SIZE} />,
   factoryWorkers: () => <BuildingGlyph type="factory" size={ICON_SIZE} />,
   homeless: () => <BuildingGlyph type="housing" size={ICON_SIZE} />,

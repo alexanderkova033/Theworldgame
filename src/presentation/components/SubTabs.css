@@ -45,6 +45,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.tree-badge-drafting {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
 .sub-tab__alert {
   display: inline-flex;
   align-items: center;

@@ -5,6 +5,7 @@ import type { CountryStats, GameDate, GameSpeed } from "../../domain/country/typ
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import type { EconomySection } from "../../application/getAdvisorOutlook";
 import type { HeatingOutlook } from "../../application/getHeatingOutlook";
+import type { Forecasts } from "../../application/getForecasts";
 import type { MaterialShortage } from "../../application/getMaterialShortages";
 import type { Ledger } from "../../domain/ledger/types";
 import type { ResourceBundle } from "../../domain/resources/types";
@@ -144,6 +145,7 @@ interface TopBarProps {
   shortages: MaterialShortage[]; // building materials about to run out — see getMaterialShortages
   lastDayLedger: Ledger;
   monthLedger: Ledger;
+  forecasts: Forecasts;
   production: DailyProductionSummary;
   heating: HeatingOutlook;
   debt: number;
@@ -169,6 +171,7 @@ export function TopBar({
   shortages,
   lastDayLedger,
   monthLedger,
+  forecasts,
   production,
   heating,
   debt,
@@ -200,6 +203,7 @@ export function TopBar({
           shortages={shortages}
           lastDayLedger={lastDayLedger}
           monthLedger={monthLedger}
+          forecasts={forecasts}
           onOpenReports={() => onOpenPanel("reports")}
         />
 

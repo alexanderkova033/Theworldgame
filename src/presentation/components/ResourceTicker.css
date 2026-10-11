@@ -135,6 +135,37 @@ button.resource-ticker__why-button:hover:not(:disabled) {
   min-width: 20rem;
 }
 
+.resource-ticker__runout-line .resource-ticker__alert {
+  margin-right: 0.35rem;
+  vertical-align: -0.15rem;
+}
+
+/* Runs out within the forecast window: hourglass + days, red when close. */
+.resource-ticker__runout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--warning);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.resource-ticker__runout.is-soon {
+  color: var(--danger);
+}
+
+.resource-ticker__runout-line {
+  max-width: 20rem;
+  margin: 0.6rem 0 0;
+  white-space: normal;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
 .resource-ticker__why-month {
   display: flex;
   align-items: center;
