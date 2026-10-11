@@ -251,9 +251,9 @@ export function simulateDay(state: GameState): GameState {
       });
     }
   }
-  const workingCounts = getWorkingCounts(working);
   // Staffed buildings run at the share of their jobs that can be filled —
-  // food first, then schools, then factories (see labourRules.ts).
+  // each province's own people first (food, then schools, then factories),
+  // then commuters from elsewhere (see labourRules.ts).
   const labour = getLabourSituation(working);
 
   // 2. Raw resources: every owned province produces its terrain's resource.
@@ -270,8 +270,8 @@ export function simulateDay(state: GameState): GameState {
   // province's own grain/fish that same day is available to process) but
   // before step 4 folds the result into the food stock.
   const { foodProduced: processedFood, grainConsumed, fishConsumed } = produceProcessedFood(
-    workingCounts.granaries * labour.foodStaffing,
-    workingCounts.canneries * labour.foodStaffing,
+    labour.staffed.granaries,
+    labour.staffed.canneries,
     producedResources,
   );
   const processedResources: typeof producedResources = {
@@ -343,8 +343,8 @@ export function simulateDay(state: GameState): GameState {
   ledger = book(ledger, "treasury", { taxes: taxIncome, industry: industryIncome, salaries: -salaries });
 
   // 4. Food: production (farms + processed Grain/Fish) vs consumption.
-  const { newFoodStock, isShortage } = updateFood(working.stats, workingCounts.farms * labour.foodStaffing, season, processedFood, researchEffects.winterFarmMultiplier);
-  const farmFood = produceFood(workingCounts.farms * labour.foodStaffing, season, researchEffects.winterFarmMultiplier);
+  const { newFoodStock, isShortage } = updateFood(working.stats, labour.staffed.farms, season, processedFood, researchEffects.winterFarmMultiplier);
+  const farmFood = produceFood(labour.staffed.farms, season, researchEffects.winterFarmMultiplier);
   // What was actually eaten — in a shortage, less than people needed.
   const eaten = working.stats.food + farmFood + processedFood - newFoodStock;
   ledger = book(ledger, "food", { farms: farmFood, processing: processedFood, eating: -eaten });
@@ -360,7 +360,7 @@ export function simulateDay(state: GameState): GameState {
   // 5. Industry output (derived from factories, scaled by laws + the research
   // tree) — and by unrest: discontent slows it, strikes stop factories.
   const industry =
-    calculateIndustryOutput(workingCounts.factories * labour.industryStaffing) *
+    calculateIndustryOutput(labour.staffed.factories) *
     lawEffects.industryMultiplier *
     nationEffects.industryMultiplier *
     researchEffects.industryMultiplier *

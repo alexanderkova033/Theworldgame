@@ -47,7 +47,7 @@ export interface DailyProductionSummary {
 
 export function getDailyProductionSummary(state: GameState): DailyProductionSummary {
   const working = getWorkingCounts(state);
-  const { foodStaffing: staffing } = getLabourSituation(state);
+  const { staffed } = getLabourSituation(state);
   const season = getSeason(state.date);
   const efficiencyMultiplier = calculateEfficiencyMultiplier(working.roads);
   const lawEffects = getActiveLawEffects(state.enactedLawIds);
@@ -66,8 +66,8 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const industryIncome = state.stats.industry * INCOME_PER_INDUSTRY * incomeMultiplier;
   const salaries = getDailySalaries(state.workforce);
 
-  const { foodProduced: processedFood } = produceProcessedFood(working.granaries * staffing, working.canneries * staffing, state.resources);
-  const farmFood = produceFood(working.farms * staffing, season, researchEffects.winterFarmMultiplier);
+  const { foodProduced: processedFood } = produceProcessedFood(staffed.granaries, staffed.canneries, state.resources);
+  const farmFood = produceFood(staffed.farms, season, researchEffects.winterFarmMultiplier);
   const foodProduced = farmFood + processedFood;
   const foodConsumed = consumeFood(state.stats);
 

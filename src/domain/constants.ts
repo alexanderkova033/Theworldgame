@@ -75,6 +75,9 @@ export const MAX_ROADS_PER_PROVINCE = 5;
 export const LABOUR_SHARE = 0.25; // share of the population that works
 export const JOBS_PER_BUILDING = { farm: 450, factory: 1000, granary: 300, cannery: 300, education: 250 } as const;
 export const UNEMPLOYMENT_POPULARITY_PENALTY = 30; // times the share of workers without a job
+// Each province is its own job market; of the people left without work in
+// theirs, this share will travel to fill open jobs in another.
+export const COMMUTE_SHARE = 0.5;
 
 // --- Political actions (see application/actions/politicalActions.ts) ---
 // Ways to spend political power directly on support and order.
