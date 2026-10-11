@@ -79,6 +79,11 @@ export const UNEMPLOYMENT_POPULARITY_PENALTY = 30; // times the share of workers
 // theirs, this share will travel to fill open jobs in another.
 export const COMMUTE_SHARE = 0.5;
 
+// --- Migration between provinces (see domain/provinces/provinceMigration.ts) ---
+export const MIGRATION_SHARE_PER_DAY = 0.02; // of a province's homeless (and of its jobless households) who move each day
+// How readily people move into a province in each stage of unrest.
+export const MIGRATION_UNREST_PULL = { calm: 1, discontent: 0.75, strikes: 0.4, riots: 0.1 } as const;
+
 // --- Political actions (see application/actions/politicalActions.ts) ---
 // Ways to spend political power directly on support and order.
 export const RALLY_POLITICAL_POWER_COST = 25;

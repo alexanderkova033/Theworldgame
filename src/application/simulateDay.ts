@@ -32,6 +32,7 @@ import { getNationEffects } from "../domain/nations/nationEffects";
 import { getNation } from "../domain/nations/nationRules";
 import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../domain/parties/factionRules";
 import { getParty } from "../domain/parties/partyRules";
+import { applyMigration, planMigration } from "../domain/provinces/provinceMigration";
 import { getProvincePopulationTotal, reconcileProvinces, syncProvinces } from "../domain/provinces/provincePopulation";
 import { getProvinceName } from "../domain/provinces/provinceRules";
 import {
@@ -478,8 +479,10 @@ export function simulateDay(state: GameState): GameState {
       },
     ]),
   );
-  const population = getProvincePopulationTotal(grownProvinces);
-  working = { ...working, provinces: grownProvinces };
+  // ...and people move toward provinces with free homes and open jobs.
+  const migratedProvinces = applyMigration(grownProvinces, planMigration(grownProvinces, capacityByProvince, labour.provinces));
+  const population = getProvincePopulationTotal(migratedProvinces);
+  working = { ...working, provinces: migratedProvinces };
   // Logged when homelessness first becomes noticeable (2%), not every day.
   if (getHomelessTotal(working) / Math.max(1, population) >= 0.02 && homelessShare < 0.02) {
     events.unshift({
