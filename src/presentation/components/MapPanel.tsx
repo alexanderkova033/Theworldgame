@@ -1,5 +1,5 @@
 import "./MapPanel.css";
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type Dispatch, type SetStateAction } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import type { ProjectType } from "../../domain/construction/types";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import { NATIONS } from "../../domain/nations/nationData";
@@ -229,6 +229,37 @@ function StatusFlag({ kind, level, cx, cy }: { kind: "homes" | "jobs"; level: "w
       )}
     </g>
   );
+}
+
+type FlagKey = "homesFull" | "homesOver" | "jobsShort" | "jobsJobless" | "discontent" | "strikes" | "riots";
+
+// The legend's key to the province flags — drawn with the very glyphs the
+// info bars use.
+const FLAG_LEGEND: Array<{ key: FlagKey; label: string; hint: string; glyph: ReactNode }> = [
+  { key: "homesOver", label: "People without a home", hint: "1% or more of the people here have no home — build homes here", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="homes" level="alert" cx={-1} cy={1} /></svg> },
+  { key: "homesFull", label: "Homes nearly full", hint: "95% of the places here are taken — no room to grow", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="homes" level="warn" cx={0} cy={1} /></svg> },
+  { key: "jobsJobless", label: "Out of work", hint: "10% or more of the workers here have no job — build workplaces here", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="jobs" level="alert" cx={-1} cy={1} /></svg> },
+  { key: "jobsShort", label: "Jobs unfilled", hint: "5% or more of the jobs here have nobody to do them — homes here would bring workers", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="jobs" level="warn" cx={0} cy={1} /></svg> },
+  { key: "discontent", label: "Discontent", hint: UNREST_INFO.discontent.effect, glyph: <UnrestStageIcon stage="discontent" size={22} /> },
+  { key: "strikes", label: "Strikes", hint: UNREST_INFO.strikes.effect, glyph: <UnrestStageIcon stage="strikes" size={22} /> },
+  {
+    key: "riots",
+    label: "Riots",
+    hint: "A province rioting on its own wrecks its buildings and drags national stability down",
+    glyph: <UnrestStageIcon stage="riots" size={22} />,
+  },
+];
+
+function countFlags(status: Record<string, ProvinceStatus>): Record<FlagKey, number> {
+  const counts: Record<FlagKey, number> = { homesFull: 0, homesOver: 0, jobsShort: 0, jobsJobless: 0, discontent: 0, strikes: 0, riots: 0 };
+  for (const s of Object.values(status)) {
+    if (s.homes === "over") counts.homesOver++;
+    if (s.homes === "full") counts.homesFull++;
+    if (s.jobs === "jobless") counts.jobsJobless++;
+    if (s.jobs === "short") counts.jobsShort++;
+    if (s.stage !== "calm") counts[s.stage]++;
+  }
+  return counts;
 }
 
 // Everything drawn on the map, as its own memoized component: panning and
@@ -726,6 +757,11 @@ export const MapPanel = memo(function MapPanel({
   // the map, and toggled from a small corner button instead, HOI4-outliner
   // style.
   const [showLegend, setShowLegend] = useState(false);
+  // Until the legend has been opened once this session, the button points
+  // at it with a "!" whenever a province flag is on the map.
+  const [legendSeen, setLegendSeen] = useState(false);
+  const flagCounts = useMemo(() => countFlags(provinceStatus), [provinceStatus]);
+  const anyFlags = Object.values(flagCounts).some((n) => n > 0);
 
   function handleStageMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     const rect = stageRef.current?.getBoundingClientRect();
@@ -1014,14 +1050,37 @@ export const MapPanel = memo(function MapPanel({
         <button
           type="button"
           className={`map-panel__legend-toggle ${showLegend ? "is-active" : ""}`}
-          onClick={() => setShowLegend((v) => !v)}
+          onClick={() => {
+            setShowLegend((v) => !v);
+            setLegendSeen(true);
+          }}
           aria-expanded={showLegend}
+          title={anyFlags && !legendSeen ? "Some provinces are flagged — the legend explains the marks" : undefined}
         >
           Legend
+          {anyFlags && !legendSeen && (
+            <span className="map-panel__legend-badge" aria-label="Provinces flagged">
+              !
+            </span>
+          )}
         </button>
 
         {showLegend && (
           <div className="map-panel__legend">
+            {/* The flags first: they're what changes, and what needs you. */}
+            <span className="map-panel__legend-heading">Province flags</span>
+            {FLAG_LEGEND.map((flag) => (
+              <span key={flag.key} className={`map-panel__legend-item ${flagCounts[flag.key] > 0 ? "is-present" : ""}`} title={flag.hint}>
+                {flag.glyph}
+                {flag.label}
+                {flagCounts[flag.key] > 0 && (
+                  <strong className="map-panel__legend-count">
+                    {flagCounts[flag.key]} {flagCounts[flag.key] === 1 ? "province" : "provinces"}
+                  </strong>
+                )}
+              </span>
+            ))}
+            <span className="map-panel__legend-heading">Map</span>
             {NATIONS.map((n) => (
               <span key={n.id} className={`map-panel__legend-item ${n.id === nation.id ? "is-you" : ""}`} title={n.name}>
                 <span className="map-panel__legend-swatch" style={{ backgroundColor: n.color }} />
