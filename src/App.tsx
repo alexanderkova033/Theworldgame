@@ -345,7 +345,7 @@ function App() {
                 again here was pure duplication. Reports stays the historical
                 record: monthly summaries + the event log. */}
             <ReportsPanel reports={state.monthlyReports} />
-            <EventLog events={state.events} />
+            <EventLog events={state.events} onOpenPanel={openPanel} />
           </div>
         </Modal>
       )}

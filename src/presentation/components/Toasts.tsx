@@ -13,6 +13,7 @@ import { CURRENCY_SYMBOL } from "../../domain/constants";
 import { getLedgerHeadline } from "../../domain/ledger/ledgerRules";
 import { formatSignedChange } from "../formatNumber";
 import { getCauseInfo, METRIC_LABELS } from "../causes";
+import { getEventKind } from "../eventKinds";
 import { WrenchIcon } from "./RepairsPanel";
 import type { EconomySection } from "../../application/getAdvisorOutlook";
 import type { OpenPanel, PanelKey } from "./TopBar";
@@ -28,14 +29,17 @@ interface Toast {
   action: { label: string; panel: PanelKey; section?: EconomySection };
 }
 
+// Every toast's button goes where the event's problem is dealt with (see
+// eventKinds.ts) — the event log otherwise.
 function toastFromEvent(event: GameEvent): Toast | null {
-  if (event.message.includes("has broken down")) {
+  const { kind, action } = getEventKind(event);
+  if (kind === "breakdown") {
     return {
       key: event.id,
       kind: "breakdown",
       title: "Breakdown",
       message: event.message.replace(" — repair it from the Economy tab.", "."),
-      action: { label: "Repair", panel: "economy", section: "build" },
+      action: action ?? { label: "Repair", panel: "economy", section: "build" },
     };
   }
   return {
@@ -43,7 +47,7 @@ function toastFromEvent(event: GameEvent): Toast | null {
     kind: event.severity,
     title: event.severity === "danger" ? "Danger" : event.severity === "warning" ? "Warning" : "News",
     message: event.message,
-    action: { label: "Reports", panel: "reports" },
+    action: action ?? { label: "Reports", panel: "reports" },
   };
 }
 
