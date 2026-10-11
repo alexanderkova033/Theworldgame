@@ -8,15 +8,15 @@ import { NATIONS } from "./domain/nations/nationData";
 import type { GameSpeed } from "./domain/country/types";
 import { getPartiesForNation, getParty } from "./domain/parties/partyRules";
 import { dismissDecision, resolveDecision } from "./application/actions";
-import { getAdvisorOutlook } from "./application/getAdvisorOutlook";
+import { getAdvisorOutlook, type EconomySection } from "./application/getAdvisorOutlook";
 import { getDailyProductionSummary } from "./application/getDailyProductionSummary";
 import { getHeatingOutlook } from "./application/getHeatingOutlook";
 import { getMaterialShortages } from "./application/getMaterialShortages";
 import { getProvinceOverview, getProvinceStatus, type ProvinceStatus } from "./application/getProvinceOverview";
 import { playDanger, playGameOver } from "./presentation/audio/sound";
-import { ActionsPanel } from "./presentation/components/ActionsPanel";
 import { AdvisorStrip } from "./presentation/components/AdvisorStrip";
 import { DecisionModal } from "./presentation/components/DecisionModal";
+import { EconomyPanel } from "./presentation/components/EconomyPanel";
 import { EventLog } from "./presentation/components/EventLog";
 import { ExpeditionPanel } from "./presentation/components/ExpeditionPanel";
 import { GameEndScreen } from "./presentation/components/GameEndScreen";
@@ -25,19 +25,13 @@ import { MapPanel } from "./presentation/components/MapPanel";
 import { Modal } from "./presentation/components/Modal";
 import { NavIcon } from "./presentation/components/NavIcon";
 import { PartySelectScreen } from "./presentation/components/PartySelectScreen";
-import { PeoplePanel } from "./presentation/components/PeoplePanel";
 import { PoliticsPanel } from "./presentation/components/PoliticsPanel";
-import { ProductionPanel } from "./presentation/components/ProductionPanel";
-import { ProjectsPanel } from "./presentation/components/ProjectsPanel";
-import { RepairsPanel } from "./presentation/components/RepairsPanel";
 import { ReportsPanel } from "./presentation/components/ReportsPanel";
 import { ResearchPanel } from "./presentation/components/ResearchPanel";
 import { StartScreen } from "./presentation/components/StartScreen";
-import { TaxPanel } from "./presentation/components/TaxPanel";
 import { Toasts } from "./presentation/components/Toasts";
 import { TopBar, type PanelKey } from "./presentation/components/TopBar";
 import { TradePanel } from "./presentation/components/TradePanel";
-import { WorkforcePanel } from "./presentation/components/WorkforcePanel";
 import { useGameClock } from "./presentation/hooks/useGameClock";
 
 const SPEED_KEYS: Record<string, GameSpeed> = { "1": 1, "2": 2, "3": 3, "5": 5 };
@@ -69,6 +63,9 @@ function App() {
   // on-demand overlay (HOI4-style tabs) instead of a permanent sidebar —
   // see Modal.tsx and TopBar.tsx.
   const [openModal, setOpenModal] = useState<PanelKey | null>(null);
+  // Which section of the Economy tab is showing — remembered between visits,
+  // and set directly when an advisor chip or toast points somewhere.
+  const [economySection, setEconomySection] = useState<EconomySection>("build");
 
   // How many of state.events the player has actually seen — everything past
   // that count shows up as an unread badge on the Reports tab, since the
@@ -226,7 +223,8 @@ function App() {
   // Non-null past the `!state` guard above — it's memoized from that same value.
   const dailyProduction = production!;
 
-  function openPanel(panel: PanelKey) {
+  function openPanel(panel: PanelKey, section?: EconomySection) {
+    if (section) setEconomySection(section);
     // Always opens/switches to the tab — never toggles it closed. An
     // earlier version closed the panel when you clicked its already-active
     // tab again, but that made an accidental double-click (easy to trigger
@@ -288,24 +286,17 @@ function App() {
 
       {openModal === "economy" && (
         <Modal title="Economy" icon={<NavIcon type="economy" size={22} />} onClose={() => setOpenModal(null)} wide>
-          <div className="economy-modal">
-            <ActionsPanel state={state} selectedProvinceId={currentProvinceId} dispatch={dispatch} />
-            <div className="economy-modal__side">
-              <TaxPanel state={state} production={dailyProduction} dispatch={dispatch} />
-              <PeoplePanel
-                state={state}
-                production={dailyProduction}
-                provinces={provinceOverview}
-                selectedProvinceId={currentProvinceId}
-                onSelectProvince={setSelectedProvinceId}
-                onOpenPanel={openPanel}
-              />
-              <RepairsPanel state={state} dispatch={dispatch} />
-              <WorkforcePanel state={state} dispatch={dispatch} />
-              <ProjectsPanel state={state} />
-              <ProductionPanel production={dailyProduction} />
-            </div>
-          </div>
+          <EconomyPanel
+            state={state}
+            dispatch={dispatch}
+            production={dailyProduction}
+            provinces={provinceOverview}
+            selectedProvinceId={currentProvinceId}
+            onSelectProvince={setSelectedProvinceId}
+            onOpenPanel={openPanel}
+            section={economySection}
+            onSection={setEconomySection}
+          />
         </Modal>
       )}
 

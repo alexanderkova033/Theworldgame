@@ -21,7 +21,8 @@ import { getSynergiesForLaw } from "../../domain/synergy/synergyRules";
 import { playConfirm } from "../audio/sound";
 import { CostChips, DaysChip, ResourceChip, StatChip, TreasuryChip } from "./CostChips";
 import { StatIcon } from "./StatIcon";
-import { InspectorHeader, StatusLine, SynergyLine, TreeBank, TreeColumns, TreeTabs, VoteRow, WorkInProgress, type TreeNodeStatus } from "./TechTree";
+import { SubTabs } from "./SubTabs";
+import { InspectorHeader, StatusLine, SynergyLine, TreeBank, TreeColumns, VoteRow, WorkInProgress, type TreeNodeStatus } from "./TechTree";
 
 interface LawsPanelProps {
   state: GameState;
@@ -177,7 +178,7 @@ export function LawsPanel({ state, dispatch }: LawsPanelProps) {
         )}
       </div>
 
-      <TreeTabs
+      <SubTabs
         label="Law categories"
         tabs={CATEGORIES.map((c) => {
           const nodes = LAW_NODES.filter((n) => n.category === c.key);
@@ -188,7 +189,7 @@ export function LawsPanel({ state, dispatch }: LawsPanelProps) {
           return {
             key: c.key,
             label: c.label,
-            icon: c.icon,
+            icon: <StatIcon type={c.icon} size={22} />,
             badge: isDrafting ? `⧗ ${done}/${tiers}` : `${done}/${tiers}`,
             hint: isDrafting ? `${drafting!.name} is being drafted · ${done} of ${tiers} tiers passed` : `${done} of ${tiers} tiers passed`,
           };

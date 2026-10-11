@@ -11,7 +11,7 @@ import { NavIcon } from "./NavIcon";
 import { WrenchIcon } from "./RepairsPanel";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
-import type { PanelKey } from "./TopBar";
+import type { OpenPanel } from "./TopBar";
 
 const ICON_SIZE = 18;
 
@@ -64,7 +64,7 @@ function CheckIcon() {
 
 interface AdvisorStripProps {
   outlook: AdvisorOutlook;
-  onOpenPanel: (panel: PanelKey) => void;
+  onOpenPanel: OpenPanel;
 }
 
 export function AdvisorStrip({ outlook, onOpenPanel }: AdvisorStripProps) {
@@ -78,7 +78,7 @@ export function AdvisorStrip({ outlook, onOpenPanel }: AdvisorStripProps) {
           type="button"
           className={`advisor-chip ${alert.critical ? "is-critical" : "is-warning"}`}
           title={alert.detail}
-          onClick={() => onOpenPanel(alert.panel)}
+          onClick={() => onOpenPanel(alert.panel, alert.section)}
         >
           {alert.critical && (
             <span className="advisor-chip__alert" aria-label="Urgent">
@@ -93,7 +93,7 @@ export function AdvisorStrip({ outlook, onOpenPanel }: AdvisorStripProps) {
       ))}
 
       {objective && (
-        <button type="button" className="advisor-chip is-objective" title={objective.detail} onClick={() => onOpenPanel(objective.panel)}>
+        <button type="button" className="advisor-chip is-objective" title={objective.detail} onClick={() => onOpenPanel(objective.panel, objective.section)}>
           <span className="advisor-chip__flag">
             <FlagIcon />
           </span>

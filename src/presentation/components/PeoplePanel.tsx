@@ -14,7 +14,7 @@ import { UNREST_INFO } from "../unrestStages";
 import { BuildingGlyph, FlameIcon, UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
-import type { PanelKey } from "./TopBar";
+import type { OpenPanel } from "./TopBar";
 
 function Meter({
   icon,
@@ -115,7 +115,7 @@ interface PeoplePanelProps {
   provinces: ProvinceOverview[];
   selectedProvinceId: string;
   onSelectProvince: (provinceId: string) => void;
-  onOpenPanel: (panel: PanelKey) => void;
+  onOpenPanel: OpenPanel;
 }
 
 export function PeoplePanel({ state, production, provinces, selectedProvinceId, onSelectProvince, onOpenPanel }: PeoplePanelProps) {

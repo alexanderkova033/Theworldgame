@@ -1,0 +1,64 @@
+/* HOI4-style subtabs: one section of a tab at a time (see SubTabs.tsx). */
+.sub-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+  border-bottom: 2px solid var(--panel-border);
+}
+
+.sub-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.6rem;
+  padding: 0.35rem 0.9rem 0.35rem 0.55rem;
+  margin-bottom: -2px;
+  border-radius: 8px 8px 0 0;
+  border-bottom-color: var(--panel-border);
+  font-size: 0.95rem;
+}
+
+.sub-tab svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* The open branch joins the tree below it: gold edge, no bottom border. */
+.sub-tab.is-active {
+  background:
+    var(--grain) 0 0/70px 70px repeat,
+    linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg)) no-repeat;
+  color: var(--accent-active);
+  border-color: var(--accent-active);
+  border-bottom-color: var(--panel-bg);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 -2px 10px rgba(240, 200, 105, 0.25);
+}
+
+.sub-tab__badge {
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.sub-tab__alert {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #1a0d06;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  text-shadow: none;
+}
+
+.sub-tab.is-alert:not(.is-active) {
+  border-color: var(--danger);
+}

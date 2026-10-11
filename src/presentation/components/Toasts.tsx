@@ -14,7 +14,8 @@ import { getLedgerHeadline } from "../../domain/ledger/ledgerRules";
 import { formatSignedChange } from "../formatNumber";
 import { getCauseInfo, METRIC_LABELS } from "../causes";
 import { WrenchIcon } from "./RepairsPanel";
-import type { PanelKey } from "./TopBar";
+import type { EconomySection } from "../../application/getAdvisorOutlook";
+import type { OpenPanel, PanelKey } from "./TopBar";
 
 const TOAST_LIFETIME_MS = 8000;
 const MAX_TOASTS = 4;
@@ -24,7 +25,7 @@ interface Toast {
   kind: "report" | "breakdown" | "info" | "warning" | "danger";
   title: string;
   message: string;
-  action: { label: string; panel: PanelKey };
+  action: { label: string; panel: PanelKey; section?: EconomySection };
 }
 
 function toastFromEvent(event: GameEvent): Toast | null {
@@ -34,7 +35,7 @@ function toastFromEvent(event: GameEvent): Toast | null {
       kind: "breakdown",
       title: "Breakdown",
       message: event.message.replace(" — repair it from the Economy tab.", "."),
-      action: { label: "Repair", panel: "economy" },
+      action: { label: "Repair", panel: "economy", section: "build" },
     };
   }
   return {
@@ -94,7 +95,7 @@ function ToastIcon({ kind }: { kind: Toast["kind"] }) {
 interface ToastsProps {
   events: GameEvent[];
   monthlyReports: MonthlyReport[];
-  onOpenPanel: (panel: PanelKey) => void;
+  onOpenPanel: OpenPanel;
 }
 
 export function Toasts({ events, monthlyReports, onOpenPanel }: ToastsProps) {
@@ -152,7 +153,7 @@ export function Toasts({ events, monthlyReports, onOpenPanel }: ToastsProps) {
               type="button"
               className="btn-primary"
               onClick={() => {
-                onOpenPanel(toast.action.panel);
+                onOpenPanel(toast.action.panel, toast.action.section);
                 setToasts((current) => current.filter((t) => t.key !== toast.key));
               }}
             >

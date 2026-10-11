@@ -53,3 +53,19 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Economy sections with one panel, or two of equal weight. */
+.economy-modal__single {
+  max-width: 46rem;
+  margin: 0 auto;
+}
+
+.economy-modal.economy-modal--even {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* A steady height across sections, so the modal doesn't re-centre (and the
+   tabs jump) every time a shorter section opens. */
+.economy-panel {
+  min-height: min(44rem, calc(100vh - var(--top-bar-height) - 8rem));
+}

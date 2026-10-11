@@ -27,7 +27,8 @@ import { getScientistCap, getTotalScientists, RESEARCH_CATEGORIES } from "../../
 import { playConfirm } from "../audio/sound";
 import { CostChips, StatChip } from "./CostChips";
 import { StatIcon } from "./StatIcon";
-import { InspectorHeader, StatusLine, SynergyLine, TreeColumns, TreeTabs, type TreeNodeStatus, type TreeTab } from "./TechTree";
+import { SubTabs, type SubTab } from "./SubTabs";
+import { InspectorHeader, StatusLine, SynergyLine, TreeColumns, type TreeNodeStatus } from "./TechTree";
 import { AREA_ICONS, AREA_LABELS } from "../researchAreas";
 import { ScientistStepper } from "./WorkforcePanel";
 
@@ -169,7 +170,7 @@ function ResearchInspector({ node, state, status, onFocus, onStop }: ResearchIns
 
 // Each area's tab: how far its current direction is, or a "!" when it's
 // idle with something to research.
-function areaTab(state: GameState, category: ResearchCategory): TreeTab {
+function areaTab(state: GameState, category: ResearchCategory): SubTab {
   const focusId = state.researchFocus[category];
   const focusNode = focusId ? getResearchNode(focusId) : undefined;
   const done = RESEARCH_NODES.filter((n) => n.category === category && state.enactedResearchIds.includes(n.id)).length;
@@ -178,7 +179,7 @@ function areaTab(state: GameState, category: ResearchCategory): TreeTab {
   return {
     key: category,
     label: AREA_LABELS[category],
-    icon: AREA_ICONS[category],
+    icon: <StatIcon type={AREA_ICONS[category]} size={22} />,
     alert: idle,
     badge: focusNode ? `${Math.round(getResearchProgressRatio(state, focusNode) * 100)}%` : `${done}/${total}`,
     hint: focusNode
@@ -224,7 +225,7 @@ export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
         </span>
       </div>
 
-      <TreeTabs
+      <SubTabs
         label="Research areas"
         tabs={RESEARCH_CATEGORIES.map((c) => areaTab(state, c))}
         active={area}

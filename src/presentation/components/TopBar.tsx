@@ -3,6 +3,7 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { formatDate, type Season } from "../../domain/country/calendar";
 import type { CountryStats, GameDate, GameSpeed } from "../../domain/country/types";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
+import type { EconomySection } from "../../application/getAdvisorOutlook";
 import type { HeatingOutlook } from "../../application/getHeatingOutlook";
 import type { MaterialShortage } from "../../application/getMaterialShortages";
 import type { ResourceBundle } from "../../domain/resources/types";
@@ -14,6 +15,9 @@ import { ResourceTicker } from "./ResourceTicker";
 const SPEEDS: GameSpeed[] = [1, 2, 3, 5];
 
 export type PanelKey = "politics" | "economy" | "trade" | "reports" | "laws" | "research" | "ventures";
+
+// Opens a tab — for Economy, optionally straight at one of its sections.
+export type OpenPanel = (panel: PanelKey, section?: EconomySection) => void;
 
 const TABS: Array<{ key: PanelKey; label: string; icon: NavIconType }> = [
   { key: "politics", label: "Politics", icon: "politics" },

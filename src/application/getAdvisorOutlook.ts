@@ -32,6 +32,22 @@ import type { HeatingOutlook } from "./getHeatingOutlook";
 // Which tab fixes it — the same keys as the top bar's tabs.
 export type AdvisorPanel = "politics" | "economy" | "trade" | "research";
 
+// The Economy tab's sections — an alert about homes opens People, one
+// about broken buildings opens Build (next to Repairs).
+export type EconomySection = "build" | "people" | "staff" | "budget";
+
+const ECONOMY_SECTION: Partial<Record<AdvisorAlertKind | ObjectiveKind, EconomySection>> = {
+  provinceUnrest: "people",
+  food: "build",
+  farmWorkers: "people",
+  factoryWorkers: "people",
+  homeless: "people",
+  broken: "build",
+  stalled: "build",
+  farm: "build",
+  homes: "build",
+};
+
 export type AdvisorAlertKind =
   | "unrest"
   | "provinceUnrest"
@@ -53,6 +69,7 @@ export interface AdvisorAlert {
   critical: boolean;
   panel: AdvisorPanel;
   stage?: GameState["unrestStage"]; // for the unrest alert
+  section?: EconomySection; // which part of the Economy tab, when panel is "economy"
 }
 
 export type ObjectiveKind = "winter" | "farm" | "homes" | "election";
@@ -63,6 +80,7 @@ export interface AdvisorObjective {
   detail: string;
   done: boolean[]; // one tick per objective, in order
   panel: AdvisorPanel;
+  section?: EconomySection;
 }
 
 export interface AdvisorOutlook {
@@ -242,7 +260,8 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
 
   return alerts
     .sort((a, b) => Number(b.critical) - Number(a.critical) || ALERT_ORDER.indexOf(a.kind) - ALERT_ORDER.indexOf(b.kind))
-    .slice(0, ADVISOR_MAX_ALERTS);
+    .slice(0, ADVISOR_MAX_ALERTS)
+    .map((alert) => (alert.panel === "economy" ? { ...alert, section: ECONOMY_SECTION[alert.kind] } : alert));
 }
 
 // The opening steps, each worked out from the state: through the first
@@ -292,5 +311,6 @@ function getObjective(state: GameState): AdvisorObjective | null {
 
 export function getAdvisorOutlook(state: GameState, production: DailyProductionSummary, heating: HeatingOutlook): AdvisorOutlook {
   const alerts = getAlerts(state, production, heating);
-  return { alerts, objective: alerts.length === 0 ? getObjective(state) : null };
+  const objective = alerts.length === 0 ? getObjective(state) : null;
+  return { alerts, objective: objective && objective.panel === "economy" ? { ...objective, section: ECONOMY_SECTION[objective.kind] } : objective };
 }
