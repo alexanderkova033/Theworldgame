@@ -270,7 +270,7 @@ function App() {
         debt={state.debt}
         activePanel={openModal}
         reportsBadgeCount={unseenEventCount}
-        advisor={advisor && <AdvisorStrip outlook={advisor} onOpenPanel={openPanel} />}
+        advisor={advisor && <AdvisorStrip outlook={advisor} state={state} heating={heating!} dispatch={dispatch} onOpenPanel={openPanel} />}
         onPause={pause}
         onResume={resume}
         onSetSpeed={setSpeed}

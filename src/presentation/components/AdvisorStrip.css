@@ -99,3 +99,44 @@
   color: var(--success);
   cursor: default;
 }
+
+/* A chip and its one-click fix, joined into one pill. */
+.advisor-group {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.advisor-group.has-fix > .advisor-chip {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+button.advisor-fix {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 1.85rem;
+  padding: 0.2rem 0.7rem;
+  margin-left: -2px;
+  border-radius: 0 999px 999px 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  white-space: nowrap;
+  background: linear-gradient(180deg, var(--accent-active), var(--accent));
+  border-color: #fff0c2;
+  color: #241505;
+  text-shadow: none;
+}
+
+.advisor-fix__cost {
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+  font-size: 0.8125rem;
+}
+
+/* Armed: asking for the second click — red edge and wording, not just colour. */
+button.advisor-fix.is-armed {
+  background: linear-gradient(180deg, #f3b3a6, var(--danger));
+  border-color: #fff0c2;
+}

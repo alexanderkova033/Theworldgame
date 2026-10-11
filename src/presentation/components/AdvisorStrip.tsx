@@ -4,7 +4,13 @@
 // per step. Everything comes from getAdvisorOutlook, computed once per day
 // in App.tsx — this only draws it.
 import "./AdvisorStrip.css";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import type { HeatingOutlook } from "../../application/getHeatingOutlook";
+import { getQuickFix, type QuickFix } from "../../application/getQuickFix";
+import { CURRENCY_SYMBOL, QUICK_FIX_CONFIRM_SHARE } from "../../domain/constants";
+import type { GameState } from "../../domain/country/types";
+import { playConfirm } from "../audio/sound";
+import { formatCompact } from "../formatNumber";
 import type { AdvisorAlertKind, AdvisorOutlook, ObjectiveKind } from "../../application/getAdvisorOutlook";
 import { BuildingGlyph, FlameIcon, LoanIcon, UnrestStageIcon } from "./CauseIcon";
 import { NavIcon } from "./NavIcon";
@@ -62,19 +68,68 @@ function CheckIcon() {
   );
 }
 
+// The fix for one chip, beside it. A fix that would take a big bite out of
+// the treasury asks twice: the first click shows the cost and arms it, a
+// second one within a few seconds does it.
+function QuickFixButton({ fix, treasury, onApply }: { fix: QuickFix; treasury: number; onApply: () => void }) {
+  const [armed, setArmed] = useState(false);
+  const needsConfirm = fix.treasuryCost > 0 && fix.treasuryCost > Math.max(0, treasury) * QUICK_FIX_CONFIRM_SHARE;
+  useEffect(() => {
+    if (!armed) return;
+    const id = setTimeout(() => setArmed(false), CONFIRM_WINDOW_MS);
+    return () => clearTimeout(id);
+  }, [armed]);
+  const cost = [
+    fix.treasuryCost > 0 ? `${formatCompact(fix.treasuryCost)} ${CURRENCY_SYMBOL}` : null,
+    fix.politicalPowerCost > 0 ? `${Math.round(fix.politicalPowerCost)} political power` : null,
+  ]
+    .filter(Boolean)
+    .join(" + ");
+  return (
+    <button
+      type="button"
+      className={`advisor-fix ${armed ? "is-armed" : ""}`}
+      title={`${fix.label}${cost ? ` — costs ${cost}` : ""}${needsConfirm && !armed ? ". A big share of the treasury: click twice to confirm." : ""}`}
+      onClick={() => {
+        if (needsConfirm && !armed) {
+          setArmed(true);
+          return;
+        }
+        setArmed(false);
+        playConfirm();
+        onApply();
+      }}
+    >
+      {armed ? `Confirm −${formatCompact(fix.treasuryCost)} ${CURRENCY_SYMBOL}?` : fix.label}
+      {!armed && fix.treasuryCost > 0 && (
+        <span className="advisor-fix__cost">
+          {formatCompact(fix.treasuryCost)} {CURRENCY_SYMBOL}
+        </span>
+      )}
+    </button>
+  );
+}
+
+const CONFIRM_WINDOW_MS = 4000;
+
 interface AdvisorStripProps {
   outlook: AdvisorOutlook;
+  state: GameState;
+  heating: HeatingOutlook;
+  dispatch: (action: (state: GameState) => GameState) => void;
   onOpenPanel: OpenPanel;
 }
 
-export function AdvisorStrip({ outlook, onOpenPanel }: AdvisorStripProps) {
+export function AdvisorStrip({ outlook, state, heating, dispatch, onOpenPanel }: AdvisorStripProps) {
   const { alerts, objective } = outlook;
 
   return (
     <div className="advisor-strip" role="region" aria-label="What needs you now">
-      {alerts.map((alert) => (
+      {alerts.map((alert) => {
+        const fix = getQuickFix(state, alert, heating);
+        return (
+        <span key={alert.kind} className={`advisor-group ${fix ? "has-fix" : ""}`}>
         <button
-          key={alert.kind}
           type="button"
           className={`advisor-chip ${alert.critical ? "is-critical" : "is-warning"}`}
           title={alert.detail}
@@ -90,7 +145,10 @@ export function AdvisorStrip({ outlook, onOpenPanel }: AdvisorStripProps) {
           </span>
           <span>{alert.text}</span>
         </button>
-      ))}
+        {fix && <QuickFixButton fix={fix} treasury={state.stats.treasury} onApply={() => dispatch(fix.apply)} />}
+        </span>
+        );
+      })}
 
       {objective && (
         <button type="button" className="advisor-chip is-objective" title={objective.detail} onClick={() => onOpenPanel(objective.panel, objective.section)}>

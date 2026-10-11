@@ -322,6 +322,10 @@ export const ADVISOR_HOMELESS_WARN_SHARE = 0.01;
 export const ADVISOR_HOMELESS_CRITICAL_SHARE = 0.05;
 export const ADVISOR_ELECTION_WARN_MONTHS = 6; // losing with an election this close
 export const ADVISOR_ELECTION_CRITICAL_MONTHS = 2;
+// One-click fixes on the advisor's chips (see application/getQuickFix.ts).
+export const QUICK_FIX_COAL_DAYS = 30; // buy enough coal to heat the homes this long
+export const QUICK_FIX_FOOD_BATCHES = 5; // food bought in one click (×2,000)
+export const QUICK_FIX_CONFIRM_SHARE = 0.2; // a fix costing more than this share of the treasury asks twice
 
 // Top bar: a building material comes out of the Stores list when the
 // projects drawing on it would use it up within this many days.
