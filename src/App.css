@@ -15,6 +15,7 @@
 }
 
 .game-layout__map-stage {
+  position: relative; /* the province card docks to its edge */
   flex: 1;
   min-width: 0;
   display: flex;

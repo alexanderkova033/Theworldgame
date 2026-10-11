@@ -1,0 +1,175 @@
+/* Docked at the map's left edge, below the top bar — never over the
+   province itself, and never in the way of the zoom buttons (right) or
+   the legend (bottom left). */
+.province-card {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 20;
+  width: min(22rem, calc(100% - 2rem));
+  padding: 0.75rem 0.85rem 0.85rem;
+  border: 2px solid var(--panel-border);
+  border-radius: 10px;
+  background:
+    var(--grain) 0 0/90px 90px repeat,
+    linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg)) no-repeat;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6);
+}
+
+.province-card__head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.province-card__name {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  font-size: 1.1rem;
+}
+
+.province-card__name::before,
+.province-card__name::after {
+  display: none;
+}
+
+.province-card__terrain svg {
+  display: block;
+}
+
+button.province-card__close {
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.province-card__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.8rem;
+  margin: 0.55rem 0 0.4rem;
+}
+
+.province-card__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: help;
+}
+
+.province-card__stat svg {
+  display: block;
+}
+
+.province-card__stat.is-alert {
+  color: var(--danger);
+}
+
+.province-card__alert {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #1a0d06;
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+
+.province-card__need {
+  margin: 0 0 0.6rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.province-card__need.is-urgent {
+  color: var(--danger);
+}
+
+.province-card__builds {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+}
+
+button.province-card__build {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 0.4rem;
+  align-items: center;
+  padding: 0.35rem 0.45rem;
+  text-align: left;
+}
+
+.province-card__build svg {
+  grid-row: span 2;
+  display: block;
+}
+
+.province-card__build-name {
+  font-size: 0.875rem;
+}
+
+.province-card__build-name {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+.province-card__build-count {
+  margin-left: auto;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.province-card__build-cost {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.province-card__build-cost > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.province-card__build-cost svg {
+  grid-row: auto;
+}
+
+/* The piece you're missing, in red with a "!" — readable even on a
+   greyed-out button. */
+.province-card .is-short {
+  color: var(--danger);
+  font-weight: 800;
+}
+
+button.province-card__build:disabled {
+  opacity: 0.8;
+}
+
+/* The fix for the province's problem: gold edge plus a star. */
+button.province-card__build.is-recommended {
+  border-color: var(--accent-active);
+}
+
+button.province-card__more {
+  width: 100%;
+  margin-top: 0.45rem;
+  font-size: 0.875rem;
+}

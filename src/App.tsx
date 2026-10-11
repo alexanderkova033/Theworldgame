@@ -26,6 +26,7 @@ import { Modal } from "./presentation/components/Modal";
 import { NavIcon } from "./presentation/components/NavIcon";
 import { PartySelectScreen } from "./presentation/components/PartySelectScreen";
 import { PoliticsPanel } from "./presentation/components/PoliticsPanel";
+import { ProvinceCard } from "./presentation/components/ProvinceCard";
 import { ReportsPanel } from "./presentation/components/ReportsPanel";
 import { ResearchPanel } from "./presentation/components/ResearchPanel";
 import { StartScreen } from "./presentation/components/StartScreen";
@@ -53,6 +54,13 @@ function App() {
   // Which province new construction goes into. This is a UI selection, not
   // simulation truth — it never touches GameState directly.
   const [selectedProvinceId, setSelectedProvinceId] = useState<string | null>(null);
+  // Clicking a province on the map also opens its card (see ProvinceCard).
+  const [isProvinceCardOpen, setProvinceCardOpen] = useState(false);
+  const selectProvinceOnMap = useCallback((provinceId: string) => {
+    setSelectedProvinceId(provinceId);
+    setProvinceCardOpen(true);
+  }, []);
+  const closeProvinceCard = useCallback(() => setProvinceCardOpen(false), []);
 
   // Which unclaimed island the Ventures panel is showing. Same idea as
   // selectedProvinceId — a UI selection, not simulation truth.
@@ -266,7 +274,7 @@ function App() {
             nation={nation}
             placedBuildings={state.placedBuildings}
             selectedProvinceId={currentProvinceId}
-            onSelectProvince={setSelectedProvinceId}
+            onSelectProvince={selectProvinceOnMap}
             scoutedIslandIds={state.scoutedIslandIds}
             expeditionIslandIds={expeditionIslandIds}
             selectedIslandId={selectedIslandId}
@@ -275,6 +283,13 @@ function App() {
             provinceStatus={provinceStatus}
             provinceOverview={provinceOverview}
           />
+          {isProvinceCardOpen &&
+            (() => {
+              const province = provinceOverview.find((p) => p.id === currentProvinceId);
+              return province ? (
+                <ProvinceCard state={state} province={province} dispatch={dispatch} onOpenPanel={openPanel} onClose={closeProvinceCard} />
+              ) : null;
+            })()}
         </div>
       </main>
 

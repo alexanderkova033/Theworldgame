@@ -11,7 +11,7 @@ import { isBuildingUnlocked } from "../../domain/research/researchRules";
 import type { ResourceType } from "../../domain/resources/types";
 import { recordAction } from "./recordAction";
 
-interface BuildActionConfig {
+export interface BuildActionConfig {
   type: ProjectType;
   label: string;
   cost: number;
@@ -33,6 +33,7 @@ export interface BuildAction {
   (state: GameState, provinceId: string): GameState;
   canBuild: (state: GameState, provinceId: string) => boolean;
   maxPerProvince: number;
+  config: BuildActionConfig; // its label and prices, for UI that lists build options (see ProvinceCard)
 }
 
 // Completed buildings of this type in the province, plus any already queued
@@ -53,7 +54,7 @@ export function countBuildingsInProvince(state: GameState, type: ProjectType, pr
 // against a comfortable treasury — canBuild only has to check this upfront
 // share, but that also means starting a project commits you to an ongoing
 // cost you might not be able to fully afford if you overbuild.
-function upfrontCost(cost: number): number {
+export function upfrontCost(cost: number): number {
   return Math.round(cost * 0.6);
 }
 
@@ -98,5 +99,6 @@ export function createBuildAction(config: BuildActionConfig): BuildAction {
   const action = build as BuildAction;
   action.canBuild = canBuild;
   action.maxPerProvince = config.maxPerProvince;
+  action.config = config;
   return action;
 }
