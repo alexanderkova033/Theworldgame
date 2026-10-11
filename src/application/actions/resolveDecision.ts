@@ -3,6 +3,7 @@ import type { GameState } from "../../domain/country/types";
 import { MAX_DECISION_HISTORY } from "../../domain/constants";
 import { getDecision } from "../../domain/decisions/decisionRules";
 import { applyFactionEffects, getFactionWeights } from "../../domain/parties/factionRules";
+import { syncProvinces } from "../../domain/provinces/provincePopulation";
 import { ONE_OFF, recordAction } from "./recordAction";
 
 // Picking an option resolves the popup: applies that option's one-time
@@ -22,7 +23,8 @@ export function resolveDecision(state: GameState, decisionId: string, optionId: 
     effects,
     effects.popularityDelta ?? 0,
   );
-  return recordAction(state, {
+  // A decision that moves people (an epidemic, cleared camps) moves them in every province.
+  return syncProvinces(recordAction(state, {
     ...state,
     pendingDecisionId: null,
     decisionHistory: [
@@ -47,7 +49,7 @@ export function resolveDecision(state: GameState, decisionId: string, optionId: 
       },
       ...state.events,
     ],
-  }, ONE_OFF);
+  }, ONE_OFF));
 }
 
 // Closing the popup without picking either option — the decision passes

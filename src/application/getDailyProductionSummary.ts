@@ -8,7 +8,7 @@ import { getSeason, type Season } from "../domain/country/calendar";
 import type { GameState } from "../domain/country/types";
 import { getDiplomacyIncomeMultiplier } from "../domain/diplomacy/diplomacyRules";
 import { consumeFood, produceFood, produceProcessedFood } from "../domain/food/foodRules";
-import { burnHeatingFuel, getHeatingDemand, getHousingCapacity } from "../domain/housing/housingRules";
+import { burnHeatingFuel, getHeatingDemand, getHomelessTotal, getHousingCapacity } from "../domain/housing/housingRules";
 import { getLabourSituation } from "../domain/labour/labourRules";
 import { getActiveLawEffects } from "../domain/laws/lawsRules";
 import { getWorkingCounts } from "../domain/maintenance/maintenanceRules";
@@ -39,6 +39,7 @@ export interface DailyProductionSummary {
   researchRates: Record<ResearchCategory, number>;
   researchPerDay: number; // all areas together
   housingCapacity: number; // people the working homes can hold
+  homeless: number; // people without a home, summed over the provinces (a free home elsewhere doesn't help)
   heatingFuel: number; // fuel the homes burn per day (winter only)
   unheatedShare: number; // 0..1 of homes that can't be heated from current stock
   politicalPowerPerDay: number;
@@ -100,6 +101,7 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
     researchRates,
     researchPerDay: researchRates.industry + researchRates.agriculture + researchRates.administration + researchRates.housing,
     housingCapacity: getHousingCapacity(state),
+    homeless: getHomelessTotal(state),
     heatingFuel,
     unheatedShare: heating.unheatedShare,
     politicalPowerPerDay: calculateDailyPoliticalPower(state.stats.popularity, researchEffects.politicalPowerMultiplier),

@@ -4,7 +4,7 @@
 import { getSeason } from "../domain/country/calendar";
 import type { GameState } from "../domain/country/types";
 import { getLabourSituation } from "../domain/labour/labourRules";
-import { burnHeatingFuel, getHeatingDemand, getHomelessShare, getHousingCapacity } from "../domain/housing/housingRules";
+import { burnHeatingFuel, getHeatingDemand, getNationalHomelessShare } from "../domain/housing/housingRules";
 import { getPopularityDrivers, getPopularityTarget, type PopularityConditions, type PopularityDriver } from "../domain/politics/politicsRules";
 
 export interface PopularityOutlook {
@@ -16,7 +16,7 @@ export function getPopularityOutlook(state: GameState): PopularityOutlook {
   const conditions: PopularityConditions = {
     taxRate: state.taxRate,
     isFoodShortage: state.stats.food <= 0,
-    homelessShare: getHomelessShare(state.stats.population, getHousingCapacity(state)),
+    homelessShare: getNationalHomelessShare(state),
     unheatedShare: burnHeatingFuel(state.resources, getHeatingDemand(state, getSeason(state.date))).unheatedShare,
     unemploymentShare: getLabourSituation(state).unemploymentShare,
     stability: state.stats.stability,

@@ -16,10 +16,10 @@ import {
   burnHeatingFuel,
   getColdStabilityPenalty,
   getHeatingDemand,
-  getHomelessShare,
   getHomelessStabilityPenalty,
-  getHousingCapacity,
+  getHomelessTotal,
   getHousingCapacityByProvince,
+  getNationalHomelessShare,
 } from "../domain/housing/housingRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getLabourSituation } from "../domain/labour/labourRules";
@@ -32,7 +32,7 @@ import { getNationEffects } from "../domain/nations/nationEffects";
 import { getNation } from "../domain/nations/nationRules";
 import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../domain/parties/factionRules";
 import { getParty } from "../domain/parties/partyRules";
-import { reconcileProvinces } from "../domain/provinces/provincePopulation";
+import { getProvincePopulationTotal, reconcileProvinces, syncProvinces } from "../domain/provinces/provincePopulation";
 import { getProvinceName } from "../domain/provinces/provinceRules";
 import {
   calculateDailyPoliticalPower,
@@ -213,6 +213,8 @@ export function simulateDay(state: GameState): GameState {
   working = advancePolicies(working);
   events.unshift(...working.events.slice(0, working.events.length - eventCountBeforePolicies));
   ledger = bookChange(ledger, statsBeforePolicies, working.stats, ONE_OFF);
+  // A law or technology that moved people moved them in every province.
+  working = syncProvinces(working);
 
   // 1d. Repairs in progress tick down; then any working building might
   // break (police deter some of it). Broken buildings stop producing until
@@ -293,9 +295,10 @@ export function simulateDay(state: GameState): GameState {
     });
   }
 
-  // Housing: anyone without a roof weighs on stability (step 7).
-  const housingCapacity = getHousingCapacity(working);
-  const homelessShare = getHomelessShare(working.stats.population, housingCapacity);
+  // Housing: anyone without a roof weighs on stability (step 7) — counted
+  // province by province, since a free home elsewhere is no use to them.
+  const capacityByProvince = getHousingCapacityByProvince(working);
+  const homelessShare = getNationalHomelessShare(working);
 
   // 2c. Debt compounds daily, whether or not it's touched — see
   // domain/loans/loanRules.ts. Crossing into "dangerous" territory (and only
@@ -459,10 +462,26 @@ export function simulateDay(state: GameState): GameState {
     ),
   );
 
-  // 9. Population grows or shrinks based on food, stability, housing and heat.
-  const population = updatePopulation({ ...statsWithFood, stability }, isShortage, housingCapacity, heating.unheatedShare);
+  // 9. Population grows or shrinks based on food, stability and heat — and
+  // each province against its own homes. The nation is their sum.
+  const grownProvinces = Object.fromEntries(
+    Object.entries(working.provinces).map(([id, province]) => [
+      id,
+      {
+        ...province,
+        population: updatePopulation(
+          { ...statsWithFood, stability, population: province.population },
+          isShortage,
+          capacityByProvince[id] ?? 0,
+          heating.unheatedShare,
+        ),
+      },
+    ]),
+  );
+  const population = getProvincePopulationTotal(grownProvinces);
+  working = { ...working, provinces: grownProvinces };
   // Logged when homelessness first becomes noticeable (2%), not every day.
-  if (getHomelessShare(population, housingCapacity) >= 0.02 && homelessShare < 0.02) {
+  if (getHomelessTotal(working) / Math.max(1, population) >= 0.02 && homelessShare < 0.02) {
     events.unshift({
       id: generateId("event"),
       date: state.date,

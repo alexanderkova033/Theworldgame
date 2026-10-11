@@ -9,7 +9,7 @@ import {
 } from "../constants";
 import { getSeason } from "../country/calendar";
 import type { GameState } from "../country/types";
-import { getHeatingDemand, getHomelessShare, getHousingCapacity } from "../housing/housingRules";
+import { getHeatingDemand, getNationalHomelessShare } from "../housing/housingRules";
 import { getLabourSituation } from "../labour/labourRules";
 import { isDebtDangerous } from "../loans/loanRules";
 import type { DecisionDefinition } from "./types";
@@ -22,7 +22,7 @@ function coalRunningOut(state: GameState): boolean {
 }
 
 function manyHomeless(state: GameState): boolean {
-  return getHomelessShare(state.stats.population, getHousingCapacity(state)) >= DECISION_HOUSING_PROTEST_SHARE;
+  return getNationalHomelessShare(state) >= DECISION_HOUSING_PROTEST_SHARE;
 }
 
 function workersRestless(state: GameState): boolean {

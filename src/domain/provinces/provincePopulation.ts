@@ -3,8 +3,11 @@
 // sum. Anything that changes the national figure as a whole — a decision,
 // a law, an epidemic — is spread over the provinces in proportion by
 // reconcileProvinces, so those rules never need to know about provinces.
-import type { ProvinceState } from "./types";
+import type { GameState } from "../country/types";
+import { getHousingCapacityByProvince } from "../housing/housingRules";
+import { getNation } from "../nations/nationRules";
 import { getStageForStability } from "../unrest/unrestRules";
+import type { ProvinceState } from "./types";
 
 export function getProvincePopulationTotal(provinces: Record<string, ProvinceState>): number {
   return Object.values(provinces).reduce((sum, p) => sum + p.population, 0);
@@ -52,4 +55,17 @@ export function reconcileProvinces(
   const weights = total > 0 ? Object.fromEntries(provinceIds.map((id) => [id, next[id].population])) : capacityByProvince;
   const share = shares(provinceIds, weights);
   return Object.fromEntries(provinceIds.map((id) => [id, { ...next[id], population: Math.max(0, next[id].population + gap * share[id]) }]));
+}
+
+// The whole state, with its provinces brought back in line with the
+// national population (after a decision or event changed it).
+export function syncProvinces(state: GameState): GameState {
+  const provinces = reconcileProvinces(
+    state.provinces,
+    getNation(state.nationId).provinceIds,
+    state.stats.population,
+    getHousingCapacityByProvince(state),
+    state.stats.stability,
+  );
+  return provinces === state.provinces ? state : { ...state, provinces };
 }

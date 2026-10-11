@@ -61,7 +61,7 @@ interface PeoplePanelProps {
 export function PeoplePanel({ state, production, onOpenPanel }: PeoplePanelProps) {
   const population = state.stats.population;
   const capacity = production.housingCapacity;
-  const homeless = Math.max(0, population - capacity);
+  const homeless = production.homeless; // summed over provinces — a free home elsewhere doesn't help
 
   const labour = getLabourSituation(state);
   const shortWorkers = Math.max(0, labour.jobs - labour.workers);
@@ -79,7 +79,7 @@ export function PeoplePanel({ state, production, onOpenPanel }: PeoplePanelProps
         fill={capacity > 0 ? population / capacity : 1}
         danger={homeless > 0}
         value={`${formatCompact(population)} / ${formatCompact(capacity)}`}
-        detail={homeless > 0 ? `${formatCompact(homeless)} without a home` : `${formatCompact(capacity - population)} free places`}
+        detail={homeless > 0 ? `${formatCompact(homeless)} without a home` : `${formatCompact(Math.max(0, capacity - population))} free places`}
       />
 
       <Meter

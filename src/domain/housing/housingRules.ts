@@ -44,6 +44,22 @@ export function getHomelessShare(population: number, capacity: number): number {
   return Math.max(0, population - capacity) / population;
 }
 
+// People without a home, province by province: a free home in one province
+// doesn't house a family sleeping rough in another.
+export function getHomelessByProvince(state: GameState): Record<string, number> {
+  const capacity = getHousingCapacityByProvince(state);
+  return Object.fromEntries(Object.entries(state.provinces).map(([id, p]) => [id, Math.max(0, p.population - (capacity[id] ?? 0))]));
+}
+
+export function getHomelessTotal(state: GameState): number {
+  return Object.values(getHomelessByProvince(state)).reduce((sum, n) => sum + n, 0);
+}
+
+// The national share without a home — the sum over provinces.
+export function getNationalHomelessShare(state: GameState): number {
+  return state.stats.population > 0 ? getHomelessTotal(state) / state.stats.population : 0;
+}
+
 export function getHomelessStabilityPenalty(homelessShare: number): number {
   return Math.min(HOMELESS_PENALTY_CAP, homelessShare * HOMELESS_STABILITY_PENALTY);
 }

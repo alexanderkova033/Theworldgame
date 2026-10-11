@@ -18,7 +18,6 @@ import {
   ELECTION_WIN_THRESHOLD,
 } from "../domain/constants";
 import type { GameState } from "../domain/country/types";
-import { getHomelessShare } from "../domain/housing/housingRules";
 import { getLabourSituation } from "../domain/labour/labourRules";
 import { isDebtDangerous } from "../domain/loans/loanRules";
 import { monthsUntilNextElection } from "../domain/parties/electionRules";
@@ -152,9 +151,9 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     });
   }
 
-  const homelessShare = getHomelessShare(state.stats.population, production.housingCapacity);
+  const homelessShare = state.stats.population > 0 ? production.homeless / state.stats.population : 0;
   if (homelessShare >= ADVISOR_HOMELESS_WARN_SHARE) {
-    const homeless = state.stats.population - production.housingCapacity;
+    const homeless = production.homeless;
     alerts.push({
       kind: "homeless",
       text: `Homeless: ${compact(homeless)}`,

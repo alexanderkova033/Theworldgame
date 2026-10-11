@@ -88,7 +88,7 @@ export function ResourceTicker({ stats, unrestStage, resources, production, heat
       "population",
       "Population / homes for",
       `${formatCompact(stats.population)} / ${formatCompact(production.housingCapacity)}`,
-      `${formatExact(stats.population)} of ${formatExact(production.housingCapacity)} housed${stats.population > production.housingCapacity ? ` — ${formatExact(stats.population - production.housingCapacity)} without a home` : ""}`,
+      `${formatExact(stats.population)} of ${formatExact(production.housingCapacity)} housed${production.homeless > 0 ? ` — ${formatExact(production.homeless)} without a home` : ""}`,
       undefined,
     ],
     ["food", "Food", formatCompact(stats.food), formatExact(stats.food), production.netFood],
@@ -104,13 +104,13 @@ export function ResourceTicker({ stats, unrestStage, resources, production, heat
       {statItems.map(([icon, label, displayValue, exactValue, delta]) => (
         <Fragment key={label}>
           <div
-            className={`resource-ticker__chip ${icon === "population" && (stats.population > production.housingCapacity || production.unheatedShare > 0) ? "is-danger" : ""}`}
+            className={`resource-ticker__chip ${icon === "population" && (production.homeless >= 1 || production.unheatedShare > 0) ? "is-danger" : ""}`}
             title={delta !== undefined ? `${label}: ${exactValue} (${formatDelta(delta)})` : `${label}: ${exactValue}`}
             aria-label={delta !== undefined ? `${label}: ${exactValue}, ${formatDelta(delta)}` : `${label}: ${exactValue}`}
           >
             <StatIcon type={icon} size={20} />
             <span>{displayValue}</span>
-            {icon === "population" && (stats.population > production.housingCapacity || production.unheatedShare > 0) && (
+            {icon === "population" && (production.homeless >= 1 || production.unheatedShare > 0) && (
               <span className="resource-ticker__alert" aria-hidden="true">
                 !
               </span>
