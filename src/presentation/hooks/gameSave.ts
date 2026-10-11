@@ -108,6 +108,7 @@ function hydrateGameState(raw: Partial<GameState>): GameState {
     monthlyReports: raw.monthlyReports ?? [],
     history: raw.history ?? [],
     pendingLedger: raw.pendingLedger ?? emptyLedger(),
+    lastDayLedger: raw.lastDayLedger ?? emptyLedger(),
     pendingDecisionId: raw.pendingDecisionId ?? null,
     decisionHistory: raw.decisionHistory ?? [],
     provinces: raw.provinces ?? {},

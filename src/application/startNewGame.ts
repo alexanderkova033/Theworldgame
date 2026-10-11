@@ -139,6 +139,7 @@ function createInitialState(nationId: string, partyId: string): GameState {
     monthlyReports: [],
     history: [],
     pendingLedger: emptyLedger(),
+    lastDayLedger: emptyLedger(),
     pendingDecisionId: null,
     decisionHistory: [],
   };

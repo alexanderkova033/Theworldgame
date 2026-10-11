@@ -117,6 +117,7 @@ export interface GameState {
   monthlyReports: MonthlyReport[];
   history: DailyDelta[]; // daily deltas since the last monthly report
   pendingLedger: Ledger; // what player actions changed since the last tick — folded into the next day's DailyDelta
+  lastDayLedger: Ledger; // everything that moved the numbers in the last day (tick, actions, monthly rolls) — for the top bar's "why" popovers
 
   pendingDecisionId: string | null; // a decision popup waiting on the player — see domain/decisions
   decisionHistory: DecisionHistoryEntry[];

@@ -3,6 +3,7 @@
 // UI panels. It never computes simulation values itself.
 import "./App.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { emptyLedger, mergeLedgers } from "./domain/ledger/ledgerRules";
 import { getNation } from "./domain/nations/nationRules";
 import { NATIONS } from "./domain/nations/nationData";
 import type { GameSpeed } from "./domain/country/types";
@@ -86,6 +87,12 @@ function App() {
   // re-renders App.
   const production = useMemo(() => (state ? getDailyProductionSummary(state) : null), [state]);
   const heating = useMemo(() => (state ? getHeatingOutlook(state) : null), [state]);
+  // The month so far, cause by cause — summed from the days already
+  // booked (see domain/ledger), plus anything done since the last tick.
+  const monthLedger = useMemo(
+    () => (state ? [...state.history.map((d) => d.ledger ?? emptyLedger()), state.pendingLedger].reduce(mergeLedgers, emptyLedger()) : emptyLedger()),
+    [state],
+  );
   const shortages = useMemo(() => (state && production ? getMaterialShortages(state, production) : []), [state, production]);
   // What needs the player now — ranked once per day, never inside the map.
   const advisor = useMemo(() => (state && production && heating ? getAdvisorOutlook(state, production, heating) : null), [state, production, heating]);
@@ -256,6 +263,8 @@ function App() {
         unrestStage={state.unrestStage}
         resources={state.resources}
         shortages={shortages}
+        lastDayLedger={state.lastDayLedger}
+        monthLedger={monthLedger}
         production={dailyProduction}
         heating={heating!}
         debt={state.debt}

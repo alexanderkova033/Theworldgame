@@ -18,6 +18,10 @@ import { formatCompact } from "../formatNumber";
 import { RESOURCE_TYPES, type ResourceBundle, type ResourceType } from "../../domain/resources/types";
 import type { UnrestStage } from "../../domain/unrest/types";
 import { UNREST_INFO } from "../unrestStages";
+import { getLedgerTotal } from "../../domain/ledger/ledgerRules";
+import type { Ledger, LedgerMetric } from "../../domain/ledger/types";
+import { formatChange, METRIC_LABELS } from "../causes";
+import { CauseBreakdown } from "./CauseBreakdown";
 import { FlameIcon, UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
@@ -30,6 +34,9 @@ interface ResourceTickerProps {
   heating: HeatingOutlook;
   debt: number;
   shortages: MaterialShortage[];
+  lastDayLedger: Ledger; // what moved the numbers yesterday — see GameState.lastDayLedger
+  monthLedger: Ledger; // the same, for the month so far
+  onOpenReports: () => void;
 }
 
 const RESOURCE_LABELS: Record<ResourceType, string> = {
@@ -98,11 +105,11 @@ function CrateIcon() {
 }
 
 // Every resource in stock and its daily rate, behind one button.
-function Stores({ resources, production, shortages }: { resources: ResourceBundle; production: DailyProductionSummary; shortages: MaterialShortage[] }) {
+// A chip's dropdown: open on click, closed by clicking anywhere else or
+// pressing Escape (so opening one chip's closes another's).
+function usePopover() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
-  // Clicking anywhere else, or Escape, closes it.
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
@@ -118,6 +125,70 @@ function Stores({ resources, production, shortages }: { resources: ResourceBundl
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
+  return { open, setOpen, ref };
+}
+
+// One of the four numbers the ledger explains, as a button: click it for
+// what moved it over the last day (the same signed bars as the monthly
+// report) and where it stands for the month so far.
+function WhyChip({
+  label,
+  metric,
+  danger,
+  warn,
+  lastDay,
+  month,
+  onOpenReports,
+  children,
+}: {
+  label: string;
+  metric: LedgerMetric;
+  danger?: boolean;
+  warn?: boolean;
+  lastDay: Ledger;
+  month: Ledger;
+  onOpenReports: () => void;
+  children: ReactNode;
+}) {
+  const { open, setOpen, ref } = usePopover();
+  return (
+    <div className="resource-ticker__why" ref={ref}>
+      <button
+        type="button"
+        className={`resource-ticker__chip resource-ticker__why-button ${danger ? "is-danger" : warn ? "is-warn" : ""} ${open ? "is-open" : ""}`}
+        aria-expanded={open}
+        aria-haspopup="true"
+        aria-label={`${label}. Show why it changed.`}
+        title={`${label} — click to see why it's moving`}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {children}
+      </button>
+      {open && (
+        <div className="resource-ticker__popover resource-ticker__why-panel" role="dialog" aria-label={`Why ${METRIC_LABELS[metric].toLowerCase()} changed`}>
+          <CauseBreakdown ledger={lastDay} metric={metric} title={`${METRIC_LABELS[metric]} — last day`} perDay />
+          <div className="resource-ticker__why-month">
+            <span>
+              This month so far: <strong>{formatChange(metric, getLedgerTotal(month, metric))}</strong>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onOpenReports();
+              }}
+            >
+              Monthly reports
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stores({ resources, production, shortages }: { resources: ResourceBundle; production: DailyProductionSummary; shortages: MaterialShortage[] }) {
+  const { open, setOpen, ref } = usePopover();
 
   return (
     <div className="resource-ticker__stores" ref={ref}>
@@ -134,7 +205,7 @@ function Stores({ resources, production, shortages }: { resources: ResourceBundl
         <span aria-hidden="true">{open ? "▴" : "▾"}</span>
       </button>
       {open && (
-        <div className="resource-ticker__stores-panel" role="dialog" aria-label="Stores">
+        <div className="resource-ticker__popover" role="dialog" aria-label="Stores">
           {RESOURCE_TYPES.map((type) => {
             const short = shortages.find((s) => s.type === type);
             return (
@@ -154,7 +225,8 @@ function Stores({ resources, production, shortages }: { resources: ResourceBundl
   );
 }
 
-export function ResourceTicker({ stats, unrestStage, resources, production, heating, debt, shortages }: ResourceTickerProps) {
+export function ResourceTicker({ stats, unrestStage, resources, production, heating, debt, shortages, lastDayLedger, monthLedger, onOpenReports }: ResourceTickerProps) {
+  const why = { lastDay: lastDayLedger, month: monthLedger, onOpenReports };
   const homesTrouble = production.homeless >= 1 || production.unheatedShare > 0;
   const stage = UNREST_INFO[unrestStage];
   const stageUrgent = unrestStage === "strikes" || unrestStage === "riots";
@@ -165,13 +237,13 @@ export function ResourceTicker({ stats, unrestStage, resources, production, heat
 
   return (
     <div className="resource-ticker">
-      <Chip label={`Treasury: ${formatExact(stats.treasury)} ${CURRENCY_SYMBOL} (${formatDelta(production.totalIncome)})`} danger={stats.treasury < 0}>
+      <WhyChip {...why} metric="treasury" label={`Treasury: ${formatExact(stats.treasury)} ${CURRENCY_SYMBOL} (${formatDelta(production.totalIncome)})`} danger={stats.treasury < 0}>
         <StatIcon type="treasury" size={20} />
         <span>
           {formatCompact(stats.treasury)} {CURRENCY_SYMBOL}
         </span>
         <Delta value={production.totalIncome} />
-      </Chip>
+      </WhyChip>
 
       <Chip
         label={`People: ${formatExact(stats.population)}, homes for ${formatExact(production.housingCapacity)}${production.homeless > 0 ? ` — ${formatExact(production.homeless)} without a home` : ""}`}
@@ -184,15 +256,17 @@ export function ResourceTicker({ stats, unrestStage, resources, production, heat
         {homesTrouble && <Alert />}
       </Chip>
 
-      <Chip label={`Food: ${formatExact(stats.food)} (${formatDelta(production.netFood)})`}>
+      <WhyChip {...why} metric="food" label={`Food: ${formatExact(stats.food)} (${formatDelta(production.netFood)})`}>
         <StatIcon type="food" size={20} />
         <span>{formatCompact(stats.food)}</span>
         <Delta value={production.netFood} />
-      </Chip>
+      </WhyChip>
 
       {/* Stability carries its unrest stage: the shape always, the name
           once it's more than calm (see domain/unrest). */}
-      <Chip
+      <WhyChip
+        {...why}
+        metric="stability"
         label={`Stability: ${formatExact(stats.stability)}/100 — ${stage.name} (${stage.range}): ${stage.effect}${unrestStage === "calm" ? "" : " A crackdown on the Politics tab pulls the country back a stage."}`}
         danger={stageUrgent}
         warn={unrestStage === "discontent"}
@@ -202,13 +276,13 @@ export function ResourceTicker({ stats, unrestStage, resources, production, heat
         <UnrestStageIcon stage={unrestStage} size={18} />
         {unrestStage !== "calm" && <span>{stage.name}</span>}
         {stageUrgent && <Alert />}
-      </Chip>
+      </WhyChip>
 
-      <Chip label={`Support: ${formatExact(stats.popularity)}% — elections need 50%`} danger={stats.popularity < 50}>
+      <WhyChip {...why} metric="support" label={`Support: ${formatExact(stats.popularity)}% — elections need 50%`} danger={stats.popularity < 50}>
         <StatIcon type="popularity" size={20} />
         <span>{formatExact(stats.popularity)}%</span>
         {stats.popularity < 50 && <Alert />}
-      </Chip>
+      </WhyChip>
 
       {debt > 0 && (
         <Chip

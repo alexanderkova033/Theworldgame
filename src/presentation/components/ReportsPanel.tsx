@@ -3,24 +3,15 @@ import { useState } from "react";
 import { formatMonthYear, getReportedMonth } from "../../domain/country/calendar";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { MonthlyReport } from "../../domain/country/types";
-import { getLedgerTotal, getRankedCauses, LEDGER_METRICS, type RankedCause } from "../../domain/ledger/ledgerRules";
-import type { Ledger, LedgerMetric } from "../../domain/ledger/types";
-import { formatSignedChange } from "../formatNumber";
-import { getCauseInfo, METRIC_ICONS, METRIC_LABELS } from "../causes";
+import { getLedgerTotal, LEDGER_METRICS } from "../../domain/ledger/ledgerRules";
+import type { LedgerMetric } from "../../domain/ledger/types";
+import { formatChange, METRIC_ICONS, METRIC_LABELS } from "../causes";
+import { CauseBreakdown } from "./CauseBreakdown";
 import { NavIcon } from "./NavIcon";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
 interface ReportsPanelProps {
   reports: MonthlyReport[];
-}
-
-// How many causes each number lists before the rest fold into "Other".
-const MAX_CAUSES = 5;
-
-// Crowns and food are big round numbers; support and stability are points
-// where a tenth still matters.
-function formatChange(metric: LedgerMetric | "population", value: number): string {
-  return formatSignedChange(value, metric === "support" || metric === "stability");
 }
 
 function reportTotal(report: MonthlyReport, metric: LedgerMetric): number | null {
@@ -83,50 +74,6 @@ function Metric({ icon, value, label, metric }: { icon: StatIconType; value: num
       <StatIcon type={icon} size={17} />
       <span className={`reports-panel__metric-value ${tone}`}>{text}</span>
     </span>
-  );
-}
-
-// The causes behind one number, biggest first, each as a bar growing left
-// (a loss) or right (a gain) from the middle line — the side carries the
-// sign as well as the colour and the +/− in the figure.
-function CauseBreakdown({ ledger, metric }: { ledger: Ledger; metric: LedgerMetric }) {
-  const total = getLedgerTotal(ledger, metric);
-  const ranked = getRankedCauses(ledger, metric).filter((c) => formatChange(metric, c.value) !== "0");
-  const shown: RankedCause[] = ranked.slice(0, MAX_CAUSES);
-  const rest = ranked.slice(MAX_CAUSES).reduce((sum, c) => sum + c.value, 0);
-  if (rest !== 0 && formatChange(metric, rest) !== "0") shown.push({ cause: "other", value: rest });
-  const maxAbs = Math.max(...shown.map((c) => Math.abs(c.value)), 1e-9);
-
-  return (
-    <section className="reports-cause" aria-label={`${METRIC_LABELS[metric]}: why it changed`}>
-      <header className="reports-cause__head">
-        <StatIcon type={METRIC_ICONS[metric]} size={18} />
-        <span className="reports-cause__title">{METRIC_LABELS[metric]}</span>
-        <strong className={`reports-cause__total ${total > 0 ? "is-gain" : total < 0 ? "is-loss" : ""}`}>
-          {formatChange(metric, total)}
-        </strong>
-      </header>
-      {shown.length === 0 ? (
-        <p className="reports-cause__empty">No change</p>
-      ) : (
-        <ul className="reports-cause__list">
-          {shown.map(({ cause, value }) => {
-            const info = getCauseInfo(metric, cause);
-            const width = `${(Math.abs(value) / maxAbs) * 50}%`;
-            return (
-              <li key={cause} className="reports-cause__row" title={info.hint || undefined}>
-                <span className="reports-cause__icon">{info.icon(16)}</span>
-                <span className="reports-cause__label">{info.label}</span>
-                <span className="reports-cause__bar" aria-hidden="true">
-                  <span className={`reports-cause__fill ${value >= 0 ? "is-gain" : "is-loss"}`} style={{ width }} />
-                </span>
-                <span className={`reports-cause__value ${value >= 0 ? "is-gain" : "is-loss"}`}>{formatChange(metric, value)}</span>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </section>
   );
 }
 

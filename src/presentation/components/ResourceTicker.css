@@ -101,7 +101,22 @@ button.resource-ticker__stores-button:hover:not(:disabled) {
   border-color: var(--accent-active);
 }
 
-.resource-ticker__stores-panel {
+.resource-ticker__why {
+  position: relative;
+}
+
+button.resource-ticker__why-button {
+  min-height: 1.9rem;
+  text-shadow: none;
+}
+
+button.resource-ticker__why-button.is-open,
+button.resource-ticker__why-button:hover:not(:disabled) {
+  border-color: var(--accent-active);
+}
+
+/* A dropdown under a chip: Stores, or a number's "why". */
+.resource-ticker__popover {
   position: absolute;
   top: calc(100% + 0.4rem);
   left: 0;
@@ -114,6 +129,26 @@ button.resource-ticker__stores-button:hover:not(:disabled) {
     var(--grain) 0 0/90px 90px repeat,
     linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg)) no-repeat;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
+}
+
+.resource-ticker__why-panel {
+  min-width: 20rem;
+}
+
+.resource-ticker__why-month {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--panel-border);
+  font-size: 0.875rem;
+}
+
+.resource-ticker__why-month button {
+  font-size: 0.8125rem;
+  padding: 0.3rem 0.6rem;
 }
 
 .resource-ticker__store-row {

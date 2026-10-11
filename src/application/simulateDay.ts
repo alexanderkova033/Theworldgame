@@ -727,6 +727,7 @@ export function simulateDay(state: GameState): GameState {
     // The provinces always add up to the national population.
     provinces: reconcileProvinces(working.provinces, nation.provinceIds, finalStats.population, getHousingCapacityByProvince(working), finalStats.stability),
     pendingLedger: emptyLedger(),
+    lastDayLedger: mergeLedgers(delta.ledger ?? emptyLedger(), lateLedger),
     monthlyReports,
   };
 }

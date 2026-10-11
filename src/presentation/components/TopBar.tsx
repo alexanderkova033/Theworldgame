@@ -6,6 +6,7 @@ import type { DailyProductionSummary } from "../../application/getDailyProductio
 import type { EconomySection } from "../../application/getAdvisorOutlook";
 import type { HeatingOutlook } from "../../application/getHeatingOutlook";
 import type { MaterialShortage } from "../../application/getMaterialShortages";
+import type { Ledger } from "../../domain/ledger/types";
 import type { ResourceBundle } from "../../domain/resources/types";
 import type { UnrestStage } from "../../domain/unrest/types";
 import { isMuted, setMuted } from "../audio/sound";
@@ -141,6 +142,8 @@ interface TopBarProps {
   unrestStage: UnrestStage;
   resources: ResourceBundle;
   shortages: MaterialShortage[]; // building materials about to run out — see getMaterialShortages
+  lastDayLedger: Ledger;
+  monthLedger: Ledger;
   production: DailyProductionSummary;
   heating: HeatingOutlook;
   debt: number;
@@ -164,6 +167,8 @@ export function TopBar({
   unrestStage,
   resources,
   shortages,
+  lastDayLedger,
+  monthLedger,
   production,
   heating,
   debt,
@@ -193,6 +198,9 @@ export function TopBar({
           debt={debt}
           heating={heating}
           shortages={shortages}
+          lastDayLedger={lastDayLedger}
+          monthLedger={monthLedger}
+          onOpenReports={() => onOpenPanel("reports")}
         />
 
         <div className="top-bar__spacer" />
