@@ -83,11 +83,16 @@ export function getRiotDamageChance(police: number): number {
   return RIOT_DAMAGE_CHANCE_PER_DAY * (1 - getPoliceBreakdownReduction(police));
 }
 
-// A riot day: maybe one working building is wrecked, through the same
-// broken/repair system as wear and tear. Same array back when nothing happens.
-export function rollRiotDamage(placedBuildings: PlacedBuilding[], police: number): { placedBuildings: PlacedBuilding[]; wrecked: PlacedBuilding | null } {
+// A riot day: maybe one working building is wrecked (in one province, if
+// given), through the same broken/repair system as wear and tear. Same
+// array back when nothing happens.
+export function rollRiotDamage(
+  placedBuildings: PlacedBuilding[],
+  police: number,
+  provinceId?: string,
+): { placedBuildings: PlacedBuilding[]; wrecked: PlacedBuilding | null } {
   if (Math.random() >= getRiotDamageChance(police)) return { placedBuildings, wrecked: null };
-  const targets = placedBuildings.filter(isWorking);
+  const targets = placedBuildings.filter((b) => isWorking(b) && (provinceId === undefined || b.provinceId === provinceId));
   if (targets.length === 0) return { placedBuildings, wrecked: null };
   const target = targets[Math.floor(Math.random() * targets.length)];
   const wrecked: PlacedBuilding = { ...target, condition: "broken" };

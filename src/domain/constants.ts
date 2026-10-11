@@ -84,6 +84,13 @@ export const MIGRATION_SHARE_PER_DAY = 0.02; // of a province's homeless (and of
 // How readily people move into a province in each stage of unrest.
 export const MIGRATION_UNREST_PULL = { calm: 1, discontent: 0.75, strikes: 0.4, riots: 0.1 } as const;
 
+// --- Province unrest (see domain/provinces/provinceOrder.ts) ---
+// A province's own order heads for national stability minus its own troubles.
+export const PROVINCE_STABILITY_DRIFT = 0.05; // share of the gap to that target closed each day
+export const PROVINCE_HOMELESS_UNREST = 80; // points off, times the province's homeless share
+export const PROVINCE_JOBLESS_UNREST = 60; // points off, times the province's jobless share
+export const PROVINCE_RIOT_STABILITY_DRAG = 0.2; // national stability lost per day for each province rioting on its own
+
 // --- Political actions (see application/actions/politicalActions.ts) ---
 // Ways to spend political power directly on support and order.
 export const RALLY_POLITICAL_POWER_COST = 25;

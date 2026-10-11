@@ -33,6 +33,7 @@ import { getNation } from "../domain/nations/nationRules";
 import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../domain/parties/factionRules";
 import { getParty } from "../domain/parties/partyRules";
 import { applyMigration, planMigration } from "../domain/provinces/provinceMigration";
+import { getProvinceRiotDrag, getProvincesRiotingAlone, isLocalTrouble, updateProvinceOrder } from "../domain/provinces/provinceOrder";
 import { getProvincePopulationTotal, reconcileProvinces, syncProvinces } from "../domain/provinces/provincePopulation";
 import { getProvinceName } from "../domain/provinces/provinceRules";
 import {
@@ -239,9 +240,11 @@ export function simulateDay(state: GameState): GameState {
     });
   }
   working = { ...working, placedBuildings: breakdowns.placedBuildings };
-  // Rioting mobs wreck buildings too, through the same repair system.
-  if (working.unrestStage === "riots") {
-    const riot = rollRiotDamage(working.placedBuildings, working.workforce.police);
+  // Rioting mobs wreck buildings too, through the same repair system —
+  // anywhere when the whole country riots, or in a province rioting alone.
+  const riotZones = working.unrestStage === "riots" ? [undefined] : getProvincesRiotingAlone(working.provinces, working.unrestStage);
+  for (const zone of riotZones) {
+    const riot = rollRiotDamage(working.placedBuildings, working.workforce.police, zone);
     if (riot.wrecked) {
       working = { ...working, placedBuildings: riot.placedBuildings };
       events.unshift({
@@ -378,9 +381,12 @@ export function simulateDay(state: GameState): GameState {
   const homelessStabilityPenalty = getHomelessStabilityPenalty(homelessShare);
   const coldStabilityPenalty = getColdStabilityPenalty(heating.unheatedShare);
   const policeStabilityBonus = getPoliceStabilityBonus(workforce.police);
+  // Provinces rioting on their own pull the whole country down.
+  const provinceRiotDrag = getProvinceRiotDrag(working.provinces, working.unrestStage);
   const stability = Math.min(
     100,
-    updateStability(statsWithFood, isShortage, debtStabilityPenalty + homelessStabilityPenalty + coldStabilityPenalty) + policeStabilityBonus,
+    updateStability(statsWithFood, isShortage, debtStabilityPenalty + homelessStabilityPenalty + coldStabilityPenalty + provinceRiotDrag) +
+      policeStabilityBonus,
   );
   const stabilityPressures = getStabilityPressures(statsWithFood, isShortage);
   ledger = book(
@@ -393,6 +399,7 @@ export function simulateDay(state: GameState): GameState {
         debt: -debtStabilityPenalty,
         homes: -homelessStabilityPenalty,
         cold: -coldStabilityPenalty,
+        provinces: -provinceRiotDrag,
         police: policeStabilityBonus,
       },
       stability - working.stats.stability,
@@ -482,7 +489,26 @@ export function simulateDay(state: GameState): GameState {
   // ...and people move toward provinces with free homes and open jobs.
   const migratedProvinces = applyMigration(grownProvinces, planMigration(grownProvinces, capacityByProvince, labour.provinces));
   const population = getProvincePopulationTotal(migratedProvinces);
-  working = { ...working, provinces: migratedProvinces };
+  // Each province's own order follows the nation's, minus its own homeless
+  // and jobless — announced when one strikes or riots worse than the rest.
+  const order = updateProvinceOrder(migratedProvinces, stability, capacityByProvince, labour.provinces);
+  for (const change of order.changes) {
+    const name = getProvinceName(change.provinceId);
+    if (isLocalTrouble(change.to, unrestStage) && isWorseStage(change.to, change.from)) {
+      events.unshift({
+        id: generateId("event"),
+        date: state.date,
+        message:
+          change.to === "riots"
+            ? `Riots in ${name}! Too many there have no home or no work. Build there, or crack down — it drags the whole country down.`
+            : `Strikes in ${name} — too many there have no home or no work.`,
+        severity: change.to === "riots" ? "danger" : "warning",
+      });
+    } else if (change.from === "riots" && isLocalTrouble(change.from, unrestStage)) {
+      events.unshift({ id: generateId("event"), date: state.date, message: `The riots in ${name} die down.`, severity: "info" });
+    }
+  }
+  working = { ...working, provinces: order.provinces };
   // Logged when homelessness first becomes noticeable (2%), not every day.
   if (getHomelessTotal(working) / Math.max(1, population) >= 0.02 && homelessShare < 0.02) {
     events.unshift({

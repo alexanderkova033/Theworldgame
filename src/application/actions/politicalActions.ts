@@ -15,6 +15,7 @@ import { generateId } from "../../domain/country/id";
 import type { GameState, GameEvent } from "../../domain/country/types";
 import { applyUniformDelta, getFactionWeights, getWeightedPopularity } from "../../domain/parties/factionRules";
 import type { Ideology } from "../../domain/parties/types";
+import { crackDownProvinces } from "../../domain/provinces/provinceOrder";
 import { applyCrackdown } from "../../domain/unrest/unrestRules";
 import { ONE_OFF, recordAction } from "./recordAction";
 
@@ -77,6 +78,7 @@ export function crackDown(state: GameState): GameState {
     ...state,
     factionApproval,
     unrestStage: stage,
+    provinces: crackDownProvinces(state.provinces, state.workforce.police),
     stats: {
       ...state.stats,
       popularity,
