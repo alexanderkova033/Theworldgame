@@ -1,0 +1,203 @@
+/* The shared bar (see Gauge.tsx): a recessed track, glossy fills, a red
+   hatched overflow tail, zone bands, markers and a heading diamond. */
+.gauge {
+  --gauge-height: 0.9rem;
+  width: 100%;
+}
+
+.gauge--sm {
+  --gauge-height: 0.55rem;
+}
+
+.gauge--lg {
+  --gauge-height: 1.25rem;
+}
+
+.gauge__track {
+  position: relative;
+  height: var(--gauge-height);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #0a0603, #1a1006);
+  border: 1px solid rgba(122, 83, 31, 0.9);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.gauge__zones {
+  position: relative;
+  height: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+/* Each zone's strip, with a gap between neighbours so the lines read. */
+.gauge__zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(26, 13, 6, 0.6);
+  border-left: 2px solid var(--panel-bg);
+}
+
+.gauge__tick {
+  position: absolute;
+  top: 18%;
+  bottom: 18%;
+  width: 1px;
+  background: rgba(241, 226, 191, 0.14);
+}
+
+.gauge__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  transition: width 0.45s ease, left 0.45s ease, background 0.3s ease;
+  /* A soft highlight along the top, so the fill reads as a raised bar. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -2px 3px rgba(0, 0, 0, 0.25);
+}
+
+.gauge__fill.is-good,
+.gauge__zone.is-good {
+  background: linear-gradient(180deg, #8fcf9b, #4f9a5e);
+}
+
+.gauge__fill.is-warn,
+.gauge__zone.is-warn {
+  background: linear-gradient(180deg, #f0c27a, #c4882f);
+}
+
+.gauge__fill.is-bad,
+.gauge__zone.is-bad {
+  background: linear-gradient(180deg, #f39582, #c4452f);
+}
+
+.gauge__fill.is-neutral,
+.gauge__zone.is-neutral {
+  background: linear-gradient(180deg, #c9b48f, #8a7556);
+}
+
+.gauge__fill.is-accent,
+.gauge__zone.is-accent {
+  background: linear-gradient(180deg, #f6d98a, #c9a036);
+}
+
+/* Counted but empty: jobs nobody fills. */
+.gauge__fill.is-dashed {
+  background: repeating-linear-gradient(90deg, rgba(241, 226, 191, 0.35) 0 4px, transparent 4px 8px);
+  box-shadow: inset 0 0 0 1px rgba(241, 226, 191, 0.3);
+}
+
+/* Past capacity: red hatching, unmistakably not "full". */
+.gauge__overflow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(135deg, #ea6a52 0 4px, #5a1a10 4px 8px);
+  transition: width 0.45s ease, left 0.45s ease;
+}
+
+.gauge__notch {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 3px;
+  margin-left: -1.5px;
+  background: #f1e2bf;
+  box-shadow: 0 0 0 1px #1a0d06;
+}
+
+.gauge__marker {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  width: 2px;
+  margin-left: -1px;
+  background: #fff3d0;
+  box-shadow: 0 0 0 1px rgba(26, 13, 6, 0.8);
+}
+
+/* Where the number is drifting: a hollow diamond riding the bar. */
+.gauge__heading {
+  position: absolute;
+  top: 50%;
+  width: calc(var(--gauge-height) * 0.75);
+  height: calc(var(--gauge-height) * 0.75);
+  border: 2px solid #fff3d0;
+  background: rgba(26, 13, 6, 0.6);
+  transform: translate(-50%, -50%) rotate(45deg);
+  transition: left 0.45s ease;
+}
+
+.gauge__labels {
+  position: relative;
+  height: 1.15rem;
+  margin-top: 0.2rem;
+  font-size: 0.8125rem;
+  line-height: 1;
+}
+
+.gauge__marker-label,
+.gauge__zone-label {
+  position: absolute;
+  top: 0.15rem;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+.gauge__marker-label {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.gauge__zone-label.is-warn {
+  color: var(--warning);
+}
+
+.gauge__zone-label.is-bad {
+  color: var(--danger);
+}
+
+.gauge__zone-label.is-good {
+  color: var(--success);
+}
+
+/* SignedBar: a centre line, a fill growing right (gain) or left (loss). */
+.signed-bar {
+  position: relative;
+  height: 0.6rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #0a0603, #1a1006);
+  border: 1px solid rgba(122, 83, 31, 0.9);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.6);
+}
+
+.signed-bar::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text-muted);
+}
+
+.signed-bar__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  transition: width 0.45s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.signed-bar__fill.is-gain {
+  left: 50%;
+  background: linear-gradient(180deg, #8fcf9b, #4f9a5e);
+}
+
+.signed-bar__fill.is-loss {
+  right: 50%;
+  background: linear-gradient(180deg, #f39582, #c4452f);
+}

@@ -130,6 +130,12 @@
 
 /* A plain strip, not a wooden button — the build location is the one
    outlined in gold. */
+/* Each cell: a small gauge, then the figures. */
+.people-province__gauge {
+  display: block;
+  width: 4.5rem;
+}
+
 button.people-province {
   display: grid;
   grid-template-columns: minmax(7rem, 1fr) auto auto 1.4rem;

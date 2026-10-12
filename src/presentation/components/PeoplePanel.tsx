@@ -12,6 +12,7 @@ import { formatCompact } from "../formatNumber";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
 import { UNREST_INFO } from "../unrestStages";
 import { BuildingGlyph, FlameIcon, UnrestStageIcon } from "./CauseIcon";
+import { Gauge } from "./Gauge";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 import type { OpenPanel } from "./TopBar";
@@ -19,7 +20,7 @@ import type { OpenPanel } from "./TopBar";
 function Meter({
   icon,
   label,
-  fill,
+  gauge,
   danger,
   value,
   detail,
@@ -27,7 +28,7 @@ function Meter({
 }: {
   icon: ReactNode;
   label: string;
-  fill: number; // 0..1
+  gauge: ReactNode;
   danger: boolean;
   value: string;
   detail: ReactNode;
@@ -44,9 +45,7 @@ function Meter({
             {value}
           </strong>
         </div>
-        <span className="people-meter__bar" aria-hidden="true">
-          <span className="people-meter__fill" style={{ width: `${Math.round(Math.min(1, Math.max(0, fill)) * 100)}%` }} />
-        </span>
+        {gauge}
         <span className="people-meter__detail">{detail}</span>
       </div>
       {action}
@@ -89,11 +88,32 @@ function ProvinceRows({
                 </span>
                 <span className={`people-province__cell ${homesAlert ? "is-alert" : ""}`}>
                   <BuildingGlyph type="housing" size={16} />
+                  <span className="people-province__gauge">
+                    <Gauge
+                      max={p.capacity}
+                      segments={[{ value: p.population - p.homeless, tone: status.homes === "ok" ? "good" : "warn" }]}
+                      overflow={p.homeless}
+                      size="sm"
+                      label={`${Math.round(p.population)} people, homes for ${Math.round(p.capacity)}`}
+                    />
+                  </span>
                   {formatCompact(p.population)}/{formatCompact(p.capacity)}
                   {homesAlert && <span className="people-meter__alert">!</span>}
                 </span>
                 <span className={`people-province__cell ${jobsAlert ? "is-alert" : ""}`}>
                   <StatIcon type="industry" size={16} />
+                  <span className="people-province__gauge">
+                    <Gauge
+                      max={p.jobs}
+                      segments={[
+                        { value: p.jobs - p.openJobs, tone: "good" },
+                        { value: p.openJobs, tone: "neutral", dashed: true },
+                      ]}
+                      overflow={p.unemployed}
+                      size="sm"
+                      label={`${Math.round(p.workers)} workers for ${Math.round(p.jobs)} jobs`}
+                    />
+                  </span>
                   {formatCompact(p.workers)}/{formatCompact(p.jobs)}
                   {jobsAlert && <span className="people-meter__alert">!</span>}
                 </span>
@@ -125,6 +145,8 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
 
   const labour = getLabourSituation(state);
   const shortWorkers = Math.max(0, labour.jobs - labour.workers);
+  const unfilled = Object.values(labour.provinces).reduce((sum, p) => sum + p.openJobs, 0);
+  const housed = Math.max(0, population - homeless);
 
   const heating = getHeatingOutlook(state);
   const fuelShort = heating.fuel < heating.fuelNeeded;
@@ -136,7 +158,15 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
       <Meter
         icon={<StatIcon type="population" size={22} />}
         label="Homes"
-        fill={capacity > 0 ? population / capacity : 1}
+        gauge={
+          <Gauge
+            max={capacity}
+            segments={[{ value: housed, tone: capacity > 0 && housed / capacity >= 0.95 ? "warn" : "good" }]}
+            overflow={homeless}
+            size="lg"
+            label={`${Math.round(housed)} housed of ${Math.round(capacity)} places${homeless > 0 ? `, ${Math.round(homeless)} without a home` : ""}`}
+          />
+        }
         danger={homeless > 0}
         value={`${formatCompact(population)} / ${formatCompact(capacity)}`}
         detail={homeless > 0 ? `${formatCompact(homeless)} without a home` : `${formatCompact(Math.max(0, capacity - population))} free places`}
@@ -145,11 +175,24 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
       <Meter
         icon={<StatIcon type="industry" size={22} />}
         label="Jobs"
-        fill={labour.jobs > 0 ? Math.min(labour.workers, labour.jobs) / labour.jobs : 1}
+        gauge={
+          <Gauge
+            max={labour.jobs}
+            segments={[
+              { value: labour.jobs - unfilled, tone: "good" },
+              { value: unfilled, tone: "neutral", dashed: true },
+            ]}
+            overflow={labour.unemployed}
+            size="lg"
+            label={`${Math.round(labour.jobs - unfilled)} of ${Math.round(labour.jobs)} jobs filled${labour.unemployed >= 1 ? `, ${Math.round(labour.unemployed)} out of work` : ""}`}
+          />
+        }
         danger={shortWorkers > 0 || labour.unemploymentShare > 0.1}
         value={`${formatCompact(labour.workers)} / ${formatCompact(labour.jobs)}`}
         detail={
-          shortWorkers > 0
+          unfilled >= 1 && labour.unemployed >= 1
+            ? `${formatCompact(labour.unemployed)} out of work, ${formatCompact(unfilled)} jobs unfilled elsewhere — build homes near the jobs`
+            : shortWorkers > 0
             ? `Short ${formatCompact(shortWorkers)} workers — ${labour.foodStaffing < 1 ? `farms at ${Math.round(labour.foodStaffing * 100)}%` : labour.industryStaffing < 1 ? `factories at ${Math.round(labour.industryStaffing * 100)}%` : `schools at ${Math.round(labour.schoolStaffing * 100)}%`}`
             : labour.unemployed > 0
               ? `${formatCompact(labour.unemployed)} out of work`
@@ -160,7 +203,19 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
       <Meter
         icon={<FlameIcon />}
         label={heating.isWinter ? "Heating" : "Coal for winter"}
-        fill={heating.fuelNeeded > 0 ? heating.fuel / heating.fuelNeeded : 1}
+        gauge={
+          <Gauge
+            max={Math.max(1, heating.fuelNeeded)}
+            segments={[
+              {
+                value: Math.min(heating.fuel, heating.fuelNeeded),
+                tone: heating.fuel >= heating.fuelNeeded ? "good" : heating.fuel >= heating.fuelNeeded * 0.5 ? "warn" : "bad",
+              },
+            ]}
+            size="lg"
+            label={`${Math.floor(heating.fuel)} coal and wood of ${Math.ceil(heating.fuelNeeded)} needed for ${heating.isWinter ? "the rest of this winter" : "next winter"}`}
+          />
+        }
         danger={fuelShort && (heating.isWinter || heating.daysUntilWinter < 60)}
         value={heating.isWinter ? `${Number.isFinite(heating.daysOfFuel) ? Math.floor(heating.daysOfFuel) : "∞"} days` : `${Math.floor(heating.fuel)} / ${Math.ceil(heating.fuelNeeded)}`}
         detail={

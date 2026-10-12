@@ -45,6 +45,7 @@
   align-items: center;
   justify-content: center;
   position: sticky;
+  z-index: 5; /* above the panel's own positioned bits (gauge labels, badges) as they scroll under it */
   top: 0;
   margin: 0 -1.1rem 1rem;
   padding: 0.8rem 1.1rem 0.7rem;

@@ -26,6 +26,9 @@ import {
   STABILITY_LOW_POPULARITY_THRESHOLD,
   STABILITY_RECOVERY_RATE,
   TAX_RATE_STEP,
+  UNREST_DISCONTENT_BELOW,
+  UNREST_RIOTS_BELOW,
+  UNREST_STRIKES_BELOW,
 } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getDecision } from "../../domain/decisions/decisionRules";
@@ -41,6 +44,7 @@ import { UNREST_INFO, UNREST_STEPS } from "../unrestStages";
 import { UnrestStageIcon } from "./CauseIcon";
 import { DecisionIcon } from "./DecisionModal";
 import { ForeignAffairs } from "./ForeignAffairs";
+import { Gauge, SignedBar, type GaugeTone } from "./Gauge";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import type { PanelKey } from "./TopBar";
 
@@ -101,6 +105,9 @@ function CrossIcon() {
   );
 }
 
+// A driver this big fills its half of the bar.
+const DRIVER_SCALE = 15;
+
 function signed(n: number, digits = 0): string {
   const rounded = Number(n.toFixed(digits));
   return rounded > 0 ? `+${rounded}` : `${rounded}`;
@@ -147,6 +154,9 @@ function DriverCard({ driver, children }: { driver: PopularityDriver; children?:
       <StatIcon type={DRIVER_ICONS[driver.key]} size={24} />
       <span className="politics-driver__label">{driver.label}</span>
       <strong className="politics-driver__value">{signed(value)}</strong>
+      <span className="politics-driver__bar">
+        <SignedBar value={driver.value} scale={DRIVER_SCALE} label={`${driver.label}: ${signed(value)} to where support is heading`} />
+      </span>
       <span className="politics-driver__fix">{children}</span>
     </div>
   );
@@ -188,6 +198,17 @@ function Drivers({ state, dispatch, onOpenPanel }: { state: GameState; dispatch:
           {current}% → {target}% {target > current ? "↑" : target < current ? "↓" : ""}
         </span>
       </div>
+      {/* Support now, the line to win, and the diamond where it's drifting. */}
+      <div className="politics-drivers__gauge">
+        <Gauge
+          max={100}
+          size="lg"
+          segments={[{ value: state.stats.popularity, tone: current >= ELECTION_WIN_THRESHOLD ? "good" : "bad" }]}
+          markers={[{ at: ELECTION_WIN_THRESHOLD, label: `${ELECTION_WIN_THRESHOLD}% to win` }]}
+          heading={outlook.target}
+          label={`Support ${current}%, drifting toward ${target}%; ${ELECTION_WIN_THRESHOLD}% wins the election`}
+        />
+      </div>
       <div className="politics-drivers__grid">
         {outlook.drivers.map((driver) => (
           <DriverCard key={driver.key} driver={driver}>
@@ -211,27 +232,30 @@ function Unrest({ state }: { state: GameState }) {
           {Math.round(state.stats.stability)}
         </span>
       </div>
-      <ol className="politics-unrest__ladder">
-        {UNREST_STEPS.map((step, i) => {
-          const info = UNREST_INFO[step];
-          return (
-            <li
-              key={step}
-              className={`politics-unrest__step is-${step} ${i === current ? "is-current" : i < current ? "is-past" : ""}`}
-              aria-current={i === current ? "step" : undefined}
-              title={`${info.name} (${info.range}): ${info.effect}`}
-            >
-              <UnrestStageIcon stage={step} size={26} />
-              <strong>{info.name}</strong>
-              <span>{info.range}</span>
-              {i === current && <span className="politics-unrest__here">You are here</span>}
-            </li>
-          );
-        })}
-      </ol>
+      {/* Stability as one gauge, the stages as zones along it: how far
+          it is to the next line down is visible at a glance. */}
+      <Gauge
+        max={100}
+        size="lg"
+        segments={[{ value: state.stats.stability, tone: STAGE_TONE[state.unrestStage] }]}
+        zones={[
+          { from: 0, to: UNREST_RIOTS_BELOW, tone: "bad", label: "Riots", hint: `${UNREST_INFO.riots.range}: ${UNREST_INFO.riots.effect}` },
+          { from: UNREST_RIOTS_BELOW, to: UNREST_STRIKES_BELOW, tone: "bad", label: "Strikes", hint: `${UNREST_INFO.strikes.range}: ${UNREST_INFO.strikes.effect}` },
+          { from: UNREST_STRIKES_BELOW, to: UNREST_DISCONTENT_BELOW, tone: "warn", label: "Discontent", hint: `${UNREST_INFO.discontent.range}: ${UNREST_INFO.discontent.effect}` },
+          { from: UNREST_DISCONTENT_BELOW, to: 100, tone: "good", label: "Calm", hint: UNREST_INFO.calm.effect },
+        ]}
+        label={`Stability ${Math.round(state.stats.stability)} of 100 — ${UNREST_INFO[state.unrestStage].name}`}
+      />
+      <p className={`politics-unrest__now is-${state.unrestStage}`}>
+        <UnrestStageIcon stage={state.unrestStage} size={22} />
+        <strong>{UNREST_INFO[state.unrestStage].name}.</strong> {UNREST_INFO[state.unrestStage].effect}
+        {current > 0 && " A crackdown pulls the country back a stage."} The government collapses at 0.
+      </p>
     </div>
   );
 }
+
+const STAGE_TONE: Record<GameState["unrestStage"], GaugeTone> = { calm: "good", discontent: "warn", strikes: "bad", riots: "bad" };
 
 // --- Spend political power on the mood of the country ---------------------
 function ActionCard({
@@ -451,8 +475,13 @@ function ElectionsView({ state, dispatch, onOpenPanel }: { state: GameState; dis
                   )}
                   <span className="politics-group__share">{Math.round(weights[ideology] * 100)}% of voters</span>
                 </span>
-                <span className="politics-group__bar" aria-hidden="true">
-                  <span className="politics-group__fill" style={{ width: `${approval}%` }} />
+                <span className="politics-group__bar">
+                  <Gauge
+                    max={100}
+                    segments={[{ value: approval, tone: approval >= ELECTION_WIN_THRESHOLD ? "good" : approval >= 40 ? "warn" : "bad" }]}
+                    markers={[{ at: ELECTION_WIN_THRESHOLD }]}
+                    label={`${IDEOLOGY_GROUPS[ideology]}: ${approval}% back you`}
+                  />
                 </span>
                 <span className="politics-group__approval">{approval}%</span>
               </div>
