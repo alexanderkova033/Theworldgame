@@ -55,15 +55,15 @@
    gains) so adjacent parts stay distinguishable without needing a dedicated
    color per metric — the icon key below says which is which. */
 .production-panel__bar-seg.is-gain {
-  background: linear-gradient(180deg, #8ccb98, var(--success));
+  background: var(--wash-good);
 }
 
 .production-panel__bar-seg.is-gain + .production-panel__bar-seg.is-gain {
-  background: linear-gradient(180deg, #4f8c62, #346142);
+  background: #6c8355;
 }
 
 .production-panel__bar-seg.is-loss {
-  background: linear-gradient(180deg, #d6604c, var(--danger));
+  background: var(--wash-bad);
 }
 
 .production-panel__keys {

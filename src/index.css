@@ -20,8 +20,9 @@
 
   /* Parchment and ink */
   --paper: #d2bb8e;
-  --paper-raised: #dac59b;
-  --paper-deep: #c0a576; /* troughs, insets, the inside of a gauge */
+  /* One paper for every surface; cards part by their rules, not by tone. */
+  --paper-raised: var(--paper);
+  --paper-deep: #c0a576; /* the one recess: troughs, wells, the inside of a gauge */
   --ink: #2b1d12; /* 8.7:1 on --paper */
   --ink-muted: #3f2e1e; /* 6.9:1 on --paper — never lighter, it must stay easy to read */
   --rule: #96784a; /* sepia ruling */
@@ -40,12 +41,12 @@
   --panel-bg: var(--paper);
   --panel-bg-raised: var(--paper-raised);
   --panel-border: var(--rule);
-  --wood-dark: #c4ab7d;
-  --wood-light: #d6c095;
+  --wood-dark: var(--paper);
+  --wood-light: var(--paper);
   --text: var(--ink);
   --text-muted: var(--ink-muted);
   --accent: #563e0d; /* dark gilt — 5.4:1 on paper, for ornament and labels */
-  --accent-soft: rgba(123, 33, 33, 0.08);
+  --accent-soft: var(--paper-deep);
   --accent-active: var(--oxblood); /* headings, the selected thing, focus */
   /* Status colours, deepened for ink on paper (each ≥ 4.5:1 on --paper). */
   --danger: #841a11;
@@ -53,10 +54,10 @@
   --info: #183e66;
   --success: #1b4a25;
 
-  /* Recesses on the page: a boxed-off area, a stronger one, a bar's trough. */
-  --inset: rgba(110, 80, 40, 0.1);
-  --inset-strong: rgba(100, 72, 36, 0.17);
-  --track: #b39869;
+  /* Recesses: one solid tone, so a well inside a well never steps darker. */
+  --inset: var(--paper-deep);
+  --inset-strong: var(--paper-deep);
+  --track: var(--paper-deep);
 
   /* Watercolour washes for fills (gauges, map tints) — never used as text. */
   --wash-good: #869c6c;
@@ -107,7 +108,7 @@
   --accent-soft: rgba(226, 194, 122, 0.14);
   --accent-active: var(--gilt-bright);
   --inset: rgba(0, 0, 0, 0.2);
-  --inset-strong: rgba(0, 0, 0, 0.35);
+  --inset-strong: rgba(0, 0, 0, 0.2);
   --track: #0f1a14;
   --danger: #f1937d;
   --warning: #ebbc68;
@@ -158,7 +159,7 @@ button {
   cursor: pointer;
   border: 1px solid var(--rule-dark);
   border-radius: 3px;
-  background: linear-gradient(180deg, var(--wood-light), var(--wood-dark));
+  background: var(--paper);
   color: var(--text);
   padding: 0.5rem 0.75rem;
   font-size: 0.85rem;
@@ -168,7 +169,7 @@ button {
 
 button:hover:not(:disabled) {
   border-color: var(--oxblood);
-  background: linear-gradient(180deg, #dcc8a0, #ccb383);
+  background: var(--paper-deep);
 }
 
 button:active:not(:disabled) {
@@ -186,7 +187,7 @@ button:disabled {
 
 /* Selected (a speed, a mode, a tab): set in green morocco with gilt lettering. */
 button.is-active {
-  background: linear-gradient(180deg, #2f4b3d, var(--leather));
+  background: var(--leather);
   border-color: var(--leather-dark);
   color: #f4ead0;
   font-weight: 700;
@@ -194,14 +195,14 @@ button.is-active {
 }
 
 button.is-active:hover:not(:disabled) {
-  background: linear-gradient(180deg, #375646, #26412f);
-  border-color: var(--leather-dark);
+  background: var(--leather);
+  border-color: var(--gilt);
 }
 
 /* Primary: the one thing a panel wants you to do — an oxblood label with
    gilt lettering, like a seal on the page. */
 button.btn-primary {
-  background: linear-gradient(180deg, #8f2a24, var(--oxblood-dark));
+  background: var(--oxblood);
   border-color: #3e0d0d;
   color: #f8ebc6;
   font-weight: 700;
@@ -209,27 +210,27 @@ button.btn-primary {
 }
 
 button.btn-primary:hover:not(:disabled) {
-  background: linear-gradient(180deg, #a3352c, #67191a);
-  border-color: #3e0d0d;
+  background: var(--oxblood);
+  border-color: var(--gilt);
 }
 
 /* On leather, buttons are tooled leather edged in gilt. */
 .surface-leather button {
   border-color: #8a6c33;
-  background: linear-gradient(180deg, #2f4b3d, var(--leather-dark));
+  background: var(--leather-dark);
   color: var(--text);
   box-shadow: none;
 }
 
 .surface-leather button:hover:not(:disabled) {
   border-color: var(--gilt-bright);
-  background: linear-gradient(180deg, #375646, #1b2e24);
+  background: var(--leather-dark);
 }
 
 .surface-leather button.is-active,
 .surface-leather button.btn-primary {
-  background: linear-gradient(180deg, #f0d792, #c49a44);
-  border-color: #f6e6b8;
+  background: #c9a24a;
+  border-color: var(--gilt-bright);
   color: #2a1a08;
   box-shadow: none;
 }
@@ -310,7 +311,7 @@ h3 {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #efe4c7, var(--paper-deep));
+  background: var(--paper);
   border: 1px solid var(--rule-dark);
   box-shadow: inset 0 0 0 3px var(--paper-raised), inset 0 0 0 4px var(--rule);
   display: flex;

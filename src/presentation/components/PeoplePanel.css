@@ -69,11 +69,11 @@
 .people-meter__fill {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, var(--success), #9fd3a8);
+  background: var(--wash-good);
 }
 
 .people-meter.is-danger .people-meter__fill {
-  background: linear-gradient(90deg, var(--danger), var(--warning));
+  background: var(--wash-bad);
 }
 
 .people-meter__detail {

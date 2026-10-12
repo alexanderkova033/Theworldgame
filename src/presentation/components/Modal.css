@@ -84,7 +84,7 @@
   height: 2.3rem;
   border-radius: 50%;
   /* An engraved medallion: paper ringed twice in sepia. */
-  background: radial-gradient(circle at 35% 30%, #efe4c7, var(--paper-deep));
+  background: var(--paper);
   border: 1px solid var(--rule-dark);
   box-shadow: inset 0 0 0 3px var(--paper-raised), inset 0 0 0 4px var(--rule);
   flex-shrink: 0;
@@ -119,7 +119,7 @@
   /* A wax seal: oxblood, with a cream cross. */
   border-radius: 50%;
   border: 1px solid #3e0d0d;
-  background: radial-gradient(circle at 35% 30%, #a3352c, var(--oxblood-dark));
+  background: var(--oxblood);
   color: #f8ebc6;
   font-size: 1.1rem;
   line-height: 1;
@@ -128,5 +128,5 @@
 
 .modal__close:hover:not(:disabled) {
   border-color: #3e0d0d;
-  background: radial-gradient(circle at 35% 30%, #b8443a, #6a1a18);
+  background: #8e1e14;
 }

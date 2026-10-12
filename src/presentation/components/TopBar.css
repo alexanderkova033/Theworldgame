@@ -1,3 +1,6 @@
+/* The top bar is bound like the spine of a Georgian ledger: one even green
+   morocco, its rows parted by gilt fillets (the spine's raised bands), the
+   nation's name on a red morocco label, and gilt tooling along the foot. */
 .top-bar {
   position: relative;
   /* Above Modal's overlay (z-index: 50, position: fixed, inset: 0) so the
@@ -8,9 +11,7 @@
   z-index: 60;
   display: flex;
   flex-direction: column;
-  /* A spine of green morocco leather. */
-  background: var(--grain) 0 0/90px 90px repeat, linear-gradient(180deg, #2c4739, var(--leather) 55%, var(--leather-dark));
-  box-shadow: 0 4px 14px rgba(20, 12, 4, 0.55);
+  background: var(--grain) 0 0/90px 90px repeat, var(--leather);
 }
 
 /* Gilt tooling along the spine's foot: two fillets with a roll of dots
@@ -33,60 +34,88 @@
   padding: 0.55rem 1.25rem;
 }
 
-.top-bar__row--ticker {
-  border-bottom: 1px solid rgba(226, 194, 122, 0.28);
+/* A raised band between rows: a pair of gilt fillets, one bright, one dim. */
+.top-bar__row + .top-bar__row,
+.top-bar > .advisor-strip {
+  border-top: 1px solid rgba(226, 194, 122, 0.55);
+  box-shadow: inset 0 3px 0 -2px rgba(226, 194, 122, 0.25);
 }
 
 .top-bar__row--tabs {
-  padding-top: 0.45rem;
-  padding-bottom: 0.45rem;
-  gap: 0.5rem;
-  background: rgba(0, 0, 0, 0.16);
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+  gap: 0.25rem;
 }
 
+/* The nation's name on a red morocco label, ruled twice in gilt — the
+   label every bound volume of the age carried on its spine. */
 .top-bar__nation {
   display: flex;
   flex-direction: column;
-  line-height: 1.2;
+  align-items: center;
+  line-height: 1.15;
+  padding: 0.3rem 0.95rem 0.35rem;
+  background: var(--grain) 0 0/90px 90px repeat, #5e1717;
+  border: 1px solid var(--gilt-bright);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 2px #5e1717, inset 0 0 0 3px rgba(226, 194, 122, 0.6);
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.1rem;
-  color: var(--accent-active);
-  letter-spacing: 0.03em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  font-size: 1.15rem;
+  color: var(--gilt-bright);
+  letter-spacing: 0.04em;
   white-space: nowrap;
-  padding-left: 0.7rem;
-  border-left: 3px solid var(--party-color, var(--accent));
 }
 
 .top-bar__party {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-family: var(--font-body);
-  font-weight: 700;
+  font-style: italic;
+  font-weight: 600;
   font-size: 0.8125rem;
-  letter-spacing: 0.02em;
-  color: var(--party-color);
-  text-shadow: none;
+  letter-spacing: 0;
+  color: #ecdcb4;
 }
 
+/* The ruling party's colour, as a small inlaid roundel. */
+.top-bar__party::before {
+  content: "";
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--party-color);
+  border: 1px solid var(--gilt-bright);
+}
+
+/* The calendar and the clock: one gilt-ruled compartment. */
 .top-bar__date {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-weight: 600;
+  min-height: 2.1rem;
+  padding: 0 0.75rem;
+  border: 1px solid rgba(226, 194, 122, 0.55);
+  border-radius: 2px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
   white-space: nowrap;
-  color: var(--text-muted);
+  color: var(--text);
 }
 
 .top-bar__pause-speed {
   display: inline-flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.6rem;
 }
 
 .top-bar__pause-button {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  min-height: 2.1rem;
 }
 
 .top-bar__mute-button {
@@ -103,15 +132,29 @@
   display: block;
 }
 
+/* The speeds, joined into one tooled strip. */
 .top-bar__speeds {
   display: flex;
-  gap: 0.3rem;
 }
 
 .top-bar__speed-button {
   min-width: 2.3rem;
-  padding: 0.4rem 0.5rem;
+  min-height: 2.1rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0;
   font-size: 0.875rem;
+}
+
+.top-bar__speed-button + .top-bar__speed-button {
+  margin-left: -1px;
+}
+
+.top-bar__speed-button:first-child {
+  border-radius: 2px 0 0 2px;
+}
+
+.top-bar__speed-button:last-child {
+  border-radius: 0 2px 2px 0;
 }
 
 .top-bar__spacer {
@@ -119,18 +162,47 @@
   min-width: 0.5rem;
 }
 
-.top-bar__tab {
+/* Tabs: gilt lettering beside a tooled medallion, no box of their own.
+   The open one is underscored with a gilt rule. */
+.top-bar__row--tabs .top-bar__tab {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.35rem 0.9rem 0.35rem 0.35rem;
-  font-size: 0.875rem;
+  padding: 0.3rem 0.85rem 0.3rem 0.3rem;
+  background: transparent;
+  border-color: transparent;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
   letter-spacing: 0.02em;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+  color: #ecdcb4;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
-.top-bar__tab:hover:not(:disabled) {
-  transform: translateY(-1px);
+.top-bar__row--tabs .top-bar__tab:hover:not(:disabled) {
+  background: rgba(226, 194, 122, 0.08);
+  border-color: transparent;
+  color: var(--gilt-bright);
+}
+
+.top-bar__row--tabs .top-bar__tab.is-active,
+.top-bar__row--tabs .top-bar__tab.is-active:hover:not(:disabled) {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--gilt-bright);
+}
+
+.top-bar__tab.is-active::after {
+  content: "";
+  position: absolute;
+  left: 2.7rem;
+  right: 0.85rem;
+  bottom: -0.15rem;
+  height: 3px;
+  border-top: 1px solid var(--gilt-bright);
+  border-bottom: 1px solid var(--gilt-bright);
 }
 
 .top-bar__tab svg {
@@ -138,9 +210,7 @@
   flex-shrink: 0;
 }
 
-/* Each tab's glyph sits in its own round frame, portrait-style — the same
-   language as .icon-tile__icon elsewhere in the UI — so the tab row reads
-   as a row of carved medallions rather than plain flat buttons. */
+/* Each tab's glyph sits in a tooled roundel: leather, ringed in gilt. */
 .top-bar__tab-icon {
   position: relative;
   display: inline-flex;
@@ -149,23 +219,15 @@
   width: 2.1rem;
   height: 2.1rem;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.14), transparent 65%), var(--panel-bg-raised);
-  border: 2px solid var(--panel-border);
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.5),
-    inset 0 0 0 1px rgba(240, 200, 105, 0.22),
-    inset 0 2px 2px rgba(255, 255, 255, 0.1),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.45);
+  background: var(--leather-dark);
+  border: 1px solid rgba(226, 194, 122, 0.55);
+  box-shadow: inset 0 0 0 2px var(--leather-dark), inset 0 0 0 3px rgba(226, 194, 122, 0.25);
   flex-shrink: 0;
 }
 
 .top-bar__tab.is-active .top-bar__tab-icon {
-  border-color: #fff0c2;
-  box-shadow:
-    0 0 10px rgba(240, 200, 105, 0.55),
-    inset 0 0 0 1px rgba(240, 200, 105, 0.4),
-    inset 0 2px 2px rgba(255, 255, 255, 0.16),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.35);
+  border-color: var(--gilt-bright);
+  box-shadow: inset 0 0 0 2px var(--leather-dark), inset 0 0 0 3px var(--gilt-bright);
 }
 
 .top-bar__tab-badge {
@@ -176,12 +238,13 @@
   height: 1.1rem;
   padding: 0 0.25rem;
   border-radius: 999px;
-  background: var(--danger);
-  border: 1px solid #f0c2b8;
-  color: #2a0906;
+  background: #8e1e14;
+  border: 1px solid var(--gilt-bright);
+  color: #f4ead0;
+  font-family: var(--font-body);
   font-size: 0.8125rem;
   font-weight: 800;
-  line-height: 1.1rem;
+  line-height: 1.05rem;
   text-align: center;
 }
 

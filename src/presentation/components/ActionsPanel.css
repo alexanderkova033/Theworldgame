@@ -173,8 +173,8 @@
 }
 
 .build-tile__pip.is-filled {
-  background: linear-gradient(180deg, var(--accent-active), var(--accent));
-  border-color: #fff0c2;
+  background: var(--oxblood);
+  border-color: var(--oxblood-dark);
   box-shadow: none;
 }
 
