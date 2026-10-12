@@ -11,8 +11,7 @@
   z-index: 60;
   display: flex;
   flex-direction: column;
-  /* Tooled all over with a faint gilt diaper of lozenges and quatrefoils. */
-  background: var(--tooling-diaper) 0 0/36px 36px repeat, var(--grain) 0 0/90px 90px repeat, var(--leather);
+  background: var(--grain) 0 0/90px 90px repeat, var(--leather);
 }
 
 /* Dentelle along the spine's foot: a fillet, scallops and pendant
@@ -33,11 +32,10 @@
   padding: 0.55rem 1.25rem;
 }
 
-/* A raised band between rows: a roll of gilt lozenges on a fillet. */
+/* Rows parted by a single gilt fillet. */
 .top-bar__row + .top-bar__row,
 .top-bar > .advisor-strip {
-  padding-top: calc(0.45rem + 7px);
-  background: var(--tooling-roll) 0 0/14px 7px repeat-x;
+  border-top: 1px solid rgba(226, 194, 122, 0.3);
 }
 
 .top-bar__row--tabs {
@@ -45,9 +43,8 @@
   gap: 0.45rem;
 }
 
-/* The nation's name on a red morocco label, ruled in gilt with a dotted
-   inner roll — the label every bound volume of the age carried on its
-   spine. */
+/* The nation's name on a red morocco label ruled in gilt — the label
+   every bound volume of the age carried on its spine. */
 .top-bar__nation {
   display: flex;
   flex-direction: column;
@@ -57,8 +54,6 @@
   background: var(--grain) 0 0/90px 90px repeat, #5e1717;
   border: 1px solid var(--gilt-bright);
   border-radius: 10px;
-  outline: 1px dotted rgba(226, 194, 122, 0.8);
-  outline-offset: -5px;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.15rem;
@@ -97,7 +92,7 @@
   min-height: 2.1rem;
   padding: 0 0.85rem;
   background: var(--leather-dark);
-  border: 1px solid rgba(226, 194, 122, 0.55);
+  border: 1px solid rgba(226, 194, 122, 0.3);
   border-radius: 999px;
   font-family: var(--font-display);
   font-size: 1rem;
@@ -174,9 +169,9 @@
   min-width: 0.5rem;
 }
 
-/* Tabs: rounded cartouches of darker leather, edged in gilt, a tooled
-   medallion at the head of each. The open one is set in red morocco,
-   like the nation's label, with a second gilt rule inside its edge. */
+/* Tabs: rounded cartouches of darker leather with a faint gilt edge and
+   a tooled medallion at the head. The open one takes a bright gilt edge
+   and gilt lettering. */
 .top-bar__row--tabs .top-bar__tab {
   position: relative;
   display: flex;
@@ -184,7 +179,7 @@
   gap: 0.5rem;
   padding: 0.22rem 1rem 0.22rem 0.22rem;
   background: var(--leather-dark);
-  border: 1px solid rgba(226, 194, 122, 0.55);
+  border: 1px solid rgba(226, 194, 122, 0.3);
   border-radius: 999px;
   font-family: var(--font-display);
   font-size: 1rem;
@@ -202,9 +197,9 @@
 
 .top-bar__row--tabs .top-bar__tab.is-active,
 .top-bar__row--tabs .top-bar__tab.is-active:hover:not(:disabled) {
-  background: #5e1717;
+  background: var(--leather-dark);
   border-color: var(--gilt-bright);
-  box-shadow: inset 0 0 0 2px #5e1717, inset 0 0 0 3px rgba(226, 194, 122, 0.45);
+  box-shadow: none;
   color: var(--gilt-bright);
 }
 
@@ -223,7 +218,7 @@
   height: 2.1rem;
   border-radius: 50%;
   background: var(--leather-dark);
-  border: 1px solid rgba(226, 194, 122, 0.55);
+  border: 1px solid rgba(226, 194, 122, 0.3);
   box-shadow: inset 0 0 0 2px var(--leather-dark), inset 0 0 0 3px rgba(226, 194, 122, 0.25);
   flex-shrink: 0;
 }

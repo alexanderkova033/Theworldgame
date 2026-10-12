@@ -12,7 +12,7 @@
   /* A rounded compartment, sunk into the leather and ruled in gilt. */
   padding: 0.28rem 0.7rem;
   background: var(--leather-dark);
-  border: 1px solid rgba(226, 194, 122, 0.5);
+  border: 1px solid rgba(226, 194, 122, 0.3);
   border-radius: 999px;
   font-size: 0.9rem;
   font-weight: 600;
@@ -90,7 +90,7 @@
 
 .resource-ticker button.resource-ticker__chip {
   background: var(--leather-dark);
-  border-color: rgba(226, 194, 122, 0.5);
+  border-color: rgba(226, 194, 122, 0.3);
   border-radius: 999px;
 }
 
