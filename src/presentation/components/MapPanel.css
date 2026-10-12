@@ -1,7 +1,7 @@
-/* No .panel here on purpose — the map is the one element in the whole UI
-   that isn't a carved-wood card. It fills the entire stage edge-to-edge,
-   HOI4-style, with every control (zoom, legend) floating on top of it
-   instead of sharing a bordered frame with it. */
+/* No .panel here on purpose: the map fills the whole stage edge to edge,
+   a hand-coloured engraved chart with every control (zoom, legend, modes)
+   laid on it as a small paper cartouche. Fills and strokes only, never a
+   filter, so panning never re-rasterizes anything. */
 .map-panel {
   flex: 1;
   min-width: 0;
@@ -15,6 +15,7 @@
   flex: 1;
   min-height: 0;
   display: flex;
+  background: #d8dccb;
 }
 
 .map-panel__svg {
@@ -30,6 +31,8 @@
   cursor: grabbing;
 }
 
+/* --- Controls: paper cartouches on the chart ---------------------------- */
+
 .map-panel__zoom-controls {
   position: absolute;
   top: 0.9rem;
@@ -41,9 +44,6 @@
   align-items: center;
 }
 
-/* Round carved medallions, same language as the top bar's tab icons and the
-   legend toggle, so the map's own floating controls read as part of the
-   same command UI instead of generic square buttons dropped on the map. */
 .map-panel__zoom-controls button {
   width: 2.4rem;
   height: 2.4rem;
@@ -52,86 +52,136 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
   font-weight: 700;
   line-height: 1;
-  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.12), transparent 65%), rgba(9, 12, 17, 0.88);
 }
 
 .map-panel__zoom-controls button[aria-label="Reset view"] {
   width: auto;
   height: auto;
   min-width: 2.4rem;
+  min-height: 1.9rem;
   border-radius: 999px;
-  padding: 0.3rem 0.55rem;
+  padding: 0.3rem 0.65rem;
+  font-family: var(--font-body);
   font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
+}
+
+/* --- The sea ------------------------------------------------------------- */
+
+.map-panel__sea {
+  fill: #d8dccb;
+}
+
+.map-panel__waterline {
+  fill: none;
+  stroke: #3e5a68;
+  stroke-linejoin: round;
+}
+
+.map-panel__waterline-gap {
+  fill: none;
+  stroke: #d8dccb;
+  stroke-linejoin: round;
+}
+
+/* The colourist's blue along the shore, over the water-lining. */
+.map-panel__shallows {
+  fill: none;
+  stroke: #7fa6b8;
+  stroke-width: 30;
+  stroke-linejoin: round;
+  opacity: 0.3;
+}
+
+.map-panel__compass-ring {
+  fill: none;
+  stroke: #3b2a1a;
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+.map-panel__compass-dark {
+  fill: #3b2a1a;
+  opacity: 0.7;
+}
+
+.map-panel__compass-light {
+  fill: #f3ead3;
+  stroke: #3b2a1a;
+  stroke-width: 0.8;
+  stroke-opacity: 0.7;
+}
+
+.map-panel__compass-hub {
+  fill: #7b2121;
+  stroke: #3b2a1a;
+  stroke-width: 0.8;
+}
+
+.map-panel__compass-north {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  text-anchor: middle;
+  fill: #7b2121;
+  user-select: none;
+}
+
+/* --- The land ------------------------------------------------------------ */
+
+.map-panel__land-paper {
+  fill: #f1e6c9;
 }
 
 .map-panel__coast {
   fill: none;
-  stroke: #06090d;
-  stroke-width: 5.2;
-}
-
-.map-panel__shallows {
-  fill: none;
-  stroke: #4a8fae;
-  stroke-width: 36;
-  stroke-linejoin: round;
-  opacity: 0.18;
-}
-
-.map-panel__shallows--near {
-  stroke-width: 18;
-  opacity: 0.25;
-}
-
-.map-panel__land-shadow path {
-  fill: #000;
-  opacity: 0.35;
-}
-
-.map-panel__surf {
-  fill: none;
-  stroke: #d8f2fa;
-  stroke-width: 2;
-  stroke-dasharray: 3 2.5;
-  opacity: 0.6;
-}
-
-.map-panel__province {
-  stroke: #06090d;
+  stroke: #2b1d12;
   stroke-width: 2.6;
+  stroke-linejoin: round;
+}
+
+/* Provinces: a watercolour wash of the nation's colour, divided by dotted
+   ink lines as old county maps were. */
+.map-panel__province {
+  stroke: #5c4733;
+  stroke-width: 1.4;
+  stroke-dasharray: 1.5 3.5;
+  stroke-linecap: round;
 }
 
 .map-panel__province.is-owned {
   fill: var(--nation-color);
+  fill-opacity: 0.5;
   cursor: pointer;
 }
 
 .map-panel__province.is-owned:hover {
-  stroke: var(--accent);
-  stroke-width: 3.4;
+  fill-opacity: 0.62;
+  stroke: var(--oxblood);
+  stroke-width: 2.4;
+  stroke-dasharray: none;
 }
 
-/* Neighbors keep their own color at near full strength, so the political
-   map reads as three distinct countries, not "yours" and "grey". */
 .map-panel__province.is-foreign {
-  opacity: 0.85;
+  fill-opacity: 0.3;
 }
 
-.map-panel__province.is-selected {
-  stroke: var(--accent-active);
-  stroke-width: 4.2;
+.map-panel__province.is-selected,
+.map-panel__province.is-selected:hover {
+  stroke: var(--oxblood);
+  stroke-width: 3.6;
+  stroke-dasharray: none;
 }
 
 .map-panel__unclaimed-land {
-  fill: #5c5138;
-  stroke: #06090d;
-  stroke-width: 3.6;
-  opacity: 0.8;
+  fill: #efe3c4;
+  stroke: #2b1d12;
+  stroke-width: 2.4;
+  stroke-linejoin: round;
 }
 
 .map-panel__unclaimed-land--clickable {
@@ -139,80 +189,187 @@
 }
 
 .map-panel__unclaimed-land--clickable:hover {
-  stroke: var(--accent);
+  fill: #f6eed8;
+  stroke: var(--oxblood);
 }
 
 .map-panel__unclaimed-land.is-selected {
-  stroke: var(--accent-active);
-  stroke-width: 4.5;
+  stroke: var(--oxblood);
+  stroke-width: 4;
 }
 
+.map-panel__nation-border {
+  fill: none;
+  stroke-width: 14;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.map-panel__nation-frontier {
+  fill: none;
+  stroke: #2b1d12;
+  stroke-width: 2.2;
+  stroke-dasharray: 9 3 2 3;
+  stroke-linecap: round;
+}
+
+/* Roads, cased as a surveyor drew them: two ink edges with the paper
+   showing between. */
 .map-panel__road-line-base {
-  stroke: #2a1f14;
-  stroke-width: 4.5;
+  stroke: #3b2a1a;
   stroke-linecap: round;
   opacity: 0.85;
 }
 
 .map-panel__road-line-top {
-  stroke: #e8d9ab;
-  stroke-width: 2.4;
+  stroke: #f6eed8;
   stroke-linecap: round;
-  stroke-dasharray: 7 5;
 }
 
 .map-panel__road-hub {
-  fill: #e8d9ab;
-  stroke: #2a1f14;
+  fill: #f6eed8;
+  stroke: #3b2a1a;
   stroke-width: 1.5;
 }
 
+.map-panel__road-count {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  fill: #2b1d12;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: rgba(246, 238, 216, 0.9);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  user-select: none;
+}
+
+/* --- Lettering ----------------------------------------------------------- */
+
+.map-panel__label {
+  font-family: var(--font-display);
+  font-size: 17px;
+  fill: #2b1d12;
+  text-anchor: middle;
+  font-weight: 700;
+  user-select: none;
+  paint-order: stroke;
+  stroke: rgba(246, 238, 216, 0.85);
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
+}
+
+.map-panel__label.is-foreign {
+  fill: #5c4733;
+  font-style: italic;
+  font-weight: 600;
+}
+
+.map-panel__nation-name {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-anchor: middle;
+  fill: rgba(43, 29, 18, 0.72);
+  paint-order: stroke;
+  stroke: rgba(246, 238, 216, 0.7);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  user-select: none;
+}
+
+.map-panel__nation-name.is-you {
+  fill: #561414;
+}
+
+.map-panel__nation-party {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-style: italic;
+  font-weight: 700;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: rgba(246, 238, 216, 0.85);
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
+  user-select: none;
+}
+
+/* --- Province info bars: small paper slips pinned to the chart ----------- */
+
 .map-panel__info-bar {
-  fill: rgba(6, 9, 13, 0.62);
-  stroke: rgba(244, 239, 226, 0.16);
-  stroke-width: 1;
+  fill: rgba(249, 243, 227, 0.93);
+  stroke: #6e5434;
+  stroke-width: 0.9;
 }
 
 .map-panel__info-count {
   font-family: var(--font-body);
   font-size: 11px;
   font-weight: 700;
-  fill: #f4efe2;
+  fill: #2b1d12;
   user-select: none;
 }
 
-.map-panel__road-count {
-  font-family: var(--font-body);
-  font-size: 12.5px;
-  font-weight: 700;
-  fill: #f4efe2;
+.map-panel__broken-marker {
+  fill: var(--danger);
+  stroke: #2b1d12;
+  stroke-width: 1;
+}
+
+.map-panel__broken-count {
+  font-size: 11px;
+  font-weight: 800;
   text-anchor: middle;
-  paint-order: stroke;
-  stroke: rgba(6, 9, 13, 0.75);
-  stroke-width: 3px;
-  stroke-linejoin: round;
-  user-select: none;
+  fill: #f9f3e3;
 }
 
-.map-panel__label {
-  font-family: var(--font-display);
-  font-size: 17px;
-  fill: #f4efe2;
+/* Province flags in the info bar: homes and jobs, amber when tight, red
+   with a "!" badge when people there have no home or no work. */
+.map-panel__status-flag {
+  stroke: #2b1d12;
+  stroke-width: 0.8;
+}
+
+.map-panel__status-flag.is-warn {
+  fill: #d49a3a;
+}
+
+.map-panel__status-flag.is-alert {
+  fill: var(--danger);
+}
+
+.map-panel__status-alert {
+  fill: #2b1d12;
+  stroke: var(--danger);
+  stroke-width: 0.8;
+}
+
+.map-panel__status-alert-mark {
+  font-size: 7px;
+  font-weight: 800;
   text-anchor: middle;
-  font-weight: 700;
-  user-select: none;
-  paint-order: stroke;
-  stroke: rgba(6, 9, 13, 0.65);
-  stroke-width: 3px;
-  stroke-linejoin: round;
+  fill: #f9f3e3;
 }
 
-.map-panel__label.is-foreign {
-  fill: #c3c9d3;
-  opacity: 0.75;
+/* An outline on an SVG shape draws as a rectangle around its whole bounding
+   box — never show one on a province. Keyboard focus gets a dashed oxblood
+   edge along the province itself instead (selection is the solid one). */
+.map-panel__province:focus,
+.map-panel__province:focus-visible {
+  outline: none;
 }
 
-/* Map modes, bottom centre: the switch, and the active mode's key. */
+.map-panel__province:focus-visible {
+  stroke: var(--oxblood);
+  stroke-width: 3.6;
+  stroke-dasharray: 10 6;
+}
+
+/* --- Map modes, bottom centre: the switch, and the active mode's key ----- */
+
 .map-panel__modes {
   position: absolute;
   left: 50%;
@@ -227,8 +384,8 @@
 
 .map-panel__mode-switch {
   display: flex;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border-radius: 6px;
+  box-shadow: 0 3px 10px rgba(60, 40, 20, 0.3);
 }
 
 .map-panel__mode-switch button {
@@ -236,33 +393,28 @@
   padding: 0.3rem 0.85rem;
   border-radius: 0;
   font-size: 0.875rem;
-  background: rgba(9, 12, 17, 0.85);
 }
 
 .map-panel__mode-switch button + button {
-  margin-left: -2px;
+  margin-left: -1px;
 }
 
 .map-panel__mode-switch button:first-child {
-  border-radius: 8px 0 0 8px;
+  border-radius: 6px 0 0 6px;
 }
 
 .map-panel__mode-switch button:last-child {
-  border-radius: 0 8px 8px 0;
-}
-
-.map-panel__mode-switch button.is-active {
-  background: linear-gradient(180deg, var(--accent-active), var(--accent));
-  color: #241505;
-  text-shadow: none;
+  border-radius: 0 6px 6px 0;
 }
 
 .map-panel__mode-key {
   display: flex;
   gap: 0.8rem;
   padding: 0.3rem 0.7rem;
-  border-radius: 6px;
-  background: rgba(9, 12, 17, 0.85);
+  border-radius: 4px;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  box-shadow: 0 3px 10px rgba(60, 40, 20, 0.25);
   font-size: 0.8125rem;
   color: var(--text);
 }
@@ -278,14 +430,18 @@
   display: block;
 }
 
+/* --- The legend: a key in a ruled cartouche, as a chart's corner held ---- */
+
 .map-panel__legend-toggle {
   position: absolute;
   left: 0.9rem;
   bottom: 0.9rem;
   z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   padding: 0.4rem 0.7rem;
   font-size: 0.8125rem;
-  background: rgba(9, 12, 17, 0.85);
 }
 
 .map-panel__legend {
@@ -299,11 +455,11 @@
   gap: 0.5rem 1rem;
   max-height: 40%;
   overflow-y: auto;
-  padding: 0.7rem 0.9rem;
-  background: linear-gradient(180deg, rgba(36, 23, 8, 0.92), rgba(11, 7, 4, 0.92));
-  border: 2px solid var(--panel-border);
-  border-radius: 6px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(240, 200, 105, 0.14);
+  padding: 0.8rem 1rem;
+  background: var(--grain) 0 0/90px 90px repeat, var(--paper-raised);
+  border: 1px solid var(--rule-dark);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 4px var(--paper-raised), inset 0 0 0 5px var(--rule), 0 8px 20px rgba(60, 40, 20, 0.3);
   font-size: 0.85rem;
   color: var(--text-muted);
   animation: modal-pop 0.12s ease-out;
@@ -320,7 +476,7 @@
   flex-basis: 100%;
   font-family: var(--font-display);
   font-weight: 700;
-  color: var(--accent-active);
+  color: var(--oxblood);
 }
 
 .map-panel__legend-item:not(.is-present) svg {
@@ -332,12 +488,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.map-panel__legend-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
 .map-panel__legend-badge {
   display: inline-flex;
   align-items: center;
@@ -346,16 +496,16 @@
   height: 1rem;
   border-radius: 50%;
   background: var(--danger);
-  color: #1a0d06;
+  color: var(--paper-raised);
   font-size: 0.8125rem;
   font-weight: 800;
-  text-shadow: none;
 }
 
 .map-panel__legend-swatch {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid var(--ink);
   display: inline-block;
 }
 
@@ -364,25 +514,27 @@
   flex-shrink: 0;
 }
 
+/* --- The hover note ------------------------------------------------------ */
+
 .map-panel__tooltip {
   position: absolute;
   z-index: 3;
   pointer-events: none;
   min-width: 11rem;
   max-width: 15rem;
-  background: linear-gradient(180deg, var(--wood-light), var(--panel-bg));
-  border: 2px solid var(--panel-border);
-  border-radius: 6px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(240, 200, 105, 0.18);
-  padding: 0.55rem 0.7rem;
+  background: var(--grain) 0 0/90px 90px repeat, var(--paper-raised);
+  border: 1px solid var(--rule-dark);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 3px var(--paper-raised), inset 0 0 0 4px var(--rule), 0 8px 20px rgba(60, 40, 20, 0.3);
+  padding: 0.6rem 0.75rem;
 }
 
 .map-panel__tooltip-title {
   font-family: var(--font-display);
   font-weight: 700;
-  color: var(--accent-active);
+  color: var(--oxblood);
   margin-bottom: 0.35rem;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .map-panel__tooltip-row {
@@ -403,116 +555,17 @@
   color: var(--text-muted);
 }
 
-.map-panel__nation-name {
-  font-family: var(--font-display);
-  font-size: 34px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-anchor: middle;
-  fill: rgba(244, 239, 226, 0.78);
-  paint-order: stroke;
-  stroke: rgba(6, 9, 13, 0.7);
-  stroke-width: 5px;
-  stroke-linejoin: round;
-  user-select: none;
-}
-
-.map-panel__nation-name.is-you {
-  fill: #fff3cf;
-}
-
-.map-panel__nation-party {
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-anchor: middle;
-  paint-order: stroke;
-  stroke: rgba(6, 9, 13, 0.75);
-  stroke-width: 3.5px;
-  stroke-linejoin: round;
-  user-select: none;
-}
-
-.map-panel__broken-marker {
-  fill: var(--danger);
-  stroke: #06090d;
-  stroke-width: 1;
-}
-
-.map-panel__broken-count {
-  font-size: 11px;
-  font-weight: 800;
-  text-anchor: middle;
-  fill: #fff;
-}
-
 .map-panel__tooltip-broken {
   color: var(--danger);
   font-weight: 700;
-}
-
-.map-panel__nation-border {
-  fill: none;
-  stroke-width: 10;
-  stroke-linecap: round;
-}
-
-.map-panel__nation-frontier {
-  fill: none;
-  stroke: #06090d;
-  stroke-width: 4.5;
-  stroke-linecap: round;
-}
-
-/* An outline on an SVG shape draws as a rectangle around its whole bounding
-   box — never show one on a province. Keyboard focus gets a dashed gold edge
-   along the province itself instead (selection is the solid one). */
-.map-panel__province:focus,
-.map-panel__province:focus-visible {
-  outline: none;
-}
-
-.map-panel__province:focus-visible {
-  stroke: var(--accent-active);
-  stroke-width: 4.2;
-  stroke-dasharray: 10 6;
-}
-
-/* Province flags in the info bar: homes and jobs, amber when tight, red
-   with a "!" badge when people there have no home or no work. */
-.map-panel__status-flag {
-  stroke: #1a0d06;
-  stroke-width: 0.8;
-}
-
-.map-panel__status-flag.is-warn {
-  fill: var(--warning);
-}
-
-.map-panel__status-flag.is-alert {
-  fill: var(--danger);
-}
-
-.map-panel__status-alert {
-  fill: #1a0d06;
-  stroke: var(--danger);
-  stroke-width: 0.8;
-}
-
-.map-panel__status-alert-mark {
-  font-size: 7px;
-  font-weight: 800;
-  text-anchor: middle;
-  fill: #fff;
 }
 
 /* The tooltip's "this province as a place" block. */
 .map-panel__tooltip-place {
   margin: 0.2rem 0;
   padding: 0.2rem 0;
-  border-top: 1px solid var(--panel-border);
-  border-bottom: 1px solid var(--panel-border);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
 }
 
 .map-panel__tooltip-row.is-alert {

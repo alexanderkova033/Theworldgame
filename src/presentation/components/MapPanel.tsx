@@ -69,31 +69,97 @@ const TERRAIN_PATTERN: Record<Terrain, string> = {
   plains: "url(#terrain-plains)",
 };
 
-// A terrain-colored wash underneath that texture (blended with multiply,
-// so it darkens/tints rather than washing out the nation's color) — the
-// two together read as an actual colored terrain instead of a flat
-// political fill with a pattern stamped on it. Pushed richer/more
-// saturated than a subtle relief hint so the base color itself already
-// reads as forest/hill/plain/coast before the scattered props on top.
+// A faint terrain wash under that texture, laid over the nation's own
+// watercolour like a second pass of the brush — enough that hills, forest,
+// plains and coast differ in tone, not so much that it muddies the paper.
 const TERRAIN_TINT: Record<Terrain, string> = {
-  hills: "#63492c",
-  forest: "#123a20",
-  coast: "#256782",
-  plains: "#8f741f",
+  hills: "#8a6438",
+  forest: "#3f6b3a",
+  coast: "#4f8296",
+  plains: "#c39a3c",
 };
 
 // Each road built thickens the single line to its province (instead of
 // fanning out extra parallel lines) — a "×N" badge carries the exact count
 // so the line itself never has to turn into a tangle to stay informative.
-// A brighter shade of a nation's color for its border band, so the band
-// stands out against the nation's own fill.
-function lighten(hex: string, amount: number): string {
+// A colour pushed toward the ink, so a pale party colour still reads as
+// lettering on the paper.
+function inkier(hex: string, amount: number): string {
   const n = parseInt(hex.slice(1), 16);
-  const channel = (shift: number) => {
+  const ink = [0x2b, 0x1d, 0x12];
+  const channel = (shift: number, i: number) => {
     const c = (n >> shift) & 0xff;
-    return Math.round(c + (255 - c) * amount);
+    return Math.round(c + (ink[i] - c) * amount);
   };
-  return `rgb(${channel(16)}, ${channel(8)}, ${channel(0)})`;
+  return `rgb(${channel(16, 0)}, ${channel(8, 1)}, ${channel(0, 2)})`;
+}
+
+// The watercolour a nation is washed in: its own hue, lifted to a clear
+// mid tone. A dark crest colour laid thin over cream only turns grey.
+function washColor(hex: string): string {
+  const n = parseInt(hex.slice(1), 16);
+  const [r, g, b] = [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff].map((c) => c / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  let h = 0;
+  if (d > 0) h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return `hsl(${Math.round(h * 60 + 360) % 360}, 55%, 55%)`;
+}
+
+// Water-lining, as engravers drew it: rings of fine lines following the
+// coast outward, closer together near the shore. Each ring is a wide ink
+// stroke with a slightly narrower sea-coloured one over it, leaving a line.
+const WATERLINES = [
+  { width: 64, opacity: 0.22 },
+  { width: 48, opacity: 0.3 },
+  { width: 34, opacity: 0.38 },
+  { width: 22, opacity: 0.48 },
+  { width: 12, opacity: 0.6 },
+];
+
+function Waterlines({ d }: { d: string }) {
+  return (
+    <>
+      {WATERLINES.map((ring) => (
+        <g key={ring.width}>
+          <path d={d} className="map-panel__waterline" style={{ strokeWidth: ring.width, strokeOpacity: ring.opacity }} />
+          <path d={d} className="map-panel__waterline-gap" style={{ strokeWidth: ring.width - 2.2 }} />
+        </g>
+      ))}
+    </>
+  );
+}
+
+// A compass rose in open water, the way every chart of the day carried one.
+const COMPASS = { x: 1330, y: 480, r: 62 };
+
+function CompassRose() {
+  const { x, y, r } = COMPASS;
+  const point = (angle: number, length: number, half: number) => {
+    const rad = (angle * Math.PI) / 180;
+    const tip = [x + Math.sin(rad) * length, y - Math.cos(rad) * length];
+    const left = [x + Math.sin(rad - Math.PI / 2) * half, y - Math.cos(rad - Math.PI / 2) * half];
+    const right = [x + Math.sin(rad + Math.PI / 2) * half, y - Math.cos(rad + Math.PI / 2) * half];
+    return (
+      <g key={angle}>
+        <polygon points={`${x},${y} ${tip.join(",")} ${left.join(",")}`} className="map-panel__compass-dark" />
+        <polygon points={`${x},${y} ${tip.join(",")} ${right.join(",")}`} className="map-panel__compass-light" />
+      </g>
+    );
+  };
+  return (
+    <g pointerEvents="none" aria-hidden="true">
+      <circle cx={x} cy={y} r={r} className="map-panel__compass-ring" />
+      <circle cx={x} cy={y} r={r - 6} className="map-panel__compass-ring" />
+      {[45, 135, 225, 315].map((a) => point(a, r * 0.72, 7))}
+      {[0, 90, 180, 270].map((a) => point(a, r * 1.18, 11))}
+      <circle cx={x} cy={y} r={4} className="map-panel__compass-hub" />
+      <text x={x} y={y - r * 1.18 - 8} className="map-panel__compass-north">
+        N
+      </text>
+    </g>
+  );
 }
 
 const ROAD_BASE_WIDTH = 2.5;
@@ -110,8 +176,8 @@ function roadLineWidth(count: number): number {
 function CapitalBadge({ x, y }: { x: number; y: number }) {
   return (
     <g pointerEvents="none">
-      <circle cx={x} cy={y} r={6.4} fill="#2a1f10" stroke="#f0c869" strokeWidth={0.9} opacity={0.92} />
-      <polygon points={starPoints(x, y, 4.4, 1.9)} fill="#f0c869" stroke="#7a5a1e" strokeWidth={0.5} strokeLinejoin="round" />
+      <circle cx={x} cy={y} r={6.4} fill="#7b2121" stroke="#2b1d12" strokeWidth={0.9} />
+      <polygon points={starPoints(x, y, 4.4, 1.9)} fill="#e2c27a" stroke="#561414" strokeWidth={0.5} strokeLinejoin="round" />
     </g>
   );
 }
@@ -235,7 +301,7 @@ function StatusFlag({ kind, level, cx, cy }: { kind: "homes" | "jobs"; level: "w
 type MapMode = "political" | "homes" | "jobs" | "unrest";
 type ModeLevel = "ok" | "warn" | "alert";
 
-const MODE_COLORS: Record<ModeLevel, string> = { ok: "#6fae7c", warn: "#d9a24f", alert: "#ea6a52" };
+const MODE_COLORS: Record<ModeLevel, string> = { ok: "#8fb97a", warn: "#e0ac52", alert: "#d0644a" };
 
 // Each mode's three steps, and what they mean.
 const MAP_MODES: Array<{ key: MapMode; label: string; levels?: Record<ModeLevel, string> }> = [
@@ -255,9 +321,9 @@ function getModeLevel(mode: MapMode, status: ProvinceStatus): ModeLevel {
 function ModeSwatch({ level }: { level: ModeLevel }) {
   return (
     <svg width={18} height={14} viewBox="0 0 18 14" aria-hidden="true">
-      <rect x={0.5} y={0.5} width={17} height={13} rx={2} fill={MODE_COLORS[level]} stroke="#1a0d06" />
+      <rect x={0.5} y={0.5} width={17} height={13} rx={2} fill={MODE_COLORS[level]} stroke="#2b1d12" />
       {level !== "ok" && (
-        <g stroke="#1a0d06" strokeWidth={1.6} opacity={0.6}>
+        <g stroke="#2b1d12" strokeWidth={1.6} opacity={0.6}>
           <line x1={-2} y1={14} x2={12} y2={0} />
           <line x1={6} y1={14} x2={20} y2={0} />
           {level === "alert" && (
@@ -331,10 +397,6 @@ const MapLayers = memo(function MapLayers({
   return (
     <>
     <defs>
-      <radialGradient id="ocean-gradient" cx="50%" cy="40%" r="75%">
-        <stop offset="0%" stopColor="#1e3a52" />
-        <stop offset="100%" stopColor="#101d29" />
-      </radialGradient>
       {/* Each nation's shape, to keep its border band on its own side
           of the frontier. */}
       {NATION_SHAPES.map((shape) => (
@@ -343,91 +405,80 @@ const MapLayers = memo(function MapLayers({
         </clipPath>
       ))}
 
-      {/* Open-sea texture: soft, wide-set swells across the whole
-          ocean, distinct from the tighter shoreline ripples in
-          terrain-coast, so the water reads as alive everywhere, not
-          just at the water's edge. */}
-      <pattern id="ocean-swell" width={140} height={90} patternUnits="userSpaceOnUse">
-        <path d="M-10,20 Q25,4 60,20 T130,20" stroke="#3a7093" strokeWidth={1.6} fill="none" opacity={0.16} />
-        <path d="M-10,55 Q25,39 60,55 T130,55" stroke="#3a7093" strokeWidth={1.4} fill="none" opacity={0.12} />
-        <path d="M15,80 Q50,66 85,80 T155,80" stroke="#3a7093" strokeWidth={1.2} fill="none" opacity={0.1} />
+      {/* The open sea, engraved: fine level lines ruled across the whole
+          chart, broken here and there by a little stroke of swell. */}
+      <pattern id="ocean-engraving" width={120} height={12} patternUnits="userSpaceOnUse">
+        <line x1={0} y1={6} x2={120} y2={6} stroke="#4c6a78" strokeWidth={0.7} opacity={0.32} />
+      </pattern>
+      <pattern id="ocean-swell" width={260} height={150} patternUnits="userSpaceOnUse">
+        <path d="M20,40 q10,-6 20,0 t20,0" stroke="#3e5a68" strokeWidth={1} fill="none" opacity={0.4} strokeLinecap="round" />
+        <path d="M150,115 q10,-6 20,0 t20,0" stroke="#3e5a68" strokeWidth={1} fill="none" opacity={0.4} strokeLinecap="round" />
       </pattern>
 
-      {/* Terrain textures — scattered props (pine, boulder, wheat,
-          surf) instead of a flat relief hint, but kept sparse, thin-
-          stroked, and low-opacity so they read as a quiet landscape
-          cue rather than competing with the map's political color and
-          icons. */}
+      {/* Terrain, drawn as an engraver would: little molehill hills,
+          pen-and-wash trees, tufts of grass, ripples off the shore. Sparse
+          and thin, so the colour of the land still leads. */}
       <pattern id="terrain-hills" width={100} height={90} patternUnits="userSpaceOnUse">
-        <ellipse cx={20} cy={50} rx={11} ry={5} fill="#4a3a24" opacity={0.35} />
-        <ellipse cx={20} cy={46} rx={13} ry={9} fill="#7a6a52" stroke="#241c10" strokeWidth={0.8} opacity={0.8} />
-        <ellipse cx={16} cy={41} rx={6} ry={3.5} fill="#a89877" opacity={0.4} />
+        <path d="M6,52 Q20,30 34,52" fill="#d9c49a" stroke="#3b2a1a" strokeWidth={1} opacity={0.85} />
+        <path d="M14,40 L18,48 M20,36 L23,46 M26,40 L27,49" stroke="#3b2a1a" strokeWidth={0.7} opacity={0.6} />
+        <path d="M54,82 Q64,68 74,82" fill="#d9c49a" stroke="#3b2a1a" strokeWidth={0.9} opacity={0.7} />
       </pattern>
       <pattern id="terrain-forest" width={90} height={90} patternUnits="userSpaceOnUse">
-        <rect x={14.5} y={54} width={3} height={4} fill="#4a3320" opacity={0.75} />
-        <polygon points="7,54 25,54 16,42" fill="#2d6b3a" stroke="#12291a" strokeWidth={0.7} opacity={0.75} />
-        <polygon points="9,47 23,47 16,37" fill="#34793f" stroke="#12291a" strokeWidth={0.7} opacity={0.75} />
-        <polygon points="11,41 21,41 16,32" fill="#3d8a48" stroke="#12291a" strokeWidth={0.7} opacity={0.75} />
-        <polygon points="16,34 18,40 15,40" fill="#7ecf86" opacity={0.3} />
+        <path d="M16,58 L16,50" stroke="#3b2a1a" strokeWidth={1} />
+        <path d="M16,51 C8,51 7,43 11,41 C10,35 17,32 20,36 C25,35 27,42 23,45 C25,49 21,52 16,51 Z" fill="#7e9c64" stroke="#2f3b22" strokeWidth={0.8} opacity={0.85} />
+        <path d="M62,24 L62,18" stroke="#3b2a1a" strokeWidth={0.9} />
+        <path d="M62,19 C56,19 56,13 59,12 C59,7 65,6 66,10 C70,10 70,16 66,17 C66,19 64,20 62,19 Z" fill="#7e9c64" stroke="#2f3b22" strokeWidth={0.7} opacity={0.75} />
       </pattern>
       <pattern id="terrain-coast" width={40} height={22} patternUnits="userSpaceOnUse">
-        <path d="M0,11 Q10,3 20,11 T40,11" stroke="#d8f2fa" strokeWidth={1.6} fill="none" opacity={0.35} strokeLinecap="round" />
-        <path d="M0,18 Q10,12 20,18 T40,18" stroke="#d8f2fa" strokeWidth={1.2} fill="none" opacity={0.2} strokeLinecap="round" />
+        <path d="M0,11 Q10,5 20,11 T40,11" stroke="#3e5a68" strokeWidth={0.9} fill="none" opacity={0.4} strokeLinecap="round" />
       </pattern>
       {/* Map-mode hatching: diagonal lines for "tight", a cross-hatch for
           "trouble" — so the shading never relies on colour alone. */}
       <pattern id="mode-hatch-warn" width={14} height={14} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-        <line x1={0} y1={0} x2={0} y2={14} stroke="#1a0d06" strokeWidth={2.4} opacity={0.5} />
+        <line x1={0} y1={0} x2={0} y2={14} stroke="#2b1d12" strokeWidth={2.4} opacity={0.5} />
       </pattern>
       <pattern id="mode-hatch-alert" width={11} height={11} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-        <line x1={0} y1={0} x2={0} y2={11} stroke="#1a0d06" strokeWidth={2.2} opacity={0.55} />
-        <line x1={0} y1={0} x2={11} y2={0} stroke="#1a0d06" strokeWidth={2.2} opacity={0.55} />
+        <line x1={0} y1={0} x2={0} y2={11} stroke="#2b1d12" strokeWidth={2.2} opacity={0.55} />
+        <line x1={0} y1={0} x2={11} y2={0} stroke="#2b1d12" strokeWidth={2.2} opacity={0.55} />
       </pattern>
       <pattern id="terrain-plains" width={50} height={50} patternUnits="userSpaceOnUse">
-        <path d="M10,30 Q7,22 5,14" stroke="#c9a23a" strokeWidth={1} fill="none" strokeLinecap="round" opacity={0.65} />
-        <ellipse cx={5} cy={13} rx={1.4} ry={2.6} fill="#d9b846" opacity={0.65} />
-        <path d="M10,30 Q10,20 9,10" stroke="#d9b846" strokeWidth={1} fill="none" strokeLinecap="round" opacity={0.65} />
-        <ellipse cx={9} cy={9} rx={1.4} ry={2.8} fill="#e8c860" opacity={0.65} />
-        <path d="M10,30 Q13,22 15,14" stroke="#c9a23a" strokeWidth={1} fill="none" strokeLinecap="round" opacity={0.65} />
-        <ellipse cx={15} cy={13} rx={1.4} ry={2.6} fill="#d9b846" opacity={0.65} />
+        <path d="M6,30 Q7,25 5,21 M9,30 Q9,24 10,19 M12,30 Q12,26 15,22" stroke="#5c4a24" strokeWidth={0.8} fill="none" strokeLinecap="round" opacity={0.6} />
+        <path d="M33,48 Q33,44 31,41 M36,48 Q36,43 38,40" stroke="#5c4a24" strokeWidth={0.7} fill="none" strokeLinecap="round" opacity={0.45} />
       </pattern>
     </defs>
 
-    <rect x={OCEAN_RECT.x} y={OCEAN_RECT.y} width={OCEAN_RECT.width} height={OCEAN_RECT.height} fill="url(#ocean-gradient)" />
-    <rect
-      x={OCEAN_RECT.x}
-      y={OCEAN_RECT.y}
-      width={OCEAN_RECT.width}
-      height={OCEAN_RECT.height}
-      fill="url(#ocean-swell)"
-      pointerEvents="none"
-    />
+    <rect x={OCEAN_RECT.x} y={OCEAN_RECT.y} width={OCEAN_RECT.width} height={OCEAN_RECT.height} className="map-panel__sea" />
+    {["ocean-engraving", "ocean-swell"].map((id) => (
+      <rect
+        key={id}
+        x={OCEAN_RECT.x}
+        y={OCEAN_RECT.y}
+        width={OCEAN_RECT.width}
+        height={OCEAN_RECT.height}
+        fill={`url(#${id})`}
+        pointerEvents="none"
+      />
+    ))}
 
-    {/* Shallow water: a soft halo hugging every coastline,
-        plus a thin surf line right at the water's edge — drawn before
-        any land fill, so the fill's inner half covers it and only the
-        water-side sliver shows through. Reads as an actual sea meeting
-        an actual shore instead of a flat shape dropped on blue. */}
+    <CompassRose />
+
+    {/* Water-lining round every shore, then a blue wash along it, the way
+        a colourist went over the coasts of a printed chart. All drawn
+        before the land, so only the water side shows. */}
     <g pointerEvents="none">
+      <Waterlines d={coastPath} />
+      {otherLandmasses.map((land) => (
+        <Waterlines key={`${land.id}-waterlines`} d={land.path} />
+      ))}
       <path d={coastPath} className="map-panel__shallows" />
-      <path d={coastPath} className="map-panel__shallows map-panel__shallows--near" />
       {otherLandmasses.map((land) => (
         <path key={`${land.id}-shallows`} d={land.path} className="map-panel__shallows" />
       ))}
-      <path d={coastPath} className="map-panel__surf" />
-      {otherLandmasses.map((land) => (
-        <path key={`${land.id}-surf`} d={land.path} className="map-panel__surf" />
-      ))}
     </g>
 
-    {/* A shadow under all land: the same shapes, offset and dark —
-        no blur filter, so panning never re-rasterizes it. */}
-    <g className="map-panel__land-shadow" transform="translate(0 5)" pointerEvents="none">
-      <path d={coastPath} />
-      {otherLandmasses.map((land) => (
-        <path key={`${land.id}-shadow`} d={land.path} />
-      ))}
-    </g>
+    {/* Bare paper under the continent: each nation's colour is a
+        translucent wash laid over it. */}
+    <path d={coastPath} className="map-panel__land-paper" pointerEvents="none" />
 
     {/* Other landmasses: unowned, but chartable via ventures. */}
     <g>
@@ -481,7 +532,7 @@ const MapLayers = memo(function MapLayers({
               isOwned ? "is-owned" : "is-foreign",
               isSelected ? "is-selected" : "",
             ].join(" ")}
-            style={!isOwned ? { fill: owner?.color ?? "#414a58" } : undefined}
+            style={!isOwned ? { fill: owner ? washColor(owner.color) : "#a8946c" } : undefined}
             onClick={isOwned ? () => onProvinceClick(province.id) : undefined}
             tabIndex={isOwned ? 0 : undefined}
             role={isOwned ? "button" : undefined}
@@ -520,7 +571,7 @@ const MapLayers = memo(function MapLayers({
             key={`${province.id}-tint`}
             d={province.path}
             fill={TERRAIN_TINT[province.terrain]}
-            opacity={isOwned ? 0.3 : 0.18}
+            opacity={isOwned ? 0.07 : 0.06}
             className="map-panel__terrain-tint"
             pointerEvents="none"
           />
@@ -538,7 +589,7 @@ const MapLayers = memo(function MapLayers({
             key={`${province.id}-terrain`}
             d={province.path}
             fill={TERRAIN_PATTERN[province.terrain]}
-            opacity={isOwned ? 0.65 : 0.35}
+            opacity={isOwned ? 0.8 : 0.5}
             pointerEvents="none"
           />
         );
@@ -553,7 +604,7 @@ const MapLayers = memo(function MapLayers({
         provinces.map((province) => {
           const status = provinceStatus[province.id];
           // Other nations fade back, so their colours can't be read as a step.
-          if (!status) return <path key={`${province.id}-mode`} d={province.path} fill="#0b0704" opacity={0.55} pointerEvents="none" />;
+          if (!status) return <path key={`${province.id}-mode`} d={province.path} fill="#efe3c4" opacity={0.75} pointerEvents="none" />;
           const level = getModeLevel(mapMode, status);
           return (
             <g key={`${province.id}-mode`} pointerEvents="none">
@@ -564,16 +615,17 @@ const MapLayers = memo(function MapLayers({
         })}
     </g>
 
-    {/* National frontiers: a band in each nation's (brightened) color
-        just inside its outer edge, so who owns what reads at a glance
-        even where two nations' fills sit side by side. */}
+    {/* National frontiers: a deeper band of each nation's colour just
+        inside its edge, as a colourist ran the brush along a border, and a
+        dash-and-dot ink line on the frontier itself. */}
     <g pointerEvents="none">
       {NATION_SHAPES.map((shape) => (
         <path
           key={`${shape.nationId}-border`}
           d={shape.frontier}
           clipPath={`url(#nation-clip-${shape.nationId})`}
-          stroke={lighten(shape.color, shape.nationId === nation.id ? 0.45 : 0.3)}
+          stroke={shape.color}
+          strokeOpacity={shape.nationId === nation.id ? 0.55 : 0.4}
           className="map-panel__nation-border"
         />
       ))}
@@ -658,7 +710,7 @@ const MapLayers = memo(function MapLayers({
                 {shape.name}
               </text>
               {ruler && (
-                <text x={shape.labelX} y={shape.labelY - 16} className="map-panel__nation-party" style={{ fill: lighten(ruler.color, 0.35) }}>
+                <text x={shape.labelX} y={shape.labelY - 16} className="map-panel__nation-party" style={{ fill: inkier(ruler.color, 0.3) }}>
                   {ruler.name}
                 </text>
               )}
@@ -990,7 +1042,7 @@ export const MapPanel = memo(function MapPanel({
           ref={svgRef}
           viewBox={`${view.x} ${view.y} ${view.width} ${view.height}`}
           className={`map-panel__svg ${isPanning ? "is-panning" : ""}`}
-          style={{ "--nation-color": nation.color } as CSSProperties}
+          style={{ "--nation-color": washColor(nation.color) } as CSSProperties}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
