@@ -13,7 +13,7 @@
   background:
     var(--grain) 0 0/90px 90px repeat,
     linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg)) no-repeat;
-  box-shadow: 0 10px 26px rgba(60, 40, 20, 0.6);
+  box-shadow: none;
 }
 
 .province-card__head {

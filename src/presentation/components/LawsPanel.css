@@ -27,7 +27,7 @@
   border: 1px solid var(--panel-border);
   border-radius: 999px;
   background: var(--inset-strong);
-  box-shadow: inset 0 1px 4px rgba(60, 40, 20, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.28);
 }
 
 .law-tree__bank svg {
@@ -56,7 +56,7 @@
 }
 
 .law-tree__column + .law-tree__column {
-  border-left: 1px dashed rgba(240, 200, 105, 0.14);
+  border-left: 1px dashed rgba(110, 84, 52, 0.3);
 }
 
 .law-tree__column-title {
@@ -119,7 +119,7 @@
   width: 2px;
   height: 0.9rem;
   background: linear-gradient(180deg, var(--panel-border), var(--accent) 130%);
-  box-shadow: 0 0 4px rgba(202, 160, 54, 0.25);
+  box-shadow: none;
 }
 
 .law-tree__connector-fork {
@@ -135,7 +135,7 @@
   right: 22%;
   height: 2px;
   background: var(--panel-border);
-  box-shadow: 0 0 4px rgba(202, 160, 54, 0.2);
+  box-shadow: none;
 }
 
 .law-tree__connector-leg {
@@ -144,7 +144,7 @@
   width: 2px;
   height: 100%;
   background: var(--panel-border);
-  box-shadow: 0 0 4px rgba(202, 160, 54, 0.2);
+  box-shadow: none;
   /* Horizontal position is set inline per-leg (see TierConnector in
      LawsPanel.tsx/ResearchPanel.tsx) so any fork width — 2-way or 3-way —
      spreads evenly instead of assuming exactly two legs. */
@@ -184,7 +184,7 @@
   /* An engraved medallion: a ring of ink, a hairline round it. */
   background: radial-gradient(circle at 35% 30%, rgba(255, 246, 222, 0.35), transparent 65%), var(--paper-raised);
   border: 2px solid var(--rule-dark);
-  box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--rule), 0 2px 5px rgba(60, 40, 20, 0.25);
+  box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--rule);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -195,7 +195,7 @@
 /* Open to pass: an oxblood ring whose outer hairline breathes. */
 .law-node--available .law-node__icon {
   border-color: var(--oxblood);
-  box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--oxblood), 0 2px 5px rgba(60, 40, 20, 0.25);
+  box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--oxblood);
   animation: law-node-pulse 2.6s ease-in-out infinite;
 }
 
@@ -203,15 +203,15 @@
 .law-node--enacted .law-node__icon {
   background: radial-gradient(circle at 35% 30%, rgba(255, 246, 222, 0.35), transparent 65%), #d3dcbd;
   border-color: var(--success);
-  box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--success), 0 2px 5px rgba(60, 40, 20, 0.25);
+  box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--success);
 }
 
 @keyframes law-node-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--oxblood), 0 2px 5px rgba(60, 40, 20, 0.25);
+    box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--oxblood);
   }
   50% {
-    box-shadow: 0 0 0 4px var(--paper-raised), 0 0 0 5px rgba(123, 33, 33, 0.55), 0 2px 5px rgba(60, 40, 20, 0.25);
+    box-shadow: 0 0 0 4px var(--paper-raised), 0 0 0 5px rgba(123, 33, 33, 0.55);
   }
 }
 
@@ -305,11 +305,7 @@
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.1), transparent 65%), var(--panel-bg-raised);
   border: 2px solid var(--panel-border);
-  box-shadow:
-    0 3px 6px rgba(60, 40, 20, 0.5),
-    inset 0 0 0 1px rgba(240, 200, 105, 0.2),
-    inset 0 2px 2px rgba(255, 255, 255, 0.1),
-    inset 0 -2px 4px rgba(60, 40, 20, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -479,7 +475,7 @@
   border-radius: 999px;
   overflow: hidden;
   background: var(--inset-strong);
-  box-shadow: inset 0 1px 3px rgba(60, 40, 20, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.28);
 }
 
 .law-inspector__chance-fill {

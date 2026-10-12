@@ -19,7 +19,7 @@
   border: 1px solid var(--panel-border);
   border-left-width: 5px;
   background: var(--panel-bg);
-  box-shadow: 0 6px 18px rgba(60, 40, 20, 0.55);
+  box-shadow: none;
   animation: toast-in 0.18s ease-out;
 }
 

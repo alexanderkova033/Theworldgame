@@ -5,7 +5,7 @@
   border: 1px solid var(--panel-border);
   border-radius: 8px;
   background: var(--inset);
-  box-shadow: inset 0 1px 4px rgba(60, 40, 20, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.28);
   margin-bottom: 0.7rem;
 }
 
@@ -19,11 +19,7 @@
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.1), transparent 65%), var(--panel-bg-raised);
   border: 2px solid var(--panel-border);
-  box-shadow:
-    0 2px 5px rgba(60, 40, 20, 0.5),
-    inset 0 0 0 1px rgba(240, 200, 105, 0.2),
-    inset 0 2px 2px rgba(255, 255, 255, 0.1),
-    inset 0 -2px 4px rgba(60, 40, 20, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;

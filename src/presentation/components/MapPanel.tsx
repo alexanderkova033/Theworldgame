@@ -70,14 +70,15 @@ const TERRAIN_PATTERN: Record<Terrain, string> = {
   plains: "url(#terrain-plains)",
 };
 
-// A faint terrain wash under that texture, laid over the nation's own
-// watercolour like a second pass of the brush — enough that hills, forest,
-// plains and coast differ in tone, not so much that it muddies the paper.
+// A terrain wash over the nation's own watercolour, like a second pass of
+// the brush: umber hills, green forest, wheat-gold plains, sea-grey coast.
+// Strong enough to read at a glance; the nation still shows in its border
+// band and its lettering.
 const TERRAIN_TINT: Record<Terrain, string> = {
-  hills: "#8a6438",
-  forest: "#3f6b3a",
-  coast: "#4f8296",
-  plains: "#c39a3c",
+  hills: "#7a5428",
+  forest: "#2f5a26",
+  coast: "#3d6f86",
+  plains: "#c79a2e",
 };
 
 // Each road built thickens the single line to its province (instead of
@@ -417,22 +418,36 @@ const MapLayers = memo(function MapLayers({
         <path d="M150,115 q10,-6 20,0 t20,0" stroke="#3e5a68" strokeWidth={1} fill="none" opacity={0.4} strokeLinecap="round" />
       </pattern>
 
-      {/* Terrain, drawn as an engraver would: little molehill hills,
-          pen-and-wash trees, tufts of grass, ripples off the shore. Sparse
-          and thin, so the colour of the land still leads. */}
-      <pattern id="terrain-hills" width={100} height={90} patternUnits="userSpaceOnUse">
-        <path d="M6,52 Q20,30 34,52" fill="#d9c49a" stroke="#3b2a1a" strokeWidth={1} opacity={0.85} />
-        <path d="M14,40 L18,48 M20,36 L23,46 M26,40 L27,49" stroke="#3b2a1a" strokeWidth={0.7} opacity={0.6} />
-        <path d="M54,82 Q64,68 74,82" fill="#d9c49a" stroke="#3b2a1a" strokeWidth={0.9} opacity={0.7} />
+      {/* Terrain, drawn as an engraver would, each with its own shape so the
+          four tell apart even without their colour: rows of shaded molehills,
+          clumps of round trees, grass tufts over faint furrows, and the short
+          level dashes of salt-marsh along the coast. */}
+      <pattern id="terrain-hills" width={56} height={40} patternUnits="userSpaceOnUse">
+        {[
+          [4, 18],
+          [32, 38],
+        ].map(([x, y]) => (
+          <g key={x}>
+            <path d={`M${x},${y} Q${x + 10},${y - 17} ${x + 20},${y}`} fill="#b39062" stroke="#2b1d12" strokeWidth={1.1} />
+            <path d={`M${x + 12},${y - 9} L${x + 15},${y - 1} M${x + 15},${y - 6} L${x + 18},${y - 1}`} stroke="#2b1d12" strokeWidth={0.8} />
+          </g>
+        ))}
       </pattern>
-      <pattern id="terrain-forest" width={90} height={90} patternUnits="userSpaceOnUse">
-        <path d="M16,58 L16,50" stroke="#3b2a1a" strokeWidth={1} />
-        <path d="M16,51 C8,51 7,43 11,41 C10,35 17,32 20,36 C25,35 27,42 23,45 C25,49 21,52 16,51 Z" fill="#7e9c64" stroke="#2f3b22" strokeWidth={0.8} opacity={0.85} />
-        <path d="M62,24 L62,18" stroke="#3b2a1a" strokeWidth={0.9} />
-        <path d="M62,19 C56,19 56,13 59,12 C59,7 65,6 66,10 C70,10 70,16 66,17 C66,19 64,20 62,19 Z" fill="#7e9c64" stroke="#2f3b22" strokeWidth={0.7} opacity={0.75} />
+      <pattern id="terrain-forest" width={38} height={34} patternUnits="userSpaceOnUse">
+        {[
+          [9, 14, 6],
+          [19, 11, 5],
+          [28, 30, 6],
+        ].map(([x, y, r]) => (
+          <g key={x}>
+            <path d={`M${x},${y + r} L${x},${y + r + 4}`} stroke="#2b1d12" strokeWidth={1} />
+            <circle cx={x} cy={y} r={r} fill="#4d6e3a" stroke="#1f2a15" strokeWidth={0.9} />
+            <path d={`M${x + r * 0.2},${y + r * 0.85} A${r},${r} 0 0 0 ${x + r * 0.9},${y + r * 0.3}`} stroke="#1f2a15" strokeWidth={1.4} fill="none" />
+          </g>
+        ))}
       </pattern>
-      <pattern id="terrain-coast" width={40} height={22} patternUnits="userSpaceOnUse">
-        <path d="M0,11 Q10,5 20,11 T40,11" stroke="#3e5a68" strokeWidth={0.9} fill="none" opacity={0.4} strokeLinecap="round" />
+      <pattern id="terrain-coast" width={30} height={14} patternUnits="userSpaceOnUse">
+        <path d="M2,5 H12 M17,5 H27 M9,11 H21" stroke="#28485a" strokeWidth={1.1} strokeLinecap="round" />
       </pattern>
       {/* Map-mode hatching: diagonal lines for "tight", a cross-hatch for
           "trouble" — so the shading never relies on colour alone. */}
@@ -443,9 +458,9 @@ const MapLayers = memo(function MapLayers({
         <line x1={0} y1={0} x2={0} y2={11} stroke="#2b1d12" strokeWidth={2.2} opacity={0.55} />
         <line x1={0} y1={0} x2={11} y2={0} stroke="#2b1d12" strokeWidth={2.2} opacity={0.55} />
       </pattern>
-      <pattern id="terrain-plains" width={50} height={50} patternUnits="userSpaceOnUse">
-        <path d="M6,30 Q7,25 5,21 M9,30 Q9,24 10,19 M12,30 Q12,26 15,22" stroke="#5c4a24" strokeWidth={0.8} fill="none" strokeLinecap="round" opacity={0.6} />
-        <path d="M33,48 Q33,44 31,41 M36,48 Q36,43 38,40" stroke="#5c4a24" strokeWidth={0.7} fill="none" strokeLinecap="round" opacity={0.45} />
+      <pattern id="terrain-plains" width={36} height={30} patternUnits="userSpaceOnUse">
+        <path d="M0,24 H36" stroke="#6b5226" strokeWidth={0.6} opacity={0.45} />
+        <path d="M6,12 L5,6 M8,12 L8,5 M10,12 L11,6 M24,26 L23,20 M26,26 L26,19 M28,26 L29,20" stroke="#4a3a14" strokeWidth={0.9} strokeLinecap="round" />
       </pattern>
     </defs>
 
@@ -509,7 +524,7 @@ const MapLayers = memo(function MapLayers({
       {/* A hint of vegetation so unclaimed islands read as actual
           islands, not flat brown blobs. */}
       {otherLandmasses.map((land) => (
-        <path key={`${land.id}-terrain`} d={land.path} fill="url(#terrain-forest)" opacity={0.55} pointerEvents="none" />
+        <path key={`${land.id}-terrain`} d={land.path} fill="url(#terrain-forest)" opacity={0.35} pointerEvents="none" />
       ))}
     </g>
     {otherLandmasses.map((land) => (
@@ -573,7 +588,7 @@ const MapLayers = memo(function MapLayers({
             key={`${province.id}-tint`}
             d={province.path}
             fill={TERRAIN_TINT[province.terrain]}
-            opacity={isOwned ? 0.07 : 0.06}
+            opacity={isOwned ? 0.14 : 0.12}
             className="map-panel__terrain-tint"
             pointerEvents="none"
           />
@@ -591,7 +606,7 @@ const MapLayers = memo(function MapLayers({
             key={`${province.id}-terrain`}
             d={province.path}
             fill={TERRAIN_PATTERN[province.terrain]}
-            opacity={isOwned ? 0.8 : 0.5}
+            opacity={isOwned ? 0.9 : 0.65}
             pointerEvents="none"
           />
         );
@@ -606,7 +621,7 @@ const MapLayers = memo(function MapLayers({
         provinces.map((province) => {
           const status = provinceStatus[province.id];
           // Other nations fade back, so their colours can't be read as a step.
-          if (!status) return <path key={`${province.id}-mode`} d={province.path} fill="#e2d3ad" opacity={0.75} pointerEvents="none" />;
+          if (!status) return <path key={`${province.id}-mode`} d={province.path} fill="#c9b083" opacity={0.75} pointerEvents="none" />;
           const level = getModeLevel(mapMode, status);
           return (
             <g key={`${province.id}-mode`} pointerEvents="none">

@@ -154,13 +154,13 @@ button.people-province {
 }
 
 button.people-province:hover:not(:disabled) {
-  background: rgba(240, 200, 105, 0.08);
+  background: var(--inset);
   box-shadow: none;
 }
 
 button.people-province.is-selected {
   border-color: var(--accent-active);
-  background: rgba(240, 200, 105, 0.12);
+  background: var(--inset-strong);
 }
 
 .people-province__name {

@@ -52,7 +52,7 @@
   /* The page's title band, set off by a double rule. */
   background: var(--grain) 0 0/90px 90px repeat, linear-gradient(180deg, var(--paper-raised), var(--paper));
   border-bottom: 3px double var(--rule-dark);
-  box-shadow: 0 4px 8px -4px rgba(60, 40, 20, 0.35);
+  box-shadow: none;
 }
 
 .modal__header-title {
@@ -86,7 +86,7 @@
   /* An engraved medallion: paper ringed twice in sepia. */
   background: radial-gradient(circle at 35% 30%, #efe4c7, var(--paper-deep));
   border: 1px solid var(--rule-dark);
-  box-shadow: inset 0 0 0 3px var(--paper-raised), inset 0 0 0 4px var(--rule), 0 1px 2px rgba(60, 40, 20, 0.3);
+  box-shadow: inset 0 0 0 3px var(--paper-raised), inset 0 0 0 4px var(--rule);
   flex-shrink: 0;
 }
 
@@ -123,7 +123,7 @@
   color: #f8ebc6;
   font-size: 1.1rem;
   line-height: 1;
-  box-shadow: inset 0 0 0 2px rgba(226, 194, 122, 0.35), 0 1px 3px rgba(60, 40, 20, 0.45);
+  box-shadow: inset 0 0 0 2px rgba(226, 194, 122, 0.35);
 }
 
 .modal__close:hover:not(:disabled) {

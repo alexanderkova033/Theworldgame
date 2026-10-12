@@ -19,14 +19,14 @@
   color-scheme: light;
 
   /* Parchment and ink */
-  --paper: #e6d8b5;
-  --paper-raised: #ece0c0;
-  --paper-deep: #d7c59c; /* troughs, insets, the inside of a gauge */
-  --ink: #2b1d12; /* 11.5:1 on --paper */
-  --ink-muted: #5c4733; /* 6.2:1 on --paper */
-  --rule: #a88b5c; /* sepia ruling */
-  --rule-dark: #6e5434;
-  --oxblood: #7b2121; /* 7.1:1 on --paper — what must be acted on */
+  --paper: #d2bb8e;
+  --paper-raised: #dac59b;
+  --paper-deep: #c0a576; /* troughs, insets, the inside of a gauge */
+  --ink: #2b1d12; /* 8.7:1 on --paper */
+  --ink-muted: #3f2e1e; /* 6.9:1 on --paper — never lighter, it must stay easy to read */
+  --rule: #96784a; /* sepia ruling */
+  --rule-dark: #5e4528;
+  --oxblood: #7b2121; /* 5.5:1 on --paper — what must be acted on */
   --oxblood-dark: #561414;
   --gilt: #b08a3e;
   --gilt-bright: #e2c27a;
@@ -40,23 +40,23 @@
   --panel-bg: var(--paper);
   --panel-bg-raised: var(--paper-raised);
   --panel-border: var(--rule);
-  --wood-dark: #dacba6;
-  --wood-light: #ebdfc0;
+  --wood-dark: #c4ab7d;
+  --wood-light: #d6c095;
   --text: var(--ink);
   --text-muted: var(--ink-muted);
-  --accent: #765818; /* dark gilt — 4.7:1 on paper, for ornament and labels */
+  --accent: #563e0d; /* dark gilt — 5.4:1 on paper, for ornament and labels */
   --accent-soft: rgba(123, 33, 33, 0.08);
   --accent-active: var(--oxblood); /* headings, the selected thing, focus */
   /* Status colours, deepened for ink on paper (each ≥ 4.5:1 on --paper). */
-  --danger: #a3271b;
-  --warning: #7a4a08;
-  --info: #1f4d78;
-  --success: #285f35;
+  --danger: #841a11;
+  --warning: #5c3704;
+  --info: #183e66;
+  --success: #1b4a25;
 
   /* Recesses on the page: a boxed-off area, a stronger one, a bar's trough. */
-  --inset: rgba(140, 105, 60, 0.09);
-  --inset-strong: rgba(120, 90, 50, 0.16);
-  --track: #cdb98d;
+  --inset: rgba(110, 80, 40, 0.1);
+  --inset-strong: rgba(100, 72, 36, 0.17);
+  --track: #b39869;
 
   /* Watercolour washes for fills (gauges, map tints) — never used as text. */
   --wash-good: #7da36a;
@@ -67,7 +67,9 @@
   /* Alegreya rather than an all-caps engraved face: it keeps the period
      look, but has a real lowercase, so words keep their shape. */
   --font-display: "Alegreya", Georgia, "Times New Roman", serif;
-  --font-body: system-ui, "Segoe UI", Roboto, sans-serif;
+  /* Source Serif: a transitional serif in the manner of the 1700s, cut for
+     screens, with a tall x-height that stays clear at small sizes. */
+  --font-body: "Source Serif 4", Georgia, "Times New Roman", serif;
 
   /* Laid-paper grain: a fine, warm noise baked as a tiny tiling SVG and
      used only as a background layer (never its own element), so pages read
@@ -77,7 +79,7 @@
   --laid: repeating-linear-gradient(0deg, rgba(110, 84, 52, 0.035) 0 1px, transparent 1px 7px);
 
   /* A heading's ornament: a hairline, a lozenge and dots, in oxblood. */
-  --ornament: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='12' viewBox='0 0 180 12'%3E%3Cg fill='%237b2121'%3E%3Crect x='6' y='5.5' width='66' height='1'/%3E%3Crect x='108' y='5.5' width='66' height='1'/%3E%3Ccircle cx='78' cy='6' r='1.6'/%3E%3Ccircle cx='102' cy='6' r='1.6'/%3E%3Cpath d='M90 0.5 L95.5 6 L90 11.5 L84.5 6 Z'/%3E%3C/g%3E%3Cpath d='M90 3.5 L92.5 6 L90 8.5 L87.5 6 Z' fill='%23e6d8b5'/%3E%3C/svg%3E");
+  --ornament: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='12' viewBox='0 0 180 12'%3E%3Cg fill='%237b2121'%3E%3Crect x='6' y='5.5' width='66' height='1'/%3E%3Crect x='108' y='5.5' width='66' height='1'/%3E%3Ccircle cx='78' cy='6' r='1.6'/%3E%3Ccircle cx='102' cy='6' r='1.6'/%3E%3Cpath d='M90 0.5 L95.5 6 L90 11.5 L84.5 6 Z'/%3E%3C/g%3E%3Cpath d='M90 3.5 L92.5 6 L90 8.5 L87.5 6 Z' fill='%23d2bb8e'/%3E%3C/svg%3E");
 
   /* TopBar's rendered height (ticker row + tabs row + advisor row), with a little slack —
      Modal.css uses this so a tall panel's header can never end up rendered
@@ -86,6 +88,7 @@
   --top-bar-height: 10.8rem;
 
   font-family: var(--font-body);
+  font-optical-sizing: auto;
   line-height: 1.5;
 }
 
@@ -159,24 +162,25 @@ button {
   color: var(--text);
   padding: 0.5rem 0.75rem;
   font-size: 0.85rem;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 246, 222, 0.4),
-    0 1px 2px rgba(60, 40, 20, 0.28);
+  box-shadow: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, transform 0.1s ease;
 }
 
 button:hover:not(:disabled) {
   border-color: var(--oxblood);
-  background: linear-gradient(180deg, #efe4c7, #e0d1ab);
+  background: linear-gradient(180deg, #dcc8a0, #ccb383);
 }
 
 button:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: inset 0 2px 4px rgba(60, 40, 20, 0.3);
+  box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.28);
 }
 
+/* Not now: still fully legible, just pressed back into the page. */
 button:disabled {
-  opacity: 0.5;
+  background: var(--inset-strong);
+  border-color: var(--rule);
+  color: var(--text-muted);
   cursor: not-allowed;
 }
 
@@ -186,7 +190,7 @@ button.is-active {
   border-color: var(--leather-dark);
   color: #f4ead0;
   font-weight: 700;
-  box-shadow: inset 0 0 0 1px rgba(226, 194, 122, 0.45), 0 1px 2px rgba(60, 40, 20, 0.3);
+  box-shadow: inset 0 0 0 1px rgba(226, 194, 122, 0.45);
 }
 
 button.is-active:hover:not(:disabled) {
@@ -201,7 +205,7 @@ button.btn-primary {
   border-color: #3e0d0d;
   color: #f8ebc6;
   font-weight: 700;
-  box-shadow: inset 0 0 0 1px rgba(226, 194, 122, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 1px 2px rgba(60, 40, 20, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(226, 194, 122, 0.45);
 }
 
 button.btn-primary:hover:not(:disabled) {
@@ -214,7 +218,7 @@ button.btn-primary:hover:not(:disabled) {
   border-color: #8a6c33;
   background: linear-gradient(180deg, #2f4b3d, var(--leather-dark));
   color: var(--text);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 1px 2px rgba(0, 0, 0, 0.45);
+  box-shadow: none;
 }
 
 .surface-leather button:hover:not(:disabled) {
@@ -227,7 +231,7 @@ button.btn-primary:hover:not(:disabled) {
   background: linear-gradient(180deg, #f0d792, #c49a44);
   border-color: #f6e6b8;
   color: #2a1a08;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 3px rgba(0, 0, 0, 0.5);
+  box-shadow: none;
 }
 
 h1, h2, h3 {
@@ -287,11 +291,7 @@ h3 {
   border-radius: 3px;
   padding: 1.1rem 1.2rem;
   margin-bottom: 1rem;
-  box-shadow:
-    inset 0 0 0 4px var(--panel-bg),
-    inset 0 0 0 5px rgba(168, 139, 92, 0.7),
-    0 6px 16px rgba(40, 25, 10, 0.28),
-    0 1px 3px rgba(40, 25, 10, 0.3);
+  box-shadow: inset 0 0 0 4px var(--panel-bg), inset 0 0 0 5px rgba(168, 139, 92, 0.7);
 }
 
 /* Shared "icon tile" layout: a portrait glyph in a round frame beside a
@@ -312,7 +312,7 @@ h3 {
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #efe4c7, var(--paper-deep));
   border: 1px solid var(--rule-dark);
-  box-shadow: inset 0 0 0 3px var(--paper-raised), inset 0 0 0 4px var(--rule), 0 1px 2px rgba(60, 40, 20, 0.3);
+  box-shadow: inset 0 0 0 3px var(--paper-raised), inset 0 0 0 4px var(--rule);
   display: flex;
   align-items: center;
   justify-content: center;

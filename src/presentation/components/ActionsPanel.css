@@ -46,7 +46,7 @@
   border: 1px solid var(--panel-border);
   border-radius: 12px;
   background: var(--inset);
-  box-shadow: inset 0 1px 4px rgba(60, 40, 20, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.28);
   color: var(--text);
   font: inherit;
   text-align: center;
@@ -60,10 +60,7 @@
 .build-tile:not(:disabled):hover {
   transform: translateY(-2px);
   border-color: var(--tint);
-  box-shadow:
-    0 4px 14px rgba(60, 40, 20, 0.45),
-    0 0 0 1px var(--tint),
-    inset 0 1px 4px rgba(60, 40, 20, 0.4);
+  box-shadow: 0 0 0 1px var(--tint);
 }
 
 .build-tile:not(:disabled):active {
@@ -90,16 +87,13 @@
     radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--tint) 32%, transparent), transparent 70%),
     var(--panel-bg-raised);
   border: 2px solid color-mix(in srgb, var(--tint) 55%, var(--panel-border));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -3px 6px rgba(60, 40, 20, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.28);
 }
 
 .build-tile__art > svg {
   width: 54px;
   height: 54px;
   display: block;
-  filter: drop-shadow(0 2px 2px rgba(60, 40, 20, 0.5));
 }
 
 .build-tile__name {
@@ -181,7 +175,7 @@
 .build-tile__pip.is-filled {
   background: linear-gradient(180deg, var(--accent-active), var(--accent));
   border-color: #fff0c2;
-  box-shadow: 0 0 4px rgba(240, 200, 105, 0.5);
+  box-shadow: none;
 }
 
 /* Can't afford it: the red chip says why, the tile just sits back a little. */
@@ -189,9 +183,10 @@
   filter: saturate(0.6);
 }
 
-/* No room left here: everything but the full pips fades. */
-.build-tile.is-full > :not(.build-tile__pips) {
-  opacity: 0.45;
+/* No room left here: the picture and figures step back; the name and the
+   full pips stay legible. */
+.build-tile.is-full > :not(.build-tile__pips):not(.build-tile__name) {
+  opacity: 0.55;
 }
 
 /* Still behind the Research tree. */
@@ -220,7 +215,6 @@
 .build-tile__lock svg {
   width: 26px;
   height: 26px;
-  filter: drop-shadow(0 1px 3px rgba(60, 40, 20, 0.8));
 }
 
 .build-tile__unlock {

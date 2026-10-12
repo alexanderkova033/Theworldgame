@@ -33,7 +33,7 @@
   border-color: var(--accent-active);
   border-bottom-color: var(--panel-bg);
   text-shadow: none;
-  box-shadow: 0 -2px 6px rgba(60, 40, 20, 0.12);
+  box-shadow: none;
 }
 
 .sub-tab__badge {

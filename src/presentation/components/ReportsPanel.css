@@ -15,7 +15,7 @@
   border: 1px solid var(--panel-border);
   border-radius: 6px;
   background: var(--inset);
-  box-shadow: inset 0 1px 4px rgba(60, 40, 20, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.28);
 }
 
 .reports-panel__item.is-expanded {
@@ -45,7 +45,7 @@ button.reports-panel__summary {
 }
 
 button.reports-panel__summary:hover:not(:disabled) {
-  background: rgba(240, 200, 105, 0.08);
+  background: var(--inset);
   box-shadow: none;
 }
 

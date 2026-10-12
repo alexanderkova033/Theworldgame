@@ -19,7 +19,7 @@
   border-radius: 999px;
   background: var(--track);
   border: 1px solid var(--rule);
-  box-shadow: inset 0 2px 4px rgba(60, 40, 20, 0.7), 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.28);
   overflow: hidden;
 }
 
@@ -53,7 +53,7 @@
   bottom: 0;
   transition: width 0.45s ease, left 0.45s ease, background 0.3s ease;
   /* A soft highlight along the top, so the fill reads as a raised bar. */
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -2px 3px rgba(60, 40, 20, 0.25);
+  box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.28);
 }
 
 .gauge__fill.is-good,
@@ -169,7 +169,7 @@
   border-radius: 999px;
   background: var(--track);
   border: 1px solid var(--rule);
-  box-shadow: inset 0 2px 3px rgba(60, 40, 20, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.28);
 }
 
 .signed-bar::after {
@@ -189,7 +189,7 @@
   bottom: 0;
   border-radius: 999px;
   transition: width 0.45s ease;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  box-shadow: none;
 }
 
 .signed-bar__fill.is-gain {
