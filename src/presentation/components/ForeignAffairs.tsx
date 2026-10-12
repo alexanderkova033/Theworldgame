@@ -58,7 +58,7 @@ function ForeignCard({ state, nationId, gov, strength, dispatch }: { state: Game
             <span
               key={partyId}
               className="foreign-card__meter-fill"
-              style={{ width: `${gov.support[partyId]}%`, background: party.color }}
+              style={{ width: `${gov.support[partyId]}%`, background: `color-mix(in srgb, ${party.color} 62%, #8f7d5c)` }}
             />
           );
         })}

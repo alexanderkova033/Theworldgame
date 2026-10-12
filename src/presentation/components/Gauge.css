@@ -52,33 +52,33 @@
   top: 0;
   bottom: 0;
   transition: width 0.45s ease, left 0.45s ease, background 0.3s ease;
-  /* A soft highlight along the top, so the fill reads as a raised bar. */
+  /* Flat washes, ruled in at the edge, as a colourist would lay them. */
   box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.28);
 }
 
 .gauge__fill.is-good,
 .gauge__zone.is-good {
-  background: linear-gradient(180deg, #a3c48c, #6b9558);
+  background: var(--wash-good);
 }
 
 .gauge__fill.is-warn,
 .gauge__zone.is-warn {
-  background: linear-gradient(180deg, #ecc47a, #c48f32);
+  background: var(--wash-warn);
 }
 
 .gauge__fill.is-bad,
 .gauge__zone.is-bad {
-  background: linear-gradient(180deg, #df866f, #b24732);
+  background: var(--wash-bad);
 }
 
 .gauge__fill.is-neutral,
 .gauge__zone.is-neutral {
-  background: linear-gradient(180deg, #d3c39e, #a8946c);
+  background: var(--wash-neutral);
 }
 
 .gauge__fill.is-accent,
 .gauge__zone.is-accent {
-  background: linear-gradient(180deg, #e9cf86, #b8913f);
+  background: #b49756;
 }
 
 /* Counted but empty: jobs nobody fills. */
@@ -194,10 +194,10 @@
 
 .signed-bar__fill.is-gain {
   left: 50%;
-  background: linear-gradient(180deg, #a3c48c, #6b9558);
+  background: var(--wash-good);
 }
 
 .signed-bar__fill.is-loss {
   right: 50%;
-  background: linear-gradient(180deg, #df866f, #b24732);
+  background: var(--wash-bad);
 }

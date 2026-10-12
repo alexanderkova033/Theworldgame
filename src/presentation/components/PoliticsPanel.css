@@ -145,9 +145,8 @@
 .politics-vote__fill {
   display: block;
   height: 100%;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.25), transparent 45%, rgba(0, 0, 0, 0.18)),
-    var(--party-color);
+  /* The party's colour, faded toward sepia so a bright one doesn't glare. */
+  background: color-mix(in srgb, var(--party-color) 62%, #8f7d5c);
   transition: width 0.3s ease;
 }
 

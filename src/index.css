@@ -59,10 +59,10 @@
   --track: #b39869;
 
   /* Watercolour washes for fills (gauges, map tints) — never used as text. */
-  --wash-good: #7da36a;
-  --wash-warn: #d9a548;
-  --wash-bad: #c8553f;
-  --wash-neutral: #b9a47e;
+  --wash-good: #869c6c;
+  --wash-warn: #c39d58;
+  --wash-bad: #b06a52;
+  --wash-neutral: #a8946c;
 
   /* Alegreya rather than an all-caps engraved face: it keeps the period
      look, but has a real lowercase, so words keep their shape. */
