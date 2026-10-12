@@ -1,5 +1,6 @@
 import "./MapPanel.css";
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type Dispatch, type ReactNode, type SetStateAction } from "react";
+import { flushSync } from "react-dom";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import type { ProjectType } from "../../domain/construction/types";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import { NATIONS } from "../../domain/nations/nationData";
@@ -214,6 +215,7 @@ const WORLD_VIEW: ViewBox = {
 const MIN_ZOOM = BASE_VIEW.width / WORLD_VIEW.width; // zooming out this far shows the whole surrounding sea
 const MAX_ZOOM = 6;
 const DRAG_CLICK_THRESHOLD = 6; // total pixels of movement from the initial press before a drag stops counting as a click
+const WHEEL_SETTLE_MS = 140; // a wheel pause this long ends the gesture and redraws the map at its new zoom
 const LABEL_ZOOM_THRESHOLD = 1.5; // zoomRatio past which every province gets its name label, not just the focused one
 
 function clampViewBox(vb: ViewBox): ViewBox {
@@ -897,6 +899,54 @@ export const MapPanel = memo(function MapPanel({
     }
   }
 
+  // Panning and zooming never redraw the chart while the gesture is under
+  // way: the drawn map is slid and scaled as a picture (a GPU transform),
+  // and the real viewBox is set once, when the drag ends or the wheel goes
+  // quiet. Redrawing every engraved line on every pointer move is what made
+  // the map lag. The SVG is drawn half a stage wider on every side than the
+  // stage (see .map-panel__svg), so a drag reveals land, not blank sea.
+  const viewRef = useRef(view);
+  const pendingView = useRef<ViewBox | null>(null);
+  const wheelTimer = useRef<number | undefined>(undefined);
+
+  // How a view sits in the stage: one scale for both axes, centred, as
+  // preserveAspectRatio "meet" draws it.
+  const fitView = useCallback((vb: ViewBox) => {
+    const rect = stageRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+    const scale = Math.min(rect.width / vb.width, rect.height / vb.height);
+    return { left: rect.left, top: rect.top, scale, offX: (rect.width - vb.width * scale) / 2, offY: (rect.height - vb.height * scale) / 2 };
+  }, []);
+
+  const previewView = useCallback(
+    (next: ViewBox) => {
+      pendingView.current = next;
+      const shown = viewRef.current;
+      const fit = fitView(shown);
+      const svg = svgRef.current;
+      if (!fit || !svg) return;
+      const k = shown.width / next.width;
+      const tx = fit.offX * (1 - k) + k * fit.scale * (shown.x - next.x);
+      const ty = fit.offY * (1 - k) + k * fit.scale * (shown.y - next.y);
+      svg.style.transform = `translate(${tx}px, ${ty}px) scale(${k})`;
+    },
+    [fitView],
+  );
+
+  const commitView = useCallback(() => {
+    window.clearTimeout(wheelTimer.current);
+    const next = pendingView.current;
+    if (!next) return;
+    pendingView.current = null;
+    flushSync(() => setView(next));
+  }, []);
+
+  // The new viewBox and the cleared transform land in the same frame.
+  useLayoutEffect(() => {
+    viewRef.current = view;
+    if (svgRef.current && !pendingView.current) svgRef.current.style.transform = "";
+  }, [view]);
+
   // Wheel-to-zoom, centered on the cursor. Attached as a native (non-passive)
   // listener so we can preventDefault and stop the page itself from
   // scrolling while the cursor is over the map.
@@ -906,26 +956,29 @@ export const MapPanel = memo(function MapPanel({
 
     function handleWheel(e: WheelEvent) {
       e.preventDefault();
-      const rect = svg!.getBoundingClientRect();
-      const px = (e.clientX - rect.left) / rect.width;
-      const py = (e.clientY - rect.top) / rect.height;
+      const base = pendingView.current ?? viewRef.current;
+      const fit = fitView(base);
+      if (!fit) return;
+      const mx = e.clientX - fit.left;
+      const my = e.clientY - fit.top;
+      // The world point under the cursor stays under it.
+      const wx = base.x + (mx - fit.offX) / fit.scale;
+      const wy = base.y + (my - fit.offY) / fit.scale;
       const zoomFactor = e.deltaY < 0 ? 0.88 : 1 / 0.88;
-
-      setView((vb) => {
-        const newWidth = vb.width * zoomFactor;
-        const newHeight = newWidth * (BASE_VIEW.height / BASE_VIEW.width);
-        return clampViewBox({
-          x: vb.x + (vb.width - newWidth) * px,
-          y: vb.y + (vb.height - newHeight) * py,
-          width: newWidth,
-          height: newHeight,
-        });
-      });
+      const width = base.width * zoomFactor;
+      const height = width * (BASE_VIEW.height / BASE_VIEW.width);
+      const scale = fit.scale / zoomFactor;
+      previewView(clampViewBox({ x: wx - (mx - fit.offX) / scale, y: wy - (my - fit.offY) / scale, width, height }));
+      window.clearTimeout(wheelTimer.current);
+      wheelTimer.current = window.setTimeout(commitView, WHEEL_SETTLE_MS);
     }
 
     svg.addEventListener("wheel", handleWheel, { passive: false });
-    return () => svg.removeEventListener("wheel", handleWheel);
-  }, []);
+    return () => {
+      svg.removeEventListener("wheel", handleWheel);
+      window.clearTimeout(wheelTimer.current);
+    };
+  }, [fitView, previewView, commitView]);
 
   function handlePointerDown(e: React.PointerEvent<SVGSVGElement>) {
     dragOrigin.current = { x: e.clientX, y: e.clientY };
@@ -965,16 +1018,11 @@ export const MapPanel = memo(function MapPanel({
       }
     }
 
-    const rect = svgRef.current?.getBoundingClientRect();
-    if (!rect) return;
     dragStart.current = { x: e.clientX, y: e.clientY };
-    setView((vb) =>
-      clampViewBox({
-        ...vb,
-        x: vb.x - (dxPixels / rect.width) * vb.width,
-        y: vb.y - (dyPixels / rect.height) * vb.height,
-      }),
-    );
+    const base = pendingView.current ?? viewRef.current;
+    const fit = fitView(base);
+    if (!fit) return;
+    previewView(clampViewBox({ ...base, x: base.x - dxPixels / fit.scale, y: base.y - dyPixels / fit.scale }));
   }
 
   function handlePointerUp(e: React.PointerEvent<SVGSVGElement>) {
@@ -983,6 +1031,7 @@ export const MapPanel = memo(function MapPanel({
     }
     dragOrigin.current = null;
     dragStart.current = null;
+    commitView();
     setIsPanning(false);
   }
 
@@ -1009,6 +1058,7 @@ export const MapPanel = memo(function MapPanel({
   );
 
   function zoomBy(factor: number) {
+    commitView();
     setView((vb) => {
       const cx = vb.x + vb.width / 2;
       const cy = vb.y + vb.height / 2;
@@ -1040,7 +1090,7 @@ export const MapPanel = memo(function MapPanel({
       <div className="map-panel__stage" ref={stageRef} onMouseMove={handleStageMouseMove}>
         <svg
           ref={svgRef}
-          viewBox={`${view.x} ${view.y} ${view.width} ${view.height}`}
+          viewBox={`${view.x - view.width / 2} ${view.y - view.height / 2} ${view.width * 2} ${view.height * 2}`}
           className={`map-panel__svg ${isPanning ? "is-panning" : ""}`}
           style={{ "--nation-color": washColor(nation.color) } as CSSProperties}
           onPointerDown={handlePointerDown}
@@ -1072,7 +1122,11 @@ export const MapPanel = memo(function MapPanel({
           <button type="button" onClick={() => zoomBy(1 / 1.4)} aria-label="Zoom in">
             +
           </button>
-          <button type="button" onClick={() => setView(BASE_VIEW)} aria-label="Reset view">
+          <button type="button" onClick={() => {
+              commitView();
+              setView(BASE_VIEW);
+            }}
+            aria-label="Reset view">
             Reset
           </button>
           <button type="button" onClick={() => zoomBy(1.4)} aria-label="Zoom out">

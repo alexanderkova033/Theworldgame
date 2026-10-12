@@ -15,12 +15,22 @@
   flex: 1;
   min-height: 0;
   display: flex;
+  overflow: hidden;
   background: #d8dccb;
 }
 
+/* Drawn half a stage past every edge and kept on its own layer, so a drag
+   or wheel slides and scales the finished picture (see MapPanel's
+   previewView) and the chart is only redrawn once the gesture ends. The
+   transform's origin is the stage's top-left corner. */
 .map-panel__svg {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  left: -50%;
+  top: -50%;
+  width: 200%;
+  height: 200%;
+  transform-origin: 25% 25%;
+  will-change: transform;
   display: block;
   cursor: grab;
   touch-action: none;
