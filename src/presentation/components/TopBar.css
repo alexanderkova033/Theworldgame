@@ -11,20 +11,19 @@
   z-index: 60;
   display: flex;
   flex-direction: column;
-  background: var(--grain) 0 0/90px 90px repeat, var(--leather);
+  /* Tooled all over with a faint gilt diaper of lozenges and quatrefoils. */
+  background: var(--tooling-diaper) 0 0/36px 36px repeat, var(--grain) 0 0/90px 90px repeat, var(--leather);
 }
 
-/* Gilt tooling along the spine's foot: two fillets with a roll of dots
-   between them, as a binder would run along a book's edge. */
+/* Dentelle along the spine's foot: a fillet, scallops and pendant
+   lozenges, the lace-like border binders tooled along a board's edge. */
 .top-bar::after {
   content: "";
   display: block;
-  height: 8px;
-  background:
-    linear-gradient(var(--gilt-bright), var(--gilt-bright)) 0 1px/100% 1px no-repeat,
-    linear-gradient(var(--gilt-bright), var(--gilt-bright)) 0 6px/100% 1px no-repeat,
-    radial-gradient(circle 1.2px at 6px 4px, var(--gilt-bright) 85%, transparent 100%) 0 0/12px 8px repeat-x,
-    var(--leather-dark);
+  height: 16px;
+  border-top: 1px solid var(--gilt-bright);
+  background: var(--tooling-dentelle) 0 1px/20px 14px repeat-x, var(--leather-dark);
+  border-bottom: 1px solid #0c1611;
 }
 
 .top-bar__row {
@@ -34,31 +33,32 @@
   padding: 0.55rem 1.25rem;
 }
 
-/* A raised band between rows: a pair of gilt fillets, one bright, one dim. */
+/* A raised band between rows: a roll of gilt lozenges on a fillet. */
 .top-bar__row + .top-bar__row,
 .top-bar > .advisor-strip {
-  border-top: 1px solid rgba(226, 194, 122, 0.55);
-  box-shadow: inset 0 3px 0 -2px rgba(226, 194, 122, 0.25);
+  padding-top: calc(0.45rem + 7px);
+  background: var(--tooling-roll) 0 0/14px 7px repeat-x;
 }
 
 .top-bar__row--tabs {
-  padding-top: 0.4rem;
-  padding-bottom: 0.4rem;
-  gap: 0.25rem;
+  padding-bottom: 0.45rem;
+  gap: 0.45rem;
 }
 
-/* The nation's name on a red morocco label, ruled twice in gilt — the
-   label every bound volume of the age carried on its spine. */
+/* The nation's name on a red morocco label, ruled in gilt with a dotted
+   inner roll — the label every bound volume of the age carried on its
+   spine. */
 .top-bar__nation {
   display: flex;
   flex-direction: column;
   align-items: center;
   line-height: 1.15;
-  padding: 0.3rem 0.95rem 0.35rem;
+  padding: 0.35rem 1.1rem 0.4rem;
   background: var(--grain) 0 0/90px 90px repeat, #5e1717;
   border: 1px solid var(--gilt-bright);
-  border-radius: 2px;
-  box-shadow: inset 0 0 0 2px #5e1717, inset 0 0 0 3px rgba(226, 194, 122, 0.6);
+  border-radius: 10px;
+  outline: 1px dotted rgba(226, 194, 122, 0.8);
+  outline-offset: -5px;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.15rem;
@@ -95,9 +95,10 @@
   align-items: center;
   gap: 0.4rem;
   min-height: 2.1rem;
-  padding: 0 0.75rem;
+  padding: 0 0.85rem;
+  background: var(--leather-dark);
   border: 1px solid rgba(226, 194, 122, 0.55);
-  border-radius: 2px;
+  border-radius: 999px;
   font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 700;
@@ -150,11 +151,22 @@
 }
 
 .top-bar__speed-button:first-child {
-  border-radius: 2px 0 0 2px;
+  border-radius: 999px 0 0 999px;
+  padding-left: 0.7rem;
 }
 
 .top-bar__speed-button:last-child {
-  border-radius: 0 2px 2px 0;
+  border-radius: 0 999px 999px 0;
+  padding-right: 0.7rem;
+}
+
+.top-bar__pause-button,
+.top-bar__mute-button {
+  border-radius: 999px;
+}
+
+.top-bar__pause-button {
+  padding: 0.35rem 0.95rem 0.35rem 0.75rem;
 }
 
 .top-bar__spacer {
@@ -162,47 +174,38 @@
   min-width: 0.5rem;
 }
 
-/* Tabs: gilt lettering beside a tooled medallion, no box of their own.
-   The open one is underscored with a gilt rule. */
+/* Tabs: rounded cartouches of darker leather, edged in gilt, a tooled
+   medallion at the head of each. The open one is set in red morocco,
+   like the nation's label, with a second gilt rule inside its edge. */
 .top-bar__row--tabs .top-bar__tab {
   position: relative;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.3rem 0.85rem 0.3rem 0.3rem;
-  background: transparent;
-  border-color: transparent;
+  padding: 0.22rem 1rem 0.22rem 0.22rem;
+  background: var(--leather-dark);
+  border: 1px solid rgba(226, 194, 122, 0.55);
+  border-radius: 999px;
   font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   color: #ecdcb4;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
 
 .top-bar__row--tabs .top-bar__tab:hover:not(:disabled) {
-  background: rgba(226, 194, 122, 0.08);
-  border-color: transparent;
+  background: var(--leather-dark);
+  border-color: var(--gilt-bright);
   color: var(--gilt-bright);
 }
 
 .top-bar__row--tabs .top-bar__tab.is-active,
 .top-bar__row--tabs .top-bar__tab.is-active:hover:not(:disabled) {
-  background: transparent;
-  border-color: transparent;
-  box-shadow: none;
+  background: #5e1717;
+  border-color: var(--gilt-bright);
+  box-shadow: inset 0 0 0 2px #5e1717, inset 0 0 0 3px rgba(226, 194, 122, 0.45);
   color: var(--gilt-bright);
-}
-
-.top-bar__tab.is-active::after {
-  content: "";
-  position: absolute;
-  left: 2.7rem;
-  right: 0.85rem;
-  bottom: -0.15rem;
-  height: 3px;
-  border-top: 1px solid var(--gilt-bright);
-  border-bottom: 1px solid var(--gilt-bright);
 }
 
 .top-bar__tab svg {

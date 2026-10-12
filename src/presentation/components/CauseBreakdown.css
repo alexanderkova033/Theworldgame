@@ -54,7 +54,7 @@
 .reports-cause__bar {
   position: relative;
   height: 0.6rem;
-  border-radius: 2px;
+  border-radius: 999px;
   background: var(--bg-deep);
 }
 
@@ -73,7 +73,7 @@
   top: 0;
   bottom: 0;
   min-width: 2px;
-  border-radius: 2px;
+  border-radius: 999px;
 }
 
 .reports-cause__fill.is-gain {

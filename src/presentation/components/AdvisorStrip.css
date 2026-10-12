@@ -15,11 +15,11 @@
   min-height: 1.85rem;
   padding: 0.2rem 0.7rem 0.2rem 0.4rem;
   border: 1px solid rgba(226, 194, 122, 0.55);
-  border-radius: 2px;
+  border-radius: 999px;
   font-size: 0.875rem;
   font-weight: 600;
   white-space: nowrap;
-  background: transparent;
+  background: var(--leather-dark);
 }
 
 .advisor-chip svg {
@@ -118,7 +118,7 @@ button.advisor-fix {
   min-height: 1.85rem;
   padding: 0.2rem 0.7rem;
   margin-left: -1px;
-  border-radius: 0 2px 2px 0;
+  border-radius: 0 999px 999px 0;
   font-size: 0.875rem;
   font-weight: 700;
   white-space: nowrap;
@@ -130,7 +130,7 @@ button.advisor-fix {
 
 .advisor-fix__cost {
   padding: 0 0.35rem;
-  border-radius: 2px;
+  border-radius: 999px;
   background: rgba(43, 29, 18, 0.15);
   font-size: 0.8125rem;
 }

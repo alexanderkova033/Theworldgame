@@ -1,25 +1,19 @@
 .resource-ticker {
   display: flex;
   align-items: center;
-  gap: 0.3rem 0;
+  gap: 0.4rem;
   flex-wrap: wrap;
-}
-
-/* Compartments on the spine, parted by gilt hairlines. */
-.resource-ticker > * + * {
-  margin-left: 0.3rem;
-  padding-left: 0.3rem;
-  border-left: 1px solid rgba(226, 194, 122, 0.3);
 }
 
 .resource-ticker__chip {
   display: inline-flex;
   align-items: center;
   gap: 0.32rem;
-  padding: 0.28rem 0.5rem;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 2px;
+  /* A rounded compartment, sunk into the leather and ruled in gilt. */
+  padding: 0.28rem 0.7rem;
+  background: var(--leather-dark);
+  border: 1px solid rgba(226, 194, 122, 0.5);
+  border-radius: 999px;
   font-size: 0.9rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -95,8 +89,9 @@
 }
 
 .resource-ticker button.resource-ticker__chip {
-  background: transparent;
-  border-color: transparent;
+  background: var(--leather-dark);
+  border-color: rgba(226, 194, 122, 0.5);
+  border-radius: 999px;
 }
 
 .resource-ticker button.resource-ticker__chip.is-warn {
@@ -147,7 +142,7 @@ button.resource-ticker__why-button:hover:not(:disabled) {
   min-width: 15rem;
   padding: 0.6rem 0.7rem;
   border: 1px solid var(--gilt-bright);
-  border-radius: 2px;
+  border-radius: 8px;
   background: var(--grain) 0 0/90px 90px repeat, var(--leather-dark);
   box-shadow: inset 0 0 0 2px var(--leather-dark), inset 0 0 0 3px rgba(226, 194, 122, 0.35);
 }
