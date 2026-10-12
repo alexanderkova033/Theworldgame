@@ -15,6 +15,7 @@ import type { GameState } from "../../domain/country/types";
 import { getTotalScientists } from "../../domain/workforce/workforceRules";
 import { formatCompact, formatSignedChange } from "../formatNumber";
 import { ActionsPanel } from "./ActionsPanel";
+import { CauseBreakdown } from "./CauseBreakdown";
 import { NavIcon } from "./NavIcon";
 import { PeoplePanel } from "./PeoplePanel";
 import { ProductionPanel } from "./ProductionPanel";
@@ -117,7 +118,15 @@ export function EconomyPanel({ state, dispatch, production, provinces, selectedP
 
       {section === "budget" && (
         <div className="economy-modal economy-modal--even">
-          <TaxPanel state={state} production={production} dispatch={dispatch} />
+          <div className="economy-modal__side">
+            <TaxPanel state={state} production={production} dispatch={dispatch} />
+            {/* Where yesterday's money came from and went: the monthly
+                report's bars, for a single day. */}
+            <section className="panel">
+              <h2>Money per day</h2>
+              <CauseBreakdown ledger={state.lastDayLedger} metric="treasury" title="Last day" perDay />
+            </section>
+          </div>
           <ProductionPanel production={production} />
         </div>
       )}

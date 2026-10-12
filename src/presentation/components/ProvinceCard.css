@@ -85,6 +85,13 @@ button.province-card__close {
   font-weight: 800;
 }
 
+/* Homes over jobs, the same gauges as the People panel. */
+.province-card__gauges {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0 0 0.55rem;
+}
+
 .province-card__need {
   margin: 0 0 0.6rem;
   font-size: 0.9375rem;

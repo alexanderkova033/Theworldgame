@@ -6,7 +6,12 @@ import type { DailyProductionSummary } from "../../application/getDailyProductio
 import { setTaxRate } from "../../application/actions";
 import { COMFORTABLE_TAX_RATE, CURRENCY_SYMBOL, MAX_TAX_RATE, MIN_TAX_RATE, TAX_POPULARITY_PER_POINT, TAX_RATE_STEP } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
+import { Gauge } from "./Gauge";
 import { StatIcon } from "./StatIcon";
+
+// Where the "grumbling" stretch of the tax gauge ends — a picture of the
+// scale, not a rule: support falls by the same amount per point throughout.
+const TAX_GRUMBLE_PERCENT = 25;
 
 interface TaxPanelProps {
   state: GameState;
@@ -47,6 +52,22 @@ export function TaxPanel({ state, production, dispatch }: TaxPanelProps) {
             +
           </button>
         </span>
+      </div>
+      {/* The rate on a scale from the lowest to the highest allowed, with
+          what people make of each stretch of it. */}
+      <div className="tax-panel__gauge">
+        <Gauge
+          min={MIN_TAX_RATE * 100}
+          max={MAX_TAX_RATE * 100}
+          size="lg"
+          segments={[{ value: percent - MIN_TAX_RATE * 100, tone: percent <= COMFORTABLE_TAX_RATE * 100 ? "good" : percent <= TAX_GRUMBLE_PERCENT ? "warn" : "bad" }]}
+          zones={[
+            { from: MIN_TAX_RATE * 100, to: COMFORTABLE_TAX_RATE * 100, tone: "good", label: "Accepted", hint: "People accept taxes up to this rate" },
+            { from: COMFORTABLE_TAX_RATE * 100, to: TAX_GRUMBLE_PERCENT, tone: "warn", label: "Grumbling", hint: "Each point above costs support" },
+            { from: TAX_GRUMBLE_PERCENT, to: MAX_TAX_RATE * 100, tone: "bad", label: "Angry", hint: "Heavy taxes: support falls fast" },
+          ]}
+          label={`Tax rate ${percent}%, people accept ${Math.round(COMFORTABLE_TAX_RATE * 100)}%`}
+        />
       </div>
       <div className="tax-panel__effects">
         <span className="tax-panel__effect is-gain" title="Tax income per day at this rate">

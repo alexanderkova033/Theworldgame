@@ -18,6 +18,7 @@ import { playConfirm } from "../audio/sound";
 import { formatCompact } from "../formatNumber";
 import { UNREST_INFO } from "../unrestStages";
 import { BuildingGlyph, UnrestStageIcon } from "./CauseIcon";
+import { Gauge } from "./Gauge";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 import type { OpenPanel } from "./TopBar";
@@ -118,6 +119,24 @@ export function ProvinceCard({ state, province, dispatch, onOpenPanel, onClose }
           <UnrestStageIcon stage={province.unrestStage} size={18} />
           {UNREST_INFO[province.unrestStage].name}
         </span>
+      </div>
+
+      <div className="province-card__gauges">
+        <Gauge
+          max={province.capacity}
+          segments={[{ value: province.population - province.homeless, tone: status.homes === "ok" ? "good" : "warn" }]}
+          overflow={province.homeless}
+          label={`Homes: ${Math.round(province.population)} people, room for ${Math.round(province.capacity)}`}
+        />
+        <Gauge
+          max={province.jobs}
+          segments={[
+            { value: province.jobs - province.openJobs, tone: "good" },
+            { value: province.openJobs, tone: "neutral", dashed: true },
+          ]}
+          overflow={province.unemployed}
+          label={`Jobs: ${Math.round(province.jobs - province.openJobs)} of ${Math.round(province.jobs)} filled, ${Math.round(province.unemployed)} out of work`}
+        />
       </div>
 
       <p className={`province-card__need ${need.urgent ? "is-urgent" : ""}`}>{need.text}</p>

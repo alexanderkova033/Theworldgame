@@ -33,6 +33,10 @@
   font-variant-numeric: tabular-nums;
 }
 
+.tax-panel__gauge {
+  margin: 0.2rem 0 0.7rem;
+}
+
 .tax-panel__effects {
   display: flex;
   gap: 1.2rem;
