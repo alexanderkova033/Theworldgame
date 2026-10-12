@@ -103,9 +103,9 @@
 }
 
 .staff-stepper__button--add:not(:disabled) {
-  background: linear-gradient(180deg, var(--accent-active), var(--accent));
-  border-color: #fff0c2;
-  color: #241505;
+  background: var(--oxblood);
+  border-color: var(--oxblood-dark);
+  color: var(--paper-raised);
   text-shadow: none;
 }
 

@@ -60,7 +60,7 @@
   align-items: center;
   justify-content: center;
   background: var(--info);
-  color: #0e131a;
+  color: var(--paper-raised);
 }
 
 .event-log__badge svg {

@@ -52,7 +52,7 @@
   height: 1rem;
   border-radius: 50%;
   background: var(--danger);
-  color: #1a0d06;
+  color: var(--paper-raised);
   font-size: 0.8125rem;
   font-weight: 800;
 }

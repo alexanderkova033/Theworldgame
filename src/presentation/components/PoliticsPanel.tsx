@@ -416,12 +416,12 @@ function ElectionsView({ state, dispatch, onOpenPanel }: { state: GameState; dis
       {/* 2. The vote, as one bar: you on the left, the rival on the right. */}
       <div className="politics-vote">
         <div className="politics-vote__names">
-          <span style={{ color: party.color }}>
+          <span style={{ color: `color-mix(in srgb, ${party.color} 60%, var(--ink))` }}>
             <StatIcon type={IDEOLOGY_ICONS[party.ideology]} size={18} />
             {party.name}
             <strong>{popularity}%</strong>
           </span>
-          <span style={{ color: rival.color }}>
+          <span style={{ color: `color-mix(in srgb, ${rival.color} 60%, var(--ink))` }}>
             <strong>{rivalPopularity}%</strong>
             {rival.name}
             <StatIcon type={IDEOLOGY_ICONS[rival.ideology]} size={18} />
@@ -464,12 +464,12 @@ function ElectionsView({ state, dispatch, onOpenPanel }: { state: GameState; dis
                 <span className="politics-group__name">
                   {IDEOLOGY_GROUPS[ideology]}
                   {isYours && (
-                    <span className="politics-group__tag" style={{ borderColor: party.color, color: party.color }}>
+                    <span className="politics-group__tag" style={{ borderColor: party.color, color: `color-mix(in srgb, ${party.color} 60%, var(--ink))` }}>
                       your base
                     </span>
                   )}
                   {isRivals && (
-                    <span className="politics-group__tag" style={{ borderColor: rival.color, color: rival.color }}>
+                    <span className="politics-group__tag" style={{ borderColor: rival.color, color: `color-mix(in srgb, ${rival.color} 60%, var(--ink))` }}>
                       rival's base
                     </span>
                   )}

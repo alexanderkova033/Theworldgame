@@ -63,7 +63,7 @@
   height: 16px;
   border-radius: 50%;
   background: var(--danger);
-  color: #1a0d06;
+  color: var(--paper-raised);
   display: flex;
   align-items: center;
   justify-content: center;

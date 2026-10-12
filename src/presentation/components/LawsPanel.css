@@ -181,13 +181,10 @@
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.1), transparent 65%), var(--panel-bg-raised);
-  border: 2px solid var(--panel-border);
-  box-shadow:
-    0 3px 8px rgba(60, 40, 20, 0.5),
-    inset 0 0 0 1px rgba(240, 200, 105, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -2px 5px rgba(60, 40, 20, 0.4);
+  /* An engraved medallion: a ring of ink, a hairline round it. */
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.5), transparent 65%), var(--paper-raised);
+  border: 2px solid var(--rule-dark);
+  box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--rule), 0 2px 5px rgba(60, 40, 20, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -195,23 +192,26 @@
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
+/* Open to pass: an oxblood ring whose outer hairline breathes. */
 .law-node--available .law-node__icon {
-  border-color: var(--accent-active);
-  box-shadow: 0 0 12px rgba(240, 200, 105, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -2px 5px rgba(60, 40, 20, 0.35);
+  border-color: var(--oxblood);
+  box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--oxblood), 0 2px 5px rgba(60, 40, 20, 0.25);
   animation: law-node-pulse 2.6s ease-in-out infinite;
 }
 
+/* Passed: washed in green, like a coloured plate. */
 .law-node--enacted .law-node__icon {
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.5), transparent 65%), #dfe8cf;
   border-color: var(--success);
-  box-shadow: 0 0 10px rgba(111, 174, 124, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -2px 5px rgba(60, 40, 20, 0.35);
+  box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--success), 0 2px 5px rgba(60, 40, 20, 0.25);
 }
 
 @keyframes law-node-pulse {
   0%, 100% {
-    box-shadow: 0 0 10px rgba(240, 200, 105, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -2px 5px rgba(60, 40, 20, 0.35);
+    box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--oxblood), 0 2px 5px rgba(60, 40, 20, 0.25);
   }
   50% {
-    box-shadow: 0 0 18px rgba(240, 200, 105, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -2px 5px rgba(60, 40, 20, 0.35);
+    box-shadow: 0 0 0 4px var(--paper-raised), 0 0 0 5px rgba(123, 33, 33, 0.55), 0 2px 5px rgba(60, 40, 20, 0.25);
   }
 }
 
@@ -237,7 +237,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--bg-deep);
+  border: 1px solid var(--paper-raised);
 }
 
 .law-node__badge--enacted {
@@ -246,7 +246,7 @@
 
 .law-node__badge--foreclosed {
   background: var(--danger);
-  color: #1a0d06;
+  color: var(--paper-raised);
 }
 
 .law-node__badge--locked {
@@ -592,7 +592,7 @@
 
 .law-node__badge--in-progress {
   background: var(--accent-active);
-  color: #1a1406;
+  color: var(--paper-raised);
 }
 
 .law-inspector__status.is-in-progress {
