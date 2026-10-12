@@ -6,14 +6,12 @@
   justify-content: center;
   padding: 2rem 1.5rem;
   overflow: hidden;
-  /* Echoes body's own gradient+texture treatment (see index.css) instead of
-     a flat void — a wide top glow, a faint second glow low-left for depth,
-     and the same fine diagonal hatching used everywhere else in the game. */
+  /* A title page: laid paper, foxed a little toward the edges. */
   background:
-    radial-gradient(ellipse 80% 55% at 50% 0%, rgba(201, 162, 74, 0.14), transparent 65%),
-    radial-gradient(ellipse 60% 45% at 12% 100%, rgba(122, 83, 31, 0.12), transparent 70%),
-    repeating-linear-gradient(115deg, rgba(0, 0, 0, 0.12) 0px, transparent 2px, transparent 5px),
-    var(--bg-deep);
+    radial-gradient(ellipse 85% 75% at 50% 45%, transparent 55%, rgba(110, 84, 52, 0.2)),
+    var(--grain) 0 0/90px 90px repeat,
+    var(--laid),
+    var(--paper);
 }
 
 .start-screen__watermark {
@@ -24,8 +22,8 @@
   width: 90rem;
   max-width: none;
   transform: translate(-50%, -50%);
-  fill: rgba(240, 200, 105, 0.05);
-  stroke: rgba(240, 200, 105, 0.07);
+  fill: rgba(123, 33, 33, 0.03);
+  stroke: rgba(110, 84, 52, 0.12);
   stroke-width: 1.5;
   pointer-events: none;
 }
@@ -39,18 +37,20 @@
 }
 
 .start-screen__eyebrow {
-  letter-spacing: 0.02em;
-  font-size: 0.85rem;
-  color: var(--accent);
-  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--oxblood);
+  margin: 0 0 0.4rem;
 }
 
 .start-screen__title {
   position: relative;
-  font-size: 2.7rem;
-  color: var(--text);
-  margin: 0 0 0.9rem;
-  padding-bottom: 0.7rem;
+  font-size: 3.1rem;
+  color: var(--ink);
+  text-shadow: none;
+  margin: 0 0 1rem;
+  padding-bottom: 1.1rem;
 }
 
 .start-screen__title::after {
@@ -59,9 +59,9 @@
   left: 50%;
   bottom: 0;
   transform: translateX(-50%);
-  width: 12rem;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent) 15%, var(--accent-active) 50%, var(--accent) 85%, transparent);
+  width: 15rem;
+  height: 14px;
+  background: var(--ornament) center/contain no-repeat;
 }
 
 .start-screen__subtitle {
@@ -84,19 +84,12 @@
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
-  padding: 1.25rem 1.1rem;
-  background:
-    radial-gradient(circle 2.5px at 10px 10px, var(--accent-active) 92%, transparent 100%),
-    radial-gradient(circle 2.5px at calc(100% - 10px) 10px, var(--accent-active) 92%, transparent 100%),
-    radial-gradient(circle 2.5px at 10px calc(100% - 10px), var(--accent-active) 92%, transparent 100%),
-    radial-gradient(circle 2.5px at calc(100% - 10px) calc(100% - 10px), var(--accent-active) 92%, transparent 100%),
-    linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg));
-  background-repeat: no-repeat;
-  border: 1px solid var(--panel-border);
-  border-radius: 12px;
-  box-shadow:
-    0 8px 20px rgba(0, 0, 0, 0.3),
-    inset 0 0 0 1px rgba(240, 200, 105, 0.14);
+  padding: 1.35rem 1.2rem;
+  /* A ruled plate, like every card in the game. */
+  background: var(--grain) 0 0/90px 90px repeat, var(--paper-raised);
+  border: 1px solid var(--rule-dark);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 4px var(--paper-raised), inset 0 0 0 5px var(--rule), 0 6px 16px rgba(60, 40, 20, 0.18);
   text-align: center;
 }
 
@@ -122,7 +115,7 @@
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--text);
-  background: var(--bg-deep);
+  background: var(--paper);
   border: 1px solid var(--accent-active);
   border-radius: 4px;
   padding: 0.2rem 0.4rem;
@@ -177,7 +170,7 @@
   width: 100%;
   margin-top: 0.5rem;
   padding-top: 0.5rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.3);
+  border-top: 1px solid var(--rule);
 }
 
 .save-slot-card__danger-button {
@@ -199,34 +192,39 @@
   height: auto;
   margin: 0 auto 1.5rem;
   display: block;
-  border-radius: 10px;
-  border: 1px solid var(--panel-border);
-  background: #10161f;
+  /* The same engraved chart as the game's map, in miniature. */
+  border-radius: 2px;
+  border: 1px solid var(--rule-dark);
+  box-shadow: inset 0 0 0 4px #d8dccb, inset 0 0 0 5px var(--rule);
+  background: repeating-linear-gradient(0deg, rgba(76, 106, 120, 0.16) 0 1px, transparent 1px 6px), #d8dccb;
 }
 
 .start-screen__coast {
   fill: none;
-  stroke: #06090d;
-  stroke-width: 5;
+  stroke: #2b1d12;
+  stroke-width: 3.5;
+  stroke-linejoin: round;
 }
 
 .start-screen__unclaimed-land {
-  fill: #5c5138;
-  stroke: #06090d;
-  stroke-width: 3;
-  opacity: 0.7;
+  fill: #efe3c4;
+  stroke: #2b1d12;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
 }
 
 .start-screen__province {
-  fill: var(--nation-color, #414a58);
-  stroke: #0b111a;
-  stroke-width: 2.5;
+  fill: color-mix(in srgb, var(--nation-color, #a8946c) 68%, #f1e6c9);
+  stroke: #5c4733;
+  stroke-width: 1.5;
+  stroke-dasharray: 2 4;
+  stroke-linecap: round;
   cursor: pointer;
-  transition: filter 0.15s ease;
+  transition: fill 0.15s ease;
 }
 
 .start-screen__province:hover {
-  filter: brightness(1.25);
+  fill: color-mix(in srgb, var(--nation-color, #a8946c) 88%, #f1e6c9);
 }
 
 .start-screen__nations {
@@ -241,41 +239,33 @@
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
-  padding: 1.1rem 1.25rem;
-  background:
-    radial-gradient(circle 2.5px at 10px 10px, var(--accent-active) 92%, transparent 100%),
-    radial-gradient(circle 2.5px at calc(100% - 10px) 10px, var(--accent-active) 92%, transparent 100%),
-    radial-gradient(circle 2.5px at 10px calc(100% - 10px), var(--accent-active) 92%, transparent 100%),
-    radial-gradient(circle 2.5px at calc(100% - 10px) calc(100% - 10px), var(--accent-active) 92%, transparent 100%),
-    linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg));
-  background-repeat: no-repeat;
-  border: 1px solid var(--panel-border);
-  border-radius: 12px;
-  box-shadow:
-    0 8px 20px rgba(0, 0, 0, 0.3),
-    inset 0 0 0 1px rgba(240, 200, 105, 0.14);
+  padding: 1.25rem 1.35rem;
+  background: var(--grain) 0 0/90px 90px repeat, var(--paper-raised);
+  border: 1px solid var(--rule-dark);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 4px var(--paper-raised), inset 0 0 0 5px var(--rule), 0 6px 16px rgba(60, 40, 20, 0.18);
   text-align: center;
 }
 
+/* The inner rule takes the nation's colour, as if picked out by hand. */
 .nation-card:hover:not(:disabled) {
-  border-color: var(--nation-color);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+  background: var(--grain) 0 0/90px 90px repeat, var(--paper-raised);
+  border-color: var(--rule-dark);
+  box-shadow: inset 0 0 0 4px var(--paper-raised), inset 0 0 0 6px var(--nation-color), 0 10px 22px rgba(60, 40, 20, 0.26);
   transform: translateY(-2px);
 }
 
+/* A wax seal in the nation's colour. */
 .nation-card__crest {
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.9rem;
+  height: 2.9rem;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.4), transparent 55%),
-    radial-gradient(circle at 72% 78%, rgba(0, 0, 0, 0.28), transparent 60%),
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.28), transparent 55%),
+    radial-gradient(circle at 70% 76%, rgba(43, 29, 18, 0.3), transparent 60%),
     var(--nation-color);
-  border: 3px solid rgba(255, 255, 255, 0.15);
-  box-shadow:
-    inset 0 2px 3px rgba(255, 255, 255, 0.25),
-    inset 0 -3px 5px rgba(0, 0, 0, 0.4),
-    0 0 0 3px rgba(0, 0, 0, 0.35);
+  border: 2px solid rgba(43, 29, 18, 0.25);
+  box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--rule-dark), 0 2px 4px rgba(60, 40, 20, 0.3);
   margin-bottom: 0.25rem;
   display: flex;
   align-items: center;
@@ -307,8 +297,9 @@
 
 .nation-card__cta {
   margin-top: 0.5rem;
-  font-size: 0.85rem;
-  letter-spacing: 0.02em;
-  color: var(--nation-color);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1rem;
+  color: color-mix(in srgb, var(--nation-color) 75%, var(--ink));
   font-weight: 700;
 }

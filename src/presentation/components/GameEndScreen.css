@@ -4,15 +4,23 @@
   align-items: center;
   justify-content: center;
   padding: 3rem 1.5rem;
+  /* The last page of the chronicle: a wash of oxblood for a fall, of
+     gilt for a triumph. */
   background:
-    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(194, 64, 47, 0.14), transparent 65%),
-    var(--bg-deep);
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(123, 33, 33, 0.14), transparent 65%),
+    radial-gradient(ellipse 85% 75% at 50% 45%, transparent 55%, rgba(110, 84, 52, 0.2)),
+    var(--grain) 0 0/90px 90px repeat,
+    var(--laid),
+    var(--paper);
 }
 
 .game-end-screen.is-victory {
   background:
-    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(240, 200, 105, 0.18), transparent 65%),
-    var(--bg-deep);
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(201, 162, 74, 0.28), transparent 65%),
+    radial-gradient(ellipse 85% 75% at 50% 45%, transparent 55%, rgba(110, 84, 52, 0.2)),
+    var(--grain) 0 0/90px 90px repeat,
+    var(--laid),
+    var(--paper);
 }
 
 .game-end-screen__content {
@@ -22,20 +30,35 @@
 }
 
 .game-end-screen__eyebrow {
-  letter-spacing: 0.02em;
-  font-size: 0.85rem;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.05rem;
   color: var(--danger);
   margin: 0 0 0.5rem;
 }
 
 .is-victory .game-end-screen__eyebrow {
-  color: var(--accent-active);
+  color: var(--accent);
 }
 
 .game-end-screen__title {
-  font-size: 2.4rem;
-  color: var(--text);
-  margin: 0 0 0.9rem;
+  position: relative;
+  font-size: 2.6rem;
+  color: var(--ink);
+  text-shadow: none;
+  margin: 0 0 1.1rem;
+  padding-bottom: 1.1rem;
+}
+
+.game-end-screen__title::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 13rem;
+  height: 14px;
+  background: var(--ornament) center/contain no-repeat;
 }
 
 .game-end-screen__party {
@@ -45,7 +68,8 @@
   padding: 0.3rem 0.8rem;
   border-radius: 999px;
   border: 1px solid var(--party-color);
-  color: var(--party-color);
+  background: var(--paper-raised);
+  color: color-mix(in srgb, var(--party-color) 55%, var(--ink));
   font-weight: 700;
   font-size: 0.85rem;
   margin-bottom: 1.25rem;
