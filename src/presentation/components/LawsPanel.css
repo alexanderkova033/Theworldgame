@@ -182,7 +182,7 @@
   height: 52px;
   border-radius: 50%;
   /* An engraved medallion: a ring of ink, a hairline round it. */
-  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.5), transparent 65%), var(--paper-raised);
+  background: radial-gradient(circle at 35% 30%, rgba(255, 246, 222, 0.35), transparent 65%), var(--paper-raised);
   border: 2px solid var(--rule-dark);
   box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--rule), 0 2px 5px rgba(60, 40, 20, 0.25);
   display: flex;
@@ -201,7 +201,7 @@
 
 /* Passed: washed in green, like a coloured plate. */
 .law-node--enacted .law-node__icon {
-  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.5), transparent 65%), #dfe8cf;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 246, 222, 0.35), transparent 65%), #d3dcbd;
   border-color: var(--success);
   box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--success), 0 2px 5px rgba(60, 40, 20, 0.25);
 }

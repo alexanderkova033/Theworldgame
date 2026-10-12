@@ -16,7 +16,7 @@
   min-height: 0;
   display: flex;
   overflow: hidden;
-  background: #d8dccb;
+  background: #cdd2bf;
 }
 
 /* Drawn half a stage past every edge and kept on its own layer, so a drag
@@ -83,7 +83,7 @@
 /* --- The sea ------------------------------------------------------------- */
 
 .map-panel__sea {
-  fill: #d8dccb;
+  fill: #cdd2bf;
 }
 
 .map-panel__waterline {
@@ -94,7 +94,7 @@
 
 .map-panel__waterline-gap {
   fill: none;
-  stroke: #d8dccb;
+  stroke: #cdd2bf;
   stroke-linejoin: round;
 }
 
@@ -120,7 +120,7 @@
 }
 
 .map-panel__compass-light {
-  fill: #f3ead3;
+  fill: #e6d8b5;
   stroke: #3b2a1a;
   stroke-width: 0.8;
   stroke-opacity: 0.7;
@@ -144,7 +144,7 @@
 /* --- The land ------------------------------------------------------------ */
 
 .map-panel__land-paper {
-  fill: #f1e6c9;
+  fill: #e6d8b5;
 }
 
 .map-panel__coast {
@@ -188,7 +188,7 @@
 }
 
 .map-panel__unclaimed-land {
-  fill: #efe3c4;
+  fill: #e2d3ad;
   stroke: #2b1d12;
   stroke-width: 2.4;
   stroke-linejoin: round;
@@ -199,7 +199,7 @@
 }
 
 .map-panel__unclaimed-land--clickable:hover {
-  fill: #f6eed8;
+  fill: #ece0c0;
   stroke: var(--oxblood);
 }
 
@@ -232,12 +232,12 @@
 }
 
 .map-panel__road-line-top {
-  stroke: #f6eed8;
+  stroke: #ece0c0;
   stroke-linecap: round;
 }
 
 .map-panel__road-hub {
-  fill: #f6eed8;
+  fill: #ece0c0;
   stroke: #3b2a1a;
   stroke-width: 1.5;
 }
@@ -249,7 +249,7 @@
   fill: #2b1d12;
   text-anchor: middle;
   paint-order: stroke;
-  stroke: rgba(246, 238, 216, 0.9);
+  stroke: rgba(236, 224, 192, 0.9);
   stroke-width: 3px;
   stroke-linejoin: round;
   user-select: none;
@@ -265,7 +265,7 @@
   font-weight: 700;
   user-select: none;
   paint-order: stroke;
-  stroke: rgba(246, 238, 216, 0.85);
+  stroke: rgba(236, 224, 192, 0.85);
   stroke-width: 3.5px;
   stroke-linejoin: round;
 }
@@ -284,7 +284,7 @@
   text-anchor: middle;
   fill: rgba(43, 29, 18, 0.72);
   paint-order: stroke;
-  stroke: rgba(246, 238, 216, 0.7);
+  stroke: rgba(236, 224, 192, 0.7);
   stroke-width: 4px;
   stroke-linejoin: round;
   user-select: none;
@@ -301,7 +301,7 @@
   font-weight: 700;
   text-anchor: middle;
   paint-order: stroke;
-  stroke: rgba(246, 238, 216, 0.85);
+  stroke: rgba(236, 224, 192, 0.85);
   stroke-width: 3.5px;
   stroke-linejoin: round;
   user-select: none;
@@ -310,7 +310,7 @@
 /* --- Province info bars: small paper slips pinned to the chart ----------- */
 
 .map-panel__info-bar {
-  fill: rgba(249, 243, 227, 0.93);
+  fill: rgba(236, 224, 192, 0.95);
   stroke: #6e5434;
   stroke-width: 0.9;
 }
@@ -333,7 +333,7 @@
   font-size: 11px;
   font-weight: 800;
   text-anchor: middle;
-  fill: #f9f3e3;
+  fill: #ece0c0;
 }
 
 /* Province flags in the info bar: homes and jobs, amber when tight, red
@@ -361,7 +361,7 @@
   font-size: 7px;
   font-weight: 800;
   text-anchor: middle;
-  fill: #f9f3e3;
+  fill: #ece0c0;
 }
 
 /* An outline on an SVG shape draws as a rectangle around its whole bounding

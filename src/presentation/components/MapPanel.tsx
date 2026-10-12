@@ -606,7 +606,7 @@ const MapLayers = memo(function MapLayers({
         provinces.map((province) => {
           const status = provinceStatus[province.id];
           // Other nations fade back, so their colours can't be read as a step.
-          if (!status) return <path key={`${province.id}-mode`} d={province.path} fill="#efe3c4" opacity={0.75} pointerEvents="none" />;
+          if (!status) return <path key={`${province.id}-mode`} d={province.path} fill="#e2d3ad" opacity={0.75} pointerEvents="none" />;
           const level = getModeLevel(mapMode, status);
           return (
             <g key={`${province.id}-mode`} pointerEvents="none">

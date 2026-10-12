@@ -92,7 +92,7 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  background: repeating-linear-gradient(135deg, #c8553f 0 3px, #f3ead3 3px 4px, #7a2316 4px 7px, #f3ead3 7px 8px);
+  background: repeating-linear-gradient(135deg, #c8553f 0 3px, var(--paper) 3px 4px, #7a2316 4px 7px, var(--paper) 7px 8px);
   transition: width 0.45s ease, left 0.45s ease;
 }
 

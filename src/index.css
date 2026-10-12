@@ -19,14 +19,14 @@
   color-scheme: light;
 
   /* Parchment and ink */
-  --paper: #f3ead3;
-  --paper-raised: #f9f3e3;
-  --paper-deep: #e4d6b4; /* troughs, insets, the inside of a gauge */
-  --ink: #2b1d12; /* 14:1 on --paper */
-  --ink-muted: #5c4733; /* 7.6:1 on --paper */
+  --paper: #e6d8b5;
+  --paper-raised: #ece0c0;
+  --paper-deep: #d7c59c; /* troughs, insets, the inside of a gauge */
+  --ink: #2b1d12; /* 11.5:1 on --paper */
+  --ink-muted: #5c4733; /* 6.2:1 on --paper */
   --rule: #a88b5c; /* sepia ruling */
   --rule-dark: #6e5434;
-  --oxblood: #7b2121; /* 9:1 on --paper — what must be acted on */
+  --oxblood: #7b2121; /* 7.1:1 on --paper — what must be acted on */
   --oxblood-dark: #561414;
   --gilt: #b08a3e;
   --gilt-bright: #e2c27a;
@@ -40,23 +40,23 @@
   --panel-bg: var(--paper);
   --panel-bg-raised: var(--paper-raised);
   --panel-border: var(--rule);
-  --wood-dark: #e8dcbf;
-  --wood-light: #fbf6e9;
+  --wood-dark: #dacba6;
+  --wood-light: #ebdfc0;
   --text: var(--ink);
   --text-muted: var(--ink-muted);
-  --accent: #8a6a24; /* dark gilt — 4.9:1 on paper, for ornament and labels */
+  --accent: #765818; /* dark gilt — 4.7:1 on paper, for ornament and labels */
   --accent-soft: rgba(123, 33, 33, 0.08);
   --accent-active: var(--oxblood); /* headings, the selected thing, focus */
   /* Status colours, deepened for ink on paper (each ≥ 4.5:1 on --paper). */
   --danger: #a3271b;
-  --warning: #8a560c;
+  --warning: #7a4a08;
   --info: #1f4d78;
-  --success: #2e6b3c;
+  --success: #285f35;
 
   /* Recesses on the page: a boxed-off area, a stronger one, a bar's trough. */
   --inset: rgba(140, 105, 60, 0.09);
   --inset-strong: rgba(120, 90, 50, 0.16);
-  --track: #ddcda9;
+  --track: #cdb98d;
 
   /* Watercolour washes for fills (gauges, map tints) — never used as text. */
   --wash-good: #7da36a;
@@ -77,7 +77,7 @@
   --laid: repeating-linear-gradient(0deg, rgba(110, 84, 52, 0.035) 0 1px, transparent 1px 7px);
 
   /* A heading's ornament: a hairline, a lozenge and dots, in oxblood. */
-  --ornament: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='12' viewBox='0 0 180 12'%3E%3Cg fill='%237b2121'%3E%3Crect x='6' y='5.5' width='66' height='1'/%3E%3Crect x='108' y='5.5' width='66' height='1'/%3E%3Ccircle cx='78' cy='6' r='1.6'/%3E%3Ccircle cx='102' cy='6' r='1.6'/%3E%3Cpath d='M90 0.5 L95.5 6 L90 11.5 L84.5 6 Z'/%3E%3C/g%3E%3Cpath d='M90 3.5 L92.5 6 L90 8.5 L87.5 6 Z' fill='%23f3ead3'/%3E%3C/svg%3E");
+  --ornament: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='12' viewBox='0 0 180 12'%3E%3Cg fill='%237b2121'%3E%3Crect x='6' y='5.5' width='66' height='1'/%3E%3Crect x='108' y='5.5' width='66' height='1'/%3E%3Ccircle cx='78' cy='6' r='1.6'/%3E%3Ccircle cx='102' cy='6' r='1.6'/%3E%3Cpath d='M90 0.5 L95.5 6 L90 11.5 L84.5 6 Z'/%3E%3C/g%3E%3Cpath d='M90 3.5 L92.5 6 L90 8.5 L87.5 6 Z' fill='%23e6d8b5'/%3E%3C/svg%3E");
 
   /* TopBar's rendered height (ticker row + tabs row + advisor row), with a little slack —
      Modal.css uses this so a tall panel's header can never end up rendered
@@ -160,14 +160,14 @@ button {
   padding: 0.5rem 0.75rem;
   font-size: 0.85rem;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 1px 0 rgba(255, 246, 222, 0.4),
     0 1px 2px rgba(60, 40, 20, 0.28);
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, transform 0.1s ease;
 }
 
 button:hover:not(:disabled) {
   border-color: var(--oxblood);
-  background: linear-gradient(180deg, #fffaf0, #efe3c6);
+  background: linear-gradient(180deg, #efe4c7, #e0d1ab);
 }
 
 button:active:not(:disabled) {
@@ -300,7 +300,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 246, 222, 0.22);
   border: 1px solid var(--rule);
   border-radius: 3px;
   padding: 0.45rem 0.7rem;
@@ -310,7 +310,7 @@ h3 {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fffaf0, var(--paper-deep));
+  background: radial-gradient(circle at 35% 30%, #efe4c7, var(--paper-deep));
   border: 1px solid var(--rule-dark);
   box-shadow: inset 0 0 0 3px var(--paper-raised), inset 0 0 0 4px var(--rule), 0 1px 2px rgba(60, 40, 20, 0.3);
   display: flex;
