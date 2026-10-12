@@ -38,9 +38,9 @@
   font-size: 0.85rem;
   padding: 0.4rem 0.6rem;
   border-radius: 6px;
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--inset);
   border-left: 3px solid var(--info);
-  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 1px 4px rgba(60, 40, 20, 0.35);
 }
 
 .event-log__item--warning {
@@ -88,7 +88,7 @@
   align-self: center;
   padding: 0 0.4rem;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--inset-strong);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }

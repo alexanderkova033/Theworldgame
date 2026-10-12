@@ -28,7 +28,7 @@
   margin-bottom: 1rem;
   border: 1px solid var(--panel-border);
   border-radius: 10px;
-  background: rgba(0, 0, 0, 0.22);
+  background: var(--inset);
 }
 
 .politics-hero__countdown,
@@ -215,7 +215,7 @@
   padding: 0.55rem 0.4rem;
   border-radius: 10px;
   border: 1px solid var(--panel-border);
-  background: rgba(0, 0, 0, 0.22);
+  background: var(--inset);
   text-align: center;
 }
 
@@ -263,7 +263,7 @@
   border-radius: 10px;
   border: 1px solid var(--panel-border);
   border-left-width: 4px;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--inset);
 }
 
 .politics-driver.is-gain {

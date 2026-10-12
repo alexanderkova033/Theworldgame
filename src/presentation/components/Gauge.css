@@ -17,9 +17,9 @@
   position: relative;
   height: var(--gauge-height);
   border-radius: 999px;
-  background: linear-gradient(180deg, #0a0603, #1a1006);
-  border: 1px solid rgba(122, 83, 31, 0.9);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.05);
+  background: var(--track);
+  border: 1px solid var(--rule);
+  box-shadow: inset 0 2px 4px rgba(60, 40, 20, 0.7), 0 1px 0 rgba(255, 255, 255, 0.05);
   overflow: hidden;
 }
 
@@ -44,7 +44,7 @@
   top: 18%;
   bottom: 18%;
   width: 1px;
-  background: rgba(241, 226, 191, 0.14);
+  background: rgba(43, 29, 18, 0.16);
 }
 
 .gauge__fill {
@@ -53,38 +53,38 @@
   bottom: 0;
   transition: width 0.45s ease, left 0.45s ease, background 0.3s ease;
   /* A soft highlight along the top, so the fill reads as a raised bar. */
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -2px 3px rgba(0, 0, 0, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -2px 3px rgba(60, 40, 20, 0.25);
 }
 
 .gauge__fill.is-good,
 .gauge__zone.is-good {
-  background: linear-gradient(180deg, #8fcf9b, #4f9a5e);
+  background: linear-gradient(180deg, #a3c48c, #6b9558);
 }
 
 .gauge__fill.is-warn,
 .gauge__zone.is-warn {
-  background: linear-gradient(180deg, #f0c27a, #c4882f);
+  background: linear-gradient(180deg, #ecc47a, #c48f32);
 }
 
 .gauge__fill.is-bad,
 .gauge__zone.is-bad {
-  background: linear-gradient(180deg, #f39582, #c4452f);
+  background: linear-gradient(180deg, #df866f, #b24732);
 }
 
 .gauge__fill.is-neutral,
 .gauge__zone.is-neutral {
-  background: linear-gradient(180deg, #c9b48f, #8a7556);
+  background: linear-gradient(180deg, #d3c39e, #a8946c);
 }
 
 .gauge__fill.is-accent,
 .gauge__zone.is-accent {
-  background: linear-gradient(180deg, #f6d98a, #c9a036);
+  background: linear-gradient(180deg, #e9cf86, #b8913f);
 }
 
 /* Counted but empty: jobs nobody fills. */
 .gauge__fill.is-dashed {
-  background: repeating-linear-gradient(90deg, rgba(241, 226, 191, 0.35) 0 4px, transparent 4px 8px);
-  box-shadow: inset 0 0 0 1px rgba(241, 226, 191, 0.3);
+  background: repeating-linear-gradient(90deg, rgba(43, 29, 18, 0.32) 0 4px, transparent 4px 8px);
+  box-shadow: inset 0 0 0 1px rgba(43, 29, 18, 0.35);
 }
 
 /* Past capacity: red hatching, unmistakably not "full". */
@@ -92,7 +92,7 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  background: repeating-linear-gradient(135deg, #ea6a52 0 4px, #5a1a10 4px 8px);
+  background: repeating-linear-gradient(135deg, #c8553f 0 3px, #f3ead3 3px 4px, #7a2316 4px 7px, #f3ead3 7px 8px);
   transition: width 0.45s ease, left 0.45s ease;
 }
 
@@ -102,8 +102,8 @@
   bottom: -2px;
   width: 3px;
   margin-left: -1.5px;
-  background: #f1e2bf;
-  box-shadow: 0 0 0 1px #1a0d06;
+  background: var(--ink);
+  box-shadow: 0 0 0 1px var(--paper);
 }
 
 .gauge__marker {
@@ -112,8 +112,8 @@
   bottom: -1px;
   width: 2px;
   margin-left: -1px;
-  background: #fff3d0;
-  box-shadow: 0 0 0 1px rgba(26, 13, 6, 0.8);
+  background: var(--ink);
+  box-shadow: 0 0 0 1px var(--paper);
 }
 
 /* Where the number is drifting: a hollow diamond riding the bar. */
@@ -122,8 +122,8 @@
   top: 50%;
   width: calc(var(--gauge-height) * 0.75);
   height: calc(var(--gauge-height) * 0.75);
-  border: 2px solid #fff3d0;
-  background: rgba(26, 13, 6, 0.6);
+  border: 2px solid var(--ink);
+  background: var(--paper-raised);
   transform: translate(-50%, -50%) rotate(45deg);
   transition: left 0.45s ease;
 }
@@ -167,9 +167,9 @@
   position: relative;
   height: 0.6rem;
   border-radius: 999px;
-  background: linear-gradient(180deg, #0a0603, #1a1006);
-  border: 1px solid rgba(122, 83, 31, 0.9);
-  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.6);
+  background: var(--track);
+  border: 1px solid var(--rule);
+  box-shadow: inset 0 2px 3px rgba(60, 40, 20, 0.6);
 }
 
 .signed-bar::after {
@@ -194,10 +194,10 @@
 
 .signed-bar__fill.is-gain {
   left: 50%;
-  background: linear-gradient(180deg, #8fcf9b, #4f9a5e);
+  background: linear-gradient(180deg, #a3c48c, #6b9558);
 }
 
 .signed-bar__fill.is-loss {
   right: 50%;
-  background: linear-gradient(180deg, #f39582, #c4452f);
+  background: linear-gradient(180deg, #df866f, #b24732);
 }

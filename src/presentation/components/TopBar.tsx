@@ -186,7 +186,7 @@ export function TopBar({
   const [muted, setMutedState] = useState(() => isMuted());
 
   return (
-    <header className="top-bar">
+    <header className="top-bar surface-leather">
       <div className="top-bar__row top-bar__row--ticker">
         <span className="top-bar__nation" style={{ "--party-color": partyColor } as CSSProperties}>
           {nationName}

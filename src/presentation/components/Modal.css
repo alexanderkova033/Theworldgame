@@ -1,8 +1,8 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(6, 4, 2, 0.78);
-  backdrop-filter: blur(2px);
+  /* A sepia wash over the map — no blur: filters over the map cost frames. */
+  background: rgba(42, 29, 18, 0.62);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -49,11 +49,10 @@
   top: 0;
   margin: 0 -1.1rem 1rem;
   padding: 0.8rem 1.1rem 0.7rem;
-  background:
-    var(--grain) 0 0/90px 90px repeat,
-    linear-gradient(180deg, var(--wood-light), var(--panel-bg-raised)) no-repeat;
-  border-bottom: 2px solid var(--panel-border);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+  /* The page's title band, set off by a double rule. */
+  background: var(--grain) 0 0/90px 90px repeat, linear-gradient(180deg, var(--paper-raised), var(--paper));
+  border-bottom: 3px double var(--rule-dark);
+  box-shadow: 0 4px 8px -4px rgba(60, 40, 20, 0.35);
 }
 
 .modal__header-title {
@@ -68,8 +67,13 @@
   margin-bottom: 0;
 }
 
+.modal__header h2 {
+  font-size: 1.35rem;
+}
+
+/* The ornament sits in the title band's double rule, not under the title. */
 .modal__header h2::after {
-  bottom: -0.35rem;
+  display: none;
 }
 
 .modal__header-icon {
@@ -79,13 +83,10 @@
   width: 2.3rem;
   height: 2.3rem;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.14), transparent 65%), var(--panel-bg-raised);
-  border: 2px solid var(--accent-active);
-  box-shadow:
-    0 0 10px rgba(240, 200, 105, 0.45),
-    inset 0 0 0 1px rgba(240, 200, 105, 0.3),
-    inset 0 2px 2px rgba(255, 255, 255, 0.18),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.45);
+  /* An engraved medallion: paper ringed twice in sepia. */
+  background: radial-gradient(circle at 35% 30%, #fffaf0, var(--paper-deep));
+  border: 1px solid var(--rule-dark);
+  box-shadow: inset 0 0 0 3px var(--paper-raised), inset 0 0 0 4px var(--rule), 0 1px 2px rgba(60, 40, 20, 0.3);
   flex-shrink: 0;
 }
 
@@ -115,19 +116,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* A wax seal: oxblood, with a cream cross. */
   border-radius: 50%;
-  border: 2px solid var(--panel-border);
-  background: linear-gradient(180deg, #7a2c22, #4a150f);
-  color: var(--text);
+  border: 1px solid #3e0d0d;
+  background: radial-gradient(circle at 35% 30%, #a3352c, var(--oxblood-dark));
+  color: #f8ebc6;
   font-size: 1.1rem;
   line-height: 1;
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.5),
-    inset 0 1px 2px rgba(255, 255, 255, 0.12),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 0 0 2px rgba(226, 194, 122, 0.35), 0 1px 3px rgba(60, 40, 20, 0.45);
 }
 
-.modal__close:hover {
-  border-color: var(--accent-active);
-  background: linear-gradient(180deg, #a63a2b, #6a1f16);
+.modal__close:hover:not(:disabled) {
+  border-color: #3e0d0d;
+  background: radial-gradient(circle at 35% 30%, #b8443a, #6a1a18);
 }

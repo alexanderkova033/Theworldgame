@@ -3,41 +3,81 @@
    that component's own <ComponentName>.css instead — see e.g.
    presentation/components/MapPanel.css.
 
-   Palette/theme is a Warcraft-3-inspired "carved wood & gold" command UI:
-   dark oak panels, brass/gold bevelled borders, rivets at panel corners,
-   engraved gold headers. */
+   Style: a Georgian state ledger, c. 1750. Pages of laid parchment in
+   iron-gall ink, ruled in sepia, with oxblood for what must be acted on
+   and gilt for ornament; the frame around them (the top bar) is a spine of
+   green morocco leather with gilt tooling; the map is a hand-coloured
+   engraved chart.
+
+   Two surfaces, one set of token names:
+   - the default, :root — parchment and ink
+   - .surface-leather — dark green leather and gilt (the top bar). It
+     redefines the same tokens, so any component placed on it (ticker
+     chips, advisor chips, tabs) reads correctly without its own rules. */
 
 :root {
-  color-scheme: dark;
-  --bg: #140d08;
-  --bg-deep: #0b0704;
-  --panel-bg: #241708;
-  --panel-bg-raised: #34220f;
-  --panel-border: #7a531f;
-  --wood-dark: #1a1006;
-  --wood-light: #4a2f15;
-  --text: #f1e2bf;
-  --text-muted: #b3987a;
-  --accent: #caa036;
-  --accent-soft: rgba(202, 160, 54, 0.16);
-  --accent-active: #f0c869;
-  --danger: #ea6a52; /* 5.6:1 on panels — readable as text, not just as a fill */
-  --warning: #d9a24f;
-  --info: #5b9bd6;
-  --success: #6fae7c;
+  color-scheme: light;
+
+  /* Parchment and ink */
+  --paper: #f3ead3;
+  --paper-raised: #f9f3e3;
+  --paper-deep: #e4d6b4; /* troughs, insets, the inside of a gauge */
+  --ink: #2b1d12; /* 14:1 on --paper */
+  --ink-muted: #5c4733; /* 7.6:1 on --paper */
+  --rule: #a88b5c; /* sepia ruling */
+  --rule-dark: #6e5434;
+  --oxblood: #7b2121; /* 9:1 on --paper — what must be acted on */
+  --oxblood-dark: #561414;
+  --gilt: #b08a3e;
+  --gilt-bright: #e2c27a;
+  --leather: #223a2f; /* green morocco */
+  --leather-dark: #14241c;
+  --navy: #1f3550;
+
+  /* The names every component already uses, mapped onto the ledger. */
+  --bg: #2a1d12; /* the walnut desk under everything */
+  --bg-deep: var(--paper-deep);
+  --panel-bg: var(--paper);
+  --panel-bg-raised: var(--paper-raised);
+  --panel-border: var(--rule);
+  --wood-dark: #e8dcbf;
+  --wood-light: #fbf6e9;
+  --text: var(--ink);
+  --text-muted: var(--ink-muted);
+  --accent: #8a6a24; /* dark gilt — 4.9:1 on paper, for ornament and labels */
+  --accent-soft: rgba(123, 33, 33, 0.08);
+  --accent-active: var(--oxblood); /* headings, the selected thing, focus */
+  /* Status colours, deepened for ink on paper (each ≥ 4.5:1 on --paper). */
+  --danger: #a3271b;
+  --warning: #8a560c;
+  --info: #1f4d78;
+  --success: #2e6b3c;
+
+  /* Recesses on the page: a boxed-off area, a stronger one, a bar's trough. */
+  --inset: rgba(140, 105, 60, 0.09);
+  --inset-strong: rgba(120, 90, 50, 0.16);
+  --track: #ddcda9;
+
+  /* Watercolour washes for fills (gauges, map tints) — never used as text. */
+  --wash-good: #7da36a;
+  --wash-warn: #d9a548;
+  --wash-bad: #c8553f;
+  --wash-neutral: #b9a47e;
 
   /* Alegreya rather than an all-caps engraved face: it keeps the period
      look, but has a real lowercase, so words keep their shape. */
   --font-display: "Alegreya", Georgia, "Times New Roman", serif;
   --font-body: system-ui, "Segoe UI", Roboto, sans-serif;
 
-  /* A fine grayscale film-grain, baked as a tiny seamless-tiling SVG turbulence
-     filter so every wood/gold gradient in the game reads as a textured,
-     hand-carved surface instead of flat, plotter-smooth CSS gradient — the
-     single biggest lever for "looks like a real RTS command UI" vs. "looks
-     like a website". Used as an extra background layer (never its own
-     element), so it never affects layout or interaction. */
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* Laid-paper grain: a fine, warm noise baked as a tiny tiling SVG and
+     used only as a background layer (never its own element), so pages read
+     as paper rather than flat colour. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.42 0 0 0 0 0.3 0 0 0 0 0.16 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* Faint horizontal chain-lines of laid paper. */
+  --laid: repeating-linear-gradient(0deg, rgba(110, 84, 52, 0.035) 0 1px, transparent 1px 7px);
+
+  /* A heading's ornament: a hairline, a lozenge and dots, in oxblood. */
+  --ornament: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='12' viewBox='0 0 180 12'%3E%3Cg fill='%237b2121'%3E%3Crect x='6' y='5.5' width='66' height='1'/%3E%3Crect x='108' y='5.5' width='66' height='1'/%3E%3Ccircle cx='78' cy='6' r='1.6'/%3E%3Ccircle cx='102' cy='6' r='1.6'/%3E%3Cpath d='M90 0.5 L95.5 6 L90 11.5 L84.5 6 Z'/%3E%3C/g%3E%3Cpath d='M90 3.5 L92.5 6 L90 8.5 L87.5 6 Z' fill='%23f3ead3'/%3E%3C/svg%3E");
 
   /* TopBar's rendered height (ticker row + tabs row + advisor row), with a little slack —
      Modal.css uses this so a tall panel's header can never end up rendered
@@ -49,6 +89,30 @@
   line-height: 1.5;
 }
 
+/* Green morocco and gilt: the same tokens, for things set on leather. */
+.surface-leather {
+  color-scheme: dark;
+  --panel-bg: var(--leather);
+  --panel-bg-raised: #2d4a3c;
+  --panel-border: #9c7a3a;
+  --bg-deep: var(--leather-dark);
+  --wood-dark: var(--leather-dark);
+  --wood-light: #2f4b3d;
+  --text: #f4ead0;
+  --text-muted: #cdbd94;
+  --accent: #c9a24a;
+  --accent-soft: rgba(226, 194, 122, 0.14);
+  --accent-active: var(--gilt-bright);
+  --inset: rgba(0, 0, 0, 0.2);
+  --inset-strong: rgba(0, 0, 0, 0.35);
+  --track: #0f1a14;
+  --danger: #f1937d;
+  --warning: #ebbc68;
+  --info: #93bfe8;
+  --success: #93d19f;
+  color: var(--text);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -56,20 +120,11 @@
 html, body, #root {
   height: 100%;
   margin: 0;
-  /* Firefox's scrollbar theming — Chromium/Edge/Safari get the fuller
-     ::-webkit-scrollbar treatment below. Without either, every scrollable
-     panel (Modal body, EventLog, map legend) shows the OS's flat grey/white
-     scrollbar, which reads as an unstyled hole in an otherwise carved-wood
-     UI. */
-  scrollbar-color: var(--panel-border) var(--bg-deep);
+  scrollbar-color: var(--rule) var(--paper-deep);
 }
 
 body {
-  background:
-    var(--grain) 0 0/90px 90px repeat,
-    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(202, 160, 54, 0.08), transparent 60%) no-repeat,
-    repeating-linear-gradient(115deg, rgba(0, 0, 0, 0.12) 0px, transparent 2px, transparent 5px) repeat,
-    var(--bg);
+  background: var(--grain) 0 0/90px 90px repeat, var(--bg);
   color: var(--text);
 }
 
@@ -79,109 +134,116 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-deep);
+  background: var(--paper-deep);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--wood-light), var(--panel-border));
-  border: 2px solid var(--bg-deep);
+  background: var(--rule);
+  border: 2px solid var(--paper-deep);
   border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, var(--accent), var(--panel-border));
+  background: var(--rule-dark);
 }
 
-/* A themed keyboard-focus ring in place of the browser default's stark blue
-   outline, which clashes hard against the wood/gold palette — kept visible
-   (not suppressed) for accessibility, just recolored and only shown for
-   keyboard/programmatic focus, not every mouse click. */
-:focus-visible {
-  outline: 2px solid var(--accent-active);
-  outline-offset: 2px;
-}
-
+/* Buttons: a paper label ruled in sepia — pressed into the page when held. */
 button {
   font-family: var(--font-body);
   font-weight: 600;
   letter-spacing: 0.01em;
   cursor: pointer;
-  border: 2px solid var(--panel-border);
-  border-radius: 4px;
-  background:
-    var(--grain) 0 0/70px 70px repeat,
-    linear-gradient(180deg, var(--wood-light), var(--wood-dark)) no-repeat;
+  border: 1px solid var(--rule-dark);
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--wood-light), var(--wood-dark));
   color: var(--text);
   padding: 0.5rem 0.75rem;
   font-size: 0.85rem;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   box-shadow:
-    0 3px 5px rgba(0, 0, 0, 0.5),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    inset 0 -4px 6px rgba(0, 0, 0, 0.5);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 1px 2px rgba(60, 40, 20, 0.28);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, transform 0.1s ease;
 }
 
 button:hover:not(:disabled) {
-  border-color: var(--accent-active);
-  box-shadow:
-    0 0 10px rgba(240, 200, 105, 0.5),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -4px 6px rgba(0, 0, 0, 0.5);
+  border-color: var(--oxblood);
+  background: linear-gradient(180deg, #fffaf0, #efe3c6);
 }
 
 button:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 2px 4px rgba(60, 40, 20, 0.3);
 }
 
 button:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
+/* Selected (a speed, a mode, a tab): set in green morocco with gilt lettering. */
 button.is-active {
-  background: linear-gradient(180deg, var(--accent-active), var(--accent));
-  border-color: #fff0c2;
-  color: #241505;
-  text-shadow: none;
+  background: linear-gradient(180deg, #2f4b3d, var(--leather));
+  border-color: var(--leather-dark);
+  color: #f4ead0;
   font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgba(226, 194, 122, 0.45), 0 1px 2px rgba(60, 40, 20, 0.3);
 }
 
-/* Primary: the one action a panel actually wants you to take (Build, Propose,
-   Trade, Repay...) — struck in gold so it reads as "the button" at a glance
-   instead of every action in the UI looking like the same wood rectangle. */
+button.is-active:hover:not(:disabled) {
+  background: linear-gradient(180deg, #375646, #26412f);
+  border-color: var(--leather-dark);
+}
+
+/* Primary: the one thing a panel wants you to do — an oxblood label with
+   gilt lettering, like a seal on the page. */
 button.btn-primary {
-  background: linear-gradient(180deg, var(--accent-active), var(--accent));
-  border-color: #fff0c2;
-  color: #241505;
-  text-shadow: none;
+  background: linear-gradient(180deg, #8f2a24, var(--oxblood-dark));
+  border-color: #3e0d0d;
+  color: #f8ebc6;
   font-weight: 700;
-  box-shadow: 0 0 10px rgba(240, 200, 105, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 0 -3px 5px rgba(0, 0, 0, 0.25), 0 2px 3px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(226, 194, 122, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 1px 2px rgba(60, 40, 20, 0.35);
 }
 
 button.btn-primary:hover:not(:disabled) {
-  box-shadow: 0 0 16px rgba(240, 200, 105, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -3px 5px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(180deg, #a3352c, #67191a);
+  border-color: #3e0d0d;
 }
 
-/* Danger: destructive/reversing actions (cancel an order, etc.) — the same
-   red already used for the modal close button, formalized as a variant. */
+/* On leather, buttons are tooled leather edged in gilt. */
+.surface-leather button {
+  border-color: #8a6c33;
+  background: linear-gradient(180deg, #2f4b3d, var(--leather-dark));
+  color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.surface-leather button:hover:not(:disabled) {
+  border-color: var(--gilt-bright);
+  background: linear-gradient(180deg, #375646, #1b2e24);
+}
+
+.surface-leather button.is-active,
+.surface-leather button.btn-primary {
+  background: linear-gradient(180deg, #f0d792, #c49a44);
+  border-color: #f6e6b8;
+  color: #2a1a08;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
 h1, h2, h3 {
   margin: 0 0 0.5rem 0;
   font-family: var(--font-display);
 }
 
+/* A page heading: oxblood Alegreya over a hairline-and-lozenge ornament. */
 h2 {
   position: relative;
-  font-size: 1rem;
-  letter-spacing: 0.02em;
-  color: var(--accent-active);
+  font-size: 1.15rem;
+  letter-spacing: 0.01em;
+  color: var(--oxblood);
   font-weight: 700;
   text-align: center;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.7), 0 0 10px rgba(240, 200, 105, 0.2);
-  padding-bottom: 0.7rem;
+  padding-bottom: 0.95rem;
   border-bottom: none;
 }
 
@@ -191,75 +253,56 @@ h2::after {
   left: 50%;
   bottom: 0;
   transform: translateX(-50%);
-  width: 65%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent) 15%, var(--accent-active) 50%, var(--accent) 85%, transparent);
+  width: min(11rem, 80%);
+  height: 12px;
+  background: var(--ornament) center/contain no-repeat;
 }
 
-/* A small carved gem sits astride the header's underline — the flourish
-   that turns a plain text-and-rule header into a little engraved plaque. */
-h2::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -0.1rem;
-  transform: translateX(-50%) rotate(45deg);
-  width: 7px;
-  height: 7px;
-  background: linear-gradient(135deg, #fff3d0, var(--accent-active) 55%, var(--accent));
-  box-shadow: 0 0 6px rgba(240, 200, 105, 0.75), inset -1px -1px 2px rgba(0, 0, 0, 0.35), inset 1px 1px 1px rgba(255, 255, 255, 0.5);
-  border-radius: 1px;
+/* A heading set left in a panel's header row: the ornament runs from the
+   left under it, at full width, instead of squeezing under a short word. */
+[class*="__head"] > h2::after,
+[class*="__header"] > h2::after {
+  left: 0;
+  transform: none;
+  width: 9rem;
+  background-position: left center;
 }
 
 h3 {
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  letter-spacing: 0.02em;
-  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 0.01em;
+  color: var(--ink-muted);
   margin-top: 0.9rem;
 }
 
-/* Carved-wood panel: brass double border, jewelled corner rivets, and a
-   fine grain so the "carved wood" surface reads as textured material, not a
-   flat CSS gradient — plus a second inset gold rim a few px inside the wood
-   border, which is what actually reads as "brass-inlaid frame" rather than
-   just a stroked rectangle. */
+/* A page of the ledger: laid parchment, a sepia double rule, a soft
+   shadow where it lies on the desk. */
 .panel {
   position: relative;
-  background:
-    var(--grain) 0 0/90px 90px repeat,
-    radial-gradient(circle 3.5px at 11px 11px, var(--accent-active) 85%, transparent 100%) no-repeat,
-    radial-gradient(circle 1.3px at 9.8px 9.8px, #fff8e2 85%, transparent 100%) no-repeat,
-    radial-gradient(circle 3.5px at calc(100% - 11px) 11px, var(--accent-active) 85%, transparent 100%) no-repeat,
-    radial-gradient(circle 1.3px at calc(100% - 12.2px) 9.8px, #fff8e2 85%, transparent 100%) no-repeat,
-    radial-gradient(circle 3.5px at 11px calc(100% - 11px), var(--accent-active) 85%, transparent 100%) no-repeat,
-    radial-gradient(circle 1.3px at 9.8px calc(100% - 12.2px), #fff8e2 85%, transparent 100%) no-repeat,
-    radial-gradient(circle 3.5px at calc(100% - 11px) calc(100% - 11px), var(--accent-active) 85%, transparent 100%) no-repeat,
-    radial-gradient(circle 1.3px at calc(100% - 12.2px) calc(100% - 12.2px), #fff8e2 85%, transparent 100%) no-repeat,
-    linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg)) no-repeat;
-  border: 3px solid var(--panel-border);
-  border-radius: 6px;
-  padding: 1.1rem;
+  background: var(--grain) 0 0/90px 90px repeat, var(--laid), linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg));
+  border: 1px solid var(--rule-dark);
+  border-radius: 3px;
+  padding: 1.1rem 1.2rem;
   margin-bottom: 1rem;
   box-shadow:
-    0 14px 30px rgba(0, 0, 0, 0.55),
-    0 2px 6px rgba(0, 0, 0, 0.45),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.5),
-    inset 0 0 0 4px rgba(240, 200, 105, 0.16),
-    inset 0 2px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -3px 12px rgba(0, 0, 0, 0.5);
+    inset 0 0 0 4px var(--panel-bg),
+    inset 0 0 0 5px rgba(168, 139, 92, 0.7),
+    0 6px 16px rgba(40, 25, 10, 0.28),
+    0 1px 3px rgba(40, 25, 10, 0.3);
 }
 
 /* Shared "icon tile" layout: a portrait glyph in a round frame beside a
-   label/value pair. Used anywhere a panel would otherwise be a plain text
-   list (stats, resources) so the sidebars read as imagery first. */
+   label/value pair. */
 .icon-tile {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: rgba(0, 0, 0, 0.24);
-  border: 1px solid var(--panel-border);
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
   padding: 0.45rem 0.7rem;
 }
 
@@ -267,13 +310,9 @@ h3 {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.12), transparent 65%), var(--panel-bg-raised);
-  border: 2px solid var(--panel-border);
-  box-shadow:
-    0 3px 6px rgba(0, 0, 0, 0.5),
-    inset 0 0 0 1px rgba(240, 200, 105, 0.3),
-    inset 0 2px 2px rgba(255, 255, 255, 0.14),
-    inset 0 -3px 5px rgba(0, 0, 0, 0.5);
+  background: radial-gradient(circle at 35% 30%, #fffaf0, var(--paper-deep));
+  border: 1px solid var(--rule-dark);
+  box-shadow: inset 0 0 0 3px var(--paper-raised), inset 0 0 0 4px var(--rule), 0 1px 2px rgba(60, 40, 20, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -308,7 +347,7 @@ h3 {
 
 /* Shared muted helper/explainer line under a panel heading. */
 .panel-hint {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   color: var(--text-muted);
   margin: 0 0 0.6rem;
   line-height: 1.5;
@@ -318,7 +357,7 @@ h3 {
    Always on, no settings: a visible keyboard focus ring (WCAG 2.4.7 / 1.4.11,
    at least 2px and 3:1 against its surroundings), pointer targets of at
    least 24px (WCAG 2.5.8), and motion that stands down when the operating
-   system asks for it. */
+   system asks for it. The ring is oxblood on paper, bright gilt on leather. */
 :focus-visible {
   outline: 3px solid var(--accent-active);
   outline-offset: 2px;

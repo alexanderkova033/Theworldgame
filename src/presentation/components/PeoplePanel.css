@@ -147,7 +147,7 @@ button.people-province {
   text-align: left;
   font-weight: 400;
   font-size: 0.875rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--inset);
   border: 2px solid transparent;
   box-shadow: none;
   text-shadow: none;
