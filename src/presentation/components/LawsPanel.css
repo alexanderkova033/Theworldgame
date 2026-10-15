@@ -601,6 +601,13 @@
   flex-shrink: 0;
 }
 
+.law-inspector__quota-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--text);
+}
+
 .law-inspector__vote {
   display: flex;
   align-items: center;

@@ -3,7 +3,7 @@ import { useState, type CSSProperties } from "react";
 import { enactLaw } from "../../application/actions";
 import type { AdvisorAlert } from "../../application/getAdvisorOutlook";
 import { getHelpedAlerts, getHelpedAlertsByAny } from "../../application/getTreeHints";
-import { CURRENCY_SYMBOL } from "../../domain/constants";
+import { CURRENCY_SYMBOL, INDUSTRY_PER_FACTORY } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { LAW_NODES, LAW_PATHS } from "../../domain/laws/lawData";
 import {
@@ -88,6 +88,32 @@ function formatQuotaValue(stat: QuotaStat, value: number): string {
   return Math.round(value).toLocaleString();
 }
 
+// Industry comes only from working factories, so a short quota is really
+// a count of factories still to build.
+function factoriesShort(state: GameState, threshold: number): number {
+  return Math.max(1, Math.ceil((threshold - state.stats.industry) / INDUSTRY_PER_FACTORY));
+}
+
+// What to do about a quota that isn't met yet, in one plain sentence.
+function quotaHint(state: GameState, quota: LawNode["quota"]): string {
+  switch (quota.stat) {
+    case "industry": {
+      const n = factoriesShort(state, quota.threshold);
+      return `Each working factory adds ${INDUSTRY_PER_FACTORY}. Build ${n} more ${n === 1 ? "factory" : "factories"} from the Economy tab, and staff them.`;
+    }
+    case "population":
+      return "People settle where there are homes and food. Build housing and farms.";
+    case "food":
+      return "Food piles up when farms grow more than people eat. Build farms, or buy food on the market.";
+    case "treasury":
+      return "Taxes and industry fill the treasury every day. Save up, or put off other spending.";
+    case "stability":
+      return "Stability rises when people are fed, housed, warm and in work. Police help too.";
+    case "popularity":
+      return "Support rises with fair taxes, full stomachs and rallies.";
+  }
+}
+
 // Where a law stands, in the few words that fit under its name on the tree.
 function lawStatusLabel(state: GameState, node: LawNode, status: TreeNodeStatus): string {
   switch (status) {
@@ -106,6 +132,10 @@ function lawStatusLabel(state: GameState, node: LawNode, status: TreeNodeStatus)
     case "locked-cross":
       return "Needs research";
     case "locked-quota":
+      if (node.quota.stat === "industry") {
+        const n = factoriesShort(state, node.quota.threshold);
+        return `Needs ${n} more ${n === 1 ? "factory" : "factories"}`;
+      }
       return `Needs ${QUOTA_LABELS[node.quota.stat].toLowerCase()} ${node.quota.stat === "stability" || node.quota.stat === "popularity" ? Math.round(node.quota.threshold) : formatCompact(node.quota.threshold)}`;
   }
 }
@@ -234,6 +264,7 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
           <div className="progress-bar">
             <div className="progress-bar__fill" style={{ width: `${Math.round(quota.ratio * 100)}%` }} />
           </div>
+          <p className="law-inspector__quota-hint">{quotaHint(state, node.quota)}</p>
         </div>
       )}
 
