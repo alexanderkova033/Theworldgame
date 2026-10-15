@@ -36,7 +36,7 @@ import { CostChips, StatChip } from "./CostChips";
 import { StatIcon } from "./StatIcon";
 import { SubTabs, type SubTab } from "./SubTabs";
 import { InspectorHeader, Lockouts, PathInspector, StatusLine, SynergyLine, TreeColumns, type TreeNodeStatus } from "./TechTree";
-import { AREA_ICONS, AREA_LABELS } from "../researchAreas";
+import { AREA_LABELS } from "../researchAreas";
 import { ScientistStepper } from "./WorkforcePanel";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
@@ -69,7 +69,6 @@ function PathCost({ state, nodes }: { state: GameState; nodes: ResearchNode[] })
 const CATEGORIES = RESEARCH_CATEGORIES.map((key) => ({
   key,
   label: AREA_LABELS[key],
-  icon: AREA_ICONS[key],
 }));
 
 // Where a technology stands, in the few words that fit under its name.
@@ -118,7 +117,7 @@ function closedReason(state: GameState, node: ResearchNode): string {
   const by = nameOf(why.by);
   if (why.reason === "sibling") return `Closed off: ${by.name} was developed instead.`;
   if (why.reason === "excluded") return `Closed off by ${by.name}${by.elsewhere ? ` (${by.elsewhere})` : ""}.`;
-  return "Closed off: the technology that leads here was passed over.";
+  return "Closed off: the research that leads here was passed over.";
 }
 
 // Under each column title: the area's daily rate (with where it comes from
@@ -150,7 +149,7 @@ function AreaHeader({ state, category, dispatch, onSelectNode }: { state: GameSt
           <span className="research-area__days">{daysLeft === null ? "stalled" : `${daysLeft}d`}</span>
         </button>
       ) : (
-        <span className="research-area__idle" title="This area's research is going nowhere. Pick a technology below.">
+        <span className="research-area__idle" title="This area's research is going nowhere. Pick a step below.">
           Idle: pick a direction
         </span>
       )}
@@ -216,7 +215,7 @@ function ResearchInspector({ node, state, status, onFocus, onStop }: ResearchIns
       )}
       {status === "foreclosed" && <StatusLine status="foreclosed">{closedReason(state, node)}</StatusLine>}
       {status === "locked-prerequisite" && (
-        <StatusLine status="locked">Needs {parents.length > 1 ? `${parents.slice(0, -1).join(", ")} or ${parents[parents.length - 1]}` : parents[0] ?? "the technology above"} first.</StatusLine>
+        <StatusLine status="locked">Needs {parents.length > 1 ? `${parents.slice(0, -1).join(", ")} or ${parents[parents.length - 1]}` : parents[0] ?? "the step above"} first.</StatusLine>
       )}
       {status === "locked-cross" && <StatusLine status="locked">Needs {crossNodeName ?? "a Law"} (Laws).</StatusLine>}
 
@@ -260,7 +259,6 @@ function areaTab(state: GameState, category: ResearchCategory): SubTab {
   return {
     key: category,
     label: AREA_LABELS[category],
-    icon: <StatIcon type={AREA_ICONS[category]} size={22} />,
     alert: idle,
     badge: focusNode ? `${Math.round(getResearchProgressRatio(state, focusNode) * 100)}%` : `${done}/${total}`,
     hint: focusNode
@@ -320,7 +318,7 @@ export function ResearchPanel({ state, alerts, dispatch }: ResearchPanelProps) {
       </div>
       <p className="note law-tree__guide">
         Pick a direction for each area and it moves forward every day, faster with scientists and schools. Each area splits into three
-        paths: the first technology on one closes the other two for good.
+        paths: the first step on one closes the other two for good.
       </p>
 
       <SubTabs
@@ -366,7 +364,7 @@ export function ResearchPanel({ state, alerts, dispatch }: ResearchPanelProps) {
               nodes={pathNodes(shownPath.key)}
               getStatus={statusOf}
               getEffects={(node) => node.effects}
-              noun="technology"
+              noun="step"
               hints={pathHints(shownPath.key)}
               cost={<PathCost state={state} nodes={pathNodes(shownPath.key)} />}
               onSelectNode={selectNode}

@@ -11,7 +11,7 @@ import { useRef, type KeyboardEvent, type ReactNode } from "react";
 export interface SubTab {
   key: string;
   label: string;
-  icon: ReactNode;
+  icon?: ReactNode;
   badge?: ReactNode; // a short status: progress, a count, a rate
   alert?: boolean; // needs attention — drawn with a "!" as well as colour
   hint?: string; // tooltip

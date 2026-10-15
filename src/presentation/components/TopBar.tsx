@@ -13,19 +13,20 @@ import type { Ledger } from "../../domain/ledger/types";
 import type { ResourceBundle } from "../../domain/resources/types";
 import type { UnrestStage } from "../../domain/unrest/types";
 import { isMuted, setMuted } from "../audio/sound";
-import { NavIcon, type NavIconType } from "./NavIcon";
+import { NavIcon } from "./NavIcon";
+import { StatIcon } from "./StatIcon";
 import { ResourceTicker } from "./ResourceTicker";
 
 const SPEEDS: GameSpeed[] = [1, 2, 3, 5];
 
 // Ventures have no tab: they open from an island on the map, or the event log.
-const TABS: Array<{ key: PanelKey; label: string; icon: NavIconType }> = [
-  { key: "build", label: "Build", icon: "build" },
-  { key: "money", label: "Money", icon: "money" },
-  { key: "politics", label: "Politics", icon: "politics" },
-  { key: "laws", label: "Laws", icon: "laws" },
-  { key: "research", label: "Research", icon: "research" },
-  { key: "reports", label: "Reports", icon: "reports" },
+const TABS: Array<{ key: PanelKey; label: string; icon: () => ReactNode }> = [
+  { key: "build", label: "Build", icon: () => <NavIcon type="build" size={22} /> },
+  { key: "money", label: "Money", icon: () => <StatIcon type="treasury" size={22} /> },
+  { key: "politics", label: "Politics", icon: () => <NavIcon type="politics" size={22} /> },
+  { key: "laws", label: "Laws", icon: () => <NavIcon type="laws" size={22} /> },
+  { key: "research", label: "Research", icon: () => <NavIcon type="research" size={22} /> },
+  { key: "reports", label: "Reports", icon: () => <NavIcon type="reports" size={22} /> },
 ];
 
 // A small hourglass in place of a bare date string.
@@ -248,7 +249,7 @@ export function TopBar({
               aria-label={tab.key === "reports" && reportsBadgeCount > 0 ? `${tab.label}, ${reportsBadgeCount} unread` : tab.label}
             >
               <span className="top-bar__tab-icon">
-                <NavIcon type={tab.icon} size={22} />
+                {tab.icon()}
                 {tab.key === "reports" && reportsBadgeCount > 0 && (
                   <span className="top-bar__tab-badge" aria-hidden="true">
                     {reportsBadgeCount > 9 ? "9+" : reportsBadgeCount}

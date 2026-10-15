@@ -53,7 +53,7 @@ export function getPopularityDrivers(c: PopularityConditions): PopularityDriver[
     { key: "homes", label: "Homes", value: -c.homelessShare * HOMELESS_POPULARITY_PENALTY * hardship },
     { key: "heat", label: "Heating", value: -c.unheatedShare * COLD_POPULARITY_PENALTY * hardship },
     { key: "jobs", label: "Jobs", value: -c.unemploymentShare * UNEMPLOYMENT_POPULARITY_PENALTY * hardship },
-    { key: "order", label: "Order", value: (c.stability - 50) * STABILITY_POPULARITY_WEIGHT },
+    { key: "order", label: "Stability", value: (c.stability - 50) * STABILITY_POPULARITY_WEIGHT },
     { key: "policy", label: "Laws", value: c.policy ?? 0 },
   ];
 }

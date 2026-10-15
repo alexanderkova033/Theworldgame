@@ -10,6 +10,7 @@ import { getForecasts } from "../../application/getForecasts";
 import { FORECAST_DAYS } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { formatCompact } from "../formatNumber";
+import { BuildingGlyph } from "./CauseIcon";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
 interface ProductionPanelProps {
@@ -26,7 +27,7 @@ function signed(value: number): string {
 }
 
 interface Part {
-  icon: StatIconType;
+  icon: StatIconType | "granary";
   label: string;
   value: number; // positive = adds to the net, negative = subtracts
 }
@@ -35,7 +36,7 @@ export function ProductionPanel({ state, production }: ProductionPanelProps) {
   const [focus, setFocus] = useState<string | null>(null);
   const parts: Part[] = [
     { icon: "food", label: production.season === "winter" ? "Farmed (winter)" : "Farmed", value: production.farmFood },
-    { icon: "industry", label: "Granaries & canneries", value: production.processedFood },
+    { icon: "granary", label: "Granaries & canneries", value: production.processedFood },
     { icon: "population", label: "Eaten", value: -production.foodConsumed },
   ];
   const net = Math.round(production.netFood) || 0;
@@ -71,7 +72,7 @@ export function ProductionPanel({ state, production }: ProductionPanelProps) {
         {parts.map((part) => (
           <span className={`production-panel__key ${lit(part.label)}`} key={part.label} title={part.label} {...hover(part.label)}>
             <span className={`production-panel__key-dot ${part.value >= 0 ? "is-gain" : "is-loss"}`} />
-            <StatIcon type={part.icon} size={15} />
+            {part.icon === "granary" ? <BuildingGlyph type="granary" size={15} /> : <StatIcon type={part.icon} size={15} />}
             <span className="production-panel__key-value">{signed(part.value)}</span>
           </span>
         ))}

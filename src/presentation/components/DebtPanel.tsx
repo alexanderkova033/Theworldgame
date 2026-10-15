@@ -5,7 +5,7 @@ import type { GameState } from "../../domain/country/types";
 import { isDebtDangerous } from "../../domain/loans/loanRules";
 import { formatCompact } from "../formatNumber";
 import { playCoins } from "../audio/sound";
-import { StatIcon } from "./StatIcon";
+import { LoanIcon } from "./CauseIcon";
 
 interface DebtPanelProps {
   state: GameState;
@@ -28,14 +28,14 @@ export function DebtPanel({ state, dispatch }: DebtPanelProps) {
         className="panel-hint"
         title={`Debt compounds daily with no fixed term. Past ${formatCompact(
           DEBT_DANGER_THRESHOLD,
-        )} ${CURRENCY_SYMBOL} the interest alone costs stability and popularity every day.`}
+        )} ${CURRENCY_SYMBOL} the interest alone costs stability and support every day.`}
       >
         Compounds daily · dangerous past {formatCompact(DEBT_DANGER_THRESHOLD)} {CURRENCY_SYMBOL}
       </p>
 
       <div className={`debt-panel__status ${dangerous ? "is-dangerous" : state.debt > 0 ? "is-active" : ""}`}>
         <span className="debt-panel__status-icon">
-          <StatIcon type="treasury" size={22} />
+          <LoanIcon size={22} />
         </span>
         <div className="debt-panel__status-body">
           <span className="debt-panel__status-value">

@@ -140,7 +140,7 @@ const BUILD_ITEMS: BuildItem[] = [
         <StatIcon type="population" size={16} />+{formatCompact(PEOPLE_PER_HOME)}
       </>
     ),
-    hint: `Houses ${PEOPLE_PER_HOME.toLocaleString()} people (more with housing research). Burns ${HEATING_FUEL_PER_HOME} coal (or wood) a day in winter`,
+    hint: `Houses ${PEOPLE_PER_HOME.toLocaleString()} people (more with Homes research). Burns ${HEATING_FUEL_PER_HOME} coal (or wood) a day in winter`,
   },
   {
     type: "farm",

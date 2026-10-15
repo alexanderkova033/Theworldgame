@@ -48,7 +48,7 @@ import { getDailyPoliticalPower } from "../../domain/politics/politicsRules";
 import { getCrackdownStability } from "../../domain/unrest/unrestRules";
 import { playCoins, playDrum, playRally } from "../audio/sound";
 import { UNREST_INFO, UNREST_STEPS } from "../unrestStages";
-import { FlameIcon, HourglassIcon, UnrestStageIcon } from "./CauseIcon";
+import { BuildingGlyph, CrackdownIcon, FlameIcon, HourglassIcon, JobsIcon, NeighboursIcon, RallyIcon, TaxIcon, UnrestStageIcon } from "./CauseIcon";
 import { DecisionIcon } from "./DecisionModal";
 import { ForeignAffairs } from "./ForeignAffairs";
 import { Gauge, SignedBar, withPreview, type GaugeTone } from "./Gauge";
@@ -69,28 +69,26 @@ interface PoliticsPanelProps {
   onSection: (section: PoliticsSection) => void;
 }
 
-const DRIVER_ICONS: Record<Exclude<PopularityDriver["key"], "heat" | "policy">, StatIconType> = {
-  taxes: "treasury",
-  food: "food",
-  homes: "population",
-  jobs: "industry",
-  order: "police",
-};
-
+// Each driver drawn as what it is: taxes, food, homes, heating, jobs, the
+// stability of the country, and laws.
 function DriverIcon({ driver }: { driver: PopularityDriver["key"] }) {
-  if (driver === "heat") return <FlameIcon size={22} />;
-  if (driver === "policy") return <NavIcon type="laws" size={22} />;
-  return <StatIcon type={DRIVER_ICONS[driver]} size={22} />;
+  switch (driver) {
+    case "taxes":
+      return <TaxIcon size={22} />;
+    case "food":
+      return <StatIcon type="food" size={22} />;
+    case "homes":
+      return <BuildingGlyph type="housing" size={22} />;
+    case "heat":
+      return <FlameIcon size={22} />;
+    case "jobs":
+      return <JobsIcon size={22} />;
+    case "order":
+      return <StatIcon type="stability" size={22} />;
+    case "policy":
+      return <NavIcon type="laws" size={22} />;
+  }
 }
-
-const IDEOLOGY_ICONS: Record<Ideology, StatIconType> = {
-  Agrarian: "food",
-  Commercial: "treasury",
-  Traditionalist: "stability",
-  Progressive: "popularity",
-  Labor: "industry",
-  Nationalist: "population",
-};
 
 // The groups as people, not "wings".
 const IDEOLOGY_GROUPS: Record<Ideology, string> = {
@@ -457,7 +455,7 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
       </div>
       <div className="politics-actions politics-actions--one">
         <ActionCard
-          icon="popularity"
+          icon={<RallyIcon size={28} />}
           title="Rally"
           effect={<>+{RALLY_SUPPORT} with everyone</>}
           cost={<Cost state={state} pp={RALLY_POLITICAL_POWER_COST} cr={RALLY_TREASURY_COST} />}
@@ -487,7 +485,6 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
             const gain = courting === ideology ? courtGain(ideology) : null;
             return (
               <div className={`politics-group ${focus === ideology ? "is-focus" : ""}`} key={ideology} onMouseEnter={() => setFocus(ideology)}>
-                <StatIcon type={IDEOLOGY_ICONS[ideology]} size={24} />
                 <span className="politics-group__name">
                   {IDEOLOGY_GROUPS[ideology]}
                   {isYours && (
@@ -610,7 +607,7 @@ function ActionCard({
   onPreview,
   sound,
 }: {
-  icon: StatIconType;
+  icon: ReactNode;
   title: string;
   effect: ReactNode;
   cost: ReactNode;
@@ -630,7 +627,7 @@ function ActionCard({
           onClick();
         }}
       >
-        <StatIcon type={icon} size={28} />
+        {icon}
         <span className="politics-action__text">
           <strong>{title}</strong>
           <span className="politics-action__effect">{effect}</span>
@@ -690,7 +687,7 @@ function UnrestView({ state, dispatch }: { state: GameState; dispatch: Dispatch 
       </div>
       <div className="politics-actions politics-actions--one">
         <ActionCard
-          icon="police"
+          icon={<CrackdownIcon size={28} />}
           title="Crack down"
           effect={
             <>
@@ -739,9 +736,9 @@ export function PoliticsPanel({ state, dispatch, onOpenPanel, section, onSection
             hint: `${stage.name}: ${stage.effect}`,
           },
           {
-            key: "abroad",
-            label: "Abroad",
-            icon: <NavIcon type="ventures" size={22} />,
+            key: "neighbours",
+            label: "Neighbours",
+            icon: <NeighboursIcon size={22} />,
             hint: "The neighbours' governments, and leaning on them",
           },
         ]}
@@ -751,7 +748,7 @@ export function PoliticsPanel({ state, dispatch, onOpenPanel, section, onSection
 
       {section === "support" && <SupportView state={state} dispatch={dispatch} onOpenPanel={onOpenPanel} onSection={onSection} />}
       {section === "unrest" && <UnrestView state={state} dispatch={dispatch} />}
-      {section === "abroad" && <ForeignAffairs state={state} dispatch={dispatch} />}
+      {section === "neighbours" && <ForeignAffairs state={state} dispatch={dispatch} />}
     </section>
   );
 }

@@ -14,10 +14,9 @@ import type { ProjectType } from "../../domain/construction/types";
 import { formatCompact } from "../formatNumber";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
 import { UNREST_INFO } from "../unrestStages";
-import { BuildingGlyph, FlameIcon, UnrestStageIcon } from "./CauseIcon";
+import { BuildingGlyph, FlameIcon, JobsIcon, UnrestStageIcon } from "./CauseIcon";
 import { Gauge } from "./Gauge";
 import { ResourceIcon } from "./ResourceIcon";
-import { StatIcon } from "./StatIcon";
 import type { OpenPanel } from "../navigation";
 
 function Meter({
@@ -183,7 +182,7 @@ function ProvinceTable({
               Factory jobs
             </th>
             <th scope="col" className="is-num">
-              Out of work
+              Jobless
             </th>
             <th scope="col">Mood</th>
             <th scope="col">
@@ -272,7 +271,7 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
       <h2>People</h2>
 
       <Meter
-        icon={<StatIcon type="population" size={22} />}
+        icon={<BuildingGlyph type="housing" size={22} />}
         label="Homes"
         gauge={
           <Gauge
@@ -289,7 +288,7 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
       />
 
       <Meter
-        icon={<StatIcon type="industry" size={22} />}
+        icon={<JobsIcon size={22} />}
         label="Jobs"
         gauge={
           <Gauge
@@ -300,18 +299,18 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
             ]}
             overflow={labour.unemployed}
             size="lg"
-            label={`${Math.round(labour.jobs - unfilled)} of ${Math.round(labour.jobs)} jobs filled${labour.unemployed >= 1 ? `, ${Math.round(labour.unemployed)} out of work` : ""}`}
+            label={`${Math.round(labour.jobs - unfilled)} of ${Math.round(labour.jobs)} jobs filled${labour.unemployed >= 1 ? `, ${Math.round(labour.unemployed)} jobless` : ""}`}
           />
         }
         danger={shortWorkers > 0 || labour.unemploymentShare > 0.1}
         value={`${formatCompact(labour.workers)} workers · ${formatCompact(labour.jobs)} jobs`}
         detail={
           unfilled >= 1 && labour.unemployed >= 1
-            ? `${formatCompact(labour.unemployed)} out of work, ${formatCompact(unfilled)} jobs unfilled elsewhere. Build homes near the jobs.`
+            ? `${formatCompact(labour.unemployed)} jobless, ${formatCompact(unfilled)} jobs unfilled elsewhere. Build homes near the jobs.`
             : shortWorkers > 0
             ? `Short ${formatCompact(shortWorkers)} workers: ${labour.foodStaffing < 1 ? `farms at ${Math.round(labour.foodStaffing * 100)}%` : labour.industryStaffing < 1 ? `factories at ${Math.round(labour.industryStaffing * 100)}%` : `schools at ${Math.round(labour.schoolStaffing * 100)}%`}`
             : labour.unemployed > 0
-              ? `${formatCompact(labour.unemployed)} out of work`
+              ? `${formatCompact(labour.unemployed)} jobless`
               : "Everyone employed"
         }
       />

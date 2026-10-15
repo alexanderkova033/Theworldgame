@@ -26,6 +26,7 @@ import { LawsPanel } from "./presentation/components/LawsPanel";
 import { MapPanel } from "./presentation/components/MapPanel";
 import { Modal } from "./presentation/components/Modal";
 import { NavIcon } from "./presentation/components/NavIcon";
+import { StatIcon } from "./presentation/components/StatIcon";
 import { PartySelectScreen } from "./presentation/components/PartySelectScreen";
 import { PoliticsPanel } from "./presentation/components/PoliticsPanel";
 import { ProvinceCard } from "./presentation/components/ProvinceCard";
@@ -341,7 +342,7 @@ function App() {
       )}
 
       {openModal === "money" && (
-        <Modal title="Money" icon={<NavIcon type="money" size={22} />} onClose={() => setOpenModal(null)} wide>
+        <Modal title="Money" icon={<StatIcon type="treasury" size={22} />} onClose={() => setOpenModal(null)} wide>
           <MoneyPanel
             state={state}
             production={dailyProduction}

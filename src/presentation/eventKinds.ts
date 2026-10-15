@@ -25,7 +25,7 @@ const BUILD: EventAction = { label: "Build", ...BUILDINGS };
 const KINDS: Record<Exclude<EventTopic, "paused">, Omit<EventKind, "kind">> = {
   hunger: { plural: "days of food shortage", foldable: true, action: BUY_FOOD },
   cold: { plural: "heating warnings", foldable: true, action: BUY_COAL },
-  homes: { plural: "housing warnings", foldable: true, action: SEE_PEOPLE },
+  homes: { plural: "warnings about homes", foldable: true, action: SEE_PEOPLE },
   money: { plural: "money warnings", foldable: true, action: SEE_BUDGET },
   unrest: { plural: "unrest changes", foldable: false, action: { label: "Unrest", ...UNREST } },
   provinceUnrest: { plural: "province unrest", foldable: false, action: SEE_PEOPLE },

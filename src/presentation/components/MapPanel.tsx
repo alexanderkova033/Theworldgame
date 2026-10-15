@@ -17,7 +17,7 @@ import { starPoints } from "./iconShapes";
 import type { ProvinceOverview, ProvinceStatus } from "../../application/getProvinceOverview";
 import { formatCompact } from "../formatNumber";
 import { UNREST_INFO } from "../unrestStages";
-import { UnrestStageIcon } from "./CauseIcon";
+import { JobsIcon, UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 
@@ -364,7 +364,7 @@ const MODE_COLORS: Record<ModeLevel, string> = { ok: "#93a878", warn: "#cfa760",
 const MAP_MODES: Array<{ key: MapMode; label: string; levels?: Record<ModeLevel, string> }> = [
   { key: "political", label: "Nations" },
   { key: "homes", label: "Homes", levels: { ok: "Room to grow", warn: "Nearly full", alert: "People without a home" } },
-  { key: "jobs", label: "Jobs", levels: { ok: "Work for all", warn: "Jobs unfilled", alert: "Out of work" } },
+  { key: "jobs", label: "Jobs", levels: { ok: "Work for all", warn: "Jobs unfilled", alert: "Jobless" } },
   { key: "unrest", label: "Unrest", levels: { ok: "Calm", warn: "Discontent", alert: "Strikes or riots" } },
 ];
 
@@ -402,7 +402,7 @@ type FlagKey = "homesFull" | "homesOver" | "jobsShort" | "jobsJobless" | "discon
 const FLAG_LEGEND: Array<{ key: FlagKey; label: string; hint: string; glyph: ReactNode }> = [
   { key: "homesOver", label: "People without a home", hint: "1% or more of the people here have no home. Build homes here.", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="homes" level="alert" cx={-1} cy={1} /></svg> },
   { key: "homesFull", label: "Homes nearly full", hint: "95% of the places here are taken, so there's no room to grow.", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="homes" level="warn" cx={0} cy={1} /></svg> },
-  { key: "jobsJobless", label: "Out of work", hint: "10% or more of the workers here have no job. Build workplaces here.", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="jobs" level="alert" cx={-1} cy={1} /></svg> },
+  { key: "jobsJobless", label: "Jobless", hint: "10% or more of the workers here have no job. Build workplaces here.", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="jobs" level="alert" cx={-1} cy={1} /></svg> },
   { key: "jobsShort", label: "Jobs unfilled", hint: "5% or more of the jobs here have nobody to do them. Homes here would bring workers.", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="jobs" level="warn" cx={0} cy={1} /></svg> },
   { key: "discontent", label: "Discontent", hint: UNREST_INFO.discontent.effect, glyph: <UnrestStageIcon stage="discontent" size={22} /> },
   { key: "strikes", label: "Strikes", hint: UNREST_INFO.strikes.effect, glyph: <UnrestStageIcon stage="strikes" size={22} /> },
@@ -1245,7 +1245,7 @@ export const MapPanel = memo(function MapPanel({
                       </span>
                     </div>
                     <div className={`map-panel__tooltip-row ${place.workers > 0 && place.unemployed / place.workers >= 0.1 ? "is-alert" : ""}`}>
-                      <StatIcon type="industry" size={18} />
+                      <JobsIcon size={18} />
                       <span>
                         {formatCompact(place.workers)} workers · {formatCompact(place.jobs)} jobs
                         {place.unemployed >= 1 ? ` · ${formatCompact(place.unemployed)} jobless` : ""}

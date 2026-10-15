@@ -59,10 +59,10 @@ function PathCost({ nodes }: { nodes: LawNode[] }) {
 
 
 const CATEGORIES = [
-  { key: "labor", label: "Labour", icon: "industry" as const },
-  { key: "sustenance", label: "Food", icon: "food" as const },
-  { key: "order", label: "Order", icon: "stability" as const },
-  { key: "revenue", label: "Revenue", icon: "treasury" as const },
+  { key: "labor", label: "Labour" },
+  { key: "sustenance", label: "Food" },
+  { key: "order", label: "Order" },
+  { key: "revenue", label: "Revenue" },
 ];
 
 const QUOTA_LABELS: Record<QuotaStat, string> = {
@@ -71,7 +71,7 @@ const QUOTA_LABELS: Record<QuotaStat, string> = {
   food: "Food",
   industry: "Industry",
   stability: "Stability",
-  popularity: "Popularity",
+  popularity: "Support",
 };
 
 const QUOTA_ICONS: Record<QuotaStat, "treasury" | "population" | "food" | "industry" | "stability" | "popularity"> = {
@@ -103,7 +103,7 @@ function quotaHint(state: GameState, quota: LawNode["quota"]): string {
       return `Each working factory adds ${INDUSTRY_PER_FACTORY}. Build ${n} more ${n === 1 ? "factory" : "factories"} from the Build tab, and staff them.`;
     }
     case "population":
-      return "People settle where there are homes and food. Build housing and farms.";
+      return "People settle where there are homes and food. Build homes and farms.";
     case "food":
       return "Food piles up when farms grow more than people eat. Build farms, or buy food on the market.";
     case "treasury":
@@ -251,7 +251,7 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
       {status === "locked-prerequisite" && (
         <StatusLine status="locked">Needs {parents.length > 1 ? `${parents.slice(0, -1).join(", ")} or ${parents[parents.length - 1]}` : parents[0] ?? "the law above"} first.</StatusLine>
       )}
-      {status === "locked-cross" && <StatusLine status="locked">Needs {crossNodeName ?? "a technology"} (Research).</StatusLine>}
+      {status === "locked-cross" && <StatusLine status="locked">Needs {crossNodeName ?? "a research step"} (Research).</StatusLine>}
 
       {status === "locked-quota" && (
         <div className="law-inspector__quota">
@@ -355,7 +355,6 @@ export function LawsPanel({ state, alerts, dispatch }: LawsPanelProps) {
           return {
             key: c.key,
             label: c.label,
-            icon: <StatIcon type={c.icon} size={22} />,
             alert: ready && !state.activeLaw,
             badge: isDrafting ? (
               <span className="tree-badge-drafting">

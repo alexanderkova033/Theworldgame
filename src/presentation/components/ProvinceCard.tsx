@@ -16,7 +16,8 @@ import { calculateDailyProduction, RESOURCE_BY_TERRAIN } from "../../domain/reso
 import { RESOURCE_TYPES, type ResourceType } from "../../domain/resources/types";
 import { formatCompact } from "../formatNumber";
 import { UNREST_INFO } from "../unrestStages";
-import { BuildingGlyph, UnrestStageIcon } from "./CauseIcon";
+import { BuildingGlyph, HourglassIcon, JobsIcon, UnrestStageIcon } from "./CauseIcon";
+import { NavIcon } from "./NavIcon";
 import { Gauge } from "./Gauge";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
@@ -50,7 +51,7 @@ function getNeed(p: ProvinceOverview): { text: string; urgent: boolean } {
     return { text: `${UNREST_INFO[status.stage].name}: too many here have no ${why}.`, urgent: true };
   }
   if (status.homes === "over") return { text: `Needs homes: ${formatCompact(p.homeless)} without a roof.`, urgent: true };
-  if (status.jobs === "jobless") return { text: `Needs work: ${formatCompact(p.unemployed)} out of work here.`, urgent: true };
+  if (status.jobs === "jobless") return { text: `Needs work: ${formatCompact(p.unemployed)} jobless here.`, urgent: true };
   if (status.homes === "full") return { text: "Homes nearly full. Room to grow is running out.", urgent: false };
   if (status.jobs === "short") return { text: `Jobs going unfilled: ${formatCompact(p.openJobs)} open. Homes here would bring workers.`, urgent: false };
   return { text: "All well. Nothing pressing here.", urgent: false };
@@ -123,7 +124,7 @@ export function ProvinceCard({ state, province, onOpenPanel, onClose }: Province
       <p className={`province-card__need ${need.urgent ? "is-urgent" : ""}`}>{need.text}</p>
 
       <dl className="province-card__facts">
-        <Fact icon={<BuildingGlyph type="housing" size={16} />} label="People" alert={status.homes === "over"}>
+        <Fact icon={<BuildingGlyph type="housing" size={16} />} label="Homes" alert={status.homes === "over"}>
           <strong>{formatCompact(province.population)}</strong> in homes for {formatCompact(province.capacity)}
           {province.homeless >= 1 && <span className="province-card__bad"> · {formatCompact(province.homeless)} homeless</span>}
           <Gauge
@@ -144,9 +145,9 @@ export function ProvinceCard({ state, province, onOpenPanel, onClose }: Province
           )}
         </Fact>
 
-        <Fact icon={<StatIcon type="industry" size={16} />} label="Work" alert={status.jobs === "jobless"}>
+        <Fact icon={<JobsIcon size={16} />} label="Jobs" alert={status.jobs === "jobless"}>
           <strong>{formatCompact(province.jobs - province.openJobs)}</strong> of {formatCompact(province.jobs)} jobs filled
-          {province.unemployed >= 1 && <span className="province-card__bad"> · {formatCompact(province.unemployed)} out of work</span>}
+          {province.unemployed >= 1 && <span className="province-card__bad"> · {formatCompact(province.unemployed)} jobless</span>}
           {province.commutersOut >= 1 && <> · {formatCompact(province.commutersOut)} work elsewhere</>}
           {/* Where they work: farms and food first, as jobs are filled. */}
           <span className="province-card__sectors">
@@ -166,7 +167,7 @@ export function ProvinceCard({ state, province, onOpenPanel, onClose }: Province
               { value: province.openJobs, tone: "neutral", dashed: true },
             ]}
             overflow={province.unemployed}
-            label={`Jobs: ${Math.round(province.jobs - province.openJobs)} of ${Math.round(province.jobs)} filled, ${Math.round(province.unemployed)} out of work`}
+            label={`Jobs: ${Math.round(province.jobs - province.openJobs)} of ${Math.round(province.jobs)} filled, ${Math.round(province.unemployed)} jobless`}
           />
         </Fact>
 
@@ -184,7 +185,7 @@ export function ProvinceCard({ state, province, onOpenPanel, onClose }: Province
             : `No ${terrain ? RESOURCE_BY_TERRAIN[terrain] : "goods"} this season`}
         </Fact>
 
-        <Fact icon={<BuildingGlyph type="factory" size={16} />} label="Built">
+        <Fact icon={<NavIcon type="build" size={16} />} label="Built">
           {builtTypes.length === 0
             ? "Nothing yet"
             : builtTypes.map((type, i) => {
@@ -201,7 +202,7 @@ export function ProvinceCard({ state, province, onOpenPanel, onClose }: Province
         </Fact>
 
         {projects.length > 0 && (
-          <Fact icon={<StatIcon type="treasury" size={16} />} label="Underway">
+          <Fact icon={<HourglassIcon size={16} />} label="Underway">
             {projects.map((project, i) => (
               <span key={project.id}>
                 {i > 0 && " · "}

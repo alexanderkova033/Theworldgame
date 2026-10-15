@@ -1,7 +1,7 @@
 // Small pictorial glyphs for the top-bar tab buttons — same hand-drawn-shape
 // approach as StatIcon/ResourceIcon/BuildingIcon, so the tab row reads as
 // imagery rather than plain text labels.
-export type NavIconType = "build" | "money" | "reports" | "laws" | "ventures" | "politics" | "research";
+export type NavIconType = "build" | "market" | "reports" | "laws" | "ventures" | "politics" | "research";
 
 interface NavIconProps {
   type: NavIconType;
@@ -30,7 +30,7 @@ function renderShape(type: NavIconType) {
           </g>
         </g>
       );
-    case "money":
+    case "market":
       // An exchange loop — two arced arrows chasing each other, gold and
       // blue, around a small coin — coins and goods swapping hands.
       return (

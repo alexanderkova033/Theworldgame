@@ -43,7 +43,7 @@ export function MoneyPanel({ state, production, dispatch, onOpenPanel, section, 
           {
             key: "market",
             label: "Market",
-            icon: <NavIcon type="money" size={22} />,
+            icon: <NavIcon type="market" size={22} />,
             hint: "Buy and sell goods",
           },
         ]}

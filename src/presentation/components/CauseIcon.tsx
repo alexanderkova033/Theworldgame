@@ -126,3 +126,90 @@ export function SnowflakeIcon({ size }: { size: number }) {
     </svg>
   );
 }
+
+// Jobs: a pick and a shovel crossed, work of any kind.
+export function JobsIcon({ size }: { size: number }) {
+  return (
+    <svg viewBox="-10 -10 20 20" width={size} height={size} aria-hidden="true">
+      <g strokeLinecap="round">
+        <line x1={-6.5} y1={6.5} x2={5} y2={-5} stroke="#8a5a2b" strokeWidth={1.6} />
+        <line x1={6.5} y1={6.5} x2={-5} y2={-5} stroke="#8a5a2b" strokeWidth={1.6} />
+      </g>
+      <path d="M1.5,-8 Q5.5,-7.5 8,-4 Q5,-5.5 3,-5.2 Z" fill="#8c93a0" stroke="#5a616c" strokeWidth={0.5} />
+      <path d="M-4.2,-4.2 L-8.2,-8.2 Q-9.2,-5.6 -7.6,-3.6 Q-5.8,-2.4 -4.2,-4.2 Z" fill="#8c93a0" stroke="#5a616c" strokeWidth={0.5} />
+    </svg>
+  );
+}
+
+// Neighbours: a foreign flag on its pole, the other nations.
+export function NeighboursIcon({ size }: { size: number }) {
+  return (
+    <svg viewBox="-10 -10 20 20" width={size} height={size} aria-hidden="true">
+      <line x1={-6} y1={-8.5} x2={-6} y2={8.5} stroke="#6b4a26" strokeWidth={1.4} strokeLinecap="round" />
+      <path d="M-5.3,-8 C-1,-9.5 2,-6 7.5,-7.5 L7.5,0 C2,1.5 -1,-2 -5.3,-0.5 Z" fill="#4f7cab" stroke="#2f4f73" strokeWidth={0.6} />
+      <path d="M-5.3,-4.6 C-1,-6 2,-2.6 7.5,-4 L7.5,-3 C2,-1.6 -1,-5 -5.3,-3.6 Z" fill="#e8d9ab" />
+    </svg>
+  );
+}
+
+// Wages: a pay packet, an envelope with a coin showing.
+export function WagesIcon({ size }: { size: number }) {
+  return (
+    <svg viewBox="-10 -10 20 20" width={size} height={size} aria-hidden="true">
+      <rect x={-8.5} y={-5} width={17} height={11.5} rx={1.2} fill="#e8d9ab" stroke="#93731f" strokeWidth={0.8} />
+      <path d="M-8.5,-5 L0,1.5 L8.5,-5" fill="none" stroke="#93731f" strokeWidth={0.8} strokeLinejoin="round" />
+      <circle cx={4.5} cy={3} r={2.6} fill="#e6c56a" stroke="#93731f" strokeWidth={0.7} />
+    </svg>
+  );
+}
+
+// A crackdown: a constable's truncheon, raised.
+export function CrackdownIcon({ size }: { size: number }) {
+  return (
+    <svg viewBox="-10 -10 20 20" width={size} height={size} aria-hidden="true">
+      <g transform="rotate(40)">
+        <rect x={-1.9} y={-8.5} width={3.8} height={13} rx={1.9} fill="#6b4524" stroke="#432a14" strokeWidth={0.5} />
+        <rect x={-2.3} y={2.5} width={4.6} height={1.3} fill="#c9a24a" />
+        <rect x={-1.3} y={3.8} width={2.6} height={4.5} rx={0.8} fill="#6b4a26" />
+      </g>
+    </svg>
+  );
+}
+
+// A rally: a speaking trumpet, calling the crowd.
+export function RallyIcon({ size }: { size: number }) {
+  return (
+    <svg viewBox="-10 -10 20 20" width={size} height={size} aria-hidden="true">
+      <path d="M-7,-2 L1,-6.5 L1,6.5 L-7,2 Z" fill="#c9a24a" stroke="#93731f" strokeWidth={0.7} strokeLinejoin="round" />
+      <rect x={-8.5} y={-2.4} width={2} height={4.8} rx={0.6} fill="#93731f" />
+      <g stroke="#c2402f" strokeWidth={1.1} strokeLinecap="round" fill="none">
+        <path d="M3.5,-3.5 Q5.5,0 3.5,3.5" />
+        <path d="M6,-5.5 Q9,0 6,5.5" />
+      </g>
+    </svg>
+  );
+}
+
+// Taxes: the collector's strongbox, a coin dropping through its slot.
+export function TaxIcon({ size }: { size: number }) {
+  return (
+    <svg viewBox="-10 -10 20 20" width={size} height={size} aria-hidden="true">
+      <rect x={-8} y={-2} width={16} height={10} rx={1.2} fill="#8a5a2b" stroke="#5a3a1a" strokeWidth={0.7} />
+      <rect x={-8} y={1.4} width={16} height={1.4} fill="#c9a24a" />
+      <rect x={-3} y={-2.6} width={6} height={1.3} rx={0.6} fill="#3d2a1a" />
+      <ellipse cx={0} cy={-6} rx={2.8} ry={2.8} fill="#e6c56a" stroke="#93731f" strokeWidth={0.7} />
+    </svg>
+  );
+}
+
+// A pair: two links of a chain, a law and a research that work together.
+export function PairIcon({ size }: { size: number }) {
+  return (
+    <svg viewBox="-10 -10 20 20" width={size} height={size} aria-hidden="true">
+      <g fill="none" strokeWidth={2.2} strokeLinecap="round">
+        <rect x={-8.5} y={-3.5} width={10} height={7} rx={3.5} stroke="#93731f" />
+        <rect x={-1.5} y={-3.5} width={10} height={7} rx={3.5} stroke="#c9a24a" />
+      </g>
+    </svg>
+  );
+}

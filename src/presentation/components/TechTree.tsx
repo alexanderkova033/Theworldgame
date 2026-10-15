@@ -16,7 +16,7 @@ import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode }
 import type { TreeHint } from "../../application/getTreeHints";
 import { combineEffects, describeEffects, TREE_TIERS, type EffectKey, type PolicyEffects, type TreePath } from "../../domain/policy/modifiers";
 import { AdvisorAlertIcon } from "./AdvisorStrip";
-import { BuildingGlyph, FlameIcon, SnowflakeIcon } from "./CauseIcon";
+import { BuildingGlyph, FlameIcon, NeighboursIcon, PairIcon, SnowflakeIcon, TaxIcon, WagesIcon } from "./CauseIcon";
 import { NavIcon } from "./NavIcon";
 import { NodeGlyph } from "./NodeGlyph";
 import { WrenchIcon } from "./RepairsPanel";
@@ -321,7 +321,6 @@ function TreeBranch<N extends TreeNode>({
           aria-pressed={selectedPathKey === lane.path.key}
           onClick={() => onSelectPath(lane.path.key)}
         >
-          <StatIcon type={lane.path.icon as StatIconType} size={18} />
           {lane.path.name}
           {lane.state === "closed" && <XBadge />}
           {lane.state === "taken" && <CheckBadge />}
@@ -340,7 +339,7 @@ function TreeBranch<N extends TreeNode>({
 }
 
 interface TreeColumnsProps<N extends TreeNode> {
-  categories: Array<{ key: string; label: string; icon: StatIconType }>;
+  categories: Array<{ key: string; label: string }>;
   nodesFor: (categoryKey: string) => N[];
   pathsFor: (categoryKey: string) => TreePath[];
   getStatus: (node: N) => TreeNodeStatus;
@@ -376,7 +375,6 @@ export function TreeColumns<N extends TreeNode>({
       {categories.map((category) => (
         <div className="law-tree__column" key={category.key}>
           <h3 className="law-tree__column-title">
-            <StatIcon type={category.icon} size={20} />
             {category.label}
           </h3>
           {renderColumnExtra?.(category.key)}
@@ -401,7 +399,7 @@ export function TreeColumns<N extends TreeNode>({
 }
 
 // What an effect is drawn as: a stat, or the building/thing it changes.
-type EffectIconKey = StatIconType | "farm" | "factory" | "heat" | "winter" | "repairs" | "trade" | "neighbours" | "build";
+type EffectIconKey = StatIconType | "farm" | "factory" | "heat" | "winter" | "repairs" | "market" | "neighbours" | "build" | "wages" | "taxes" | "hardship";
 
 const EFFECT_ICONS: Record<EffectKey, EffectIconKey> = {
   incomeMultiplier: "treasury",
@@ -416,13 +414,13 @@ const EFFECT_ICONS: Record<EffectKey, EffectIconKey> = {
   breakdownMultiplier: "repairs",
   repairCostMultiplier: "repairs",
   buildCostMultiplier: "build",
-  buyPriceMultiplier: "trade",
-  wageMultiplier: "police",
+  buyPriceMultiplier: "market",
+  wageMultiplier: "wages",
   researchMultiplier: "research",
   politicalPowerMultiplier: "politicalPower",
   pressureMultiplier: "neighbours",
-  hardshipMultiplier: "population",
-  taxTolerance: "treasury",
+  hardshipMultiplier: "hardship",
+  taxTolerance: "taxes",
   supportTarget: "popularity",
   stabilityPerDay: "stability",
   treasuryDelta: "treasury",
@@ -443,10 +441,16 @@ function EffectIcon({ icon }: { icon: EffectIconKey }) {
       return <SnowflakeIcon size={15} />;
     case "repairs":
       return <WrenchIcon size={14} />;
-    case "trade":
-      return <NavIcon type="money" size={15} />;
+    case "market":
+      return <NavIcon type="market" size={15} />;
+    case "wages":
+      return <WagesIcon size={15} />;
+    case "taxes":
+      return <TaxIcon size={15} />;
+    case "hardship":
+      return <StatIcon type="popularity" size={15} />;
     case "neighbours":
-      return <NavIcon type="ventures" size={15} />;
+      return <NeighboursIcon size={15} />;
     case "build":
       return <NavIcon type="build" size={15} />;
     default:
@@ -531,7 +535,7 @@ export function PathInspector<N extends TreeNode>({
   nodes: N[]; // this path's nodes, as this party sees them
   getStatus: (node: N) => TreeNodeStatus;
   getEffects: (node: N) => TreeEffects;
-  noun: "law" | "technology";
+  noun: "law" | "step";
   hints: TreeHint[];
   cost: ReactNode;
   onSelectNode: (id: string) => void;
@@ -547,9 +551,6 @@ export function PathInspector<N extends TreeNode>({
   return (
     <div className="law-inspector path-inspector">
       <div className="law-inspector__header">
-        <div className="law-inspector__icon">
-          <StatIcon type={path.icon as StatIconType} size={30} />
-        </div>
         <div className="law-inspector__heading">
           <h4 className="law-inspector__name">{path.name}</h4>
           <p className="note law-inspector__description">{path.motto}.</p>
@@ -647,7 +648,7 @@ function formatSynergyEffect(effects: Synergy["effects"]): string {
 export function SynergyLine({ synergy, partnerName, isActive }: { synergy: Synergy; partnerName: string; isActive: boolean }) {
   return (
     <p className={`law-inspector__synergy ${isActive ? "is-active" : ""}`}>
-      <StatIcon type="industry" size={14} />
+      <PairIcon size={14} />
       {isActive ? "Paired with " : "Pair with "}
       <strong>{partnerName}</strong>: {formatSynergyEffect(synergy.effects)}
       {isActive ? " (active)." : "."}

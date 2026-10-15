@@ -18,6 +18,7 @@ import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getTotalScientists } from "../../domain/workforce/workforceRules";
 import { formatCompact } from "../formatNumber";
+import { TaxIcon, WagesIcon } from "./CauseIcon";
 import { NavIcon } from "./NavIcon";
 import { StatIcon } from "./StatIcon";
 
@@ -103,7 +104,7 @@ export function BudgetPanel({ state, production, onOpenPanel }: { state: GameSta
   const income: BudgetLine[] = [
     {
       key: "taxes",
-      icon: <StatIcon type="treasury" size={20} />,
+      icon: <TaxIcon size={20} />,
       label: "Taxes",
       detail: `${Math.round(state.taxRate * 100)}% tax on ${formatCompact(state.stats.population)} people`,
       value: production.taxIncome,
@@ -121,9 +122,9 @@ export function BudgetPanel({ state, production, onOpenPanel }: { state: GameSta
   const spending: BudgetLine[] = [
     {
       key: "wages",
-      icon: <StatIcon type="police" size={20} />,
+      icon: <WagesIcon size={20} />,
       label: "Wages",
-      detail: scientists + police > 0 ? `${plural(scientists, "scientist", "scientists")} and ${plural(police, "policeman", "police")}` : "Nobody on the payroll",
+      detail: scientists + police > 0 ? `${plural(scientists, "scientist", "scientists")} and ${plural(police, "officer", "officers")}` : "Nobody on the payroll",
       value: -production.salaries,
     },
     {
