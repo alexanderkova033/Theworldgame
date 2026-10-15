@@ -1,7 +1,8 @@
 import { generateId } from "../../domain/country/id";
 import type { GameState } from "../../domain/country/types";
+import { describePolicyImpact } from "../describePolicyImpact";
 import { applyFactionEffects, getFactionWeights } from "../../domain/parties/factionRules";
-import { canFocusResearch, getResearchNode, rollResearchOutcome, scaleResearchEffects } from "../../domain/research/researchRules";
+import { canFocusResearch, getResearchNode, rollResearchOutcome, scaleOneTimeEffects } from "../../domain/research/researchRules";
 import type { ResearchCategory } from "../../domain/research/types";
 
 export { canFocusResearch };
@@ -22,18 +23,20 @@ export function clearResearchFocus(state: GameState, category: ResearchCategory)
 
 // The work is done. How well it actually turned out is still down to
 // chance: rolled once here and stored (GameState.researchOutcomes) so the
-// scaled effect is what getActiveResearchEffects uses every day after, not
+// scaled effect is what the shared modifiers use every day after, not
 // just today. Called from the daily tick, never by the player.
 export function completeResearch(state: GameState, researchId: string): GameState {
   const node = getResearchNode(researchId);
   if (!node) return state;
 
   const outcome = rollResearchOutcome();
-  const effects = scaleResearchEffects(node.effects, outcome.factor);
+  // The ongoing effects are scaled where they're read (domain/policy); the
+  // one-time ones are scaled here, the day it's finished.
+  const effects = { ...node.effects, ...scaleOneTimeEffects(node.effects, outcome.factor) };
   const weights = getFactionWeights(state.nationId);
   const { factionApproval, popularity } = applyFactionEffects(state.factionApproval, weights, effects, effects.popularityDelta ?? 0);
 
-  return {
+  const next: GameState = {
     ...state,
     enactedResearchIds: [...state.enactedResearchIds, researchId],
     researchOutcomes: { ...state.researchOutcomes, [researchId]: outcome.tier },
@@ -51,10 +54,17 @@ export function completeResearch(state: GameState, researchId: string): GameStat
       {
         id: generateId("event"),
         date: state.date,
-        message: `${node.name} is complete: ${outcome.flavor}. Pick the next direction for ${node.category} research.`,
+        message: "",
         severity: "info",
       },
       ...state.events,
     ],
   };
+  // What it changed, measured now that it's done (and scaled by the roll).
+  const impact = describePolicyImpact(state, next, node.effects);
+  next.events[0] = {
+    ...next.events[0],
+    message: `${node.name} is complete, ${outcome.flavor}: ${impact}. Pick the next direction for ${node.category} research.`,
+  };
+  return next;
 }

@@ -1,47 +1,29 @@
 # TODO
 
-A practical, near-term checklist. For bigger-picture future ideas, see [ROADMAP.md](ROADMAP.md).
+A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 
-## MVP build checklist
+## Before every change is committed
 
-- [x] Project scaffold (Vite + React + TypeScript).
-- [x] Documentation: README, GAME_DESIGN, TECHNICAL_DESIGN, ROADMAP, TODO.
-- [x] Domain layer: types + rules for country, economy, population, food, industry, roads, stability, politics, army, research, construction, provinces, nations.
-- [x] Application layer: `simulateDay`, `generateMonthlyReport`, `startNewGame(nationId)`, and one file per player action.
-- [x] Presentation layer: `useGameClock` hook, `StartScreen`, `TopBar`, `MapPanel`, `StatsPanel`, `ActionsPanel`, `ProjectsPanel`, `ReportsPanel`, `EventLog`, `BuildingIcon`, `StatIcon`, `App.tsx`.
-- [x] Wire everything together and confirm `npm run dev` runs a playable loop.
-- [x] Basic balancing pass so the game doesn't collapse or trivially snowball in the first few in-game years.
-- [x] Fictional setting (3 nations on one continent) and SVG province map, clickable and tied to where buildings get placed.
-- [x] Permanent start-screen nation picker (card grid + clickable preview map); no in-game way to change nations.
-- [x] Visual pass: serif display font, brass/gold palette, panel shadows/depth, map gradients + drop-shadow, shape-based building/stat icons.
-- [x] Roads render as an actual dashed road network (capital hub → connected provinces, thicker with more roads) instead of a dot icon; provinces got decorative terrain textures (hills/forest/coast); building icons upgraded to pictorial (barn, chimney'd factory, book, flask).
-- [x] Roads fixed to fan out as separate visible lanes per road built (plus a "×N" count badge past 5), since a single line only getting marginally thicker wasn't a visible enough change. Same fix applied to army: a crossed-swords marker + number now appears at the capital once you've recruited any soldiers. All 8 stat-panel icons upgraded from abstract shapes to pictorial models (coin stack, person, wheat sheaf, factory, shield, crossed swords, flask, star), and the 3 nation crests on the start screen got a thematic emblem each (wheat sheaf / book / gear).
-- [x] Map made bigger and moved to the center of a new layout (side panels flank it, nothing stacked below anymore); other nations now render in their own crest colors instead of flat grey; 3 decorative islands added beyond the main continent; food rebalanced so 1 person eats 1 food/day (farms rebalanced to match); Development/Military/Taxes actions and stats hidden from the UI for now (code untouched, see ROADMAP.md's "Deliberately paused" section).
-- [x] Catan-inspired resources: `domain/resources/` (Wood/Ore/Grain/Fish tied to terrain, produced daily per owned province), building costs now require a matching resource as well as Crowns, and a new Trade panel lets you exchange resources with the market at 4:1 (2:1 with a coastal port). `ResourcesPanel`, `TradePanel`, `ResourceIcon`, and a small per-province resource badge on the map are all new.
-- [x] Simplified two duplicated patterns: `application/actions/createBuildAction.ts` is now the one place `buildFarm`/`buildFactory`/`buildRoad` share, and `presentation/components/iconShapes.ts` holds the `starPoints`/`cogPoints` math instead of it being copy-pasted between `StatIcon.tsx` and `StartScreen.tsx`.
-- [x] Icons redone bigger and more literal (StatIcon/ResourceIcon are colorful mini-illustrations now, not small single-color glyphs) since the old ones were too small/abstract to read at a glance. Terrain textures made much bolder and extended to every province (not just owned ones), with hills changed from wavy lines to solid mound shapes since it looked too much like the coast pattern. The map also got zoom (scroll wheel, or +/−/Reset buttons) and pan (click-and-drag) — `MapPanel` now owns a `viewBox` as local camera state, with drag-vs-click disambiguated by a movement threshold so panning never accidentally reselects a province.
-- [x] Random world events every 6 in-game months: `domain/randomEvents/` (8 events, mix of good/bad, affecting treasury/food/stability/a resource by a percentage), triggered from `simulateDay` via a new `isEveryNMonths` calendar helper, logged to the event log with the right severity color. Verified deterministically (events land on exactly day 180, 360, 540, 720...) and in the running UI.
-- [x] The original 8 provinces were each split into 2 (16 total) — every split cuts *inside* an existing province, so the coastline, nation borders, and terrain are unchanged, just finer-grained. Nations now hold 4-6 provinces each instead of 2-3. Added a hard per-province build cap (3 farms / 2 factories / 5 roads by default, `MAX_*_PER_PROVINCE` in `domain/constants.ts`) — `createBuildAction` now exposes `.canBuild()` and `.maxPerProvince` so `ActionsPanel` can show "2/3 here" and disable at the cap, verified with a direct script (cap blocks exactly at the limit, accounting for buildings already standing) and in the running UI.
+- `npx tsc -b` (types), `npm run lint` (five fast-refresh and hook-dependency warnings are old and known), `npm run build`.
+- `npm test` runs the Vitest suite in `tests/`:
+  - `trees.test.ts`: the shape of the Laws and Research trees (one root per branch, three paths that never cross, forks at rows 4 and 5, no em dashes in player text).
+  - `balance.test.ts`: scripted three-year games. A careful player survives and wins the first election in every nation, an idle one is gone within two years, and following any single path doesn't wreck a country.
+- Balance changes: run the tests, and look at the numbers they report if a path starts to fail. The scripted player lives in `tests/support/carefulPlayer.ts`.
+- UI changes: check the screen in a browser, at a normal window and at about 1000px wide.
 
-## Known rough edges / near-term follow-ups
+## Known rough edges
 
-- [ ] No save/load yet — refreshing the page resets the game, including your nation choice. (Planned for v0.2.)
-- [ ] Taxes, education/research, and recruiting soldiers are hidden from the UI on purpose (see ROADMAP.md). Don't be alarmed that `application/actions/taxActions.ts` etc. look unused — nothing currently imports them except `application/actions/index.ts`.
-- [ ] The 3 decorative islands have no provinces and aren't ownable — purely visual for now (v0.4 item if they become real territory).
-- [ ] The map is visual only — all provinces still draw from one national economic pool. Splitting per-province stats is the top v0.2 item.
-- [ ] Trading is bank-only (a fixed-rate abstract market) — there's no direct nation-to-nation trade yet since the other two nations aren't simulated. That's a v0.4 item.
-- [ ] Grain and Fish have no direct building cost yet — they're currently pure trade bait (convert them into Wood/Ore via the market). Intentional Catan-style asymmetry, not a bug, but worth a look once Development actions come back (e.g., research/education could plausibly cost Grain or Fish).
-- [ ] The two nations you don't pick exist only as colored territory on the map — they aren't simulated, have no AI, and can't be interacted with. That's a v0.4 item.
-- [ ] The per-province build cap has no UI feedback beyond the disabled button + "X/Y here" count — no toast/message explaining *why* a maxed-out button is disabled. Worth a tooltip once there's a pattern for tooltips elsewhere.
-- [ ] Stability "collapse" is currently just a logged warning event, not a real consequence. Full collapse mechanics are a v0.2+ item.
-- [ ] Balancing numbers in `domain/constants.ts` are a first pass, not deeply playtested — expect them to need tuning as more people play.
-- [ ] Random events are uniformly-random and always national in scope (no weighting toward rarer/bigger events, no per-province targeting) — see ROADMAP.md's v0.3 note for where this goes next.
-- [ ] No automated tests yet. Domain layer is pure functions and should be straightforward to unit test — worth adding before the codebase grows further.
-- [ ] No mobile/responsive layout pass — designed for desktop browser widths first.
-- [ ] No accessibility pass (keyboard navigation, ARIA labels) yet — the map in particular relies on mouse clicks with no keyboard equivalent.
+- **Political power piles up.** A careful player banks around 1,000 over three years. Law costs were raised, but rallies and pushes on neighbours are still cheap next to the income. It needs a sink or a lower daily rate.
+- **Income multipliers are small in Crowns.** Daily income is around 25 Cr, so "+10% income" is about 2.5 Cr a day. Paths built on income rely on one-time payments to compete; raising the base income would make them read better.
+- **Labour laws past row III need factories** (industry 4, then 8). That's on purpose, but a player who never builds factories sees the whole branch stall without being told why beyond "Needs industry".
+- **Old saves.** A law being drafted under the old tree layout still finishes even if it now sits on another path. Research directions that became unreachable are cleared on load.
+- **Hints on the trees** only mark nodes that can be chosen right now; a path's name is marked if anything on it would help.
+- **Small screens.** Below about 1150px the details pane drops under the tree; below about 700px the tree scrolls sideways.
+- **README and GAME_DESIGN.md are out of date** in places (they still describe the early MVP: roads, no laws, no research areas).
 
 ## Process reminders
 
-- New stats/systems get their own `src/domain/<name>/` folder — don't bolt new logic onto an unrelated module.
-- New player actions get their own file in `src/application/actions/` — keep one action's logic self-contained.
-- Keep `domain/` and `application/` free of React imports; if a function needs `useState` or DOM access, it belongs in `presentation/`.
+- Domain rules live in `src/domain/<concept>/`, cross-domain use cases in `src/application/`, and React only in `src/presentation/`.
+- Every tunable number goes in `src/domain/constants.ts`.
+- New `GameState` fields need a default in `hydrateGameState` (`src/presentation/hooks/gameSave.ts`) so old saves load.
+- Player-facing text: plain sentences, no em dashes.

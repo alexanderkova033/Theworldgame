@@ -6,7 +6,7 @@ import { getIslandExpeditionData } from "../../domain/expeditions/expeditionData
 import { expeditionProgress } from "../../domain/expeditions/expeditionRules";
 import type { ExpeditionReward } from "../../domain/expeditions/types";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
-import { playConfirm } from "../audio/sound";
+import { playShipBell } from "../audio/sound";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 
@@ -73,7 +73,7 @@ export function ExpeditionPanel({ state, selectedIslandId, dispatch }: Expeditio
 
               {!isScouted && inProgress && (
                 <>
-                  <p className="expedition-panel__hint">Under way — {Math.ceil(inProgress.daysRemaining)}d left</p>
+                  <p className="expedition-panel__hint">Under way, {Math.ceil(inProgress.daysRemaining)}d left</p>
                   <div className="progress-bar">
                     <div className="progress-bar__fill" style={{ width: `${Math.round(expeditionProgress(inProgress) * 100)}%` }} />
                   </div>
@@ -87,7 +87,7 @@ export function ExpeditionPanel({ state, selectedIslandId, dispatch }: Expeditio
                     className="btn-primary"
                     disabled={!canSendExpedition(state, island.id)}
                     onClick={() => {
-                      playConfirm();
+                      playShipBell();
                       dispatch((s) => sendExpedition(s, island.id));
                     }}
                   >

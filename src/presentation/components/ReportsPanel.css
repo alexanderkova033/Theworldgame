@@ -1,158 +1,242 @@
-.reports-panel__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-/* One month per row, not one month per card: month label, then an
-   icon+figure cell per number on a fixed grid so the columns line up down
-   the panel and can be compared vertically at a glance. Clicking the row
-   opens the causes underneath. */
-.reports-panel__item {
-  border: 1px solid var(--panel-border);
-  border-radius: 6px;
-  background: var(--inset);
-  box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.28);
-}
-
-.reports-panel__item.is-expanded {
-  border-color: var(--accent);
-}
-
-.reports-panel__summary {
-  display: grid;
-  grid-template-columns: 5.6rem 1.1fr 1.45fr 1fr 1fr 1fr 0.8rem;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  min-height: 2.25rem;
-  padding: 0.4rem 0.6rem;
-  text-align: left;
-}
-
-/* The row is a plain strip, not a wooden button — only its hover/focus
-   says it opens. */
-button.reports-panel__summary {
-  background: none;
-  border: none;
-  box-shadow: none;
-  border-radius: 6px;
-  text-shadow: none;
-  font-weight: 400;
-}
-
-button.reports-panel__summary:hover:not(:disabled) {
-  background: var(--inset);
-  box-shadow: none;
-}
-
-.reports-panel__chevron {
-  color: var(--text-muted);
-  font-size: 0.875rem;
-}
-
-.reports-panel__causes {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.6rem 1rem;
-  padding: 0.3rem 0.7rem 0.7rem;
-  border-top: 1px solid rgba(122, 83, 31, 0.5);
-}
-
-@media (max-width: 700px) {
-  .reports-panel__causes {
-    grid-template-columns: 1fr;
-  }
-}
-
-.reports-panel__metric {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-  min-width: 0;
-  white-space: nowrap;
-  gap: 0.3rem;
-}
-
-.reports-panel__metric svg {
-  display: block;
-  flex-shrink: 0;
-}
-
-.reports-panel__metric-value {
-  font-size: 0.875rem;
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.reports-panel__metric-value.is-gain {
-  color: var(--success);
-}
-
-.reports-panel__metric-value.is-loss {
-  color: var(--danger);
-}
+/* The monthly report (see ReportsPanel.tsx): the month's numbers big at the
+   head, the causes in ruled cards, and the months behind it as a table. */
 
 .reports-panel__empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  padding: 1.5rem 0;
+  gap: 0.4rem;
+  padding: 2rem 1rem;
   color: var(--text-muted);
-  font-size: 0.85rem;
   text-align: center;
 }
 
 .reports-panel__empty svg {
-  opacity: 0.4;
+  display: block;
 }
 
 .reports-panel__empty p {
   margin: 0;
 }
 
-.reports-panel__trends {
+/* --- Which month ---------------------------------------------------------- */
+.report-head {
   display: flex;
+  align-items: baseline;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.9rem;
-  border-bottom: 1px solid var(--panel-border);
+  gap: 0.6rem;
+  margin: 0 0 0.75rem;
 }
 
-.reports-panel__sparkline {
+.report-head__month {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.report-head__note {
+  font-style: italic;
+  color: var(--ink-muted);
+}
+
+/* --- The five numbers, big ----------------------------------------------- */
+.report-tiles {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+@media (max-width: 900px) {
+  .report-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.report-tile {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.1rem;
+  min-width: 0;
+  padding: 0.55rem 0.6rem 0.5rem;
+  background: var(--paper);
+  border: 1px solid var(--rule-dark);
+  border-top: 5px solid var(--rule);
+  border-radius: 6px;
 }
 
-.reports-panel__sparkline-label {
+.report-tile.is-gain {
+  border-top-color: var(--success);
+}
+
+.report-tile.is-loss {
+  border-top-color: var(--danger);
+}
+
+.report-tile__label {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  font-size: 0.8125rem;
-  color: var(--text-muted);
-  letter-spacing: 0.03em;
+  gap: 0.35rem;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ink-muted);
 }
 
-.reports-panel__sparkline-label svg {
+.report-tile__label svg {
   display: block;
 }
 
-.reports-panel__sparkline-baseline {
-  stroke: var(--panel-border);
-  stroke-width: 1;
+.report-tile__value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  line-height: 1.15;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.reports-panel__sparkline-bar--gain {
-  fill: var(--success);
+.report-tile.is-gain .report-tile__value {
+  color: var(--success);
 }
 
-.reports-panel__sparkline-bar--loss {
-  fill: var(--danger);
+.report-tile.is-loss .report-tile__value {
+  color: var(--danger);
+}
+
+.report-tile.is-flat .report-tile__value {
+  color: var(--ink-muted);
+}
+
+.report-arrow {
+  display: block;
+  flex-shrink: 0;
+}
+
+.report-tile__unit {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+.report-section-title {
+  margin: 1.25rem 0 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--rule);
+  font-style: normal;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: var(--oxblood);
+}
+
+/* --- Why: one ruled card per number --------------------------------------- */
+.report-causes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.5rem;
+}
+
+.report-causes .reports-cause {
+  padding: 0.35rem 0.7rem 0.6rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.report-causes .reports-cause__head {
+  margin-bottom: 0.3rem;
+  border-bottom: 1px solid rgba(122, 92, 52, 0.35);
+}
+
+.report-causes .reports-cause__row {
+  padding: 0.1rem 0;
+}
+
+/* --- Month by month -------------------------------------------------------- */
+.report-history {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-history thead th {
+  padding: 0 0.4rem 0.35rem;
+  border-bottom: 1px solid var(--rule-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: right;
+  color: var(--ink-muted);
+}
+
+.report-history thead th:first-child {
+  text-align: left;
+  padding-left: 0;
+}
+
+.report-history tbody tr {
+  cursor: pointer;
+}
+
+.report-history tbody tr:hover {
+  background: rgba(122, 92, 52, 0.1);
+}
+
+.report-history tbody tr.is-selected {
+  background: var(--paper);
+  box-shadow: inset 4px 0 0 var(--oxblood);
+}
+
+.report-history td,
+.report-history tbody th {
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid rgba(122, 92, 52, 0.3);
+  text-align: right;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.report-history tbody th {
+  text-align: left;
+  padding-left: 0.5rem;
+}
+
+.report-history td.is-gain {
+  color: var(--success);
+}
+
+.report-history td.is-loss {
+  color: var(--danger);
+}
+
+.report-history td.is-flat {
+  color: var(--ink-muted);
+}
+
+button.report-history__month {
+  min-height: 0;
+  padding: 0.15rem 0;
+  border: none;
+  background: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+button.report-history__month:hover:not(:disabled) {
+  background: none;
+  text-decoration: underline;
+}
+
+button.report-history__month:active:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+
+.report-history tr.is-selected button.report-history__month {
+  color: var(--oxblood);
 }

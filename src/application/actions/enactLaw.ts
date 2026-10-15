@@ -4,6 +4,7 @@ import { canEnactLaw, getEffectivePassChance, getLawDays, getLawNode } from "../
 import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../../domain/parties/factionRules";
 import { deductResource } from "../../domain/resources/resourceRules";
 import { ONE_OFF, recordAction } from "./recordAction";
+import { describePolicyImpact } from "../describePolicyImpact";
 
 export { canEnactLaw };
 
@@ -36,7 +37,7 @@ export function enactLaw(state: GameState, lawId: string): GameState {
         {
           id: generateId("event"),
           date: state.date,
-          message: `${law.name} fails to pass — the vote falls short, and the opposition makes the most of it.`,
+          message: `${law.name} fails to pass. The vote falls short, and the opposition makes the most of it.`,
           severity: "warning",
         },
         ...state.events,
@@ -59,7 +60,7 @@ export function enactLaw(state: GameState, lawId: string): GameState {
       {
         id: generateId("event"),
         date: state.date,
-        message: `${law.name} passes the vote — it comes into force in ${days} days.`,
+        message: `${law.name} passes the vote. It comes into force in ${days} days.`,
         severity: "info",
       },
       ...state.events,
@@ -77,7 +78,7 @@ export function completeLaw(state: GameState, lawId: string): GameState {
   const { effects } = law;
   const weights = getFactionWeights(state.nationId);
   const { factionApproval, popularity } = applyFactionEffects(state.factionApproval, weights, effects, effects.popularityDelta ?? 0);
-  return {
+  const next: GameState = {
     ...state,
     enactedLawIds: [...state.enactedLawIds, lawId],
     factionApproval,
@@ -93,10 +94,13 @@ export function completeLaw(state: GameState, lawId: string): GameState {
       {
         id: generateId("event"),
         date: state.date,
-        message: `${law.name} comes into force: ${law.description}`,
+        message: "",
         severity: "info",
       },
       ...state.events,
     ],
   };
+  // What it changed, measured now that it's in force.
+  next.events[0] = { ...next.events[0], message: `${law.name} comes into force: ${describePolicyImpact(state, next, effects)}.` };
+  return next;
 }

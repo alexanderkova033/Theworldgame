@@ -15,8 +15,9 @@ import { clearSlot, getSlotPreviews, loadSlot, persistSlot, renameSlot as rename
 export type { SavedGamePreview, SaveSlotPreview } from "./gameSave";
 
 // Real milliseconds per in-game day at 1x speed. Higher speeds divide this,
-// so 5x means a day passes 5 times faster.
-const BASE_TICK_MS = 2000;
+// so 5x means a day passes 5 times faster: a year takes 18 minutes at 1x,
+// 3.6 at 5x.
+const BASE_TICK_MS = 3000;
 
 // How long to wait after the last state change before writing to
 // localStorage — coalesces the burst of ticks at high game speed into one

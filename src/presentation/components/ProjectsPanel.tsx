@@ -67,7 +67,7 @@ export function ProjectsPanel({ state }: ProjectsPanelProps) {
               <div className="projects-panel__body">
                 <div className="projects-panel__item-header">
                   <span>
-                    {project.label} <span className="projects-panel__province">— {getProvinceName(project.provinceId)}</span>
+                    {project.label} <span className="projects-panel__province">in {getProvinceName(project.provinceId)}</span>
                   </span>
                   {project.isStalled ? (
                     <span className="projects-panel__stalled-tag" title="Not enough treasury or resources to pay today's installment">

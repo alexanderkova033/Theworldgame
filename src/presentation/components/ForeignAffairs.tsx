@@ -1,25 +1,26 @@
 // Foreign affairs, inside the Politics tab: one card per neighbor, with its
-// electorate split as a two-color bar (ruling party crowned) and a "back
-// this party" button for each side. How hard a push lands comes from your
-// own popularity + stability, shown up top — and it can go negative.
+// electorate split as a two-color bar (ruling party crowned) and a "back"
+// button for each side. How far a push moves them comes from your own
+// popularity + stability, stated once up top with its price — and it can
+// go negative. Pointing at a "back" button shows the push on the bar.
 import "./ForeignAffairs.css";
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { canPressureGovernment, pressureGovernment } from "../../application/actions";
 import { FOREIGN_TAKEOVER_THRESHOLD, FRIENDLY_GOVERNMENT_INCOME_BONUS, PRESSURE_POLITICAL_POWER_COST } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getPressureStrength, isFriendly } from "../../domain/diplomacy/diplomacyRules";
-import { getResearchEffectsFor } from "../../domain/research/researchRules";
+import { getModifiers } from "../../domain/policy/policyRules";
 import type { ForeignGovernment } from "../../domain/diplomacy/types";
 import { getNation } from "../../domain/nations/nationRules";
 import { getParty } from "../../domain/parties/partyRules";
-import { playConfirm } from "../audio/sound";
+import { playSeal } from "../audio/sound";
 import { StatIcon } from "./StatIcon";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
 
 function CrownIcon() {
   return (
-    <svg viewBox="-10 -10 20 20" width={13} height={13} aria-hidden="true">
+    <svg viewBox="-10 -10 20 20" width={14} height={14} aria-label="In power">
       <path d="M-8,5 L-8,-5 L-4,-1 L0,-7 L4,-1 L8,-5 L8,5 Z" fill="#e6c56a" stroke="#93731f" strokeWidth={0.8} />
     </svg>
   );
@@ -33,7 +34,53 @@ function NationCrest({ color, name }: { color: string; name: string }) {
   );
 }
 
+function washed(color: string): string {
+  return `color-mix(in srgb, ${color} 62%, #8f7d5c)`;
+}
+
+function signed(n: number): string {
+  return `${n >= 0 ? "+" : ""}${n}`;
+}
+
+// The bar, with the push being pointed at drawn in: the stretch that would
+// change hands striped in the colour of the side that gains it.
+function Meter({ gov, partyIds, backing, strength }: { gov: ForeignGovernment; partyIds: string[]; backing: string | null; strength: number }) {
+  const [left, right] = partyIds;
+  const now = gov.support[left];
+  const after = backing === null ? now : Math.min(100, Math.max(0, now + (backing === left ? strength : -strength)));
+  const leftColor = washed(getParty(left).color);
+  const rightColor = washed(getParty(right).color);
+  const parts =
+    after > now
+      ? [
+          { width: now, color: leftColor },
+          { width: after - now, color: leftColor, preview: true },
+          { width: 100 - after, color: rightColor },
+        ]
+      : [
+          { width: after, color: leftColor },
+          { width: now - after, color: rightColor, preview: true },
+          { width: 100 - now, color: rightColor },
+        ];
+  return (
+    <div className="foreign-card__meter" title={`A challenger at ${FOREIGN_TAKEOVER_THRESHOLD}% takes power at the next monthly check`}>
+      {parts.map((part, i) =>
+        part.width > 0 ? (
+          <span
+            key={i}
+            className={`foreign-card__meter-fill ${part.preview ? "is-preview" : ""}`}
+            style={{ width: `${part.width}%`, "--fill": part.color } as CSSProperties}
+          />
+        ) : null,
+      )}
+      <span className="foreign-card__meter-threshold" style={{ left: `${100 - FOREIGN_TAKEOVER_THRESHOLD}%` }} />
+      <span className="foreign-card__meter-threshold" style={{ left: `${FOREIGN_TAKEOVER_THRESHOLD}%` }} />
+    </div>
+  );
+}
+
 function ForeignCard({ state, nationId, gov, strength, dispatch }: { state: GameState; nationId: string; gov: ForeignGovernment; strength: number; dispatch: Dispatch }) {
+  const [backing, setBacking] = useState<string | null>(null);
   const nation = getNation(nationId);
   const partyIds = Object.keys(gov.support);
   const friendly = isFriendly(gov);
@@ -46,25 +93,13 @@ function ForeignCard({ state, nationId, gov, strength, dispatch }: { state: Game
         <span className="foreign-card__name">{nation.name}</span>
         {friendly && (
           <span className="foreign-card__friendly" title={`Ruled by the party you backed: +${FRIENDLY_GOVERNMENT_INCOME_BONUS * 100}% income from trade`}>
-            Friendly +{FRIENDLY_GOVERNMENT_INCOME_BONUS * 100}%
+            Friendly
+            <StatIcon type="treasury" size={14} />+{FRIENDLY_GOVERNMENT_INCOME_BONUS * 100}%
           </span>
         )}
       </div>
 
-      <div className="foreign-card__meter" title={`A challenger at ${FOREIGN_TAKEOVER_THRESHOLD}% takes power at the next monthly check`}>
-        {partyIds.map((partyId) => {
-          const party = getParty(partyId);
-          return (
-            <span
-              key={partyId}
-              className="foreign-card__meter-fill"
-              style={{ width: `${gov.support[partyId]}%`, background: `color-mix(in srgb, ${party.color} 62%, #8f7d5c)` }}
-            />
-          );
-        })}
-        <span className="foreign-card__meter-threshold" style={{ left: `${FOREIGN_TAKEOVER_THRESHOLD}%` }} />
-        <span className="foreign-card__meter-threshold" style={{ left: `${100 - FOREIGN_TAKEOVER_THRESHOLD}%` }} />
-      </div>
+      <Meter gov={gov} partyIds={partyIds} backing={backing} strength={strength} />
 
       <div className="foreign-card__parties">
         {partyIds.map((partyId) => {
@@ -72,28 +107,32 @@ function ForeignCard({ state, nationId, gov, strength, dispatch }: { state: Game
           const isRuling = partyId === gov.rulingPartyId;
           return (
             <div className="foreign-card__party" key={partyId} style={{ "--party-color": party.color } as CSSProperties}>
-              <span className="foreign-card__party-name">
+              <span className="foreign-card__party-name">{party.name}</span>
+              <span className="foreign-card__party-share">
                 {isRuling && <CrownIcon />}
-                {party.name}
-                <span className="foreign-card__party-share">{Math.round(gov.support[partyId])}%</span>
+                {Math.round(gov.support[partyId])}%
               </span>
-              <button
-                type="button"
-                className="foreign-card__back"
-                disabled={!canPush}
-                title={`Spend ${PRESSURE_POLITICAL_POWER_COST} political power to push ${nation.name} toward the ${party.name} (${strength >= 0 ? "+" : ""}${strength} support)`}
-                onClick={() => {
-                  playConfirm();
-                  dispatch((s) => pressureGovernment(s, nationId, partyId));
-                }}
+              {/* On a wrapper, so the push still shows when it can't be paid for. */}
+              <span
+                className="foreign-card__back-wrap"
+                title={`Push ${nation.name} toward the ${party.name}: ${signed(strength)} support, for ${PRESSURE_POLITICAL_POWER_COST} political power`}
+                onMouseEnter={() => setBacking(partyId)}
+                onMouseLeave={() => setBacking(null)}
+                onFocus={() => setBacking(partyId)}
+                onBlur={() => setBacking(null)}
               >
-                <StatIcon type="politicalPower" size={15} />
-                {PRESSURE_POLITICAL_POWER_COST}
-                <span className={strength >= 0 ? "is-gain" : "is-loss"}>
-                  {strength >= 0 ? "+" : ""}
-                  {strength}
-                </span>
-              </button>
+                <button
+                  type="button"
+                  className="foreign-card__back"
+                  disabled={!canPush}
+                  onClick={() => {
+                    playSeal();
+                    dispatch((s) => pressureGovernment(s, nationId, partyId));
+                  }}
+                >
+                  Back <span className={strength >= 0 ? "is-gain" : "is-loss"}>{signed(strength)}</span>
+                </button>
+              </span>
             </div>
           );
         })}
@@ -103,35 +142,34 @@ function ForeignCard({ state, nationId, gov, strength, dispatch }: { state: Game
 }
 
 export function ForeignAffairs({ state, dispatch }: { state: GameState; dispatch: Dispatch }) {
-  const strength = getPressureStrength(state.stats, getResearchEffectsFor(state).pressureMultiplier);
+  const strength = getPressureStrength(state.stats, getModifiers(state).pressureMultiplier);
   const entries = Object.entries(state.foreignPolitics);
   if (entries.length === 0) return null;
+  const short = state.stats.politicalPower < PRESSURE_POLITICAL_POWER_COST;
 
   return (
     <div className="foreign-affairs">
-      <div className="foreign-affairs__how" aria-label="How it works">
-        <span title="Spend political power to push a neighbour's vote toward one of its parties">
-          <StatIcon type="politicalPower" size={18} /> {PRESSURE_POLITICAL_POWER_COST} → push
+      {/* What one push does, why, and what it costs — once, for every card. */}
+      <div className="foreign-affairs__head">
+        <span
+          className={`foreign-affairs__push ${strength >= 0 ? "is-gain" : "is-loss"}`}
+          title={`How far one push moves a neighbour's vote: your support (${Math.round(state.stats.popularity)}) plus stability (${Math.round(state.stats.stability)}) at home. Below zero, meddling backfires. Win them a government and it's friendly: +${FRIENDLY_GOVERNMENT_INCOME_BONUS * 100}% income from trade.`}
+        >
+          Each push
+          <strong>{signed(strength)}</strong>
+          <span className="foreign-affairs__why">
+            <StatIcon type="popularity" size={15} />
+            {Math.round(state.stats.popularity)}
+            <span aria-hidden="true">+</span>
+            <StatIcon type="stability" size={15} />
+            {Math.round(state.stats.stability)}
+          </span>
         </span>
-        <span className="foreign-affairs__arrow">→</span>
-        <span title="If your party takes power there, the government is friendly">party wins</span>
-        <span className="foreign-affairs__arrow">→</span>
-        <span className="is-gain" title="Each friendly government: better trade terms, and it campaigns for you at home">
-          <StatIcon type="treasury" size={18} /> +{FRIENDLY_GOVERNMENT_INCOME_BONUS * 100}%
-        </span>
-      </div>
-      <div
-        className={`foreign-affairs__strength ${strength >= 0 ? "is-gain" : "is-loss"}`}
-        title="Your popularity plus stability at home sets how far one push moves them. Below zero, meddling backfires."
-      >
-        <span>Push size</span>
-        <strong>
-          {strength >= 0 ? "+" : ""}
-          {strength}
-        </strong>
-        <span className="foreign-affairs__why">
-          (<StatIcon type="popularity" size={15} /> {Math.round(state.stats.popularity)} + <StatIcon type="stability" size={15} />{" "}
-          {Math.round(state.stats.stability)})
+        <span className="foreign-affairs__cost">
+          <span className={short ? "is-short" : ""} title={`${PRESSURE_POLITICAL_POWER_COST} political power a push${short ? `; you have ${Math.floor(state.stats.politicalPower)}` : ""}`}>
+            <StatIcon type="politicalPower" size={16} />
+            {PRESSURE_POLITICAL_POWER_COST}
+          </span>
         </span>
       </div>
       <div className="foreign-affairs__cards">

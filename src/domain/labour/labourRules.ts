@@ -15,23 +15,29 @@ import type { ProjectType } from "../construction/types";
 import type { GameState } from "../country/types";
 import { isWorking } from "../maintenance/maintenanceRules";
 import { getNation } from "../nations/nationRules";
-import { getResearchEffectsFor } from "../research/researchRules";
+import { getModifiers } from "../policy/policyRules";
 
 export type JobBuilding = keyof typeof JOBS_PER_BUILDING;
 
-// Workers each kind of building needs — fewer on farms and in factories
-// once research has found ways to do the work with fewer hands.
+// Workers each kind of building needs: fewer on farms and in factories
+// once research or law has found ways to do the work with fewer hands.
 export function getJobsPerBuilding(state: GameState): Record<JobBuilding, number> {
-  const research = getResearchEffectsFor(state);
+  const mods = getModifiers(state);
   return {
     ...JOBS_PER_BUILDING,
-    farm: Math.round(JOBS_PER_BUILDING.farm * research.farmJobsMultiplier),
-    factory: Math.round(JOBS_PER_BUILDING.factory * research.factoryJobsMultiplier),
+    farm: Math.round(JOBS_PER_BUILDING.farm * mods.farmJobsMultiplier),
+    factory: Math.round(JOBS_PER_BUILDING.factory * mods.factoryJobsMultiplier),
   };
 }
 
-type Sector = "food" | "school" | "industry";
-const SECTORS: Sector[] = ["food", "school", "industry"]; // the order jobs are filled in
+export type Sector = "food" | "school" | "industry";
+export const SECTORS: Sector[] = ["food", "school", "industry"]; // the order jobs are filled in
+
+// Jobs in a sector, and how many of them have someone doing them.
+export interface SectorJobs {
+  jobs: number;
+  hired: number;
+}
 const SECTOR_OF: Partial<Record<ProjectType, Sector>> = {
   farm: "food",
   granary: "food",
@@ -49,6 +55,7 @@ export interface ProvinceLabour {
   unemployed: number; // workers living here with no job here or elsewhere
   commutersOut: number; // workers living here who work in another province
   openJobs: number; // jobs here nobody fills, from here or elsewhere
+  sectors: Record<Sector, SectorJobs>; // where the jobs here are, and who fills them
 }
 
 export interface LabourSituation {
@@ -62,6 +69,7 @@ export interface LabourSituation {
   // Working buildings, counted by how fully they're staffed (a farm at
   // half its workers counts as half a farm) — what production runs on.
   staffed: { farms: number; granaries: number; canneries: number; schools: number; factories: number };
+  sectors: Record<Sector, SectorJobs>; // nationwide: food (farms, granaries, canneries), schools, factories
   provinces: Record<string, ProvinceLabour>;
 }
 
@@ -128,6 +136,11 @@ export function getLabourSituation(state: GameState): LabourSituation {
       unemployed: idle[id] - commutersOut,
       commutersOut,
       openJobs: SECTORS.reduce((sum, sector) => sum + jobs[id][sector] - hired[id][sector], 0),
+      sectors: {
+        food: { jobs: jobs[id].food, hired: hired[id].food },
+        school: { jobs: jobs[id].school, hired: hired[id].school },
+        industry: { jobs: jobs[id].industry, hired: hired[id].industry },
+      },
     };
     provinces[id] = p;
     const here = buildings[id];
@@ -153,6 +166,11 @@ export function getLabourSituation(state: GameState): LabourSituation {
     unemployed: totals.unemployed,
     unemploymentShare: totals.workers > 0 ? totals.unemployed / totals.workers : 0,
     staffed,
+    sectors: {
+      food: { jobs: totals.jobs.food, hired: totals.hired.food },
+      school: { jobs: totals.jobs.school, hired: totals.hired.school },
+      industry: { jobs: totals.jobs.industry, hired: totals.hired.industry },
+    },
     provinces,
   };
 }

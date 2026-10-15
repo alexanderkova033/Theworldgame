@@ -107,10 +107,3 @@
   font-size: 0.875rem;
   color: var(--text-muted);
 }
-
-.reports-panel__month {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.875rem;
-  color: var(--text);
-}

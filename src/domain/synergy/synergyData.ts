@@ -1,3 +1,5 @@
+import type { ModifierEffects } from "../policy/modifiers";
+
 // Synergies are the "overlap" between Laws and Research: unlike
 // crossRequirement (which blocks a node until something in the other tree
 // is enacted), a synergy is a reward — an extra ongoing bonus layered on
@@ -10,7 +12,7 @@ export interface Synergy {
   researchId: string;
   name: string;
   description: string;
-  effects: { incomeMultiplier?: number; industryMultiplier?: number };
+  effects: ModifierEffects;
 }
 
 export const SYNERGIES: Synergy[] = [
@@ -19,23 +21,23 @@ export const SYNERGIES: Synergy[] = [
     lawId: "labor-overtime-shifts",
     researchId: "industry-assembly-line",
     name: "Industrial Synergy",
-    description: "Overtime shifts and assembly-line discipline reinforce each other — the same push, from two directions.",
+    description: "Overtime shifts and the assembly line push the same way.",
     effects: { industryMultiplier: 1.05 },
   },
   {
     id: "grain-trade-synergy",
     lawId: "sustenance-export-charter",
-    researchId: "agriculture-continental-exchange",
-    name: "Grain Trade Synergy",
-    description: "The export charter and the continental exchange feed the same pipeline, tariff-free grain straight onto the wire.",
+    researchId: "agriculture-grain-mills",
+    name: "Grain Trade",
+    description: "The mills turn out flour and the charter ships it abroad.",
     effects: { incomeMultiplier: 1.05 },
   },
   {
     id: "cooperative-movement",
-    lawId: "labor-workers-council",
+    lawId: "labor-workers-councils",
     researchId: "industry-cooperative-workshops",
     name: "Cooperative Movement",
-    description: "Shop-floor councils and worker-run workshops are the same idea, told twice — the movement reinforces itself.",
+    description: "Councils on the floor and workshops owned by their workers are the same idea twice.",
     effects: { industryMultiplier: 1.08 },
   },
   {
@@ -43,7 +45,23 @@ export const SYNERGIES: Synergy[] = [
     lawId: "order-gendarmerie",
     researchId: "administration-civil-survey",
     name: "Administrative Order",
-    description: "A funded watch and a proper survey office make the state legible enough to actually collect what it's owed.",
+    description: "A survey of every district and a constable to back it up.",
+    effects: { incomeMultiplier: 1.05 },
+  },
+  {
+    id: "public-health",
+    lawId: "revenue-welfare-fund",
+    researchId: "housing-sewers",
+    name: "Public Health",
+    description: "Clean water and a little money to live on keep the poor out of the fever wards.",
+    effects: { hardshipMultiplier: 0.85 },
+  },
+  {
+    id: "state-finance",
+    lawId: "revenue-national-bank",
+    researchId: "administration-statistics-bureau",
+    name: "State Finance",
+    description: "A bank that knows exactly what every district can pay.",
     effects: { incomeMultiplier: 1.05 },
   },
 ];

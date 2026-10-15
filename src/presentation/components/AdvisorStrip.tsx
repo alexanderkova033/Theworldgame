@@ -45,6 +45,12 @@ const ALERT_ICONS: Record<AdvisorAlertKind, () => ReactNode> = {
   research: () => <StatIcon type="research" size={ICON_SIZE} />,
 };
 
+// The same pictures, for anywhere else a problem is pointed out (the
+// Laws and Research trees mark what would help with it).
+export function AdvisorAlertIcon({ kind }: { kind: AdvisorAlertKind }) {
+  return <>{ALERT_ICONS[kind]()}</>;
+}
+
 const OBJECTIVE_ICONS: Record<ObjectiveKind, () => ReactNode> = {
   winter: () => <FlameIcon size={ICON_SIZE} />,
   farm: () => <BuildingGlyph type="farm" size={ICON_SIZE} />,
@@ -90,7 +96,7 @@ function QuickFixButton({ fix, treasury, onApply }: { fix: QuickFix; treasury: n
     <button
       type="button"
       className={`advisor-fix ${armed ? "is-armed" : ""}`}
-      title={`${fix.label}${cost ? ` — costs ${cost}` : ""}${needsConfirm && !armed ? ". A big share of the treasury: click twice to confirm." : ""}`}
+      title={`${fix.label}${cost ? `: costs ${cost}` : ""}${needsConfirm && !armed ? ". A big share of the treasury: click twice to confirm." : ""}`}
       onClick={() => {
         if (needsConfirm && !armed) {
           setArmed(true);

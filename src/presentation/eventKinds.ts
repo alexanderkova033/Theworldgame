@@ -37,7 +37,7 @@ const RULES: Array<{ test: RegExp; kind: EventKind }> = [
   { test: /^(Discontent|Strikes!|Riots!|The country is calm|The strikes end|The riots die down)/, kind: { kind: "unrest", plural: "unrest changes", foldable: false, action: { label: "Politics", panel: "politics" } } },
   { test: /crackdown|rally|court the/i, kind: { kind: "politics", plural: "political actions", foldable: true, action: { label: "Politics", panel: "politics" } } },
   { test: /general election|campaigns|funding your opposition|changes government/, kind: { kind: "elections", plural: "campaign moves", foldable: true, action: { label: "Politics", panel: "politics" } } },
-  { test: /is complete: /, kind: { kind: "research", plural: "research finished", foldable: false, action: { label: "Research", panel: "research" } } },
+  { test: /is complete[:,] /, kind: { kind: "research", plural: "research finished", foldable: false, action: { label: "Research", panel: "research" } } },
   { test: /passes the vote|comes into force|fails to pass/, kind: { kind: "laws", plural: "law votes", foldable: false, action: { label: "Laws", panel: "laws" } } },
   { test: /^Venture to /, kind: { kind: "venture", plural: "ventures", foldable: false, action: { label: "Ventures", panel: "ventures" } } },
   { test: /: chose to "/, kind: { kind: "decision", plural: "decisions", foldable: false, action: { label: "Politics", panel: "politics" } } },

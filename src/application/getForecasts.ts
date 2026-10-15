@@ -7,7 +7,7 @@ import { advanceDay, getSeason } from "../domain/country/calendar";
 import type { GameDate, GameState } from "../domain/country/types";
 import { produceFood } from "../domain/food/foodRules";
 import { getLabourSituation } from "../domain/labour/labourRules";
-import { getResearchEffectsFor } from "../domain/research/researchRules";
+import { getModifiers } from "../domain/policy/policyRules";
 import type { DailyProductionSummary } from "./getDailyProductionSummary";
 
 export interface RunOut {
@@ -22,7 +22,7 @@ export interface Forecasts {
 
 export function getForecasts(state: GameState, production: DailyProductionSummary): Forecasts {
   const staffedFarms = getLabourSituation(state).staffed.farms;
-  const winterYield = getResearchEffectsFor(state).winterFarmMultiplier;
+  const mods = getModifiers(state);
   // Projects keep drawing their instalments until they're built.
   const instalments = state.projects.map((p) => ({ perDay: p.treasuryCostPerDay, days: Math.ceil(p.daysRemaining) }));
 
@@ -34,7 +34,7 @@ export function getForecasts(state: GameState, production: DailyProductionSummar
   for (let day = 1; day <= FORECAST_DAYS && (!foodOut || !treasuryOut); day++) {
     date = advanceDay(date);
     if (!foodOut) {
-      food += produceFood(staffedFarms, getSeason(date), winterYield) + production.processedFood - production.foodConsumed;
+      food += produceFood(staffedFarms, getSeason(date), mods) + production.processedFood - production.foodConsumed;
       if (food < 0) foodOut = { days: day, date };
     }
     if (!treasuryOut && state.stats.treasury >= 0) {

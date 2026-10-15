@@ -8,7 +8,7 @@ import type { GameState } from "../../domain/country/types";
 import { applyPressure, getPressureStrength } from "../../domain/diplomacy/diplomacyRules";
 import { getNation } from "../../domain/nations/nationRules";
 import { getParty } from "../../domain/parties/partyRules";
-import { getResearchEffectsFor } from "../../domain/research/researchRules";
+import { getModifiers } from "../../domain/policy/policyRules";
 
 export function canPressureGovernment(state: GameState, nationId: string): boolean {
   return nationId in state.foreignPolitics && state.stats.politicalPower >= PRESSURE_POLITICAL_POWER_COST;
@@ -19,13 +19,13 @@ export function pressureGovernment(state: GameState, nationId: string, partyId: 
   const gov = state.foreignPolitics[nationId];
   if (!(partyId in gov.support)) return state;
 
-  const strength = getPressureStrength(state.stats, getResearchEffectsFor(state).pressureMultiplier);
+  const strength = getPressureStrength(state.stats, getModifiers(state).pressureMultiplier);
   const nation = getNation(nationId);
   const party = getParty(partyId);
   const message =
     strength >= 0
-      ? `You lean on ${nation.name} in favor of the ${party.name} — support +${strength}.`
-      : `Your meddling in ${nation.name} backfires — a weak government at home makes the ${party.name} look like your puppet (${strength}).`;
+      ? `You lean on ${nation.name} in favour of the ${party.name}: support +${strength}.`
+      : `Your meddling in ${nation.name} backfires. A weak government at home makes the ${party.name} look like your puppet (${strength}).`;
 
   return {
     ...state,

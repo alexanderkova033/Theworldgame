@@ -1,11 +1,14 @@
-// Build orders for the selected province, as a grid of picture tiles. Each
-// tile *is* the build button: the building's illustration, what it yields,
-// and what it costs — all glyphs. Anything you're short on turns red right
-// on its chip; the explanations live in hover tooltips, not on the card.
+// Build orders, as a list you can read: pick the province at the top (the
+// panel covers the map, so it can't be clicked there), then every building
+// sits under what it's for — Homes & learning, Food, Industry & roads —
+// on one row saying in words what it does, what it costs, how many stand
+// here, and, when it can't be built, exactly why.
 import "./ActionsPanel.css";
-import type { CSSProperties, ReactNode } from "react";
+import { getModifiers } from "../../domain/policy/policyRules";
+import type { ReactNode } from "react";
+import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
 import { buildCannery, buildEducation, buildFactory, buildFarm, buildGranary, buildHousing, buildRoad, countBuildingsInProvince } from "../../application/actions";
-import type { BuildAction } from "../../application/actions/createBuildAction";
+import { getBuildCost, type BuildAction } from "../../application/actions/createBuildAction";
 import {
   CANNERY_BUILD_DAYS,
   CANNERY_COST,
@@ -43,15 +46,15 @@ import {
 import type { ProjectType } from "../../domain/construction/types";
 import { getSeason, type Season } from "../../domain/country/calendar";
 import type { GameState } from "../../domain/country/types";
-import { produceFood } from "../../domain/food/foodRules";
+import { produceFood, type FoodModifiers } from "../../domain/food/foodRules";
 import { getJobsPerBuilding, type JobBuilding } from "../../domain/labour/labourRules";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
-import { getResearchEffectsFor, getResearchNode, isBuildingUnlocked } from "../../domain/research/researchRules";
+import { getResearchNode, isBuildingUnlocked } from "../../domain/research/researchRules";
 import type { ResourceType } from "../../domain/resources/types";
-import { playConfirm } from "../audio/sound";
+import { playBuild } from "../audio/sound";
 import { formatCompact } from "../formatNumber";
-import { BUILDING_COLORS, BuildingIcon } from "./BuildingIcon";
+import { BuildingIcon } from "./BuildingIcon";
 import { WrenchIcon } from "./RepairsPanel";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
@@ -60,6 +63,8 @@ interface ActionsPanelProps {
   state: GameState;
   selectedProvinceId: string;
   dispatch: (action: (state: GameState) => GameState) => void;
+  provinces: ProvinceOverview[];
+  onSelectProvince: (provinceId: string) => void;
 }
 
 // 60% of the cost is due now, the rest is drained daily over the build (see
@@ -69,20 +74,6 @@ const UPFRONT_SHARE = 0.6;
 
 function upfront(value: number): number {
   return Math.round(value * UPFRONT_SHARE);
-}
-
-function PinIcon() {
-  return (
-    <svg viewBox="-10 -10 20 20" width={14} height={14}>
-      <path
-        d="M0,-7.5 C3.6,-7.5 6.2,-4.9 6.2,-1.5 C6.2,2.8 0,8 0,8 C0,8 -6.2,2.8 -6.2,-1.5 C-6.2,-4.9 -3.6,-7.5 0,-7.5 Z"
-        fill="#c9a24a"
-        stroke="#7a531f"
-        strokeWidth={0.7}
-      />
-      <circle cx={0} cy={-1.5} r={2.3} fill="#241708" />
-    </svg>
-  );
 }
 
 function HourglassIcon() {
@@ -110,44 +101,25 @@ function ResourceGlyph({ type, size = 14 }: { type: ResourceType; size?: number 
   );
 }
 
-// How many of this building already stand here, out of the cap — filled vs
-// empty pips, so "room for more" is a shape, not a fraction to read.
-function CapPips({ count, max }: { count: number; max: number }) {
-  return (
-    <span className="build-tile__pips" title={`${count} of ${max} built in this province`}>
-      {Array.from({ length: max }, (_, i) => (
-        <span key={i} className={`build-tile__pip ${i < count ? "is-filled" : ""}`} />
-      ))}
-    </span>
-  );
-}
+type BuildGroup = "people" | "food" | "industry";
 
-// One cost on a tile, red when that's the thing you can't cover yet.
-// The "!" matters as much as the red: a colour-blind player gets the same
-// signal from the shape alone.
-function CostPip({ icon, amount, short, hint }: { icon: ReactNode; amount: string; short: boolean; hint: string }) {
-  return (
-    <span className={`build-tile__cost ${short ? "is-short" : ""}`} title={short ? `Not enough — ${hint}` : hint}>
-      {short && (
-        <span className="build-tile__short-mark" aria-label="not enough">
-          !
-        </span>
-      )}
-      {icon}
-      {amount}
-    </span>
-  );
-}
+const GROUPS: Array<{ key: BuildGroup; title: string }> = [
+  { key: "people", title: "Homes & learning" },
+  { key: "food", title: "Food" },
+  { key: "industry", title: "Industry & roads" },
+];
 
 interface BuildItem {
   type: ProjectType;
+  group: BuildGroup;
+  summary: string; // what it's for, in a few plain words — always on screen
   name: string;
   action: BuildAction;
   cost: number;
   resourceCost: number;
   resourceType: ResourceType;
   buildDays: number;
-  yields: ReactNode | ((season: Season, winterYield: number) => ReactNode); // glyph + a short number — the full sentence is `hint`
+  yields: ReactNode | ((season: Season, mods: FoodModifiers) => ReactNode); // glyph + a short number; the full sentence is `hint`
   hint: string;
   unlockedBy?: string; // research node name, for buildings still locked behind the Research tree
 }
@@ -155,6 +127,8 @@ interface BuildItem {
 const BUILD_ITEMS: BuildItem[] = [
   {
     type: "housing",
+    group: "people",
+    summary: "Homes for your people. Burns coal or wood in winter.",
     name: "Homes",
     action: buildHousing,
     cost: HOUSING_COST,
@@ -170,6 +144,8 @@ const BUILD_ITEMS: BuildItem[] = [
   },
   {
     type: "farm",
+    group: "food",
+    summary: "Grows food: most at harvest, little in winter.",
     name: "Farm",
     action: buildFarm,
     cost: FARM_COST,
@@ -178,16 +154,18 @@ const BUILD_ITEMS: BuildItem[] = [
     buildDays: FARM_BUILD_DAYS,
     // Today's seasonal yield, not the nominal one — a farm built in winter
     // should say so.
-    yields: (season, winterYield) => (
+    yields: (season, mods) => (
       <>
-        <StatIcon type="food" size={16} />+{formatCompact(produceFood(1, season, winterYield))}
+        <StatIcon type="food" size={16} />+{formatCompact(produceFood(1, season, mods))}
         {season === "winter" && <span className="build-tile__season">❄</span>}
       </>
     ),
-    hint: `Produces ${FOOD_PER_FARM.toLocaleString()} food per day — more at harvest, far less in winter`,
+    hint: `Produces ${FOOD_PER_FARM.toLocaleString()} food per day, more at harvest and far less in winter`,
   },
   {
     type: "factory",
+    group: "industry",
+    summary: "Makes industry, which earns money every day.",
     name: "Factory",
     action: buildFactory,
     cost: FACTORY_COST,
@@ -203,6 +181,8 @@ const BUILD_ITEMS: BuildItem[] = [
   },
   {
     type: "road",
+    group: "industry",
+    summary: "Faster income and building across the country.",
     name: "Road",
     action: buildRoad,
     cost: ROAD_COST,
@@ -218,6 +198,8 @@ const BUILD_ITEMS: BuildItem[] = [
   },
   {
     type: "education",
+    group: "people",
+    summary: "Raises education: more research every day.",
     name: "School",
     action: buildEducation,
     cost: EDUCATION_COST,
@@ -233,6 +215,8 @@ const BUILD_ITEMS: BuildItem[] = [
   },
   {
     type: "granary",
+    group: "food",
+    summary: "Mills stored grain into food.",
     name: "Granary",
     action: buildGranary,
     cost: GRANARY_COST,
@@ -251,6 +235,8 @@ const BUILD_ITEMS: BuildItem[] = [
   },
   {
     type: "cannery",
+    group: "food",
+    summary: "Cans stored fish into food.",
     name: "Cannery",
     action: buildCannery,
     cost: CANNERY_COST,
@@ -269,114 +255,192 @@ const BUILD_ITEMS: BuildItem[] = [
   },
 ];
 
-export function ActionsPanel({ state, selectedProvinceId, dispatch }: ActionsPanelProps) {
+// Why this building can't go up right now — the first thing in the way,
+// in words. Null when it can.
+function blockedReason(item: BuildItem, cost: number, state: GameState, provinceName: string, count: number, max: number, unlockName: string | undefined, isLocked: boolean): string | null {
+  if (isLocked) return `Locked. Research “${unlockName ?? "a new technique"}” first.`;
+  if (count >= max) return `No room: all ${max} are built or underway in ${provinceName}.`;
+  const moneyShort = upfront(cost) - state.stats.treasury;
+  if (moneyShort > 0) return `Need ${Math.ceil(moneyShort).toLocaleString()} more ${CURRENCY_SYMBOL} to start.`;
+  const resourceShort = upfront(item.resourceCost) - state.resources[item.resourceType];
+  if (resourceShort > 0) return `Need ${Math.ceil(resourceShort)} more ${item.resourceType} to start. Buy it on the Trade tab.`;
+  return null;
+}
+
+// A province's one most pressing need, as a short flag on its picker chip.
+function provinceFlag(overview: ProvinceOverview): { text: string; urgent: boolean } | null {
+  const status = getProvinceStatus(overview);
+  if (status.homes === "over") return { text: "Homeless", urgent: true };
+  if (status.jobs === "jobless") return { text: "Jobless", urgent: true };
+  if (status.homes === "full") return { text: "Homes full", urgent: false };
+  if (status.jobs === "short") return { text: "Needs workers", urgent: false };
+  return null;
+}
+
+export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, onSelectProvince }: ActionsPanelProps) {
   const season = getSeason(state.date);
-  const research = getResearchEffectsFor(state);
+  const mods = getModifiers(state);
   const jobsPer = getJobsPerBuilding(state);
+  const provinceName = getProvinceName(selectedProvinceId);
+
   return (
     <section className="panel actions-panel">
       <div className="actions-panel__header">
         <h2>Build</h2>
-        <span className="actions-panel__target" title="Click a province on the map to build somewhere else">
-          <PinIcon />
-          {getProvinceName(selectedProvinceId)}
-        </span>
       </div>
 
-      <div className="actions-panel__grid">
-        {BUILD_ITEMS.map((item) => {
-          const isLocked = item.unlockedBy !== undefined && !isBuildingUnlocked(state.enactedResearchIds, item.type);
-          const count = countBuildingsInProvince(state, item.type, selectedProvinceId);
-          const max = item.action.maxPerProvince;
-          const isFull = count >= max;
-          const canBuild = !isLocked && item.action.canBuild(state, selectedProvinceId);
-          const treasuryShort = state.stats.treasury < upfront(item.cost);
-          const resourceShort = state.resources[item.resourceType] < upfront(item.resourceCost);
-          const unlockName = item.unlockedBy ? getResearchNode(item.unlockedBy)?.name : undefined;
-          const brokenHere = state.placedBuildings.filter((b) => b.type === item.type && b.provinceId === selectedProvinceId && !isWorking(b)).length;
-
-          const title = isLocked
-            ? `${item.name} — unlocked by ${unlockName ?? "research"} (Research tab)`
-            : isFull
-              ? `${item.name} — no room left in this province (${max} max)`
-              : `Build ${item.name}: ${item.hint}. ${UPFRONT_SHARE * 100}% of the cost is due on order, the rest over ${item.buildDays} days.`;
-
-          return (
-            <button
-              type="button"
-              key={item.type}
-              className={`build-tile ${isLocked ? "is-locked" : ""} ${isFull ? "is-full" : ""}`}
-              style={{ "--tint": BUILDING_COLORS[item.type] } as CSSProperties}
-              disabled={!canBuild}
-              title={title}
-              aria-label={title}
-              onClick={() => {
-                playConfirm();
-                dispatch((s) => item.action(s, selectedProvinceId));
-              }}
-            >
-              {!isLocked && <CapPips count={count} max={max} />}
-
-              <span className="build-tile__art" aria-hidden="true">
-                <svg viewBox="-12 -16 24 24">
-                  <BuildingIcon type={item.type} x={0} y={0} size={7} />
-                </svg>
-                {brokenHere > 0 && (
-                  <span className="build-tile__broken" title={`${brokenHere} broken here — repair from the Repairs panel`}>
-                    <WrenchIcon size={11} />
-                    {brokenHere}
-                  </span>
-                )}
-                {isLocked && (
-                  <span className="build-tile__lock">
-                    <LockIcon />
-                  </span>
-                )}
-              </span>
-
-              <span className="build-tile__name">{item.name}</span>
-
-              {isLocked ? (
-                <span className="build-tile__unlock">
-                  <StatIcon type="research" size={16} />
-                  {unlockName}
+      {/* Where to build: every province of yours, with its most pressing
+          need, so the right one is easy to pick. */}
+      <div className="actions-panel__where">
+        <span className="actions-panel__where-label" id="build-where-label">
+          Build in
+        </span>
+        <div className="actions-panel__provinces" role="radiogroup" aria-labelledby="build-where-label">
+          {provinces.map((province) => {
+            const flag = provinceFlag(province);
+            const selected = province.id === selectedProvinceId;
+            return (
+              <button
+                key={province.id}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                className={`actions-panel__province ${selected ? "is-selected" : ""}`}
+                onClick={() => onSelectProvince(province.id)}
+              >
+                <span className="actions-panel__province-name">
+                  {province.isCapital && <span aria-label="Capital">★ </span>}
+                  {province.name}
                 </span>
-              ) : (
-                <>
-                  <span className="build-tile__yield">{typeof item.yields === "function" ? item.yields(season, research.winterFarmMultiplier) : item.yields}</span>
-                  <span className="build-tile__costs">
-                    <CostPip
-                      icon={<StatIcon type="treasury" size={14} />}
-                      amount={formatCompact(item.cost)}
-                      short={treasuryShort}
-                      hint={`${item.cost.toLocaleString()} ${CURRENCY_SYMBOL} (${upfront(item.cost).toLocaleString()} up front)`}
-                    />
-                    <CostPip
-                      icon={<ResourceGlyph type={item.resourceType} />}
-                      amount={String(item.resourceCost)}
-                      short={resourceShort}
-                      hint={`${item.resourceCost} ${item.resourceType} (${upfront(item.resourceCost)} up front)`}
-                    />
-                    {item.type in jobsPer && (
-                      <span
-                        className="build-tile__cost build-tile__cost--jobs"
-                        title={`Needs ${jobsPer[item.type as JobBuilding]} workers from your population — without them it runs below capacity`}
-                      >
-                        <StatIcon type="population" size={14} />
-                        {formatCompact(jobsPer[item.type as JobBuilding])}
+                {flag && <span className={`actions-panel__province-flag ${flag.urgent ? "is-urgent" : ""}`}>{flag.text}</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {GROUPS.map((group) => (
+        <div key={group.key} className="build-group">
+          <h3 className="build-group__title">{group.title}</h3>
+          <ul className="build-list">
+            {BUILD_ITEMS.filter((item) => item.group === group.key).map((item) => {
+              const isLocked = item.unlockedBy !== undefined && !isBuildingUnlocked(state.enactedResearchIds, item.type);
+              const count = countBuildingsInProvince(state, item.type, selectedProvinceId);
+              const max = item.action.maxPerProvince;
+              const canBuild = !isLocked && item.action.canBuild(state, selectedProvinceId);
+              const cost = getBuildCost(state, item.cost);
+              const treasury = Math.floor(state.stats.treasury);
+              const stock = Math.floor(state.resources[item.resourceType]);
+              // Short: can't even start. Partial: can start, but today's
+              // stock won't cover the rest as the build goes on.
+              const treasuryShort = treasury < upfront(cost);
+              const treasuryPartial = !treasuryShort && treasury < cost;
+              const resourceShort = stock < upfront(item.resourceCost);
+              const resourcePartial = !resourceShort && stock < item.resourceCost;
+              const unlockName = item.unlockedBy ? getResearchNode(item.unlockedBy)?.name : undefined;
+              const brokenHere = state.placedBuildings.filter((b) => b.type === item.type && b.provinceId === selectedProvinceId && !isWorking(b)).length;
+              const reason = blockedReason(item, cost, state, provinceName, count, max, unlockName, isLocked);
+              const workers = item.type in jobsPer ? jobsPer[item.type as JobBuilding] : 0;
+
+              return (
+                <li key={item.type} className={`build-row ${isLocked ? "is-locked" : ""} ${canBuild ? "" : "is-blocked"}`}>
+                  <span className="build-row__art" aria-hidden="true">
+                    <svg viewBox="-12 -16 24 24">
+                      <BuildingIcon type={item.type} x={0} y={0} size={7} />
+                    </svg>
+                    {isLocked && (
+                      <span className="build-row__lock">
+                        <LockIcon />
                       </span>
                     )}
-                    <span className="build-tile__cost build-tile__cost--days" title={`${item.buildDays} days to build`}>
-                      <HourglassIcon />
-                      {item.buildDays}d
-                    </span>
                   </span>
-                </>
-              )}
-            </button>
-          );
-        })}
-      </div>
+
+                  <span className="build-row__main">
+                    <span className="build-row__title">
+                      <span className="build-row__name">{item.name}</span>
+                      {!isLocked && (
+                        <span className="build-row__yield" title={item.hint}>
+                          {typeof item.yields === "function" ? item.yields(season, mods) : item.yields}
+                        </span>
+                      )}
+                    </span>
+                    <span className="build-row__summary">{item.summary}</span>
+
+                    {!isLocked && (
+                      <span className="build-row__costs">
+                        {/* What you have against what it costs, so the gap reads at a glance. */}
+                        <span
+                          className={`build-row__cost ${treasuryShort ? "is-short" : treasuryPartial ? "is-partial" : ""}`}
+                          title={`You have ${treasury.toLocaleString()} ${CURRENCY_SYMBOL}. It costs ${cost.toLocaleString()} in all: ${upfront(cost).toLocaleString()} when ordered, the rest during the build.`}
+                        >
+                          <StatIcon type="treasury" size={14} />
+                          <span>
+                            <span className="build-row__have">{formatCompact(treasury)}</span>/{formatCompact(cost)} {CURRENCY_SYMBOL}
+                          </span>
+                        </span>
+                        <span
+                          className={`build-row__cost ${resourceShort ? "is-short" : resourcePartial ? "is-partial" : ""}`}
+                          title={`You have ${stock.toLocaleString()} ${item.resourceType}. It takes ${item.resourceCost} in all: ${upfront(item.resourceCost)} when ordered, the rest during the build.`}
+                        >
+                          <ResourceGlyph type={item.resourceType} />
+                          <span>
+                            <span className="build-row__have">{formatCompact(stock)}</span>/{item.resourceCost} {item.resourceType}
+                          </span>
+                        </span>
+                        <span className="build-row__cost" title={`${item.buildDays} days to build`}>
+                          <HourglassIcon />
+                          {item.buildDays} days
+                        </span>
+                        {workers > 0 && (
+                          <span className="build-row__cost" title={`Needs ${workers.toLocaleString()} workers from your population. Without them it runs below capacity.`}>
+                            <StatIcon type="population" size={14} />
+                            {formatCompact(workers)} workers
+                          </span>
+                        )}
+                      </span>
+                    )}
+
+                    {reason && (
+                      <span className="build-row__reason">
+                        <span className="build-row__reason-mark" aria-hidden="true">
+                          !
+                        </span>
+                        {reason}
+                      </span>
+                    )}
+                    {brokenHere > 0 && (
+                      <span className="build-row__broken">
+                        <WrenchIcon size={12} />
+                        {brokenHere} broken here. See Repairs.
+                      </span>
+                    )}
+                  </span>
+
+                  <span className="build-row__action">
+                    {!isLocked && (
+                      <span className="build-row__count" title={`${count} of ${max} built or underway in ${provinceName}`}>
+                        {count} / {max} here
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      className="btn-primary build-row__button"
+                      disabled={!canBuild}
+                      aria-label={canBuild ? `Build ${item.name} in ${provinceName}` : `${item.name}: ${reason}`}
+                      onClick={() => {
+                        playBuild();
+                        dispatch((s) => item.action(s, selectedProvinceId));
+                      }}
+                    >
+                      {isLocked ? "Locked" : "Build"}
+                    </button>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
     </section>
   );
 }

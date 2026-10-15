@@ -5,9 +5,9 @@ import { canRepairBuilding, repairBuilding } from "../../application/actions";
 import { REPAIR_DAYS } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getRepairCost, isWorking } from "../../domain/maintenance/maintenanceRules";
-import { getResearchEffectsFor } from "../../domain/research/researchRules";
+import { getModifiers } from "../../domain/policy/policyRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
-import { playConfirm } from "../audio/sound";
+import { playRepair } from "../audio/sound";
 import { BuildingIcon } from "./BuildingIcon";
 import { CostChips, ResourceChip, TreasuryChip } from "./CostChips";
 
@@ -25,7 +25,7 @@ export function WrenchIcon({ size = 14 }: { size?: number }) {
 export function RepairsPanel({ state, dispatch }: { state: GameState; dispatch: (action: (state: GameState) => GameState) => void }) {
   const damaged = state.placedBuildings.filter((b) => !isWorking(b));
   if (damaged.length === 0) return null;
-  const repairCostMultiplier = getResearchEffectsFor(state).repairCostMultiplier;
+  const repairCostMultiplier = getModifiers(state).repairCostMultiplier;
 
   return (
     <section className="panel repairs-panel">
@@ -64,7 +64,7 @@ export function RepairsPanel({ state, dispatch }: { state: GameState; dispatch: 
                   disabled={!canRepairBuilding(state, building.id)}
                   title={`Repair: back in service ${REPAIR_DAYS} days after paying`}
                   onClick={() => {
-                    playConfirm();
+                    playRepair();
                     dispatch((s) => repairBuilding(s, building.id));
                   }}
                 >

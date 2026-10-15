@@ -10,7 +10,7 @@ import {
 } from "../domain/constants";
 import type { GameState } from "../domain/country/types";
 import { getHousingCapacityByProvince } from "../domain/housing/housingRules";
-import { getLabourSituation } from "../domain/labour/labourRules";
+import { getLabourSituation, type Sector, type SectorJobs } from "../domain/labour/labourRules";
 import { getNation } from "../domain/nations/nationRules";
 import { planMigration } from "../domain/provinces/provinceMigration";
 import { getProvinceName } from "../domain/provinces/provinceRules";
@@ -31,6 +31,7 @@ export interface ProvinceOverview {
   stability: number;
   unrestStage: UnrestStage;
   migration: number; // net people moving in (+) or out (−) per day
+  sectors: Record<Sector, SectorJobs>; // jobs here by kind — farms and food first, then schools, then factories
 }
 
 // What the map flags, coarse on purpose: it only changes when a province
@@ -65,6 +66,7 @@ export function getProvinceOverview(state: GameState): ProvinceOverview[] {
       stability: p?.stability ?? state.stats.stability,
       unrestStage: p?.unrestStage ?? "calm",
       migration: migration[id] ?? 0,
+      sectors: l?.sectors ?? { food: { jobs: 0, hired: 0 }, school: { jobs: 0, hired: 0 }, industry: { jobs: 0, hired: 0 } },
     };
   });
 }

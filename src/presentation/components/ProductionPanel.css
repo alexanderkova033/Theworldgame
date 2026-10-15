@@ -1,36 +1,30 @@
-/* Two proportion bars (treasury, food) instead of a grid of number tiles —
-   the width of each segment carries the information; the figures underneath
-   are the footnote. */
-.production-panel__ledger + .production-panel__ledger {
-  margin-top: 0.8rem;
-}
-
-.production-panel__ledger-head {
+/* A proportion bar instead of a grid of number tiles — the width of each
+   segment carries the information; the figures underneath are the key. */
+.production-panel__head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.3rem;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
-.production-panel__ledger-title {
-  font-size: 0.8125rem;
-  letter-spacing: 0.02em;
-  color: var(--text-muted);
+.production-panel__head h2 {
+  margin: 0;
 }
 
-.production-panel__ledger-net {
+.production-panel__net {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  font-size: 0.92rem;
-  color: var(--text);
+  cursor: help;
 }
 
-.production-panel__ledger-net.is-gain {
+.production-panel__net.is-gain {
   color: var(--success);
 }
 
-.production-panel__ledger-net.is-loss {
+.production-panel__net.is-loss {
   color: var(--danger);
 }
 
@@ -48,7 +42,17 @@
   height: 100%;
   min-width: 2px;
   box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.28);
-  transition: width 0.35s ease;
+  transition: width 0.35s ease, opacity 0.15s ease;
+}
+
+/* Pointing at a stretch or its figure lights both, and sets the rest back. */
+.production-panel__bar-seg.is-dim,
+.production-panel__key.is-dim {
+  opacity: 0.35;
+}
+
+.production-panel__bar-seg.is-focus {
+  box-shadow: inset 0 0 0 2px var(--ink);
 }
 
 /* A darker shade for a second same-signed segment (tax vs. industry, both
@@ -77,6 +81,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.28rem;
+  transition: opacity 0.15s ease;
+  cursor: default;
 }
 
 .production-panel__key svg {
@@ -104,20 +110,20 @@
   color: var(--text-muted);
 }
 
-.production-panel__aside {
-  display: inline-flex;
+/* What's in store, and how long it lasts when more is eaten than grown. */
+.production-panel__store {
+  display: flex;
   align-items: center;
-  gap: 0.3rem;
-  margin-top: 0.8rem;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--panel-border);
-  border-radius: 999px;
-  background: var(--inset);
-  font-size: 0.85rem;
+  gap: 0.4rem;
+  margin: 0.8rem 0 0;
   font-variant-numeric: tabular-nums;
-  color: var(--text-muted);
 }
 
-.production-panel__aside svg {
+.production-panel__store svg {
   display: block;
+}
+
+.production-panel__store .is-loss {
+  color: var(--danger);
+  font-weight: 700;
 }

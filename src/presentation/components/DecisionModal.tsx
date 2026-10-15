@@ -2,7 +2,7 @@ import "./DecisionModal.css";
 import type { GameState } from "../../domain/country/types";
 import { getDecision } from "../../domain/decisions/decisionRules";
 import type { DecisionEffects } from "../../domain/decisions/types";
-import { playConfirm } from "../audio/sound";
+import { playSeal } from "../audio/sound";
 import { BuildingGlyph } from "./CauseIcon";
 import { Modal } from "./Modal";
 import { ResourceIcon } from "./ResourceIcon";
@@ -73,7 +73,7 @@ export function DecisionModal({ state, onResolve, onDismiss }: DecisionModalProp
               key={option.id}
               className="decision-modal__option"
               onClick={() => {
-                playConfirm();
+                playSeal();
                 onResolve(decision.id, option.id);
               }}
             >

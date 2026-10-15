@@ -14,7 +14,7 @@ import { GOOD_SPECS, MARKET_GOODS, getBatchSize, getMidPrice, getPriceRatio, nat
 import type { MarketGood } from "../../domain/market/types";
 import { getNation } from "../../domain/nations/nationRules";
 import { formatCompact } from "../formatNumber";
-import { playConfirm } from "../audio/sound";
+import { playCoins } from "../audio/sound";
 import { DebtPanel } from "./DebtPanel";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
@@ -102,7 +102,7 @@ function TradeRow({ state, good, perDay, quantity, dispatch }: RowProps) {
           className="trade-row__button btn-primary"
           disabled={!canBuyGood(state, good, quantity)}
           onClick={() => {
-            playConfirm();
+            playCoins();
             dispatch((s) => buyGood(s, good, quantity));
           }}
         >
@@ -116,7 +116,7 @@ function TradeRow({ state, good, perDay, quantity, dispatch }: RowProps) {
           className="trade-row__button"
           disabled={!canSellGood(state, good, quantity)}
           onClick={() => {
-            playConfirm();
+            playCoins();
             dispatch((s) => sellGood(s, good, quantity));
           }}
         >
@@ -179,9 +179,9 @@ export function TradePanel({ state, production, dispatch }: TradePanelProps) {
           <div className="trade__treasury">
             <StatIcon type="treasury" size={30} />
             <strong>{Math.floor(state.stats.treasury).toLocaleString()}</strong>
-            <span className={production.totalIncome >= 0 ? "is-gain" : "is-loss"}>
-              {production.totalIncome >= 0 ? "+" : ""}
-              {Math.round(production.totalIncome)}/d
+            <span className={production.netTreasury >= 0 ? "is-gain" : "is-loss"}>
+              {production.netTreasury >= 0 ? "+" : ""}
+              {Math.round(production.netTreasury)}/d
             </span>
           </div>
         </section>

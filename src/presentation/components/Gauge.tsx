@@ -6,6 +6,8 @@
 // - background zones (the unrest stages along stability)
 // - markers (50% to win, the tax people accept), labelled underneath
 // - a hollow diamond for where a number is heading
+// - a striped, pulsing stretch for what an action would change, shown
+//   while the player points at it (see withPreview)
 // - quarter ticks, and fills that ease between values (not with reduced
 //   motion — see index.css)
 // The meaning is always carried by more than colour: the hatching, the
@@ -19,6 +21,7 @@ export interface GaugeSegment {
   value: number;
   tone: GaugeTone;
   dashed?: boolean; // an empty-but-counted stretch (jobs nobody fills)
+  preview?: boolean; // what an action would add or take away, while it's pointed at
 }
 
 export interface GaugeMarker {
@@ -69,7 +72,7 @@ export function Gauge({ max, segments, overflow = 0, min = 0, zones, markers, he
         {segments.map((segment, i) => {
           const style: CSSProperties = { left: width(left), width: width(segment.value) };
           left += Math.max(0, segment.value);
-          return <span key={i} className={`gauge__fill is-${segment.tone} ${segment.dashed ? "is-dashed" : ""}`} style={style} />;
+          return <span key={i} className={`gauge__fill is-${segment.tone} ${segment.dashed ? "is-dashed" : ""} ${segment.preview ? "is-preview" : ""}`} style={style} />;
         })}
         {over > 0 && <span className="gauge__overflow" style={{ left: pct(max), width: width(over) }} />}
         {over > 0 && !empty && <span className="gauge__notch" style={{ left: pct(max) }} />}
@@ -115,6 +118,15 @@ export function Gauge({ max, segments, overflow = 0, min = 0, zones, markers, he
       )}
     </div>
   );
+}
+
+// One filled stretch, plus what a change of delta would do to it: added
+// on in green, or the part it would take away striped in red.
+export function withPreview(value: number, tone: GaugeTone, delta: number | null, max = Infinity): GaugeSegment[] {
+  if (!delta) return [{ value, tone }];
+  if (delta > 0) return [{ value, tone }, { value: Math.min(delta, max - value), tone: "good", preview: true }];
+  const lost = Math.min(-delta, value);
+  return [{ value: value - lost, tone }, { value: lost, tone: "bad", preview: true }];
 }
 
 // A change either way from a centre line — grows right in green for a gain,

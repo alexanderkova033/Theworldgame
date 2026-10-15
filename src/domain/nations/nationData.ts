@@ -39,7 +39,7 @@ export const NATIONS: Nation[] = [
       "province-1-north", "province-1-south", // Veldshire
       "province-4-west", "province-4-east", // Brindlewood
     ],
-    blurb: "A compact eastern power built on early industry — smaller, but sharp-edged.",
+    blurb: "A compact eastern power built on early industry. Smaller, but sharp-edged.",
     startingBonus: "+15% industry output.",
   },
 ];

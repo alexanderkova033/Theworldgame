@@ -15,7 +15,7 @@ import { getForecasts } from "./application/getForecasts";
 import { getHeatingOutlook } from "./application/getHeatingOutlook";
 import { getMaterialShortages } from "./application/getMaterialShortages";
 import { getProvinceOverview, getProvinceStatus, type ProvinceStatus } from "./application/getProvinceOverview";
-import { playDanger, playGameOver } from "./presentation/audio/sound";
+import { playDanger, playGameOver, playLetter } from "./presentation/audio/sound";
 import { AdvisorStrip } from "./presentation/components/AdvisorStrip";
 import { DecisionModal } from "./presentation/components/DecisionModal";
 import { EconomyPanel } from "./presentation/components/EconomyPanel";
@@ -180,14 +180,17 @@ function App() {
   // The reign just ended — a distinct sting, once.
   const wasGameOver = useRef(false);
   useEffect(() => {
-    if (state?.isGameOver && !wasGameOver.current) playGameOver();
+    if (state?.isGameOver && !wasGameOver.current) playGameOver(state.outcome === "victory");
     wasGameOver.current = state?.isGameOver ?? false;
   }, [state?.isGameOver]);
 
-  // A decision popped up (see simulateDay.ts step 14) — close whatever tab
-  // is open so it isn't competing with the popup for attention.
+  // A decision popped up (see simulateDay.ts step 14): a letter arrives,
+  // and whatever tab is open closes so it isn't competing with the popup
+  // for attention.
   useEffect(() => {
-    if (state?.pendingDecisionId) setOpenModal(null);
+    if (!state?.pendingDecisionId) return;
+    playLetter();
+    setOpenModal(null);
   }, [state?.pendingDecisionId]);
 
   // No game yet: pick a save slot, then a nation, then a party, then the
@@ -303,7 +306,7 @@ function App() {
             (() => {
               const province = provinceOverview.find((p) => p.id === currentProvinceId);
               return province ? (
-                <ProvinceCard state={state} province={province} dispatch={dispatch} onOpenPanel={openPanel} onClose={closeProvinceCard} />
+                <ProvinceCard state={state} province={province} onOpenPanel={openPanel} onClose={closeProvinceCard} />
               ) : null;
             })()}
         </div>
@@ -352,13 +355,13 @@ function App() {
 
       {openModal === "laws" && (
         <Modal title="Laws" icon={<NavIcon type="laws" size={22} />} onClose={() => setOpenModal(null)} wide>
-          <LawsPanel state={state} dispatch={dispatch} />
+          <LawsPanel state={state} alerts={advisor?.alerts ?? []} dispatch={dispatch} />
         </Modal>
       )}
 
       {openModal === "research" && (
         <Modal title="Research" icon={<NavIcon type="research" size={22} />} onClose={() => setOpenModal(null)} wide>
-          <ResearchPanel state={state} dispatch={dispatch} />
+          <ResearchPanel state={state} alerts={advisor?.alerts ?? []} dispatch={dispatch} />
         </Modal>
       )}
 

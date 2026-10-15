@@ -14,19 +14,25 @@ import {
 } from "../constants";
 import type { Season } from "../country/calendar";
 import type { CountryStats } from "../country/types";
+import type { Modifiers } from "../policy/modifiers";
 import type { ResourceBundle } from "../resources/types";
 
+// What laws, research and the party in power do to farming and eating
+// (see domain/policy). Leave it out and nothing is changed.
+export type FoodModifiers = Pick<Modifiers, "farmYieldMultiplier" | "winterFarmMultiplier" | "foodConsumptionMultiplier">;
+
+const PLAIN: FoodModifiers = { farmYieldMultiplier: 1, winterFarmMultiplier: 1, foodConsumptionMultiplier: 1 };
+
 // Farms follow the seasons: a bumper autumn harvest, a lean winter (see
-// FARM_SEASON_MULTIPLIER) — less lean with agricultural research
-// (winterYieldMultiplier, see ResearchEffects.winterFarmMultiplier).
-// Granaries/canneries below don't follow the seasons — they work from
-// whatever grain/fish is already in stock.
-export function produceFood(farmCount: number, season: Season, winterYieldMultiplier = 1): number {
-  return farmCount * FOOD_PER_FARM * FARM_SEASON_MULTIPLIER[season] * (season === "winter" ? winterYieldMultiplier : 1);
+// FARM_SEASON_MULTIPLIER), less lean with the right research. Granaries
+// and canneries below don't follow the seasons: they work from whatever
+// grain or fish is already in stock.
+export function produceFood(farmCount: number, season: Season, mods: FoodModifiers = PLAIN): number {
+  return farmCount * FOOD_PER_FARM * FARM_SEASON_MULTIPLIER[season] * mods.farmYieldMultiplier * (season === "winter" ? mods.winterFarmMultiplier : 1);
 }
 
-export function consumeFood(stats: CountryStats): number {
-  return stats.population * FOOD_PER_POP_CONSUMPTION;
+export function consumeFood(stats: CountryStats, mods: FoodModifiers = PLAIN): number {
+  return stats.population * FOOD_PER_POP_CONSUMPTION * mods.foodConsumptionMultiplier;
 }
 
 export interface FoodProcessingResult {
@@ -54,9 +60,9 @@ export interface FoodUpdateResult {
   isShortage: boolean;
 }
 
-export function updateFood(stats: CountryStats, farmCount: number, season: Season, extraFoodProduced = 0, winterYieldMultiplier = 1): FoodUpdateResult {
-  const produced = produceFood(farmCount, season, winterYieldMultiplier) + extraFoodProduced;
-  const consumed = consumeFood(stats);
+export function updateFood(stats: CountryStats, farmCount: number, season: Season, extraFoodProduced = 0, mods: FoodModifiers = PLAIN): FoodUpdateResult {
+  const produced = produceFood(farmCount, season, mods) + extraFoodProduced;
+  const consumed = consumeFood(stats, mods);
   const rawStock = stats.food + produced - consumed;
   return {
     newFoodStock: Math.max(0, rawStock),

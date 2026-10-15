@@ -86,69 +86,138 @@
   flex-shrink: 0;
 }
 
-.law-tree__tier {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-
-.law-tree__row {
-  display: flex;
-  justify-content: center;
-  gap: 1.1rem;
-  width: 100%;
-}
-
-.law-tree__row--fork {
-  justify-content: space-evenly;
-}
-
-/* --- Connectors: a stem dropping from the tier above, forking into two
-   legs when the row below has two mutually-exclusive options. Positioned
-   with simple percentages rather than measured pixels — approximate, but
-   close enough at this fixed 1-or-2-node layout. --- */
-.law-tree__connector {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-
-.law-tree__connector-stem {
-  width: 2px;
-  height: 0.9rem;
-  background: var(--rule);
-  box-shadow: none;
-}
-
-.law-tree__connector-fork {
+/* --- A branch: the shared root across the top, then one lane per path,
+   a numbered row per tier, and lines drawn from each node to the ones it
+   opens (see TreeBranch in TechTree.tsx). --- */
+.law-tree__branch {
   position: relative;
+  display: grid;
+  grid-template-rows: repeat(8, auto);
+  column-gap: 0.9rem;
+  row-gap: 1.4rem;
   width: 100%;
-  height: 0.9rem;
+  min-width: 40rem;
 }
 
-.law-tree__connector-bar {
-  position: absolute;
-  top: 0;
-  left: 22%;
-  right: 22%;
-  height: 2px;
-  background: var(--panel-border);
-  box-shadow: none;
+/* Each path's lane: a bordered band from its name to its capstone, so the
+   three paths read as separate roads. */
+.law-tree__lane {
+  position: relative;
+  margin: -0.5rem 0 -0.6rem;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: rgba(110, 84, 52, 0.05);
 }
 
-.law-tree__connector-leg {
+/* The path you're on: a green edge, like the lines along it. */
+.law-tree__lane.is-taken {
+  border: 2px solid var(--success);
+  background: color-mix(in srgb, var(--success) 9%, transparent);
+}
+
+/* Closed for good: faint, and hatched so it reads without colour too. */
+.law-tree__lane.is-closed {
+  border-style: dashed;
+  background: repeating-linear-gradient(135deg, rgba(110, 84, 52, 0.08) 0 2px, transparent 2px 9px);
+}
+
+.law-tree__lane-head {
+  position: relative;
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.7rem;
+  border: 1px solid var(--rule-dark);
+  border-radius: 999px;
+  background: var(--paper-raised);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--accent-active);
+  cursor: help;
+}
+
+.law-tree__lane-head svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.law-tree__lane-head.is-taken {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.law-tree__lane-head.is-closed {
+  color: var(--ink-muted);
+  text-decoration: line-through;
+}
+
+/* The row numbers down the left: one law (or technology) per row. */
+.law-tree__tier {
+  grid-column: 1;
+  align-self: center;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.law-tree__cell {
+  position: relative;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: flex-start;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0 0.2rem;
+}
+
+.law-tree__cell .law-node {
+  flex: 0 1 8.25rem;
+  min-width: 0;
+}
+
+/* Two badges share a lane on the forked rows, so labels may wrap. */
+.law-tree__cell .law-node__status {
+  white-space: normal;
+}
+
+.law-tree__links {
   position: absolute;
-  top: 0;
-  width: 2px;
+  inset: 0;
+  width: 100%;
   height: 100%;
-  background: var(--panel-border);
-  box-shadow: none;
-  /* Horizontal position is set inline per-leg (see TierConnector in
-     LawsPanel.tsx/ResearchPanel.tsx) so any fork width — 2-way or 3-way —
-     spreads evenly instead of assuming exactly two legs. */
+  overflow: visible;
+  pointer-events: none;
 }
+
+.law-tree__link {
+  fill: none;
+  stroke: var(--rule);
+  stroke-width: 1.6;
+}
+
+/* The path already walked: solid green. */
+.law-tree__link.is-taken {
+  stroke: var(--success);
+  stroke-width: 3;
+}
+
+/* The ways open from here: oxblood, like the Ready labels. */
+.law-tree__link.is-open {
+  stroke: var(--oxblood);
+  stroke-width: 2.4;
+}
+
+/* Closed off for good: faint and broken. */
+.law-tree__link.is-closed {
+  stroke-dasharray: 3 5;
+  opacity: 0.4;
+}
+
+
 
 /* --- Node badges --- */
 .law-node {
@@ -215,17 +284,51 @@
   }
 }
 
+/* Not open yet: quieter, but the picture still reads. */
 .law-node--locked-prerequisite .law-node__icon,
 .law-node--locked-cross .law-node__icon,
 .law-node--locked-quota .law-node__icon {
-  opacity: 0.45;
-  filter: grayscale(0.6);
+  opacity: 0.7;
+  filter: grayscale(0.45);
 }
 
 .law-node--foreclosed .law-node__icon {
-  opacity: 0.35;
+  opacity: 0.42;
   filter: grayscale(1);
 }
+
+/* --- Node pictures (see NodeGlyph.tsx): ink outlines and one wash of
+   the branch's colour, so a branch reads as a family. --- */
+.node-glyph {
+  display: block;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.node-glyph .a {
+  fill: var(--glyph-wash, var(--gilt));
+}
+
+.node-glyph .w {
+  fill: #f3e6c4;
+}
+
+.node-glyph .k {
+  fill: var(--ink);
+  stroke: none;
+}
+
+.node-glyph--labor { --glyph-wash: #c0623f; }
+.node-glyph--sustenance { --glyph-wash: #d9a441; }
+.node-glyph--order { --glyph-wash: #5b7fb8; }
+.node-glyph--revenue { --glyph-wash: #c9a24a; }
+.node-glyph--industry { --glyph-wash: #8d97a3; }
+.node-glyph--agriculture { --glyph-wash: #7fa356; }
+.node-glyph--administration { --glyph-wash: #9a7bb8; }
+.node-glyph--housing { --glyph-wash: #c27a52; }
 
 .law-node__badge {
   position: absolute;
@@ -277,20 +380,70 @@
   padding-top: 1rem;
 }
 
-/* The rival party's simulated stance on the selected node — shared between
-   LawsPanel and ResearchPanel, since both trees vote the same way. */
-.rival-stance {
-  font-size: 0.85rem;
-  font-weight: 600;
+/* Where both parties stand on a law: your benches, then the rival. */
+.party-stances {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
   margin: 0 0 0.75rem;
 }
 
-.rival-stance.is-opposes {
+.party-stance {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.party-stance.is-opposes {
   color: var(--danger);
 }
 
-.rival-stance.is-supports {
+.party-stance.is-supports {
   color: var(--success);
+}
+
+.party-stance__swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid var(--rule-dark);
+  background: color-mix(in srgb, var(--party-color) 62%, #8f7d5c);
+}
+
+.party-stance__swatch.is-rival {
+  background: color-mix(in srgb, var(--party-color) 28%, var(--paper-raised));
+  border: 1.5px solid color-mix(in srgb, var(--party-color) 60%, var(--ink));
+}
+
+/* What choosing this closes off for good. */
+.law-inspector__lockouts {
+  margin: 0 0 0.75rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px dashed var(--danger);
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+.law-inspector__lockouts-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.law-inspector__lockouts ul {
+  margin: 0.2rem 0 0;
+  padding-left: 1.4rem;
+}
+
+.law-inspector__elsewhere {
+  color: var(--ink-muted);
+  font-style: italic;
 }
 
 .law-inspector__header {
@@ -323,26 +476,40 @@
 }
 
 .law-inspector__description {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--text-muted);
-  line-height: 1.5;
+  margin: 0.35rem 0 0;
 }
 
+/* What it does: gains, then costs, a line each with its icon. */
 .law-inspector__effects {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
+  flex-direction: column;
+  gap: 0.3rem;
   margin-bottom: 0.75rem;
 }
 
 .law-inspector__benefit,
 .law-inspector__cost {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   font-size: 0.875rem;
   font-weight: 600;
+}
+
+.law-inspector__benefit li,
+.law-inspector__cost li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.law-inspector__benefit svg,
+.law-inspector__cost svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 .law-inspector__benefit {
@@ -394,16 +561,6 @@
   border: 1px solid var(--success);
   border-style: solid;
   background: rgba(111, 174, 124, 0.1);
-}
-
-.law-effect-icons {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15rem;
-}
-
-.law-effect-icons svg {
-  display: block;
 }
 
 .law-inspector__status {
@@ -596,17 +753,260 @@
   font-weight: 700;
 }
 
-/* One branch at a time: centred, at a width where its forks still read
-   as a pair rather than flying to opposite edges. */
+/* One branch at a time, across the whole sheet: three lanes need the
+   room. Narrow screens scroll the sheet sideways rather than crush it. */
 .law-tree__columns--single {
-  justify-content: center;
+  justify-content: safe center;
+  overflow-x: auto;
 }
 
 .law-tree__columns--single .law-tree__column {
-  flex: 0 1 34rem;
+  flex: 1 1 auto;
 }
 
 /* The tab already names the branch. */
 .law-tree__columns--single .law-tree__column-title {
   display: none;
+}
+
+/* --- Two panes: the tree, and the picked node's details beside it -------- */
+.law-tree__guide {
+  margin-top: -0.25rem;
+}
+
+.law-tree__bank-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}
+
+.law-tree__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+  align-items: start;
+  gap: 1rem;
+}
+
+.law-tree__body .law-tree__columns {
+  margin: 0;
+}
+
+/* The details stay in view while a long branch scrolls past. */
+.law-tree__details {
+  position: sticky;
+  top: 0;
+  padding: 1rem 1.1rem 1.1rem;
+  background: var(--paper);
+  border: 1px solid var(--rule-dark);
+  border-top: 5px solid var(--oxblood);
+  border-radius: 8px;
+}
+
+.law-tree__details .law-inspector {
+  border-top: none;
+  padding-top: 0;
+}
+
+/* Below this the three lanes need the whole width: details go underneath. */
+@media (max-width: 1150px) {
+  .law-tree__body {
+    grid-template-columns: 1fr;
+  }
+
+  .law-tree__details {
+    position: static;
+  }
+}
+
+/* --- Each node says where it stands --------------------------------------- */
+.law-node {
+  width: 8.25rem;
+}
+
+/* The picked node: framed in oxblood, so the pane beside is plainly its. */
+.law-node.is-selected,
+.law-node.is-selected:hover {
+  background: var(--paper);
+  box-shadow: inset 0 0 0 2px var(--oxblood);
+}
+
+.law-node__status {
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--ink-muted);
+  background: var(--paper-deep);
+}
+
+/* Open to act on: the loudest label on the tree. */
+.law-node--available .law-node__status {
+  color: #f8ebc6;
+  background: var(--oxblood);
+}
+
+.law-node--enacted .law-node__status {
+  color: #f4ead0;
+  background: var(--success);
+}
+
+.law-node--in-progress .law-node__status {
+  color: #f8ebc6;
+  background: var(--leather);
+}
+
+.law-node--foreclosed .law-node__status {
+  text-decoration: line-through;
+}
+
+/* A law only your party would propose: a gilt ring and a tag. */
+.law-node.is-party .law-node__icon {
+  box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--gilt);
+}
+
+.law-node__party {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--accent);
+}
+
+.law-inspector__no-cost {
+  font-size: 0.875rem;
+  font-style: italic;
+  color: var(--ink-muted);
+}
+
+/* --- A path's name is a button: it opens the whole path beside the tree. */
+button.law-tree__lane-head {
+  min-height: 2rem;
+  box-shadow: none;
+}
+
+button.law-tree__lane-head:hover {
+  border-color: var(--oxblood);
+  background: var(--paper);
+  transform: none;
+}
+
+button.law-tree__lane-head.is-selected {
+  border-color: var(--oxblood);
+  box-shadow: inset 0 0 0 1px var(--oxblood);
+  background: var(--paper);
+}
+
+/* A law or technology that would help with what the advisor is warning
+   about: the advisor's own picture for the problem, pinned to the badge. */
+.law-node__hint {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper-raised);
+  border: 2px solid var(--oxblood);
+}
+
+.law-node__hint svg {
+  display: block;
+  width: 15px;
+  height: 15px;
+}
+
+.law-tree__lane-head .law-node__hint {
+  position: static;
+  width: 20px;
+  height: 20px;
+  margin-left: 0.1rem;
+}
+
+/* --- The whole path, in the details pane --------------------------------- */
+.path-inspector__label {
+  margin: 0.85rem 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  color: var(--ink-muted);
+}
+
+.path-inspector__aside {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}
+
+.path-inspector__forks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.path-inspector__fork {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem;
+  border: 1px dashed var(--rule);
+  border-radius: 8px;
+}
+
+.path-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2rem;
+  padding: 0.15rem 0.5rem 0.15rem 0.25rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--paper-raised);
+  box-shadow: none;
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+
+.path-step:hover {
+  border-color: var(--oxblood);
+  transform: none;
+}
+
+.path-inspector__then {
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}
+
+.path-step svg {
+  flex-shrink: 0;
+}
+
+.path-inspector__hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.path-inspector__hints li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.55rem 0.15rem 0.3rem;
+  border: 1.5px solid var(--oxblood);
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--oxblood);
+}
+
+.path-inspector__cost {
+  margin-top: 0.85rem;
 }

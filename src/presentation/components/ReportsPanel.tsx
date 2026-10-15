@@ -1,3 +1,7 @@
+// The monthly report, set out to be read at a glance: one month at a time,
+// its five numbers big and labelled at the head (what moved, which way, by
+// how much), then why each one moved, then every recent month as a table
+// with named columns — click a row to read that month.
 import "./ReportsPanel.css";
 import { useState } from "react";
 import { formatMonthYear, getReportedMonth } from "../../domain/country/calendar";
@@ -14,144 +18,144 @@ interface ReportsPanelProps {
   reports: MonthlyReport[];
 }
 
-function reportTotal(report: MonthlyReport, metric: LedgerMetric): number | null {
-  if (report.ledger) return getLedgerTotal(report.ledger, metric);
+type Column = LedgerMetric | "population";
+
+const COLUMNS: Array<{ key: Column; label: string; icon: StatIconType; unit: string }> = [
+  { key: "treasury", label: METRIC_LABELS.treasury, icon: METRIC_ICONS.treasury, unit: CURRENCY_SYMBOL },
+  { key: "food", label: METRIC_LABELS.food, icon: METRIC_ICONS.food, unit: "food" },
+  { key: "support", label: METRIC_LABELS.support, icon: METRIC_ICONS.support, unit: "points" },
+  { key: "stability", label: METRIC_LABELS.stability, icon: METRIC_ICONS.stability, unit: "points" },
+  { key: "population", label: "People", icon: "population", unit: "people" },
+];
+
+function reportValue(report: MonthlyReport, column: Column): number | null {
+  if (column === "population") return report.populationChange;
+  if (report.ledger) return getLedgerTotal(report.ledger, column);
   // Reports from before causes were tracked only knew income and stability.
-  if (metric === "treasury") return report.totalIncome;
-  if (metric === "stability") return report.stabilityChange;
+  if (column === "treasury") return report.totalIncome;
+  if (column === "stability") return report.stabilityChange;
   return null;
 }
 
-// A tiny bar sparkline, not a line — these are per-month net changes that
-// swing around zero, and a smoothed line would blur exactly the swings the
-// player wants to see. Bars use the app's existing success/danger status
-// tokens (same green/red already used for law benefit/cost), since the
-// series' meaning is "gain vs loss," not an arbitrary series identity.
-function TrendSparkline({ icon, label, values }: { icon: StatIconType; label: string; values: number[] }) {
-  const width = 132;
-  const height = 36;
-  const baseline = height / 2;
-  const gap = 3;
-  const barWidth = values.length > 0 ? (width - gap * (values.length - 1)) / values.length : width;
-  const maxAbs = Math.max(1, ...values.map((v) => Math.abs(v)));
-  const scale = (height / 2 - 3) / maxAbs;
+function tone(text: string): "is-gain" | "is-loss" | "is-flat" {
+  return text.startsWith("+") ? "is-gain" : text.startsWith("−") || text.startsWith("-") ? "is-loss" : "is-flat";
+}
 
+// An up or down arrow beside a change — the direction as a shape, not only
+// as a colour.
+function Arrow({ direction }: { direction: "is-gain" | "is-loss" | "is-flat" }) {
+  if (direction === "is-flat") return null;
   return (
-    <div className="reports-panel__sparkline">
-      <span className="reports-panel__sparkline-label">
-        <StatIcon type={icon} size={15} />
-        {label}
+    <svg className="report-arrow" viewBox="-6 -6 12 12" width={14} height={14} aria-hidden="true">
+      <path d={direction === "is-gain" ? "M0,-5 L5,3 L-5,3 Z" : "M0,5 L5,-3 L-5,-3 Z"} fill="currentColor" />
+    </svg>
+  );
+}
+
+function Tile({ report, column }: { report: MonthlyReport; column: (typeof COLUMNS)[number] }) {
+  const value = reportValue(report, column.key);
+  const text = value === null ? "–" : formatChange(column.key, value);
+  const direction = value === null ? "is-flat" : tone(text);
+  return (
+    <div className={`report-tile ${direction}`}>
+      <span className="report-tile__label">
+        <StatIcon type={column.icon} size={18} />
+        {column.label}
       </span>
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${label} trend, last ${values.length} months`}>
-        <line x1={0} y1={baseline} x2={width} y2={baseline} className="reports-panel__sparkline-baseline" />
-        {values.map((value, i) => {
-          const barHeight = value === 0 ? 0 : Math.max(Math.abs(value) * scale, 1.5);
-          const x = i * (barWidth + gap);
-          const y = value >= 0 ? baseline - barHeight : baseline;
-          return (
-            <rect
-              key={i}
-              x={x}
-              y={y}
-              width={barWidth}
-              height={barHeight}
-              rx={Math.min(1.5, barWidth / 2)}
-              className={value >= 0 ? "reports-panel__sparkline-bar--gain" : "reports-panel__sparkline-bar--loss"}
-            />
-          );
-        })}
-      </svg>
+      <strong className="report-tile__value">
+        <Arrow direction={direction} />
+        {text}
+      </strong>
+      <span className="report-tile__unit">{column.unit} this month</span>
     </div>
-  );
-}
-
-// One number in a month's summary row: its icon and signed change.
-function Metric({ icon, value, label, metric }: { icon: StatIconType; value: number; label: string; metric: LedgerMetric | "population" }) {
-  const text = formatChange(metric, value);
-  const tone = text.startsWith("+") ? "is-gain" : text.startsWith("−") ? "is-loss" : "";
-  return (
-    <span className="reports-panel__metric" title={`${label}: ${text}${metric === "treasury" ? ` ${CURRENCY_SYMBOL}` : ""}`}>
-      <StatIcon type={icon} size={17} />
-      <span className={`reports-panel__metric-value ${tone}`}>{text}</span>
-    </span>
-  );
-}
-
-function ReportRow({ report, expanded, onToggle }: { report: MonthlyReport; expanded: boolean; onToggle: () => void }) {
-  const canExpand = report.ledger !== undefined;
-  const summary = (
-    <>
-      <span className="reports-panel__month">{formatMonthYear(getReportedMonth(report.date))}</span>
-      {LEDGER_METRICS.map((metric) => {
-        const value = reportTotal(report, metric);
-        return value === null ? (
-          <span key={metric} />
-        ) : (
-          <Metric key={metric} icon={METRIC_ICONS[metric]} value={value} label={METRIC_LABELS[metric]} metric={metric} />
-        );
-      })}
-      <Metric icon="population" value={report.populationChange} label="Population" metric="population" />
-      <span className="reports-panel__chevron" aria-hidden="true">
-        {canExpand ? (expanded ? "▾" : "▸") : ""}
-      </span>
-    </>
-  );
-
-  return (
-    <li className={`reports-panel__item ${expanded ? "is-expanded" : ""}`}>
-      {canExpand ? (
-        <button type="button" className="reports-panel__summary" aria-expanded={expanded} onClick={onToggle}>
-          {summary}
-        </button>
-      ) : (
-        <div className="reports-panel__summary">{summary}</div>
-      )}
-      {expanded && report.ledger && (
-        <div className="reports-panel__causes">
-          {LEDGER_METRICS.map((metric) => (
-            <CauseBreakdown key={metric} ledger={report.ledger!} metric={metric} />
-          ))}
-        </div>
-      )}
-    </li>
   );
 }
 
 export function ReportsPanel({ reports }: ReportsPanelProps) {
   const recent = reports.slice(0, 6);
-  const chronological = [...recent].reverse();
-  // The latest month opens with its causes showing; older ones on a click.
-  const [openId, setOpenId] = useState<string | null>(recent[0]?.id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = recent.find((r) => r.id === selectedId) ?? recent[0];
+
+  if (!selected) {
+    return (
+      <section className="panel reports-panel">
+        <h2>Monthly Report</h2>
+        <div className="reports-panel__empty">
+          <span aria-hidden="true">
+            <NavIcon type="reports" size={32} />
+          </span>
+          <p>Nothing yet. The first report lands on the 1st of next month.</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="panel reports-panel">
-      <h2>Monthly Reports</h2>
-      {recent.length === 0 && (
-        <div className="reports-panel__empty">
-          <span aria-hidden="true">
-            <NavIcon type="reports" size={28} />
-          </span>
-          <p>Nothing yet — the first report lands next month.</p>
-        </div>
+      <h2>Monthly Report</h2>
+
+      <p className="report-head">
+        <span className="report-head__month">{formatMonthYear(getReportedMonth(selected.date))}</span>
+        <span className="report-head__note">{selected.id === recent[0].id ? "The month just ended" : "An earlier month"}</span>
+      </p>
+
+      <div className="report-tiles">
+        {COLUMNS.map((column) => (
+          <Tile key={column.key} report={selected} column={column} />
+        ))}
+      </div>
+
+      {selected.ledger && (
+        <>
+          <h3 className="report-section-title">Why it changed</h3>
+          <div className="report-causes">
+            {LEDGER_METRICS.map((metric) => (
+              <CauseBreakdown key={metric} ledger={selected.ledger!} metric={metric} />
+            ))}
+          </div>
+        </>
       )}
 
       {recent.length > 1 && (
-        <div className="reports-panel__trends">
-          <TrendSparkline icon="treasury" label={`${chronological.length} mo.`} values={chronological.map((r) => reportTotal(r, "treasury") ?? 0)} />
-          <TrendSparkline icon="population" label={`${chronological.length} mo.`} values={chronological.map((r) => r.populationChange)} />
-        </div>
+        <>
+          <h3 className="report-section-title">Month by month</h3>
+          <table className="report-history">
+            <thead>
+              <tr>
+                <th scope="col">Month</th>
+                {COLUMNS.map((column) => (
+                  <th scope="col" key={column.key}>
+                    {column.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {recent.map((report) => {
+                const isSelected = report.id === selected.id;
+                return (
+                  <tr key={report.id} className={isSelected ? "is-selected" : ""} onClick={() => setSelectedId(report.id)}>
+                    <th scope="row">
+                      <button type="button" className="report-history__month" aria-pressed={isSelected} onClick={() => setSelectedId(report.id)}>
+                        {formatMonthYear(getReportedMonth(report.date))}
+                      </button>
+                    </th>
+                    {COLUMNS.map((column) => {
+                      const value = reportValue(report, column.key);
+                      const text = value === null ? "–" : formatChange(column.key, value);
+                      return (
+                        <td key={column.key} className={value === null ? "is-flat" : tone(text)}>
+                          {text}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </>
       )}
-
-      <ul className="reports-panel__list">
-        {recent.map((report) => (
-          <ReportRow
-            key={report.id}
-            report={report}
-            expanded={openId === report.id}
-            onToggle={() => setOpenId((current) => (current === report.id ? null : report.id))}
-          />
-        ))}
-      </ul>
     </section>
   );
 }

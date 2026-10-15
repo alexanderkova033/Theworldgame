@@ -10,267 +10,298 @@
   margin: 0;
 }
 
-.actions-panel__target {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
+/* --- Where to build: one chip per province ----------------------------- */
+.actions-panel__where {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+  padding: 0.6rem 0.7rem;
+  background: var(--paper-deep);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.actions-panel__where-label {
+  flex-shrink: 0;
+  padding-top: 0.4rem;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--accent-active);
-  background: var(--accent-soft);
-  border: 1px solid var(--panel-border);
-  border-radius: 999px;
-  padding: 0.25rem 0.75rem 0.25rem 0.5rem;
-  cursor: help;
+  color: var(--ink-muted);
 }
 
-.actions-panel__target svg {
-  flex-shrink: 0;
+.actions-panel__provinces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
 }
 
-.actions-panel__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
-  gap: 0.6rem;
+button.actions-panel__province {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  padding: 0.3rem 0.65rem;
+  background: var(--paper-raised);
+  border-color: var(--rule);
+  line-height: 1.25;
+  text-align: left;
 }
 
-/* --- One building, one tile, one click --- */
-.build-tile {
-  position: relative;
+.actions-panel__province-name {
+  font-weight: 700;
+}
+
+.actions-panel__province-flag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--warning);
+}
+
+.actions-panel__province-flag.is-urgent {
+  color: var(--danger);
+}
+
+/* The chosen province: set in green morocco, like every other selection. */
+button.actions-panel__province.is-selected,
+button.actions-panel__province.is-selected:hover:not(:disabled) {
+  background: var(--leather);
+  border-color: var(--leather-dark);
+  color: #f4ead0;
+  box-shadow: inset 0 0 0 1px rgba(226, 194, 122, 0.5);
+}
+
+.actions-panel__province.is-selected .actions-panel__province-flag {
+  color: #ebbc68;
+}
+
+.actions-panel__province.is-selected .actions-panel__province-flag.is-urgent {
+  color: #f1937d;
+}
+
+/* --- The buildings, grouped by what they're for ------------------------- */
+.build-group__title {
+  margin: 1rem 0 0.4rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--rule);
+  font-style: normal;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: var(--oxblood);
+}
+
+.build-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 0.4rem;
-  padding: 0.7rem 0.5rem 0.6rem;
-  border: 1px solid var(--panel-border);
-  border-radius: 12px;
-  background: var(--inset);
-  box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.28);
-  color: var(--text);
-  font: inherit;
-  text-align: center;
-  cursor: pointer;
-  transition:
-    transform 0.12s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
 }
 
-.build-tile:not(:disabled):hover {
-  transform: translateY(-2px);
-  border-color: var(--tint);
-  box-shadow: 0 0 0 1px var(--tint);
+/* One building: picture | what it is, does and costs | count and Build. */
+.build-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
 }
 
-.build-tile:not(:disabled):active {
-  transform: translateY(0);
+.build-row.is-locked {
+  border-style: dashed;
+  background: transparent;
 }
 
-/* Overrides the global button:disabled fade — a disabled tile still has to
-   show which cost chip is red. */
-.build-tile:disabled {
-  opacity: 0.9;
-  cursor: not-allowed;
-}
-
-/* The building itself, big, on a backdrop washed in its map color. */
-.build-tile__art {
+.build-row__art {
   position: relative;
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--tint) 32%, transparent), transparent 70%),
-    var(--panel-bg-raised);
-  border: 2px solid color-mix(in srgb, var(--tint) 55%, var(--panel-border));
-  box-shadow: inset 0 0 0 1px rgba(110, 84, 52, 0.28);
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1px solid var(--rule-dark);
+  box-shadow: inset 0 0 0 3px var(--paper-raised), inset 0 0 0 4px var(--rule);
 }
 
-.build-tile__art > svg {
-  width: 54px;
-  height: 54px;
+.build-row__art svg {
+  width: 2.2rem;
+  height: 2.2rem;
   display: block;
 }
 
-.build-tile__name {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.95rem;
+.build-row.is-locked .build-row__art svg {
+  opacity: 0.45;
 }
 
-/* What it makes: a single glyph + number badge. */
-.build-tile__yield {
+.build-row__lock {
+  position: absolute;
+  right: -0.25rem;
+  bottom: -0.25rem;
+  display: flex;
+  padding: 0.1rem;
+  border-radius: 50%;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-dark);
+  color: var(--ink-muted);
+}
+
+.build-row__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.build-row__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.build-row__name {
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* What one of them yields, as a small green-edged label. */
+.build-row__yield {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0 0.45rem;
+  border: 1px solid var(--success);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--success);
+  font-variant-numeric: tabular-nums;
+}
+
+.build-row__yield svg {
+  display: block;
+}
+
+.build-row__summary {
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+}
+
+.build-row__costs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.85rem;
+  margin-top: 0.15rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.build-row__cost {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.85rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--success);
-  background: rgba(111, 174, 124, 0.12);
-  border: 1px solid rgba(111, 174, 124, 0.35);
-  border-radius: 999px;
-  padding: 0.12rem 0.55rem;
+  white-space: nowrap;
 }
 
-.build-tile__yield svg,
-.build-tile__cost svg,
-.build-tile__unlock svg {
+.build-row__cost svg {
   display: block;
   flex-shrink: 0;
 }
 
+/* What you have, before the slash. */
+.build-row__have {
+  font-weight: 800;
+}
+
+/* Enough to start, not enough to finish from what's in store today. */
+.build-row__cost.is-partial {
+  color: var(--warning);
+}
+
+/* The cost you can't cover: red, and underlined, so it isn't colour alone. */
+.build-row__cost.is-short {
+  color: var(--danger);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.build-row__reason,
+.build-row__broken {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.build-row__reason {
+  color: var(--danger);
+}
+
+.build-row.is-locked .build-row__reason {
+  color: var(--ink-muted);
+}
+
+.build-row__reason-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--danger);
+  color: var(--paper-raised);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.build-row.is-locked .build-row__reason-mark {
+  background: var(--ink-muted);
+}
+
+.build-row__broken {
+  color: var(--warning);
+}
+
+.build-row__action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
+}
+
+.build-row__count {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+button.build-row__button {
+  min-width: 5.5rem;
+  min-height: 2.2rem;
+}
+
+/* Glyph helpers inside a yield label. */
 .build-tile__arrow {
   color: var(--text-muted);
 }
 
-.build-tile__costs {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.2rem 0.5rem;
-  font-size: 0.85rem;
-}
-
-.build-tile__cost {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--text);
-}
-
-.build-tile__cost.is-short {
-  color: var(--danger);
-}
-
-.build-tile__cost--days {
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
-/* Room left in this province, top-right corner. */
-.build-tile__pips {
-  position: absolute;
-  top: 0.45rem;
-  right: 0.5rem;
-  display: inline-flex;
-  gap: 3px;
-}
-
-.build-tile__pip {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  border: 1px solid var(--panel-border);
-  background: var(--inset-strong);
-}
-
-.build-tile__pip.is-filled {
-  background: var(--oxblood);
-  border-color: var(--oxblood-dark);
-  box-shadow: none;
-}
-
-/* Can't afford it: the red chip says why, the tile just sits back a little. */
-.build-tile:disabled .build-tile__art {
-  filter: saturate(0.6);
-}
-
-/* No room left here: the picture and figures step back; the name and the
-   full pips stay legible. */
-.build-tile.is-full > :not(.build-tile__pips):not(.build-tile__name) {
-  opacity: 0.55;
-}
-
-/* Still behind the Research tree. */
-.build-tile.is-locked {
-  border-style: dashed;
-  background: var(--inset);
-}
-
-.build-tile.is-locked .build-tile__art > svg {
-  filter: grayscale(1) brightness(0.6);
-}
-
-.build-tile.is-locked .build-tile__name {
-  color: var(--text-muted);
-}
-
-.build-tile__lock {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text);
-}
-
-.build-tile__lock svg {
-  width: 26px;
-  height: 26px;
-}
-
-.build-tile__unlock {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.8125rem;
-  color: var(--text-muted);
-  line-height: 1.2;
-}
-
-/* Broken buildings of this type here: a red wrench + count on the art. */
-.build-tile__broken {
-  position: absolute;
-  right: -6px;
-  bottom: -2px;
-  display: inline-flex;
-  align-items: center;
-  gap: 1px;
-  padding: 1px 5px 1px 4px;
-  border-radius: 999px;
-  background: var(--danger);
-  color: var(--paper-raised);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  border: 1px solid var(--bg-deep);
-}
-
-.build-tile__broken svg {
-  display: block;
-}
-
 .build-tile__season {
-  color: #bfe3f5;
-  margin-left: 0.1rem;
-}
-
-.build-tile__short-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 0.95rem;
-  height: 0.95rem;
-  border-radius: 50%;
-  background: var(--danger);
-  color: var(--paper-raised);
-  font-size: 0.8125rem;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.build-tile__cost.is-short {
-  text-decoration: underline wavy;
-  text-underline-offset: 3px;
-}
-
-.build-tile__cost--jobs {
   color: var(--info);
+  margin-left: 0.1rem;
 }

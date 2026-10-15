@@ -5,31 +5,12 @@
 // funded by the buildings in its field and the scientists hired into it
 // (see researchRules.ts and domain/workforce).
 import type { ProjectType } from "../construction/types";
+import type { PolicyEffects, PolicyLinks, TreeTier } from "../policy/modifiers";
 
 export type ResearchCategory = "industry" | "agriculture" | "administration" | "housing";
 
-export interface ResearchEffects {
-  // Ongoing, folded into the same multiplier composition as law/nation
-  // effects in simulateDay.
-  incomeMultiplier?: number;
-  industryMultiplier?: number;
-  housingCapacityMultiplier?: number; // people per home
-  heatingMultiplier?: number; // fuel burned per home in winter
-  farmJobsMultiplier?: number; // workers each farm needs — see labourRules.ts
-  factoryJobsMultiplier?: number; // workers each factory needs
-  winterFarmMultiplier?: number; // what farms yield in winter — see foodRules.ts
-  breakdownMultiplier?: number; // chance a building breaks down — see maintenanceRules.ts
-  repairCostMultiplier?: number; // price of a repair
-  buyPriceMultiplier?: number; // what buying on the market costs — see marketRules.ts
-  politicalPowerMultiplier?: number; // political power earned each day — see politicsRules.ts
-  pressureMultiplier?: number; // how hard a push on a neighbour lands — see diplomacyRules.ts
-  // One-time, applied once when the node completes.
-  treasuryDelta?: number;
-  foodDelta?: number;
-  stabilityDelta?: number;
-  populationDelta?: number;
-  popularityDelta?: number;
-}
+// Ongoing modifiers plus one-time deltas, the same shape laws use.
+export type ResearchEffects = PolicyEffects;
 
 // A handful of advanced nodes also require a specific node from the *Law*
 // tree to already be enacted. No `tree` discriminator, since a ResearchNode
@@ -38,14 +19,12 @@ export interface ResearchCrossRequirement {
   nodeId: string;
 }
 
-export interface ResearchNode {
+export interface ResearchNode extends PolicyLinks {
   id: string;
   category: ResearchCategory;
-  tier: 1 | 2 | 3 | 4; // tier 4 is a capstone, unlocked only after a tier-3 pick in the same branch
+  tier: TreeTier; // depth in its branch, which is also its row on the tree; tier 7 holds the capstones
   name: string;
   description: string;
-  benefit: string;
-  cost: string;
   crossRequirement?: ResearchCrossRequirement;
   effects: ResearchEffects;
   icon: string; // a StatIconType name — kept as a plain string here so domain/ doesn't depend on presentation/

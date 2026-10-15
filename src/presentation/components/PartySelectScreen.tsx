@@ -2,6 +2,8 @@ import "./PartySelectScreen.css";
 import type { CSSProperties } from "react";
 import type { Nation } from "../../domain/nations/types";
 import type { Party } from "../../domain/parties/types";
+import { describeEffects } from "../../domain/policy/modifiers";
+import { IDEOLOGY_CARES } from "../../domain/parties/rivalRules";
 import { starPoints } from "./iconShapes";
 import { MapWatermark } from "./StartScreen";
 
@@ -29,8 +31,8 @@ export function PartySelectScreen({ nation, parties, onBack, onSelectParty }: Pa
         </p>
         <h1 className="start-screen__title">Lead a Party</h1>
         <p className="start-screen__subtitle">
-          Every choice from here — laws, taxes, ventures — is measured by one thing: whether the people still back
-          you. Win the next general election and the one after that, or your rivals will.
+          Every law, tax and venture from here on is measured by one thing: whether the people still back you. The
+          two parties govern differently, so pick the one whose strengths you want.
         </p>
 
         <div className="party-select-screen__grid">
@@ -48,6 +50,24 @@ export function PartySelectScreen({ nation, parties, onBack, onSelectParty }: Pa
               <span className="party-card__ideology">{party.ideology}</span>
               <span className="party-card__description">{party.description}</span>
               <span className="party-card__platform">{party.platform}</span>
+              {/* What governing as this party changes: a button holds
+                  only inline content, so the lists are spans. */}
+              <span className="party-card__creed">
+                <span className="party-card__creed-label">In power</span>
+                {describeEffects(party.creed).gains.map((line) => (
+                  <span key={line.key} className="party-card__perk is-gain">
+                    + {line.text}
+                  </span>
+                ))}
+                {describeEffects(party.creed).costs.map((line) => (
+                  <span key={line.key} className="party-card__perk is-loss">
+                    − {line.text}
+                  </span>
+                ))}
+              </span>
+              <span className="party-card__cares">
+                Backs laws for {IDEOLOGY_CARES[party.ideology].for}
+              </span>
               <span className="party-card__cta">Lead the {party.name}</span>
             </button>
           ))}

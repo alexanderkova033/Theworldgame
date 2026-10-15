@@ -23,12 +23,10 @@ import {
 } from "../domain/housing/housingRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getLabourSituation } from "../domain/labour/labourRules";
-import { getActiveLawEffects } from "../domain/laws/lawsRules";
 import { emptyLedger, fitCauses, isLedgerEmpty, ledgerFromStatsChange, mergeLedgers } from "../domain/ledger/ledgerRules";
 import type { Ledger, LedgerCauses } from "../domain/ledger/types";
 import { accrueInterest, getDebtPopularityPenalty, getDebtStabilityPenalty, isDebtDangerous } from "../domain/loans/loanRules";
 import { advanceRepairs, getWorkingCounts, rollBreakdowns } from "../domain/maintenance/maintenanceRules";
-import { getNationEffects } from "../domain/nations/nationEffects";
 import { getNation } from "../domain/nations/nationRules";
 import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../domain/parties/factionRules";
 import { getParty } from "../domain/parties/partyRules";
@@ -47,11 +45,10 @@ import { updatePopulation } from "../domain/population/populationRules";
 import { updateMarket } from "../domain/market/marketRules";
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
 import { applyRandomEventEffect, pickRandomEvent } from "../domain/randomEvents/randomEventRules";
-import { getActiveResearchEffects } from "../domain/research/researchRules";
+import { getModifiers } from "../domain/policy/policyRules";
 import { addResources, calculateDailyProduction } from "../domain/resources/resourceRules";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
 import { getStabilityPressures, updateStability } from "../domain/stability/stabilityRules";
-import { getActiveSynergyEffects } from "../domain/synergy/synergyRules";
 import type { UnrestStage } from "../domain/unrest/types";
 import { getUnrestIndustryMultiplier, isWorseStage, rollRiotDamage, updateUnrestStage } from "../domain/unrest/unrestRules";
 import { getDailySalaries, getPoliceBreakdownReduction, getPoliceStabilityBonus, layOffUntilAffordable } from "../domain/workforce/workforceRules";
@@ -86,34 +83,32 @@ const BUILDING_NAMES: Record<string, string> = {
 // Unrest moving a stage either way — see domain/unrest.
 const UNREST_WORSENS: Record<UnrestStage, string> = {
   calm: "",
-  discontent: "Discontent is spreading — stability is under 40 and industry slows.",
+  discontent: "Discontent is spreading. Stability is under 40 and industry slows.",
   strikes: "Strikes! Stability is under 25 and factories are stopping. Police keep more of them open; a crackdown calms things a stage.",
   riots: "Riots! Stability is under 12 and mobs are wrecking buildings. Crack down before the government falls.",
 };
 const UNREST_EASES: Record<UnrestStage, string> = {
   calm: "The country is calm again.",
-  discontent: "The strikes end — discontent lingers.",
-  strikes: "The riots die down — strikes go on.",
+  discontent: "The strikes end, but discontent lingers.",
+  strikes: "The riots die down, but the strikes go on.",
   riots: "",
 };
 
 // The turn of the season, announced on its first day — winter especially,
 // since it's when farms stop pulling their weight.
 const SEASON_MESSAGES: Record<number, { message: string; severity: GameEvent["severity"] }> = {
-  3: { message: "Spring thaw — the fields are workable again.", severity: "info" },
-  9: { message: "Harvest season — farms yield their best of the year. Stockpile for winter.", severity: "info" },
-  12: { message: "Winter sets in — farms yield little and grain fields lie fallow until spring.", severity: "warning" },
+  3: { message: "Spring thaw: the fields are workable again.", severity: "info" },
+  9: { message: "Harvest season: farms yield their best of the year. Stockpile for winter.", severity: "info" },
+  12: { message: "Winter sets in. Farms yield little and grain fields lie fallow until spring.", severity: "warning" },
 };
 
 export function simulateDay(state: GameState): GameState {
   const efficiencyMultiplier = calculateEfficiencyMultiplier(getWorkingCounts(state).roads);
   const season = getSeason(state.date);
-  const lawEffects = getActiveLawEffects(state.enactedLawIds);
-  const researchEffects = getActiveResearchEffects(state.enactedResearchIds, state.researchOutcomes);
-  // A Law+Research pair that's both enacted layers on an extra bonus, on top
-  // of whatever each already contributes alone — see domain/synergy.
-  const synergyEffects = getActiveSynergyEffects(state.enactedLawIds, state.enactedResearchIds);
-  const nationEffects = getNationEffects(state.nationId);
+  // Laws, research, the party's creed, the nation, law+research pairs: all
+  // folded into one set of modifiers (see domain/policy). Read once at the
+  // start of the day, so a law taking force today counts from tomorrow.
+  const mods = getModifiers(state);
   const events: GameEvent[] = [...state.events];
 
   // Why today's numbers moved, cause by cause, for the monthly report (see
@@ -152,7 +147,7 @@ export function simulateDay(state: GameState): GameState {
       events.unshift({
         id: generateId("event"),
         date: state.date,
-        message: `${project.label} construction has stalled — not enough to pay for it.`,
+        message: `${project.label} construction has stalled: there isn't enough to pay for it.`,
         severity: "warning",
       });
     } else if (!advanced.isStalled && project.isStalled) {
@@ -230,12 +225,12 @@ export function simulateDay(state: GameState): GameState {
       severity: "info",
     });
   }
-  const breakdowns = rollBreakdowns(repairs.placedBuildings, getPoliceBreakdownReduction(working.workforce.police), researchEffects.breakdownMultiplier);
+  const breakdowns = rollBreakdowns(repairs.placedBuildings, getPoliceBreakdownReduction(working.workforce.police), mods.breakdownMultiplier);
   for (const building of breakdowns.broken) {
     events.unshift({
       id: generateId("event"),
       date: state.date,
-      message: `${BUILDING_NAMES[building.type]} in ${getProvinceName(building.provinceId)} has broken down — repair it from the Economy tab.`,
+      message: `${BUILDING_NAMES[building.type]} in ${getProvinceName(building.provinceId)} has broken down. Repair it from the Economy tab.`,
       severity: "warning",
     });
   }
@@ -250,7 +245,7 @@ export function simulateDay(state: GameState): GameState {
       events.unshift({
         id: generateId("event"),
         date: state.date,
-        message: `Rioters in ${getProvinceName(riot.wrecked.provinceId)}: a ${BUILDING_NAMES[riot.wrecked.type]} has broken down — repair it from the Economy tab.`,
+        message: `Rioters in ${getProvinceName(riot.wrecked.provinceId)}: a ${BUILDING_NAMES[riot.wrecked.type]} has broken down. Repair it from the Economy tab.`,
         severity: "danger",
       });
     }
@@ -294,7 +289,7 @@ export function simulateDay(state: GameState): GameState {
     events.unshift({
       id: generateId("event"),
       date: state.date,
-      message: "No coal or wood left to heat homes — people are freezing. Buy coal on the Trade tab.",
+      message: "No coal or wood left to heat homes, and people are freezing. Buy coal on the Trade tab.",
       severity: "danger",
     });
   }
@@ -312,7 +307,7 @@ export function simulateDay(state: GameState): GameState {
     events.unshift({
       id: generateId("event"),
       date: state.date,
-      message: "Debt has grown dangerous — the interest alone is now dragging down stability and popularity.",
+      message: "Debt has grown dangerous. The interest alone is now dragging down stability and support.",
       severity: "warning",
     });
   }
@@ -324,31 +319,26 @@ export function simulateDay(state: GameState): GameState {
   const { taxIncome, industryIncome } = getDailyIncomeParts(
     working.stats,
     working.taxRate,
-    efficiencyMultiplier *
-      lawEffects.incomeMultiplier *
-      nationEffects.incomeMultiplier *
-      researchEffects.incomeMultiplier *
-      synergyEffects.incomeMultiplier *
-      getDiplomacyIncomeMultiplier(working.foreignPolitics),
+    efficiencyMultiplier * mods.incomeMultiplier * getDiplomacyIncomeMultiplier(working.foreignPolitics),
   );
   const grossIncome = taxIncome + industryIncome;
-  const { workforce, laidOff } = layOffUntilAffordable(working.workforce, working.stats.treasury + grossIncome);
+  const { workforce, laidOff } = layOffUntilAffordable(working.workforce, working.stats.treasury + grossIncome, mods.wageMultiplier);
   if (laidOff > 0) {
     events.unshift({
       id: generateId("event"),
       date: state.date,
-      message: `The treasury can't cover salaries — ${laidOff} unpaid staff walk off the job.`,
+      message: `The treasury can't cover wages, and ${laidOff} unpaid staff walk off the job.`,
       severity: "warning",
     });
   }
-  const salaries = getDailySalaries(workforce);
+  const salaries = getDailySalaries(workforce, mods.wageMultiplier);
   const income = grossIncome - salaries;
   const treasury = working.stats.treasury + income;
   ledger = book(ledger, "treasury", { taxes: taxIncome, industry: industryIncome, salaries: -salaries });
 
   // 4. Food: production (farms + processed Grain/Fish) vs consumption.
-  const { newFoodStock, isShortage } = updateFood(working.stats, labour.staffed.farms, season, processedFood, researchEffects.winterFarmMultiplier);
-  const farmFood = produceFood(labour.staffed.farms, season, researchEffects.winterFarmMultiplier);
+  const { newFoodStock, isShortage } = updateFood(working.stats, labour.staffed.farms, season, processedFood, mods);
+  const farmFood = produceFood(labour.staffed.farms, season, mods);
   // What was actually eaten — in a shortage, less than people needed.
   const eaten = working.stats.food + farmFood + processedFood - newFoodStock;
   ledger = book(ledger, "food", { farms: farmFood, processing: processedFood, eating: -eaten });
@@ -364,15 +354,10 @@ export function simulateDay(state: GameState): GameState {
   // 5. Industry output (derived from factories, scaled by laws + the research
   // tree) — and by unrest: discontent slows it, strikes stop factories.
   const industry =
-    calculateIndustryOutput(labour.staffed.factories) *
-    lawEffects.industryMultiplier *
-    nationEffects.industryMultiplier *
-    researchEffects.industryMultiplier *
-    synergyEffects.industryMultiplier *
-    getUnrestIndustryMultiplier(working.unrestStage, workforce.police);
+    calculateIndustryOutput(labour.staffed.factories) * mods.industryMultiplier * getUnrestIndustryMultiplier(working.unrestStage, workforce.police);
 
   // 6. Political power accumulates, faster for a popular government.
-  const politicalPower = working.stats.politicalPower + calculateDailyPoliticalPower(working.stats.popularity, researchEffects.politicalPowerMultiplier);
+  const politicalPower = working.stats.politicalPower + calculateDailyPoliticalPower(working.stats.popularity, mods.politicalPowerMultiplier);
 
   // 7. Stability reacts to food shortages, popularity, heavy debt, people
   // without homes and homes without heat; police on the payroll steady it.
@@ -386,7 +371,8 @@ export function simulateDay(state: GameState): GameState {
   const stability = Math.min(
     100,
     updateStability(statsWithFood, isShortage, debtStabilityPenalty + homelessStabilityPenalty + coldStabilityPenalty + provinceRiotDrag) +
-      policeStabilityBonus,
+      policeStabilityBonus +
+      mods.stabilityPerDay,
   );
   const stabilityPressures = getStabilityPressures(statsWithFood, isShortage);
   ledger = book(
@@ -401,6 +387,7 @@ export function simulateDay(state: GameState): GameState {
         cold: -coldStabilityPenalty,
         provinces: -provinceRiotDrag,
         police: policeStabilityBonus,
+        policy: mods.stabilityPerDay,
       },
       stability - working.stats.stability,
     ),
@@ -447,6 +434,9 @@ export function simulateDay(state: GameState): GameState {
     unheatedShare: heating.unheatedShare,
     unemploymentShare: labour.unemploymentShare,
     stability,
+    taxTolerance: mods.taxTolerance,
+    hardship: mods.hardshipMultiplier,
+    policy: mods.supportTarget,
   };
   const popularityTarget = getPopularityTarget(popularityConditions);
   const debtPopularityPenalty = getDebtPopularityPenalty(debt);
@@ -500,8 +490,8 @@ export function simulateDay(state: GameState): GameState {
         date: state.date,
         message:
           change.to === "riots"
-            ? `Riots in ${name}! Too many there have no home or no work. Build there, or crack down — it drags the whole country down.`
-            : `Strikes in ${name} — too many there have no home or no work.`,
+            ? `Riots in ${name}! Too many there have no home or no work. Build there, or crack down: it drags the whole country down.`
+            : `Strikes in ${name}. Too many there have no home or no work.`,
         severity: change.to === "riots" ? "danger" : "warning",
       });
     } else if (change.from === "riots" && isLocalTrouble(change.from, unrestStage)) {
@@ -514,7 +504,7 @@ export function simulateDay(state: GameState): GameState {
     events.unshift({
       id: generateId("event"),
       date: state.date,
-      message: "The homes are full — families are sleeping rough. Build more homes.",
+      message: "The homes are full and families are sleeping rough. Build more homes.",
       severity: "warning",
     });
   }
@@ -601,7 +591,7 @@ export function simulateDay(state: GameState): GameState {
       events.unshift({
         id: generateId("event"),
         date,
-        message: `${nation.name} changes government: the ${newParty.name} takes power${friendly ? " — a friendly government, trade terms improve." : "."}`,
+        message: `${nation.name} changes government: the ${newParty.name} takes power${friendly ? ". A friendly government: trade terms improve." : "."}`,
         severity: friendly ? "info" : "warning",
       });
     }
@@ -619,8 +609,8 @@ export function simulateDay(state: GameState): GameState {
         date,
         message:
           move.supportDelta > 0
-            ? `${nation.name}'s ${party.name} campaigns for you across the border — support +${move.supportDelta}.`
-            : `${nation.name}'s ${party.name} is funding your opposition — support ${move.supportDelta}.`,
+            ? `${nation.name}'s ${party.name} campaigns for you across the border: support +${move.supportDelta}.`
+            : `${nation.name}'s ${party.name} is funding your opposition: support ${move.supportDelta}.`,
         severity: move.supportDelta > 0 ? "info" : "warning",
       });
     }
@@ -650,11 +640,11 @@ export function simulateDay(state: GameState): GameState {
       if (electionsWon >= ELECTIONS_TO_WIN_GAME) {
         isGameOver = true;
         outcome = "victory";
-        gameOverReason = `${party.name} has won the people's trust for good — a mandate no rival can challenge.`;
+        gameOverReason = `${party.name} has won the people's trust for good, a mandate no rival can challenge.`;
         events.unshift({
           id: generateId("event"),
           date,
-          message: `${party.name} wins the general election outright — ${electionsWon} elections running. Victory!`,
+          message: `${party.name} wins the general election outright: ${electionsWon} elections running. Victory!`,
           severity: "info",
         });
       } else {

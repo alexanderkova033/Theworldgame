@@ -3,7 +3,7 @@
 // - Build: what to build where, what's underway, what needs repairing
 // - People: homes, jobs and heating, nationally and province by province
 // - Staff: scientists and police on the payroll
-// - Budget: taxes, and what the country produces each day
+// - Budget: the day's money in and out, the tax lever, and food
 // Each tab says at a glance how its section stands, with a "!" when
 // something there needs the player; the advisor strip and toasts open the
 // right section directly (see App.tsx).
@@ -15,7 +15,7 @@ import type { GameState } from "../../domain/country/types";
 import { getTotalScientists } from "../../domain/workforce/workforceRules";
 import { formatCompact, formatSignedChange } from "../formatNumber";
 import { ActionsPanel } from "./ActionsPanel";
-import { CauseBreakdown } from "./CauseBreakdown";
+import { BudgetPanel } from "./BudgetPanel";
 import { NavIcon } from "./NavIcon";
 import { PeoplePanel } from "./PeoplePanel";
 import { ProductionPanel } from "./ProductionPanel";
@@ -75,9 +75,9 @@ function sectionTabs(state: GameState, production: DailyProductionSummary, provi
       key: "budget",
       label: "Budget",
       icon: <StatIcon type="treasury" size={22} />,
-      alert: production.totalIncome < 0,
-      badge: `${formatSignedChange(production.totalIncome)}/d`,
-      hint: `Net ${formatSignedChange(production.totalIncome)} ${CURRENCY_SYMBOL} a day after wages`,
+      alert: production.netTreasury < 0,
+      badge: `${formatSignedChange(production.netTreasury)}/d`,
+      hint: `Net ${formatSignedChange(production.netTreasury)} ${CURRENCY_SYMBOL} a day after wages and building`,
     },
   ];
 }
@@ -89,7 +89,7 @@ export function EconomyPanel({ state, dispatch, production, provinces, selectedP
 
       {section === "build" && (
         <div className="economy-modal">
-          <ActionsPanel state={state} selectedProvinceId={selectedProvinceId} dispatch={dispatch} />
+          <ActionsPanel state={state} selectedProvinceId={selectedProvinceId} dispatch={dispatch} provinces={provinces} onSelectProvince={onSelectProvince} />
           <div className="economy-modal__side">
             <ProjectsPanel state={state} />
             <RepairsPanel state={state} dispatch={dispatch} />
@@ -98,7 +98,7 @@ export function EconomyPanel({ state, dispatch, production, provinces, selectedP
       )}
 
       {section === "people" && (
-        <div className="economy-modal__single">
+        <div className="economy-modal__single economy-modal__single--wide">
           <PeoplePanel
             state={state}
             production={production}
@@ -106,6 +106,7 @@ export function EconomyPanel({ state, dispatch, production, provinces, selectedP
             selectedProvinceId={selectedProvinceId}
             onSelectProvince={onSelectProvince}
             onOpenPanel={onOpenPanel}
+            onBuild={() => onSection("build")}
           />
         </div>
       )}
@@ -118,16 +119,11 @@ export function EconomyPanel({ state, dispatch, production, provinces, selectedP
 
       {section === "budget" && (
         <div className="economy-modal economy-modal--even">
+          <BudgetPanel state={state} production={production} onSection={onSection} />
           <div className="economy-modal__side">
             <TaxPanel state={state} production={production} dispatch={dispatch} />
-            {/* Where yesterday's money came from and went: the monthly
-                report's bars, for a single day. */}
-            <section className="panel">
-              <h2>Money per day</h2>
-              <CauseBreakdown ledger={state.lastDayLedger} metric="treasury" title="Last day" perDay />
-            </section>
+            <ProductionPanel state={state} production={production} />
           </div>
-          <ProductionPanel production={production} />
         </div>
       )}
     </div>

@@ -1,0 +1,252 @@
+/* The daily budget as a page of accounts (see BudgetPanel.tsx): the day's
+   balance set large at the head, then money in and money out, ruled like a
+   ledger, the balance closed off with a double rule as a clerk would. */
+
+/* --- The balance, big ---------------------------------------------------- */
+.budget-sheet__balance {
+  display: grid;
+  grid-template-columns: auto minmax(8rem, 1fr);
+  grid-template-areas:
+    "label bars"
+    "value bars";
+  align-items: center;
+  column-gap: 1.25rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--paper);
+  border: 1px solid var(--rule-dark);
+  border-left: 6px solid var(--success);
+  border-radius: 6px;
+}
+
+.budget-sheet__balance.is-loss {
+  border-left-color: var(--danger);
+}
+
+.budget-sheet__balance-label {
+  grid-area: label;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ink-muted);
+}
+
+.budget-sheet__balance-value {
+  grid-area: value;
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  line-height: 1.1;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.budget-sheet__balance.is-gain .budget-sheet__balance-value {
+  color: var(--success);
+}
+
+.budget-sheet__balance.is-loss .budget-sheet__balance-value {
+  color: var(--danger);
+}
+
+.budget-sheet__unit {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.budget-sheet__bars {
+  grid-area: bars;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.budget-sheet__bar-row {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--ink-muted);
+}
+
+.budget-sheet__bar {
+  display: flex;
+  height: 0.9rem;
+  border-radius: 999px;
+  background: var(--paper-deep);
+  border: 1px solid var(--rule);
+  overflow: hidden;
+}
+
+/* One stretch per line of the ledger; pointing at either lights both. */
+.budget-sheet__bar-fill {
+  display: block;
+  height: 100%;
+  transition: opacity 0.15s ease, width 0.3s ease;
+}
+
+.budget-sheet__bar-fill + .budget-sheet__bar-fill {
+  border-left: 2px solid var(--paper);
+}
+
+.budget-sheet__bar-fill.is-dim {
+  opacity: 0.35;
+}
+
+.budget-sheet__bar-fill.is-focus {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+.budget-sheet__bar-fill.is-gain {
+  background: var(--wash-good);
+  box-shadow: inset 0 0 0 1px var(--success);
+}
+
+.budget-sheet__bar-fill.is-loss {
+  background: var(--wash-bad);
+  box-shadow: inset 0 0 0 1px var(--danger);
+}
+
+/* --- The accounts -------------------------------------------------------- */
+.budget-sheet__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-sheet__section th,
+.budget-sheet__section td {
+  padding: 0.7rem 0 0.3rem;
+  border-bottom: 1px solid var(--rule-dark);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: left;
+  color: var(--oxblood);
+  letter-spacing: 0.03em;
+}
+
+.budget-sheet__section td {
+  text-align: right;
+}
+
+.budget-sheet__line td,
+.budget-sheet__line th {
+  padding: 0.45rem 0;
+  border-bottom: 1px solid rgba(122, 92, 52, 0.35);
+  vertical-align: middle;
+}
+
+.budget-sheet__line {
+  transition: background 0.15s ease;
+}
+
+.budget-sheet__line.is-focus {
+  background: var(--paper-raised);
+}
+
+.budget-sheet__line.is-focus .budget-sheet__icon {
+  box-shadow: inset 4px 0 0 var(--oxblood);
+}
+
+.budget-sheet__line[title] {
+  cursor: help;
+}
+
+.budget-sheet__icon {
+  width: 2rem;
+  padding-left: 0.2rem;
+}
+
+.budget-sheet__icon svg {
+  display: block;
+}
+
+.budget-sheet__label {
+  text-align: left;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.budget-sheet__detail {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+/* To the section where this line is changed. */
+.budget-sheet__go {
+  margin-left: 0.5rem;
+  min-height: 0;
+  padding: 0 0.45rem;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.budget-sheet__value {
+  text-align: right;
+  padding-right: 0.2rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.budget-sheet__total th,
+.budget-sheet__total td {
+  padding: 0.6rem 0 0.4rem;
+  border-top: 1px solid var(--ink);
+  border-bottom: 3px double var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-align: left;
+}
+
+.budget-sheet__total td {
+  text-align: right;
+}
+
+.budget-sheet__table .is-gain {
+  color: var(--success);
+}
+
+.budget-sheet__table .is-loss {
+  color: var(--danger);
+}
+
+/* --- The treasury, and where it's heading -------------------------------- */
+.budget-sheet__outlook {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
+  margin: 0.9rem 0 0;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-sheet__outlook svg {
+  display: block;
+}
+
+.budget-sheet__outlook .is-loss {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.budget-sheet__outlook .is-gain {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.budget-sheet__debt {
+  margin-left: auto;
+  color: var(--danger);
+  font-weight: 700;
+}

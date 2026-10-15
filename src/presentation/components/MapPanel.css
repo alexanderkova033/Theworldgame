@@ -16,13 +16,27 @@
   min-height: 0;
   display: flex;
   overflow: hidden;
-  background: #b8bfa5;
+  background: #9fb096;
 }
 
 /* Drawn half a stage past every edge and kept on its own layer, so a drag
    or wheel slides and scales the finished picture (see MapPanel's
    previewView) and the chart is only redrawn once the gesture ends. The
    transform's origin is the stage's top-left corner. */
+/* The chart sits in a frame of the same green silk as the top bar, ruled
+   in gilt — so map, bar and panels read as one piece of furniture. Drawn
+   over the chart's edge, under its controls, and never in the way of a
+   click. */
+.map-panel__stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border: 7px solid var(--bar);
+  box-shadow: inset 0 0 0 1px var(--gilt), inset 0 0 0 4px rgba(210, 187, 142, 0.35), inset 0 0 0 5px rgba(122, 92, 52, 0.55);
+}
+
 .map-panel__svg {
   position: absolute;
   left: -50%;
@@ -83,7 +97,7 @@
 /* --- The sea ------------------------------------------------------------- */
 
 .map-panel__sea {
-  fill: #b8bfa5;
+  fill: #9fb096;
 }
 
 .map-panel__waterline {
@@ -94,7 +108,7 @@
 
 .map-panel__waterline-gap {
   fill: none;
-  stroke: #b8bfa5;
+  stroke: #9fb096;
   stroke-linejoin: round;
 }
 
@@ -487,6 +501,13 @@
   font-family: var(--font-display);
   font-weight: 700;
   color: var(--oxblood);
+}
+
+.map-panel__legend-note {
+  flex-basis: 100%;
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: var(--ink-muted);
 }
 
 .map-panel__legend-item:not(.is-present) svg {

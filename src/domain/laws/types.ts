@@ -1,3 +1,4 @@
+import type { PolicyEffects, PolicyLinks, TreeTier } from "../policy/modifiers";
 import type { ResourceType } from "../resources/types";
 
 // Laws: a branching tree, Frostpunk's "Book of Laws" crossed with a HOI4
@@ -9,7 +10,7 @@ import type { ResourceType } from "../resources/types";
 // with a pass chance nudged by how popular your party currently is — and
 // even a "yes" costs real treasury (and sometimes a resource), deducted only
 // once the vote actually passes — see enactCost below.
-export type LawCategory = "labor" | "sustenance" | "order";
+export type LawCategory = "labor" | "sustenance" | "order" | "revenue";
 
 // The stat a node's quota is measured against.
 export type QuotaStat = "treasury" | "population" | "food" | "industry" | "stability" | "popularity";
@@ -19,18 +20,8 @@ export interface LawQuota {
   threshold: number;
 }
 
-export interface LawEffects {
-  // Ongoing, applied every day for as long as the law is in effect (folded
-  // into the same multiplier composition roads/research already use).
-  incomeMultiplier?: number;
-  industryMultiplier?: number;
-  // One-time, applied once when the vote actually passes.
-  treasuryDelta?: number;
-  foodDelta?: number;
-  stabilityDelta?: number;
-  populationDelta?: number;
-  popularityDelta?: number;
-}
+// Ongoing modifiers plus one-time deltas, the same shape research uses.
+export type LawEffects = PolicyEffects;
 
 // What it actually costs to put a node to a vote in the first place —
 // distinct from `effects.treasuryDelta`, which is the law's own one-time
@@ -39,7 +30,7 @@ export interface LawEffects {
 // stays the existing popularity penalty, no double punishment for bad luck.
 export interface LawEnactCost {
   treasury: number;
-  politicalPower: number; // tier-scaled: 20/40/60/90 — see POLITICAL_POWER_* in constants.ts
+  politicalPower: number; // tier-scaled, see LAW_POLITICAL_POWER_BY_TIER in constants.ts
   resourceType?: ResourceType;
   resourceAmount?: number;
 }
@@ -52,15 +43,13 @@ export interface LawCrossRequirement {
   nodeId: string;
 }
 
-export interface LawNode {
+export interface LawNode extends PolicyLinks {
   id: string;
   category: LawCategory;
-  tier: 1 | 2 | 3 | 4; // depth in the branch; tier 1 is the root, always reachable once its quota is met; tier 4 is a capstone
+  tier: TreeTier; // depth in the branch, which is also its row on the tree; tier 7 holds the capstones
   quota: LawQuota;
   name: string;
   description: string;
-  benefit: string;
-  cost: string;
   enactCost: LawEnactCost;
   crossRequirement?: LawCrossRequirement;
   effects: LawEffects;

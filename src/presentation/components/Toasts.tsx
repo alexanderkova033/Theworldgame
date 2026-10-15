@@ -38,7 +38,7 @@ function toastFromEvent(event: GameEvent): Toast | null {
       key: event.id,
       kind: "breakdown",
       title: "Breakdown",
-      message: event.message.replace(" — repair it from the Economy tab.", "."),
+      message: event.message.replace(" Repair it from the Economy tab.", ""),
       action: action ?? { label: "Repair", panel: "economy", section: "build" },
     };
   }
@@ -69,7 +69,7 @@ function toastFromReport(report: MonthlyReport): Toast {
   return {
     key: report.id,
     kind: "report",
-    title: `Report — ${formatMonthYear(getReportedMonth(report.date))}`,
+    title: `Report for ${formatMonthYear(getReportedMonth(report.date))}`,
     message: reportHeadline(report),
     action: { label: "Why?", panel: "reports" },
   };
@@ -144,7 +144,7 @@ export function Toasts({ events, monthlyReports, isPaused, onOpenPanel }: Toasts
   if (toasts.length === 0) return null;
 
   return (
-    <div className="toasts" role="status" aria-live="polite">
+    <div className="toasts surface-leather" role="status" aria-live="polite">
       {toasts.map((toast) => (
         <div key={toast.key} className={`toast toast--${toast.kind}`}>
           <span className="toast__icon">

@@ -1,19 +1,28 @@
 // The parts the Laws and Research trees have in common. Both are the same
-// interaction — a three-column, four-tier fork tree of icon badges, with an
-// inspector underneath the one you picked and a vote to enact it — and used
-// to be two near-identical 370-line files. Everything shape-related lives
-// here; each panel keeps only its own domain wiring (statuses, costs, gates)
-// and hands the rest over.
+// interaction: a branch of icon badges in seven rows, a shared root that
+// splits into three lanes (one per path), joined by lines from each node to
+// the ones it opens, with the picked node's details beside it.
+// Everything shape-related lives here; each panel keeps only its own domain
+// wiring (statuses, costs, gates) and hands the rest over.
+//
+// Each node says where it stands in words under its name ("Ready to vote",
+// "Needs food 200k"), and the panels show the picked node's details beside
+// the tree rather than under it, so nothing has to be clicked to learn why a
+// padlock is there, and nothing opens out of sight.
 //
 // Styling for all of it is LawsPanel.css, which both panels import.
-import type { CSSProperties, ReactNode } from "react";
+import "./LawsPanel.css";
+import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import type { TreeHint } from "../../application/getTreeHints";
+import { combineEffects, describeEffects, TREE_TIERS, type EffectKey, type PolicyEffects, type TreePath } from "../../domain/policy/modifiers";
+import { AdvisorAlertIcon } from "./AdvisorStrip";
 import { BuildingGlyph, FlameIcon, SnowflakeIcon } from "./CauseIcon";
 import { NavIcon } from "./NavIcon";
+import { NodeGlyph } from "./NodeGlyph";
 import { WrenchIcon } from "./RepairsPanel";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import type { Synergy } from "../../domain/synergy/synergyData";
 
-export const TIERS = [1, 2, 3, 4] as const;
 
 // Both trees carry the same status vocabulary; Research simply never
 // produces "locked-quota" (it has no country-condition gate).
@@ -22,6 +31,7 @@ export type TreeNodeStatus =
   | "in-progress"
   | "available"
   | "foreclosed"
+  | "locked-party"
   | "locked-prerequisite"
   | "locked-cross"
   | "locked-quota";
@@ -31,30 +41,15 @@ export interface TreeNode {
   id: string;
   tier: number;
   name: string;
-  icon: string; // a StatIconType name — domain/ deliberately doesn't import presentation/
+  icon: string; // a StatIconType name; domain/ deliberately doesn't import presentation/
+  requires?: string[]; // the nodes that open this one: a line is drawn from each
+  ideology?: string; // only open to one kind of party: marked on the badge
+  path?: string; // the lane it sits in; none = the branch's shared root
+  category?: string; // its branch: sets the colour wash on its picture
 }
 
-// LawEffects and ResearchEffects are structurally identical; this is that
-// shared shape, so the icon derivation below serves both.
-export interface TreeEffects {
-  incomeMultiplier?: number;
-  industryMultiplier?: number;
-  housingCapacityMultiplier?: number;
-  heatingMultiplier?: number;
-  farmJobsMultiplier?: number;
-  factoryJobsMultiplier?: number;
-  winterFarmMultiplier?: number;
-  breakdownMultiplier?: number;
-  repairCostMultiplier?: number;
-  buyPriceMultiplier?: number;
-  politicalPowerMultiplier?: number;
-  pressureMultiplier?: number;
-  treasuryDelta?: number;
-  foodDelta?: number;
-  stabilityDelta?: number;
-  populationDelta?: number;
-  popularityDelta?: number;
-}
+// Both trees' effects share one shape (see domain/policy).
+export type TreeEffects = PolicyEffects;
 
 export function CheckBadge() {
   return (
@@ -90,51 +85,40 @@ function XBadge() {
   );
 }
 
-// Legs are spread evenly between 22%/78%, so a 2-way fork looks exactly as
-// it did before this stopped assuming there were only ever two.
-function TierConnector({ legCount }: { legCount: number }) {
-  const legPositions = legCount === 1 ? [50] : Array.from({ length: legCount }, (_, i) => 22 + i * (56 / (legCount - 1)));
-  return (
-    <div className="law-tree__connector">
-      <div className="law-tree__connector-stem" />
-      {legCount > 1 && (
-        <div className="law-tree__connector-fork">
-          <div className="law-tree__connector-bar" />
-          {legPositions.map((left, i) => (
-            <div className="law-tree__connector-leg" style={{ left: `${left}%` }} key={i} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // `progress` (0..1) only matters for an in-progress node — it fills the
 // ring drawn around its badge, so how far along it is reads straight off the
 // tree without opening the inspector.
 function NodeBadge({
   node,
   status,
+  statusLabel,
   progress,
   isSelected,
+  hint,
   onSelect,
 }: {
   node: TreeNode;
   status: TreeNodeStatus;
+  statusLabel?: string;
   progress: number;
   isSelected: boolean;
+  hint?: TreeHint;
   onSelect: () => void;
 }) {
   const isLocked = status.startsWith("locked-");
+  const label = [node.name, statusLabel, hint && `helps with ${hint.text}`].filter(Boolean).join(": ");
   return (
     <button
       type="button"
-      className={`law-node law-node--${status} ${isSelected ? "is-selected" : ""}`}
+      data-node-id={node.id}
+      className={`law-node law-node--${status} ${isSelected ? "is-selected" : ""} ${node.ideology ? "is-party" : ""}`}
       onClick={onSelect}
-      title={node.name}
+      aria-pressed={isSelected}
+      aria-label={label}
     >
       <span className="law-node__icon" style={{ "--progress": `${Math.round(progress * 100)}%` } as CSSProperties}>
-        <StatIcon type={node.icon as StatIconType} size={26} />
+        <NodeGlyph id={node.id} category={node.category} icon={node.icon} size={34} />
+        {hint && <HintMarker hint={hint} />}
         {status === "enacted" && (
           <span className="law-node__badge law-node__badge--enacted">
             <CheckBadge />
@@ -157,30 +141,235 @@ function NodeBadge({
         )}
       </span>
       <span className="law-node__name">{node.name}</span>
+      {node.ideology && <span className="law-node__party">Your party only</span>}
+      {statusLabel && <span className="law-node__status">{statusLabel}</span>}
     </button>
+  );
+}
+
+// A small marker on a node that would help with one of the problems the
+// advisor is warning about, in the advisor's own picture for it.
+function HintMarker({ hint }: { hint: TreeHint }) {
+  return (
+    <span className="law-node__hint" title={`Helps with ${hint.text}`}>
+      <AdvisorAlertIcon kind={hint.kind} />
+    </span>
+  );
+}
+
+// How a line between two nodes reads: the path already walked, the way
+// open next, a way closed off for good, or simply ahead.
+type LinkState = "taken" | "open" | "closed" | "ahead";
+
+function linkState(parent: TreeNodeStatus, child: TreeNodeStatus): LinkState {
+  if (parent === "foreclosed" || child === "foreclosed") return "closed";
+  if (parent === "enacted" && (child === "enacted" || child === "in-progress")) return "taken";
+  if (parent === "enacted") return "open";
+  return "ahead";
+}
+
+interface Link {
+  key: string;
+  d: string;
+  state: LinkState;
+}
+
+const NUMERALS = ["", "I", "II", "III", "IV", "V", "VI", "VII"];
+
+// Grid row for a tier: the root on row 1, the path names on row 2, then
+// tiers 2 to 7 below them.
+function gridRowOf(tier: number): number {
+  return tier === 1 ? 1 : tier + 1;
+}
+
+// How a whole lane reads: the path you're on, a path closed off for good,
+// or still open to choose.
+function laneState(head: TreeNodeStatus | undefined): "taken" | "closed" | "open" {
+  if (head === "enacted" || head === "in-progress") return "taken";
+  if (head === "foreclosed") return "closed";
+  return "open";
+}
+
+// One branch, as a grid: the shared root across the top, then a lane per
+// path under its name, a numbered row per tier, and a line from every node
+// to each node it opens. The lines are measured from where the badges
+// actually landed, so they follow the layout at any width.
+function TreeBranch<N extends TreeNode>({
+  nodes,
+  paths,
+  getStatus,
+  getProgress,
+  getStatusLabel,
+  getHint,
+  getPathHint,
+  selectedId,
+  selectedPathKey,
+  onSelect,
+  onSelectPath,
+}: {
+  nodes: N[];
+  paths: TreePath[];
+  getStatus: (node: N) => TreeNodeStatus;
+  getProgress: (node: N) => number;
+  getStatusLabel?: (node: N) => string;
+  getHint?: (node: N) => TreeHint | undefined;
+  getPathHint?: (path: TreePath) => TreeHint | undefined;
+  selectedId: string | null;
+  selectedPathKey: string | null;
+  onSelect: (nodeId: string) => void;
+  onSelectPath: (pathKey: string) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [links, setLinks] = useState<Link[]>([]);
+  // Stands in for the nodes and their statuses as the effect's dependency.
+  const statusKey = nodes.map((n) => `${n.id}:${getStatus(n)}`).join(",");
+
+  useLayoutEffect(() => {
+    const box = ref.current;
+    if (!box) return;
+    const measure = () => {
+      const origin = box.getBoundingClientRect();
+      // Lines leave from under a node's whole badge (its name and status
+      // included) and arrive at the top of the next one's icon.
+      const spot = (id: string) => {
+        const badge = box.querySelector<HTMLElement>(`[data-node-id="${id}"]`);
+        const icon = badge?.querySelector<HTMLElement>(".law-node__icon");
+        if (!badge || !icon) return null;
+        const b = badge.getBoundingClientRect();
+        const i = icon.getBoundingClientRect();
+        return { x: i.left + i.width / 2 - origin.left, top: i.top - origin.top, bottom: b.bottom - origin.top };
+      };
+      // Lines out of the root turn above the path names and drop straight
+      // into their own lane, so none of them cuts across another lane's name.
+      const headTop = box.querySelector(".law-tree__lane-head")?.getBoundingClientRect().top;
+      const elbowY = (fromBottom: number) => (headTop === undefined ? null : (fromBottom + headTop - origin.top) / 2);
+      const shown = new Map(nodes.map((n) => [n.id, n]));
+      const next: Link[] = [];
+      for (const child of nodes) {
+        for (const parentId of child.requires ?? []) {
+          const parent = shown.get(parentId);
+          const from = parent ? spot(parentId) : null;
+          const to = spot(child.id);
+          if (!parent || !from || !to) continue;
+          const bend = parent.tier === 1 ? elbowY(from.bottom) : null;
+          const dx = to.x - from.x;
+          let d: string;
+          if (bend !== null && Math.abs(dx) > 24) {
+            const r = 10 * Math.sign(dx);
+            d = `M${from.x},${from.bottom} V${bend - 10} Q${from.x},${bend} ${from.x + r},${bend} H${to.x - r} Q${to.x},${bend} ${to.x},${bend + 10} V${to.top - 2}`;
+          } else {
+            const midY = (from.bottom + to.top) / 2;
+            d = `M${from.x},${from.bottom} C${from.x},${midY} ${to.x},${midY} ${to.x},${to.top - 2}`;
+          }
+          next.push({ key: `${parentId}>${child.id}`, d, state: linkState(getStatus(parent), getStatus(child)) });
+        }
+      }
+      // Closed lines first, so the live ones are drawn over them.
+      const order: LinkState[] = ["closed", "ahead", "open", "taken"];
+      setLinks(next.sort((a, b) => order.indexOf(a.state) - order.indexOf(b.state)));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [statusKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const badge = (node: N) => (
+    <NodeBadge
+      key={node.id}
+      node={node}
+      status={getStatus(node)}
+      statusLabel={getStatusLabel?.(node)}
+      progress={getProgress(node)}
+      isSelected={selectedId === node.id}
+      hint={getHint?.(node)}
+      onSelect={() => onSelect(node.id)}
+    />
+  );
+  const lanes = paths.map((path, index) => {
+    const head = nodes.find((n) => n.path === path.key && n.tier === 2);
+    const state = laneState(head && getStatus(head));
+    return { path, column: index + 2, state, hint: state === "open" ? getPathHint?.(path) : undefined };
+  });
+
+  return (
+    <div className="law-tree__branch" ref={ref} style={{ gridTemplateColumns: `1.75rem repeat(${paths.length}, minmax(0, 1fr))` }}>
+      {/* The lane bands go first, so the lines are drawn over them. */}
+      {lanes.map((lane) => (
+        <div key={`band-${lane.path.key}`} className={`law-tree__lane is-${lane.state}`} style={{ gridColumn: lane.column, gridRow: "2 / -1" }} />
+      ))}
+      <svg className="law-tree__links" aria-hidden="true">
+        {links.map((link) => (
+          <path key={link.key} d={link.d} className={`law-tree__link is-${link.state}`} />
+        ))}
+      </svg>
+      {TREE_TIERS.map((tier) => (
+        <span key={`tier-${tier}`} className="law-tree__tier" style={{ gridRow: gridRowOf(tier) }} aria-hidden="true">
+          {NUMERALS[tier]}
+        </span>
+      ))}
+      <div className="law-tree__cell law-tree__cell--root" style={{ gridColumn: "2 / -1", gridRow: 1 }}>
+        {nodes.filter((n) => n.tier === 1).map(badge)}
+      </div>
+      {lanes.map((lane) => (
+        <button
+          type="button"
+          key={`head-${lane.path.key}`}
+          className={`law-tree__lane-head is-${lane.state} ${selectedPathKey === lane.path.key ? "is-selected" : ""}`}
+          style={{ gridColumn: lane.column, gridRow: 2 }}
+          title={`${lane.path.motto}. Click to see the whole path.`}
+          aria-pressed={selectedPathKey === lane.path.key}
+          onClick={() => onSelectPath(lane.path.key)}
+        >
+          <StatIcon type={lane.path.icon as StatIconType} size={18} />
+          {lane.path.name}
+          {lane.state === "closed" && <XBadge />}
+          {lane.state === "taken" && <CheckBadge />}
+          {lane.hint && <HintMarker hint={lane.hint} />}
+        </button>
+      ))}
+      {lanes.flatMap((lane) =>
+        TREE_TIERS.filter((tier) => tier > 1).map((tier) => (
+          <div key={`${lane.path.key}-${tier}`} className="law-tree__cell" style={{ gridColumn: lane.column, gridRow: gridRowOf(tier) }}>
+            {nodes.filter((n) => n.path === lane.path.key && n.tier === tier).map(badge)}
+          </div>
+        )),
+      )}
+    </div>
   );
 }
 
 interface TreeColumnsProps<N extends TreeNode> {
   categories: Array<{ key: string; label: string; icon: StatIconType }>;
-  nodesFor: (categoryKey: string, tier: number) => N[];
+  nodesFor: (categoryKey: string) => N[];
+  pathsFor: (categoryKey: string) => TreePath[];
   getStatus: (node: N) => TreeNodeStatus;
   getProgress: (node: N) => number; // 0..1 — fills the ring on an in-progress node
+  getStatusLabel?: (node: N) => string; // where it stands, in a few words, under its name
   renderColumnExtra?: (categoryKey: string) => ReactNode; // shown under each column's title
+  getHint?: (node: N) => TreeHint | undefined; // a problem it would help with, marked on its badge
+  getPathHint?: (path: TreePath) => TreeHint | undefined; // the same, for a whole path, on its name
   selectedId: string | null;
+  selectedPathKey: string | null;
   onSelect: (nodeId: string) => void;
+  onSelectPath: (pathKey: string) => void;
 }
 
-// The tree proper: one column per category, one row per tier, forks drawn
-// between them.
+// The tree proper: one column per category, each split into its paths.
 export function TreeColumns<N extends TreeNode>({
   categories,
   nodesFor,
+  pathsFor,
   getStatus,
   getProgress,
+  getStatusLabel,
   renderColumnExtra,
+  getHint,
+  getPathHint,
   selectedId,
+  selectedPathKey,
   onSelect,
+  onSelectPath,
 }: TreeColumnsProps<N>) {
   return (
     <div className={`law-tree__columns ${categories.length === 1 ? "law-tree__columns--single" : ""}`}>
@@ -192,27 +381,19 @@ export function TreeColumns<N extends TreeNode>({
           </h3>
           {renderColumnExtra?.(category.key)}
 
-          {TIERS.map((tier, tierIndex) => {
-            const nodes = nodesFor(category.key, tier);
-            if (nodes.length === 0) return null;
-            return (
-              <div className="law-tree__tier" key={tier}>
-                {tierIndex > 0 && <TierConnector legCount={nodes.length} />}
-                <div className={`law-tree__row ${nodes.length > 1 ? "law-tree__row--fork" : ""}`}>
-                  {nodes.map((node) => (
-                    <NodeBadge
-                      key={node.id}
-                      node={node}
-                      status={getStatus(node)}
-                      progress={getProgress(node)}
-                      isSelected={selectedId === node.id}
-                      onSelect={() => onSelect(node.id)}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+          <TreeBranch
+            nodes={nodesFor(category.key)}
+            paths={pathsFor(category.key)}
+            getStatus={getStatus}
+            getProgress={getProgress}
+            getStatusLabel={getStatusLabel}
+            getHint={getHint}
+            getPathHint={getPathHint}
+            selectedId={selectedId}
+            selectedPathKey={selectedPathKey}
+            onSelect={onSelect}
+            onSelectPath={onSelectPath}
+          />
         </div>
       ))}
     </div>
@@ -220,40 +401,36 @@ export function TreeColumns<N extends TreeNode>({
 }
 
 // What an effect is drawn as: a stat, or the building/thing it changes.
-type EffectIconKey = StatIconType | "farm" | "factory" | "heat" | "winter" | "repairs" | "trade" | "neighbours";
+type EffectIconKey = StatIconType | "farm" | "factory" | "heat" | "winter" | "repairs" | "trade" | "neighbours" | "build";
 
-// A multiplier where less is better (fewer workers, less coal, cheaper),
-// flipped so "above 1" always means "helps".
-function flipped(multiplier: number | undefined): number {
-  return multiplier !== undefined ? 2 - multiplier : NaN;
-}
-
-// Turns a node's numeric effects into the glyphs they touch, split into
-// the ones it helps and the ones it costs — so the benefit/cost lines carry
-// matching icons instead of being two undifferentiated runs of prose.
-function effectIcons(effects: TreeEffects, wantPositive: boolean): EffectIconKey[] {
-  const entries: Array<[EffectIconKey, number, number]> = [
-    ["industry", effects.industryMultiplier ?? NaN, 1],
-    ["treasury", effects.incomeMultiplier ?? NaN, 1],
-    ["population", effects.housingCapacityMultiplier ?? NaN, 1],
-    ["heat", flipped(effects.heatingMultiplier), 1],
-    ["farm", flipped(effects.farmJobsMultiplier), 1],
-    ["factory", flipped(effects.factoryJobsMultiplier), 1],
-    ["winter", effects.winterFarmMultiplier ?? NaN, 1],
-    ["repairs", flipped(effects.breakdownMultiplier), 1],
-    ["repairs", flipped(effects.repairCostMultiplier), 1],
-    ["trade", flipped(effects.buyPriceMultiplier), 1],
-    ["politicalPower", effects.politicalPowerMultiplier ?? NaN, 1],
-    ["neighbours", effects.pressureMultiplier ?? NaN, 1],
-    ["treasury", effects.treasuryDelta ?? NaN, 0],
-    ["food", effects.foodDelta ?? NaN, 0],
-    ["stability", effects.stabilityDelta ?? NaN, 0],
-    ["population", effects.populationDelta ?? NaN, 0],
-    ["popularity", effects.popularityDelta ?? NaN, 0],
-  ];
-  const icons = entries.filter(([, value, neutral]) => !Number.isNaN(value) && value >= neutral === wantPositive).map(([icon]) => icon);
-  return icons.filter((icon, i) => icons.indexOf(icon) === i);
-}
+const EFFECT_ICONS: Record<EffectKey, EffectIconKey> = {
+  incomeMultiplier: "treasury",
+  industryMultiplier: "industry",
+  housingCapacityMultiplier: "population",
+  heatingMultiplier: "heat",
+  farmJobsMultiplier: "farm",
+  factoryJobsMultiplier: "factory",
+  farmYieldMultiplier: "food",
+  winterFarmMultiplier: "winter",
+  foodConsumptionMultiplier: "food",
+  breakdownMultiplier: "repairs",
+  repairCostMultiplier: "repairs",
+  buildCostMultiplier: "build",
+  buyPriceMultiplier: "trade",
+  wageMultiplier: "police",
+  researchMultiplier: "research",
+  politicalPowerMultiplier: "politicalPower",
+  pressureMultiplier: "neighbours",
+  hardshipMultiplier: "population",
+  taxTolerance: "treasury",
+  supportTarget: "popularity",
+  stabilityPerDay: "stability",
+  treasuryDelta: "treasury",
+  foodDelta: "food",
+  stabilityDelta: "stability",
+  populationDelta: "population",
+  popularityDelta: "popularity",
+};
 
 function EffectIcon({ icon }: { icon: EffectIconKey }) {
   switch (icon) {
@@ -270,69 +447,200 @@ function EffectIcon({ icon }: { icon: EffectIconKey }) {
       return <NavIcon type="trade" size={15} />;
     case "neighbours":
       return <NavIcon type="ventures" size={15} />;
+    case "build":
+      return <NavIcon type="economy" size={15} />;
     default:
       return <StatIcon type={icon} size={15} />;
   }
 }
 
-function EffectIcons({ icons }: { icons: EffectIconKey[] }) {
-  if (icons.length === 0) return null;
+// What a node (or a party's creed) does, as two lists: gains in green,
+// costs in red, each line with the icon of what it touches.
+export function EffectList({ effects }: { effects: TreeEffects }) {
+  const { gains, costs } = describeEffects(effects);
   return (
-    <span className="law-effect-icons">
-      {icons.map((icon) => (
-        <EffectIcon icon={icon} key={icon} />
-      ))}
-    </span>
+    <div className="law-inspector__effects">
+      {gains.length > 0 && (
+        <ul className="law-inspector__benefit">
+          {gains.map((line) => (
+            <li key={line.key}>
+              <EffectIcon icon={EFFECT_ICONS[line.key]} />
+              {line.text}
+            </li>
+          ))}
+        </ul>
+      )}
+      {costs.length > 0 ? (
+        <ul className="law-inspector__cost">
+          {costs.map((line) => (
+            <li key={line.key}>
+              <EffectIcon icon={EFFECT_ICONS[line.key]} />
+              {line.text}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <span className="law-inspector__no-cost">No drawback</span>
+      )}
+    </div>
   );
 }
 
-// Name, description, and the benefit/cost pair — the top of every inspector,
-// identical in both trees.
-export function InspectorHeader({
-  node,
-  description,
-  benefit,
-  cost,
-  effects,
-}: {
-  node: TreeNode;
-  description: string;
-  benefit: string;
-  cost: string;
-  effects: TreeEffects;
-}) {
+// Name, description, and what it does: the top of every inspector.
+export function InspectorHeader({ node, description, effects }: { node: TreeNode; description: string; effects: TreeEffects }) {
   return (
     <>
       <div className="law-inspector__header">
         <div className="law-inspector__icon">
-          <StatIcon type={node.icon as StatIconType} size={30} />
+          <NodeGlyph id={node.id} category={node.category} icon={node.icon} size={34} />
         </div>
         <div className="law-inspector__heading">
           <h4 className="law-inspector__name">{node.name}</h4>
-          <p className="law-inspector__description">{description}</p>
+          <p className="note law-inspector__description">{description}</p>
         </div>
       </div>
-
-      <div className="law-inspector__effects">
-        <span className="law-inspector__benefit">
-          <EffectIcons icons={effectIcons(effects, true)} />
-          {benefit}
-        </span>
-        <span className="law-inspector__cost">
-          <EffectIcons icons={effectIcons(effects, false)} />
-          {cost}
-        </span>
-      </div>
+      <EffectList effects={effects} />
     </>
   );
 }
 
-// "+5% industry, +5% income" from a synergy's multiplier-only effects.
+// A node in the path summary: its picture and name, a button to its details.
+function PathStep({ node, onSelect }: { node: TreeNode; onSelect: (id: string) => void }) {
+  return (
+    <button type="button" className="path-step" onClick={() => onSelect(node.id)}>
+      <NodeGlyph id={node.id} category={node.category} icon={node.icon} size={24} />
+      <span>{node.name}</span>
+    </button>
+  );
+}
+
+// A whole path at a glance, for the big choice of which one to take: what
+// it adds up to (the rows every way down it passes through), the fork in
+// its middle, where it ends, what it would help with now, and what it costs.
+export function PathInspector<N extends TreeNode>({
+  path,
+  nodes,
+  getStatus,
+  getEffects,
+  noun,
+  hints,
+  cost,
+  onSelectNode,
+}: {
+  path: TreePath;
+  nodes: N[]; // this path's nodes, as this party sees them
+  getStatus: (node: N) => TreeNodeStatus;
+  getEffects: (node: N) => TreeEffects;
+  noun: "law" | "technology";
+  hints: TreeHint[];
+  cost: ReactNode;
+  onSelectNode: (id: string) => void;
+}) {
+  const at = (tier: number) => nodes.filter((n) => n.tier === tier);
+  const head = at(2)[0];
+  const state = laneState(head && getStatus(head));
+  // The rows every way down the path passes through, ending on its own
+  // capstone (a party's capstone is the alternative to it).
+  const spine = [...at(2), ...at(3), ...at(6), ...at(7).filter((n) => !n.ideology)];
+  const forks = at(4).map((first) => ({ first, second: at(5).find((n) => n.requires?.includes(first.id)) }));
+  const capstones = at(7);
+  return (
+    <div className="law-inspector path-inspector">
+      <div className="law-inspector__header">
+        <div className="law-inspector__icon">
+          <StatIcon type={path.icon as StatIconType} size={30} />
+        </div>
+        <div className="law-inspector__heading">
+          <h4 className="law-inspector__name">{path.name}</h4>
+          <p className="note law-inspector__description">{path.motto}.</p>
+        </div>
+      </div>
+
+      {state === "taken" && <StatusLine status="enacted">You're on this path.</StatusLine>}
+      {state === "closed" && <StatusLine status="foreclosed">Closed off: you took another path.</StatusLine>}
+      {state === "open" && (
+        <StatusLine status="locked">
+          Its first {noun} closes the other two paths for good.
+        </StatusLine>
+      )}
+
+      <h5 className="path-inspector__label">All together</h5>
+      <EffectList effects={combineEffects(spine.map(getEffects))} />
+      <p className="path-inspector__aside">Rows II, III, VI and VII. The fork below adds more.</p>
+
+      <h5 className="path-inspector__label">The fork: pick one way</h5>
+      <div className="path-inspector__forks">
+        {forks.map(({ first, second }) => (
+          <div key={first.id} className="path-inspector__fork">
+            <PathStep node={first} onSelect={onSelectNode} />
+            {second && (
+              <>
+                <span className="path-inspector__then">then</span>
+                <PathStep node={second} onSelect={onSelectNode} />
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <h5 className="path-inspector__label">Where it ends</h5>
+      <div className="path-inspector__forks">
+        {capstones.map((node) => (
+          <div key={node.id} className="path-inspector__fork">
+            <PathStep node={node} onSelect={onSelectNode} />
+            {node.ideology && <span className="law-node__party">Your party only</span>}
+          </div>
+        ))}
+      </div>
+
+      {hints.length > 0 && (
+        <>
+          <h5 className="path-inspector__label">Helps with now</h5>
+          <ul className="path-inspector__hints">
+            {hints.map((hint) => (
+              <li key={hint.kind}>
+                <AdvisorAlertIcon kind={hint.kind} />
+                {hint.text}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      <div className="path-inspector__cost">{cost}</div>
+    </div>
+  );
+}
+
+// What choosing this would close off for good, in this tree and the other.
+// The whole point of a fork, so it's spelled out before the choice.
+export function Lockouts({ names }: { names: Array<{ name: string; elsewhere?: string }> }) {
+  if (names.length === 0) return null;
+  const shown = names.slice(0, 6);
+  return (
+    <div className="law-inspector__lockouts">
+      <span className="law-inspector__lockouts-label">
+        <XBadge />
+        Closes off for good
+      </span>
+      <ul>
+        {shown.map((n) => (
+          <li key={n.name}>
+            {n.name}
+            {n.elsewhere && <span className="law-inspector__elsewhere"> ({n.elsewhere})</span>}
+          </li>
+        ))}
+        {names.length > shown.length && <li>and {names.length - shown.length} more</li>}
+      </ul>
+    </div>
+  );
+}
+
+// "factories produce 5% more" from a synergy's effects.
 function formatSynergyEffect(effects: Synergy["effects"]): string {
-  const parts: string[] = [];
-  if (effects.industryMultiplier) parts.push(`+${Math.round((effects.industryMultiplier - 1) * 100)}% industry`);
-  if (effects.incomeMultiplier) parts.push(`+${Math.round((effects.incomeMultiplier - 1) * 100)}% income`);
-  return parts.join(", ");
+  return describeEffects(effects)
+    .gains.map((line) => line.text.charAt(0).toLowerCase() + line.text.slice(1))
+    .join(", ");
 }
 
 // The other half of a Law+Research pair, and what enacting both is worth.
@@ -341,8 +649,8 @@ export function SynergyLine({ synergy, partnerName, isActive }: { synergy: Syner
     <p className={`law-inspector__synergy ${isActive ? "is-active" : ""}`}>
       <StatIcon type="industry" size={14} />
       {isActive ? "Paired with " : "Pair with "}
-      <strong>{partnerName}</strong> — {formatSynergyEffect(synergy.effects)}
-      {isActive ? " active." : "."}
+      <strong>{partnerName}</strong>: {formatSynergyEffect(synergy.effects)}
+      {isActive ? " (active)." : "."}
     </p>
   );
 }
@@ -372,7 +680,7 @@ export function VoteRow({
         <span className="law-inspector__chance-bar">
           <span className="law-inspector__chance-fill" style={{ width: `${passChance}%` }} />
         </span>
-        {passChance}%
+        {passChance}% to pass
       </span>
       <button className="btn-primary law-inspector__vote-button" disabled={busy || !affordable} onClick={isArmed ? onConfirm : onArm}>
         {busy ? (
@@ -412,8 +720,9 @@ export function TreeBank({ icon, value, rate, label }: { icon: StatIconType; val
   return (
     <div className="law-tree__bank" title={`${label}: ${value.toFixed(1)}, +${rate.toFixed(2)} per day`}>
       <StatIcon type={icon} size={22} />
+      <span className="law-tree__bank-label">{label}</span>
       <span className="law-tree__bank-value">{Math.floor(value)}</span>
-      <span className="law-tree__bank-rate">+{rate.toFixed(1)}/d</span>
+      <span className="law-tree__bank-rate">+{rate.toFixed(1)} a day</span>
     </div>
   );
 }
@@ -434,7 +743,7 @@ export function WorkInProgress({
   const ratio = 1 - daysRemaining / totalDays;
   return (
     <button type="button" className="law-tree__work" onClick={onSelect} title={`${node.name}: ${daysRemaining} of ${totalDays} days left`}>
-      <StatIcon type={node.icon as StatIconType} size={20} />
+      <NodeGlyph id={node.id} category={node.category} icon={node.icon} size={22} />
       <span className="law-tree__work-name">{node.name}</span>
       <span className="law-tree__work-bar">
         <span className="law-tree__work-fill" style={{ width: `${Math.round(ratio * 100)}%` }} />

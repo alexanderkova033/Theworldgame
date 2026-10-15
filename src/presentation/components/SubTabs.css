@@ -1,22 +1,54 @@
-/* HOI4-style subtabs: one section of a tab at a time (see SubTabs.tsx). */
+/* HOI4-style subtabs: one section of a tab at a time (see SubTabs.tsx).
+   Set as a ruled index on the page: the tabs stand on one sepia rule with
+   no frames of their own; the open one is lettered in oxblood and underlined
+   with a heavy oxblood bar — weight and bar as well as colour. */
 .sub-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  margin: 0 0 0.75rem;
-  border-bottom: 2px solid var(--panel-border);
+  gap: 0.2rem;
+  margin: 0 0 1rem;
+  border-bottom: 1px solid var(--rule);
 }
 
-.sub-tab {
+.sub-tabs .sub-tab {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
   min-height: 2.6rem;
-  padding: 0.35rem 0.9rem 0.35rem 0.55rem;
-  margin-bottom: -2px;
-  border-radius: 8px 8px 0 0;
-  border-bottom-color: var(--panel-border);
+  padding: 0.4rem 0.7rem 0.5rem 0.55rem;
+  margin-bottom: -1px;
+  background: transparent;
+  border: none;
+  border-radius: 6px 6px 0 0;
   font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.sub-tabs .sub-tab::after {
+  content: "";
+  position: absolute;
+  left: 0.35rem;
+  right: 0.35rem;
+  bottom: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: transparent;
+}
+
+.sub-tabs .sub-tab:hover:not(:disabled) {
+  background: rgba(122, 92, 52, 0.13);
+  color: var(--text);
+}
+
+.sub-tabs .sub-tab:hover:not(:disabled)::after {
+  background: var(--rule);
+}
+
+.sub-tabs .sub-tab:active:not(:disabled) {
+  transform: none;
+  box-shadow: none;
 }
 
 .sub-tab svg {
@@ -24,24 +56,27 @@
   flex-shrink: 0;
 }
 
-/* The open branch joins the tree below it: gold edge, no bottom border. */
-.sub-tab.is-active {
-  background:
-    var(--grain) 0 0/70px 70px repeat,
-    linear-gradient(180deg, var(--panel-bg-raised), var(--panel-bg)) no-repeat;
-  color: var(--accent-active);
-  border-color: var(--accent-active);
-  border-bottom-color: var(--panel-bg);
-  text-shadow: none;
+.sub-tabs .sub-tab.is-active,
+.sub-tabs .sub-tab.is-active:hover:not(:disabled) {
+  background: transparent;
+  color: var(--oxblood);
+  font-weight: 700;
   box-shadow: none;
+}
+
+.sub-tabs .sub-tab.is-active::after {
+  left: 0;
+  right: 0;
+  background: var(--oxblood);
 }
 
 .sub-tab__badge {
   padding: 0.05rem 0.45rem;
   border-radius: 999px;
   background: var(--inset-strong);
-  color: var(--text-muted);
+  color: var(--ink);
   font-size: 0.8125rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
@@ -63,8 +98,4 @@
   font-size: 0.8125rem;
   font-weight: 800;
   text-shadow: none;
-}
-
-.sub-tab.is-alert:not(.is-active) {
-  border-color: var(--danger);
 }

@@ -206,7 +206,7 @@ export const DECISIONS: DecisionDefinition[] = [
   {
     id: "railway-concession",
     title: "Railway Concession",
-    prompt: "Foreign investors will build a railway — if they get the tolls for twenty years.",
+    prompt: "Foreign investors will build a railway, if they get the tolls for twenty years.",
     icon: "industry",
     options: [
       { id: "accept", label: "Accept their terms", effects: { treasuryDelta: 2200, popularityDelta: -9 } },

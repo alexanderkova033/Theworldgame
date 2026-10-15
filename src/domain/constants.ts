@@ -16,6 +16,12 @@ export const MAX_FARMS_PER_PROVINCE = 3;
 export const RESOURCE_PER_PROVINCE = 0.6; // units of matching resource produced per owned province per day
 export const COAL_PER_HILLS_PROVINCE = 0.4; // hills mine coal as well as ore — the fuel homes burn in winter
 export const STARTING_RESOURCE_STOCK = 0; // nothing in the stores — every log and ingot has to be produced or bought
+// ...except coal: the game opens on 1 January, sixty days of winter ahead, and
+// the starting homes burn about 50 coal getting through it. With none in
+// the cellar the only way to keep them warm was a loan on day one; this
+// carries the first winter with room for a few new homes, and the next
+// winter is the player's to prepare for.
+export const STARTING_COAL = 80;
 export const FARM_WOOD_COST = 15; // lumber for the barn
 export const FACTORY_ORE_COST = 22; // metal for machinery
 export const ROAD_ORE_COST = 10; // gravel for the roadbed
@@ -143,9 +149,13 @@ export const MAX_EDUCATION_PER_PROVINCE = 2;
 // it's been pointed at, at its own rate: a trickle by default, more for
 // every building in that field, and much more for every scientist hired
 // into it. Schools sharpen all three. A node is done once its area has put
-// in RESEARCH_COST_BY_TIER points of work.
-export const RESEARCH_COST_BY_TIER: Record<1 | 2 | 3 | 4, number> = { 1: 45, 2: 75, 3: 115, 4: 170 };
-export const RESEARCH_BASE_RATE_PER_AREA = 0.1; // per day, per area, with nothing invested
+// in RESEARCH_COST_BY_TIER points of work. Paced so an area with nothing in
+// it takes about two months for its root, one scientist gets a path's first
+// technology in about seven weeks, and a well-funded area (a few
+// scientists, some schools) reaches a capstone in its first one to three
+// years: 467 points from root to capstone.
+export const RESEARCH_COST_BY_TIER: Record<1 | 2 | 3 | 4 | 5 | 6 | 7, number> = { 1: 12, 2: 25, 3: 40, 4: 60, 5: 80, 6: 110, 7: 140 };
+export const RESEARCH_BASE_RATE_PER_AREA = 0.15; // per day, per area, with nothing invested
 export const RESEARCH_PER_FACTORY = 0.06; // industry — workshops tinkering on the line
 export const RESEARCH_PER_ROAD = 0.03; // industry
 export const RESEARCH_PER_FARM = 0.05; // agriculture — field trials
@@ -187,11 +197,19 @@ export const REPAIR_DAYS = 10;
 export const POLITICAL_POWER_BASE_RATE = 0.4; // per day, even at zero popularity
 export const POLITICAL_POWER_PER_POPULARITY = 0.008; // extra per day per popularity point (+0.4/day at 50%)
 // A passed law is drafted into force over this many days (one law at a time).
-export const LAW_DAYS_BY_TIER: Record<1 | 2 | 3 | 4, number> = { 1: 20, 2: 30, 3: 45, 4: 60 };
+export const LAW_DAYS_BY_TIER: Record<1 | 2 | 3 | 4 | 5 | 6 | 7, number> = { 1: 15, 2: 20, 3: 30, 4: 45, 5: 55, 6: 60, 7: 70 };
+// What putting a law to the vote costs, by its row on the tree: political
+// power, and money paid only if it passes (see LawEnactCost).
+export const LAW_POLITICAL_POWER_BY_TIER: Record<1 | 2 | 3 | 4 | 5 | 6 | 7, number> = { 1: 20, 2: 30, 3: 50, 4: 70, 5: 90, 6: 110, 7: 130 };
+export const LAW_PRICE_BY_TIER: Record<1 | 2 | 3 | 4 | 5 | 6 | 7, number> = { 1: 250, 2: 350, 3: 900, 4: 2000, 5: 2800, 6: 3400, 7: 4000 };
 
 // --- Rival party stances (see domain/parties/rivalRules.ts) ---
 export const RIVAL_OPPOSE_PASS_CHANCE_PENALTY = 0.08; // a law/research vote the rival opposes is harder to pass
 export const RIVAL_SUPPORT_PASS_CHANCE_BONUS = 0.04; // ...and easier if the rival happens to agree
+// Your own benches: solid behind a law your party believes in, a few rebels
+// against one it doesn't (see getEffectivePassChance in lawsRules.ts).
+export const OWN_PARTY_BACKING_BONUS = 0.1;
+export const OWN_PARTY_REBEL_PENALTY = 0.12;
 export const RIVAL_CAMPAIGN_CHANCE_PER_MONTH = 0.3; // rolled on the first day of every month, alongside decisions
 export const RIVAL_CAMPAIGN_POPULARITY_SWING = 2.5; // base popularity swing from a rival campaign move
 

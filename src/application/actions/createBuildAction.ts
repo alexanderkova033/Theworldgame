@@ -7,6 +7,7 @@ import { generateId } from "../../domain/country/id";
 import { canAffordResource, deductResource } from "../../domain/resources/resourceRules";
 import type { GameState } from "../../domain/country/types";
 import type { Project, ProjectType } from "../../domain/construction/types";
+import { getModifiers } from "../../domain/policy/policyRules";
 import { isBuildingUnlocked } from "../../domain/research/researchRules";
 import type { ResourceType } from "../../domain/resources/types";
 import { recordAction } from "./recordAction";
@@ -58,11 +59,17 @@ export function upfrontCost(cost: number): number {
   return Math.round(cost * 0.6);
 }
 
+// What a building costs in money today, after laws and the party's creed
+// (see domain/policy). Materials aren't affected.
+export function getBuildCost(state: GameState, baseCost: number): number {
+  return Math.round(baseCost * getModifiers(state).buildCostMultiplier);
+}
+
 export function createBuildAction(config: BuildActionConfig): BuildAction {
   function canBuild(state: GameState, provinceId: string): boolean {
     return (
       (!config.requiresResearch || isBuildingUnlocked(state.enactedResearchIds, config.type)) &&
-      canAfford(state.stats, upfrontCost(config.cost)) &&
+      canAfford(state.stats, upfrontCost(getBuildCost(state, config.cost))) &&
       canAffordResource(state.resources, config.resourceType, upfrontCost(config.resourceCost)) &&
       countBuildingsInProvince(state, config.type, provinceId) < config.maxPerProvince
     );
@@ -71,7 +78,8 @@ export function createBuildAction(config: BuildActionConfig): BuildAction {
   function build(state: GameState, provinceId: string): GameState {
     if (!canBuild(state, provinceId)) return state;
 
-    const treasuryUpfront = upfrontCost(config.cost);
+    const cost = getBuildCost(state, config.cost);
+    const treasuryUpfront = upfrontCost(cost);
     const resourceUpfront = upfrontCost(config.resourceCost);
 
     const project: Project = {
@@ -81,7 +89,7 @@ export function createBuildAction(config: BuildActionConfig): BuildAction {
       totalDays: config.buildDays,
       daysRemaining: config.buildDays,
       provinceId,
-      treasuryCostPerDay: (config.cost - treasuryUpfront) / config.buildDays,
+      treasuryCostPerDay: (cost - treasuryUpfront) / config.buildDays,
       resourceType: config.resourceType,
       resourceCostPerDay: (config.resourceCost - resourceUpfront) / config.buildDays,
       isStalled: false,

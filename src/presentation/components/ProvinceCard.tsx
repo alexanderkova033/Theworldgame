@@ -1,20 +1,19 @@
 // The province you clicked on the map, as a card docked at the map's edge:
-// its people and homes, workers and jobs, and mood — each with a "!" when
-// in trouble — one line on what it needs most, and quick-build buttons with
-// the fix for its problem first. "All buildings…" opens Economy › Build
-// already pointed at this province.
+// what it needs most, in one sentence, then a short fact sheet — its people
+// and homes, who's moving in or out, work, mood, what the land yields, and
+// what stands or is going up there. It informs rather than builds: one link
+// at the foot opens Economy › Build already pointed at this province.
 import "./ProvinceCard.css";
-import { useEffect } from "react";
-import { buildCannery, buildEducation, buildFactory, buildFarm, buildGranary, buildHousing, buildRoad, countBuildingsInProvince } from "../../application/actions";
-import { upfrontCost, type BuildAction } from "../../application/actions/createBuildAction";
+import { useEffect, type ReactNode } from "react";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
-import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { ProjectType } from "../../domain/construction/types";
+import { getSeason } from "../../domain/country/calendar";
 import type { GameState } from "../../domain/country/types";
+import type { Sector } from "../../domain/labour/labourRules";
+import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
-import { isBuildingUnlocked } from "../../domain/research/researchRules";
-import { RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
-import { playConfirm } from "../audio/sound";
+import { calculateDailyProduction, RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
+import { RESOURCE_TYPES, type ResourceType } from "../../domain/resources/types";
 import { formatCompact } from "../formatNumber";
 import { UNREST_INFO } from "../unrestStages";
 import { BuildingGlyph, UnrestStageIcon } from "./CauseIcon";
@@ -23,48 +22,81 @@ import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 import type { OpenPanel } from "./TopBar";
 
-const ACTIONS: Array<[ProjectType, BuildAction]> = [
-  ["housing", buildHousing],
-  ["farm", buildFarm],
-  ["factory", buildFactory],
-  ["education", buildEducation],
-  ["road", buildRoad],
-  ["granary", buildGranary],
-  ["cannery", buildCannery],
+const BUILDING_NAMES: Record<ProjectType, [string, string]> = {
+  housing: ["Home", "Homes"],
+  farm: ["Farm", "Farms"],
+  factory: ["Factory", "Factories"],
+  road: ["Road", "Roads"],
+  education: ["School", "Schools"],
+  granary: ["Granary", "Granaries"],
+  cannery: ["Cannery", "Canneries"],
+};
+
+const SECTOR_LABELS: Array<[Sector, string]> = [
+  ["food", "Farms & food"],
+  ["school", "Schools"],
+  ["industry", "Factories"],
 ];
 
-const QUICK_BUILD_COUNT = 4;
+function plural(count: number, type: ProjectType): string {
+  return `${count} ${BUILDING_NAMES[type][count === 1 ? 0 : 1]}`;
+}
 
-// What the province needs most, and which buildings answer it, best first.
-function getNeed(p: ProvinceOverview): { text: string; urgent: boolean; order: ProjectType[] } {
+// What the province needs most, in one sentence.
+function getNeed(p: ProvinceOverview): { text: string; urgent: boolean } {
   const status = getProvinceStatus(p);
   if (status.stage === "riots" || status.stage === "strikes") {
     const why = status.homes === "over" ? "homes" : "work";
-    return {
-      text: `${UNREST_INFO[status.stage].name} — too many here have no ${why}. Build here, or crack down.`,
-      urgent: true,
-      order: why === "homes" ? ["housing", "farm", "factory"] : ["farm", "factory", "housing"],
-    };
+    return { text: `${UNREST_INFO[status.stage].name}: too many here have no ${why}.`, urgent: true };
   }
-  if (status.homes === "over") return { text: `Needs homes — ${formatCompact(p.homeless)} without a roof.`, urgent: true, order: ["housing", "farm", "factory"] };
-  if (status.jobs === "jobless") return { text: `Needs work — ${formatCompact(p.unemployed)} jobless here.`, urgent: true, order: ["farm", "factory", "education", "housing"] };
-  if (status.homes === "full") return { text: "Homes nearly full — room to grow is running out.", urgent: false, order: ["housing", "farm", "factory"] };
-  if (status.jobs === "short") return { text: `Jobs going unfilled — ${formatCompact(p.openJobs)} open. Homes here would bring workers.`, urgent: false, order: ["housing", "farm", "factory"] };
-  return { text: "Nothing pressing.", urgent: false, order: ["housing", "farm", "factory", "education"] };
+  if (status.homes === "over") return { text: `Needs homes: ${formatCompact(p.homeless)} without a roof.`, urgent: true };
+  if (status.jobs === "jobless") return { text: `Needs work: ${formatCompact(p.unemployed)} out of work here.`, urgent: true };
+  if (status.homes === "full") return { text: "Homes nearly full. Room to grow is running out.", urgent: false };
+  if (status.jobs === "short") return { text: `Jobs going unfilled: ${formatCompact(p.openJobs)} open. Homes here would bring workers.`, urgent: false };
+  return { text: "All well. Nothing pressing here.", urgent: false };
+}
+
+function Fact({ icon, label, children, alert = false }: { icon: ReactNode; label: string; children: ReactNode; alert?: boolean }) {
+  return (
+    <div className={`province-card__fact ${alert ? "is-alert" : ""}`}>
+      <dt>
+        <span className="province-card__fact-icon" aria-hidden="true">
+          {icon}
+        </span>
+        {label}
+      </dt>
+      <dd>{children}</dd>
+    </div>
+  );
+}
+
+function ResourceGlyph({ type }: { type: ResourceType }) {
+  return (
+    <svg viewBox="-10 -10 20 20" width={16} height={16} aria-hidden="true">
+      <ResourceIcon type={type} size={8} />
+    </svg>
+  );
 }
 
 interface ProvinceCardProps {
   state: GameState;
   province: ProvinceOverview;
-  dispatch: (action: (state: GameState) => GameState) => void;
   onOpenPanel: OpenPanel;
   onClose: () => void;
 }
 
-export function ProvinceCard({ state, province, dispatch, onOpenPanel, onClose }: ProvinceCardProps) {
+export function ProvinceCard({ state, province, onOpenPanel, onClose }: ProvinceCardProps) {
   const status = getProvinceStatus(province);
   const need = getNeed(province);
   const terrain = MAP_GEOMETRY.provinces.find((p) => p.id === province.id)?.terrain;
+  const yields = terrain ? calculateDailyProduction([terrain], getSeason(state.date)) : null;
+  const yieldTypes = yields ? RESOURCE_TYPES.filter((type) => yields[type] > 0) : [];
+
+  const buildings = state.placedBuildings.filter((b) => b.provinceId === province.id);
+  const builtTypes = [...new Set(buildings.map((b) => b.type))];
+  const projects = state.projects.filter((p) => p.provinceId === province.id);
+  const migration = Math.round(province.migration);
+  const unrest = UNREST_INFO[province.unrestStage];
 
   // Escape closes the card (an open tab's own Escape handling comes first:
   // the card only listens while no modal covers the map).
@@ -76,122 +108,113 @@ export function ProvinceCard({ state, province, dispatch, onOpenPanel, onClose }
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const available = ACTIONS.filter(([type, action]) => !action.config.requiresResearch || isBuildingUnlocked(state.enactedResearchIds, type));
-  const ordered = [
-    ...need.order.flatMap((type) => available.filter(([t]) => t === type)),
-    ...available.filter(([type]) => !need.order.includes(type)),
-  ].slice(0, QUICK_BUILD_COUNT);
-
   return (
     <section className="province-card" aria-label={`${province.name}`}>
-      <header className="province-card__head">
+      <header className="province-card__head surface-leather">
         <h2 className="province-card__name">
           {province.isCapital && <span aria-label="Capital">★ </span>}
           {province.name}
         </h2>
-        {terrain && (
-          <span className="province-card__terrain" title={`Produces ${RESOURCE_BY_TERRAIN[terrain]}`}>
-            <svg viewBox="-10 -10 20 20" width={18} height={18} aria-hidden="true">
-              <ResourceIcon type={RESOURCE_BY_TERRAIN[terrain]} size={8} />
-            </svg>
-          </span>
-        )}
         <button type="button" className="province-card__close" aria-label="Close" onClick={onClose}>
           ×
         </button>
       </header>
 
-      <div className="province-card__stats">
-        <span className={`province-card__stat ${status.homes === "over" ? "is-alert" : ""}`} title={`${Math.round(province.population)} people, homes for ${Math.round(province.capacity)}`}>
-          <BuildingGlyph type="housing" size={18} />
-          {formatCompact(province.population)}/{formatCompact(province.capacity)}
-          {status.homes === "over" && <span className="province-card__alert">!</span>}
-        </span>
-        <span
-          className={`province-card__stat ${status.jobs === "jobless" ? "is-alert" : ""}`}
-          title={`${Math.round(province.workers)} workers for ${Math.round(province.jobs)} jobs — ${Math.round(province.unemployed)} jobless, ${Math.round(province.openJobs)} unfilled`}
-        >
-          <StatIcon type="industry" size={18} />
-          {formatCompact(province.workers)}/{formatCompact(province.jobs)}
-          {status.jobs === "jobless" && <span className="province-card__alert">!</span>}
-        </span>
-        <span className="province-card__stat" title={`${UNREST_INFO[province.unrestStage].name}: ${UNREST_INFO[province.unrestStage].effect} Local stability ${Math.round(province.stability)}.`}>
-          <UnrestStageIcon stage={province.unrestStage} size={18} />
-          {UNREST_INFO[province.unrestStage].name}
-        </span>
-      </div>
-
-      <div className="province-card__gauges">
-        <Gauge
-          max={province.capacity}
-          segments={[{ value: province.population - province.homeless, tone: status.homes === "ok" ? "good" : "warn" }]}
-          overflow={province.homeless}
-          label={`Homes: ${Math.round(province.population)} people, room for ${Math.round(province.capacity)}`}
-        />
-        <Gauge
-          max={province.jobs}
-          segments={[
-            { value: province.jobs - province.openJobs, tone: "good" },
-            { value: province.openJobs, tone: "neutral", dashed: true },
-          ]}
-          overflow={province.unemployed}
-          label={`Jobs: ${Math.round(province.jobs - province.openJobs)} of ${Math.round(province.jobs)} filled, ${Math.round(province.unemployed)} out of work`}
-        />
-      </div>
-
       <p className={`province-card__need ${need.urgent ? "is-urgent" : ""}`}>{need.text}</p>
 
-      <div className="province-card__builds">
-        {ordered.map(([type, action], index) => {
-          const { config } = action;
-          const count = countBuildingsInProvince(state, type, province.id);
-          const canBuild = action.canBuild(state, province.id);
-          const upfront = upfrontCost(config.cost);
-          const material = upfrontCost(config.resourceCost);
-          // Say what's missing, not just grey the button out.
-          const moneyShort = state.stats.treasury < upfront;
-          const materialShort = state.resources[config.resourceType] < material;
-          const full = count >= config.maxPerProvince;
-          return (
-            <button
-              key={type}
-              type="button"
-              className={`province-card__build ${index === 0 && need.urgent ? "is-recommended" : ""}`}
-              disabled={!canBuild}
-              title={`${config.label}: ${upfront} ${CURRENCY_SYMBOL} and ${material} ${config.resourceType} up front (${config.cost} ${CURRENCY_SYMBOL} in all) · ${count}/${config.maxPerProvince} here${full ? " — no room for more here" : materialShort ? ` — short of ${config.resourceType}: buy some on the Trade tab` : moneyShort ? " — not enough money yet" : ""}`}
-              onClick={() => {
-                playConfirm();
-                dispatch((s) => action(s, province.id));
-              }}
-            >
-              <BuildingGlyph type={type} size={22} />
-              <span className="province-card__build-name">
-                {index === 0 && need.urgent && <span aria-label="Recommended">★ </span>}
-                {config.label}
-                <span className={`province-card__build-count ${full ? "is-short" : ""}`}>
-                  {count}/{config.maxPerProvince}
+      <dl className="province-card__facts">
+        <Fact icon={<BuildingGlyph type="housing" size={16} />} label="People" alert={status.homes === "over"}>
+          <strong>{formatCompact(province.population)}</strong> in homes for {formatCompact(province.capacity)}
+          {province.homeless >= 1 && <span className="province-card__bad"> · {formatCompact(province.homeless)} homeless</span>}
+          <Gauge
+            max={province.capacity}
+            segments={[{ value: province.population - province.homeless, tone: status.homes === "ok" ? "good" : "warn" }]}
+            overflow={province.homeless}
+            label={`Homes: ${Math.round(province.population)} people, room for ${Math.round(province.capacity)}`}
+          />
+        </Fact>
+
+        <Fact icon={<StatIcon type="population" size={16} />} label="Moving">
+          {migration > 0 ? (
+            <span className="province-card__good">{migration} a day moving in</span>
+          ) : migration < 0 ? (
+            <span className="province-card__bad">{-migration} a day leaving</span>
+          ) : (
+            "Nobody moving"
+          )}
+        </Fact>
+
+        <Fact icon={<StatIcon type="industry" size={16} />} label="Work" alert={status.jobs === "jobless"}>
+          <strong>{formatCompact(province.jobs - province.openJobs)}</strong> of {formatCompact(province.jobs)} jobs filled
+          {province.unemployed >= 1 && <span className="province-card__bad"> · {formatCompact(province.unemployed)} out of work</span>}
+          {province.commutersOut >= 1 && <> · {formatCompact(province.commutersOut)} work elsewhere</>}
+          {/* Where they work: farms and food first, as jobs are filled. */}
+          <span className="province-card__sectors">
+            {SECTOR_LABELS.filter(([key]) => province.sectors[key].jobs > 0).map(([key, label]) => {
+              const sector = province.sectors[key];
+              return (
+                <span key={key} className={sector.hired < sector.jobs ? "province-card__bad" : ""}>
+                  {label} {formatCompact(sector.hired)}/{formatCompact(sector.jobs)}
                 </span>
+              );
+            })}
+          </span>
+          <Gauge
+            max={province.jobs}
+            segments={[
+              { value: province.jobs - province.openJobs, tone: "good" },
+              { value: province.openJobs, tone: "neutral", dashed: true },
+            ]}
+            overflow={province.unemployed}
+            label={`Jobs: ${Math.round(province.jobs - province.openJobs)} of ${Math.round(province.jobs)} filled, ${Math.round(province.unemployed)} out of work`}
+          />
+        </Fact>
+
+        <Fact
+          icon={<UnrestStageIcon stage={province.unrestStage} size={16} />}
+          label="Mood"
+          alert={province.unrestStage === "strikes" || province.unrestStage === "riots"}
+        >
+          <strong>{unrest.name}</strong> · local stability {Math.round(province.stability)}
+        </Fact>
+
+        <Fact icon={terrain ? <ResourceGlyph type={RESOURCE_BY_TERRAIN[terrain]} /> : null} label="Yields">
+          {yieldTypes.length > 0
+            ? `${yieldTypes.map((type) => `${yields![type].toFixed(1)} ${type}`).join(" + ")} a day`
+            : `No ${terrain ? RESOURCE_BY_TERRAIN[terrain] : "goods"} this season`}
+        </Fact>
+
+        <Fact icon={<BuildingGlyph type="factory" size={16} />} label="Built">
+          {builtTypes.length === 0
+            ? "Nothing yet"
+            : builtTypes.map((type, i) => {
+                const ofType = buildings.filter((b) => b.type === type);
+                const broken = ofType.filter((b) => !isWorking(b)).length;
+                return (
+                  <span key={type}>
+                    {i > 0 && " · "}
+                    {plural(ofType.length, type)}
+                    {broken > 0 && <span className="province-card__bad"> ({broken} broken)</span>}
+                  </span>
+                );
+              })}
+        </Fact>
+
+        {projects.length > 0 && (
+          <Fact icon={<StatIcon type="treasury" size={16} />} label="Underway">
+            {projects.map((project, i) => (
+              <span key={project.id}>
+                {i > 0 && " · "}
+                {BUILDING_NAMES[project.type][0]}, {Math.ceil(project.daysRemaining)} days left
+                {project.isStalled && <span className="province-card__bad"> (stalled)</span>}
               </span>
-              <span className="province-card__build-cost">
-                <span className={moneyShort ? "is-short" : ""}>
-                  {formatCompact(upfront)} {CURRENCY_SYMBOL}
-                  {moneyShort && "!"}
-                </span>
-                <span className={materialShort ? "is-short" : ""}>
-                  <svg viewBox="-10 -10 20 20" width={13} height={13} aria-hidden="true">
-                    <ResourceIcon type={config.resourceType} size={8} />
-                  </svg>
-                  {material}
-                  {materialShort && "!"}
-                </span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
+            ))}
+          </Fact>
+        )}
+      </dl>
 
       <button type="button" className="province-card__more" onClick={() => onOpenPanel("economy", "build")}>
-        All buildings…
+        Build here…
       </button>
     </section>
   );

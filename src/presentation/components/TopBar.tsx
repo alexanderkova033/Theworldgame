@@ -1,6 +1,8 @@
 import "./TopBar.css";
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { formatDate, type Season } from "../../domain/country/calendar";
+import { ELECTION_WIN_THRESHOLD } from "../../domain/constants";
+import { monthsUntilNextElection } from "../../domain/parties/electionRules";
 import type { CountryStats, GameDate, GameSpeed } from "../../domain/country/types";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import type { EconomySection } from "../../application/getAdvisorOutlook";
@@ -18,11 +20,12 @@ const SPEEDS: GameSpeed[] = [1, 2, 3, 5];
 
 export type PanelKey = "politics" | "economy" | "trade" | "reports" | "laws" | "research" | "ventures";
 
+// Politics has no tab of its own: it opens from the nation's label.
+
 // Opens a tab — for Economy, optionally straight at one of its sections.
 export type OpenPanel = (panel: PanelKey, section?: EconomySection) => void;
 
 const TABS: Array<{ key: PanelKey; label: string; icon: NavIconType }> = [
-  { key: "politics", label: "Politics", icon: "politics" },
   { key: "economy", label: "Economy", icon: "economy" },
   { key: "trade", label: "Trade", icon: "trade" },
   { key: "reports", label: "Reports", icon: "reports" },
@@ -46,8 +49,8 @@ function DateIcon() {
 const SEASON_LABELS: Record<Season, string> = {
   spring: "Spring",
   summer: "Summer",
-  autumn: "Autumn — harvest season, farms yield their best",
-  winter: "Winter — farms yield little, grain fields lie fallow",
+  autumn: "Autumn: harvest season, farms yield their best",
+  winter: "Winter: farms yield little and grain fields lie fallow",
 };
 
 function SeasonIcon({ season }: { season: Season }) {
@@ -184,90 +187,130 @@ export function TopBar({
   onOpenPanel,
 }: TopBarProps) {
   const [muted, setMutedState] = useState(() => isMuted());
+  const supportPercent = Math.round(stats.popularity);
+  const electionMonths = monthsUntilNextElection(date);
+
+  // Publish the bar's real height for Modal.css, which hangs every panel
+  // just below it — the bar grows when its rows wrap on a narrow window or
+  // the advisor row changes, and a stale guess would tuck a panel's title
+  // under it.
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const bar = ref.current;
+    if (!bar) return;
+    const publish = () => document.documentElement.style.setProperty("--top-bar-height", `${bar.offsetHeight}px`);
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <header className="top-bar surface-leather">
-      <div className="top-bar__row top-bar__row--ticker">
-        <span className="top-bar__nation" style={{ "--party-color": partyColor } as CSSProperties}>
-          {nationName}
-          <span className="top-bar__party">{partyName}</span>
-        </span>
-
-        <ResourceTicker
-          stats={stats}
-          unrestStage={unrestStage}
-          resources={resources}
-          production={production}
-          debt={debt}
-          heating={heating}
-          shortages={shortages}
-          lastDayLedger={lastDayLedger}
-          monthLedger={monthLedger}
-          forecasts={forecasts}
-          onOpenReports={() => onOpenPanel("reports")}
-        />
-
-        <div className="top-bar__spacer" />
-
+    <header className="top-bar surface-leather" ref={ref}>
+      <div className="top-bar__main">
+        {/* The nation's label is the way into Politics: it carries the two
+            numbers that matter there — support, and the months to the
+            vote — so it reads as more than a name plate. */}
         <button
-          className="top-bar__mute-button"
-          onClick={() => {
-            const next = !muted;
-            setMuted(next);
-            setMutedState(next);
-          }}
-          aria-label={muted ? "Unmute sound" : "Mute sound"}
-          aria-pressed={muted}
+          type="button"
+          className={`top-bar__nation ${activePanel === "politics" ? "is-active" : ""}`}
+          style={{ "--party-color": partyColor } as CSSProperties}
+          onClick={() => onOpenPanel("politics")}
+          aria-current={activePanel === "politics" ? "true" : undefined}
+          aria-label={`Politics: ${nationName}, ${partyName}: support ${supportPercent}%, election in ${electionMonths} months`}
+          title="Politics: the election, support, unrest and the neighbours"
         >
-          <SpeakerIcon muted={muted} />
+          <span className="top-bar__nation-name">{nationName}</span>
+          <span className="top-bar__party">{partyName}</span>
+          <span className={`top-bar__nation-politics ${supportPercent < ELECTION_WIN_THRESHOLD ? "is-losing" : ""}`}>
+            <NavIcon type="politics" size={15} />
+            {supportPercent}% · vote in {electionMonths} mo
+          </span>
         </button>
 
-        <span className={`top-bar__date top-bar__date--${production.season}`} title={SEASON_LABELS[production.season]}>
-          <SeasonIcon season={production.season} />
-          <DateIcon />
-          {formatDate(date)}
-        </span>
+        <div className="top-bar__ticker">
+          <ResourceTicker
+            stats={stats}
+            unrestStage={unrestStage}
+            resources={resources}
+            production={production}
+            debt={debt}
+            heating={heating}
+            shortages={shortages}
+            lastDayLedger={lastDayLedger}
+            monthLedger={monthLedger}
+            forecasts={forecasts}
+            onOpenReports={() => onOpenPanel("reports")}
+          />
+        </div>
 
-        <span className="top-bar__pause-speed">
-          <button className="top-bar__pause-button" onClick={isPaused ? onResume : onPause} title="Space">
-            {isPaused ? <PlayIcon /> : <PauseIcon />}
-            {isPaused ? "Resume" : "Pause"}
-          </button>
+        <nav className="top-bar__tabs" aria-label="Panels">
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              className={`top-bar__tab ${activePanel === tab.key ? "is-active" : ""}`}
+              onClick={() => onOpenPanel(tab.key)}
+              aria-current={activePanel === tab.key ? "true" : undefined}
+              aria-label={tab.key === "reports" && reportsBadgeCount > 0 ? `${tab.label}, ${reportsBadgeCount} unread` : tab.label}
+            >
+              <span className="top-bar__tab-icon">
+                <NavIcon type={tab.icon} size={22} />
+                {tab.key === "reports" && reportsBadgeCount > 0 && (
+                  <span className="top-bar__tab-badge" aria-hidden="true">
+                    {reportsBadgeCount > 9 ? "9+" : reportsBadgeCount}
+                  </span>
+                )}
+              </span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </nav>
 
-          <div className="top-bar__speeds">
-            {SPEEDS.map((s) => (
-              <button
-                key={s}
-                className={`top-bar__speed-button ${speed === s && !isPaused ? "is-active" : ""}`}
-                onClick={() => onSetSpeed(s)}
-              >
-                {s}x
-              </button>
-            ))}
-          </div>
-        </span>
-      </div>
-
-      <div className="top-bar__row top-bar__row--tabs">
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            className={`top-bar__tab ${activePanel === tab.key ? "is-active" : ""}`}
-            onClick={() => onOpenPanel(tab.key)}
-           
-            aria-label={tab.key === "reports" && reportsBadgeCount > 0 ? `${tab.label}, ${reportsBadgeCount} unread` : tab.label}
-          >
-            <span className="top-bar__tab-icon">
-              <NavIcon type={tab.icon} />
-              {tab.key === "reports" && reportsBadgeCount > 0 && (
-                <span className="top-bar__tab-badge" aria-hidden="true">
-                  {reportsBadgeCount > 9 ? "9+" : reportsBadgeCount}
-                </span>
-              )}
+        {/* The calendar and the clock, one plate: the date over its
+            controls, as in HOI4. Paused, the Resume button is gilt — the
+            one thing to press. */}
+        <div className={`top-bar__clock ${isPaused ? "is-paused" : ""}`}>
+          <div className="top-bar__clock-date">
+            <span className={`top-bar__date top-bar__date--${production.season}`} title={SEASON_LABELS[production.season]}>
+              <SeasonIcon season={production.season} />
+              <DateIcon />
+              {formatDate(date)}
             </span>
-            <span>{tab.label}</span>
-          </button>
-        ))}
+            <button
+              className="top-bar__mute-button"
+              onClick={() => {
+                const next = !muted;
+                setMuted(next);
+                setMutedState(next);
+              }}
+              aria-label={muted ? "Unmute sound" : "Mute sound"}
+              aria-pressed={muted}
+            >
+              <SpeakerIcon muted={muted} />
+            </button>
+          </div>
+
+          <div className="top-bar__clock-controls">
+            <button className={`top-bar__pause-button ${isPaused ? "btn-primary" : ""}`} onClick={isPaused ? onResume : onPause} title="Space">
+              {isPaused ? <PlayIcon /> : <PauseIcon />}
+              {isPaused ? "Resume" : "Pause"}
+            </button>
+
+            <div className="top-bar__speeds" role="group" aria-label="Speed">
+              {SPEEDS.map((s) => (
+                <button
+                  key={s}
+                  className={`top-bar__speed-button ${speed === s && !isPaused ? "is-active" : ""}`}
+                  onClick={() => onSetSpeed(s)}
+                  aria-pressed={speed === s && !isPaused}
+                  title={`Speed ${s} (key ${s})`}
+                >
+                  {s}x
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {advisor}

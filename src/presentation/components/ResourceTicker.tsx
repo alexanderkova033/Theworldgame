@@ -164,7 +164,7 @@ function WhyChip({
         aria-expanded={open}
         aria-haspopup="true"
         aria-label={`${label}${runOut ? `. Runs out in ${runOut.days} days if nothing changes` : ""}. Show why it changed.`}
-        title={`${label}${runOut ? ` — runs out around ${formatDate(runOut.date)} if nothing changes` : ""} — click to see why it's moving`}
+        title={`${label}${runOut ? `. Runs out around ${formatDate(runOut.date)} if nothing changes` : ""}. Click to see why it's moving.`}
         onClick={() => setOpen((v) => !v)}
       >
         {children}
@@ -178,13 +178,13 @@ function WhyChip({
       </button>
       {open && (
         <div className="resource-ticker__popover resource-ticker__why-panel" role="dialog" aria-label={`Why ${METRIC_LABELS[metric].toLowerCase()} changed`}>
-          <CauseBreakdown ledger={lastDay} metric={metric} title={`${METRIC_LABELS[metric]} — last day`} perDay />
+          <CauseBreakdown ledger={lastDay} metric={metric} title={`${METRIC_LABELS[metric]}, last day`} perDay />
           {runOut && (
             <p className="resource-ticker__runout-line">
               <span className="resource-ticker__alert" aria-hidden="true">
                 !
               </span>
-              Runs out around <strong>{formatDate(runOut.date)}</strong> ({runOut.days} days) if nothing changes — winter harvests included.
+              Runs out around <strong>{formatDate(runOut.date)}</strong> ({runOut.days} days) if nothing changes, counting the lean winter harvests.
             </p>
           )}
           <div className="resource-ticker__why-month">
@@ -207,8 +207,90 @@ function WhyChip({
   );
 }
 
-function Stores({ resources, production, shortages }: { resources: ResourceBundle; production: DailyProductionSummary; shortages: MaterialShortage[] }) {
+// Whether the stores are pinned open in the bar — a per-player preference,
+// kept in this browser. Storage can be missing or refuse (a private window),
+// so both ways fall back quietly to "folded".
+const STORES_PINNED_KEY = "theworldgame-stores-pinned";
+
+function readStoresPinned(): boolean {
+  try {
+    return localStorage.getItem(STORES_PINNED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeStoresPinned(pinned: boolean) {
+  try {
+    localStorage.setItem(STORES_PINNED_KEY, pinned ? "1" : "0");
+  } catch {
+    // Not remembered — it still works for this session.
+  }
+}
+
+function PinIcon({ pinned }: { pinned: boolean }) {
+  return (
+    <svg viewBox="-10 -10 20 20" width={14} height={14} aria-hidden="true">
+      <g transform={pinned ? undefined : "rotate(35)"}>
+        <path d="M-4,-8 L4,-8 L3,-2 L6,2 L-6,2 L-3,-2 Z" fill="currentColor" />
+        <line x1={0} y1={2} x2={0} y2={9} stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" />
+      </g>
+    </svg>
+  );
+}
+
+// Every resource in stock and its daily rate: folded behind one button, or
+// pinned open as a row of cells in the strip.
+function Stores({
+  resources,
+  production,
+  shortages,
+  pinned,
+  onPin,
+}: {
+  resources: ResourceBundle;
+  production: DailyProductionSummary;
+  shortages: MaterialShortage[];
+  pinned: boolean;
+  onPin: (pinned: boolean) => void;
+}) {
   const { open, setOpen, ref } = usePopover();
+
+  if (pinned) {
+    return (
+      <div className="resource-ticker__stores-row" role="group" aria-label="Stores">
+        <span className="resource-ticker__chip resource-ticker__stores-label">
+          <CrateIcon />
+          Stores
+        </span>
+        {RESOURCE_TYPES.map((type) => {
+          const short = shortages.find((s) => s.type === type);
+          return (
+            <div
+              key={type}
+              className={`resource-ticker__chip resource-ticker__store-cell ${short ? "is-danger" : ""}`}
+              title={`${RESOURCE_LABELS[type]}: ${formatExact(resources[type])} in stock (${formatDelta(production.resourceProduction[type])} a day)${short ? ". Building will run out soon" : ""}`}
+            >
+              <ResourceGlyph type={type} />
+              <span className="resource-ticker__store-cell-name">{RESOURCE_LABELS[type]}</span>
+              <span>{formatCompact(resources[type])}</span>
+              <Delta value={production.resourceProduction[type]} />
+              {short && <Alert />}
+            </div>
+          );
+        })}
+        <button
+          type="button"
+          className="resource-ticker__chip resource-ticker__pin-toggle"
+          onClick={() => onPin(false)}
+          aria-label="Unpin the stores and fold them back into one button"
+          title="Fold the stores back into one button"
+        >
+          <PinIcon pinned />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="resource-ticker__stores" ref={ref}>
@@ -238,7 +320,20 @@ function Stores({ resources, production, shortages }: { resources: ResourceBundl
               </div>
             );
           })}
-          <p className="resource-ticker__store-hint">Buy and sell on the Trade tab.</p>
+          <div className="resource-ticker__store-foot">
+            <p className="resource-ticker__store-hint">Buy and sell on the Trade tab.</p>
+            <button
+              type="button"
+              className="resource-ticker__pin-button"
+              onClick={() => {
+                setOpen(false);
+                onPin(true);
+              }}
+            >
+              <PinIcon pinned={false} />
+              Keep in the bar
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -247,6 +342,11 @@ function Stores({ resources, production, shortages }: { resources: ResourceBundl
 
 export function ResourceTicker({ stats, unrestStage, resources, production, heating, debt, shortages, lastDayLedger, monthLedger, forecasts, onOpenReports }: ResourceTickerProps) {
   const why = { lastDay: lastDayLedger, month: monthLedger, onOpenReports };
+  const [storesPinned, setStoresPinned] = useState(readStoresPinned);
+  const pinStores = (pinned: boolean) => {
+    setStoresPinned(pinned);
+    writeStoresPinned(pinned);
+  };
   const homesTrouble = production.homeless >= 1 || production.unheatedShare > 0;
   const stage = UNREST_INFO[unrestStage];
   const stageUrgent = unrestStage === "strikes" || unrestStage === "riots";
@@ -261,18 +361,18 @@ export function ResourceTicker({ stats, unrestStage, resources, production, heat
         {...why}
         metric="treasury"
         runOut={forecasts.treasury}
-        label={`Treasury: ${formatExact(stats.treasury)} ${CURRENCY_SYMBOL} (${formatDelta(production.totalIncome)})`}
+        label={`Treasury: ${formatExact(stats.treasury)} ${CURRENCY_SYMBOL} (${formatDelta(production.netTreasury)} a day, after wages and building)`}
         danger={stats.treasury < 0}
       >
         <StatIcon type="treasury" size={20} />
         <span>
           {formatCompact(stats.treasury)} {CURRENCY_SYMBOL}
         </span>
-        <Delta value={production.totalIncome} />
+        <Delta value={production.netTreasury} />
       </WhyChip>
 
       <Chip
-        label={`People: ${formatExact(stats.population)}, homes for ${formatExact(production.housingCapacity)}${production.homeless > 0 ? ` — ${formatExact(production.homeless)} without a home` : ""}`}
+        label={`People: ${formatExact(stats.population)}, homes for ${formatExact(production.housingCapacity)}${production.homeless > 0 ? `, ${formatExact(production.homeless)} without a home` : ""}`}
         danger={homesTrouble}
       >
         <StatIcon type="population" size={20} />
@@ -293,7 +393,7 @@ export function ResourceTicker({ stats, unrestStage, resources, production, heat
       <WhyChip
         {...why}
         metric="stability"
-        label={`Stability: ${formatExact(stats.stability)}/100 — ${stage.name} (${stage.range}): ${stage.effect}${unrestStage === "calm" ? "" : " A crackdown on the Politics tab pulls the country back a stage."}`}
+        label={`Stability: ${formatExact(stats.stability)}/100, ${stage.name} (${stage.range}): ${stage.effect}${unrestStage === "calm" ? "" : " A crackdown on the Politics tab pulls the country back a stage."}`}
         danger={stageUrgent}
         warn={unrestStage === "discontent"}
       >
@@ -304,7 +404,7 @@ export function ResourceTicker({ stats, unrestStage, resources, production, heat
         {stageUrgent && <Alert />}
       </WhyChip>
 
-      <WhyChip {...why} metric="support" label={`Support: ${formatExact(stats.popularity)}% — elections need 50%`} danger={stats.popularity < 50}>
+      <WhyChip {...why} metric="support" label={`Support: ${formatExact(stats.popularity)}%. Elections need 50%.`} danger={stats.popularity < 50}>
         <StatIcon type="popularity" size={20} />
         <span>{formatExact(stats.popularity)}%</span>
         {stats.popularity < 50 && <Alert />}
@@ -312,7 +412,7 @@ export function ResourceTicker({ stats, unrestStage, resources, production, heat
 
       {debt > 0 && (
         <Chip
-          label={`Debt: ${formatExact(debt)} ${CURRENCY_SYMBOL}${isDebtDangerous(debt) ? " — dangerous, hurting stability & support" : ""}`}
+          label={`Debt: ${formatExact(debt)} ${CURRENCY_SYMBOL}${isDebtDangerous(debt) ? ". Dangerous: it hurts stability and support" : ""}`}
           danger={isDebtDangerous(debt)}
         >
           <StatIcon type="treasury" size={20} />
@@ -325,7 +425,7 @@ export function ResourceTicker({ stats, unrestStage, resources, production, heat
         <Chip
           label={
             heating.isWinter
-              ? `Heating: ${Math.floor(heating.fuel)} coal + wood in stock, homes burn ${heating.fuelPerDay.toFixed(1)} a day — lasts ${Math.floor(heating.daysOfFuel)} days`
+              ? `Heating: ${Math.floor(heating.fuel)} coal + wood in stock, homes burn ${heating.fuelPerDay.toFixed(1)} a day, enough for ${Math.floor(heating.daysOfFuel)} days`
               : `Winter in ${heating.daysUntilWinter} days: ${Math.floor(heating.fuel)} of the ${Math.ceil(heating.fuelNeeded)} coal and wood the homes will burn`
           }
           danger={heatingDanger}
@@ -337,11 +437,12 @@ export function ResourceTicker({ stats, unrestStage, resources, production, heat
         </Chip>
       )}
 
-      {/* Building materials a project is about to stall on. */}
-      {shortages.map((short) => (
+      {/* Building materials a project is about to stall on — shown in the
+          pinned stores' own cells instead, when those are out. */}
+      {!storesPinned && shortages.map((short) => (
         <Chip
           key={short.type}
-          label={`${RESOURCE_LABELS[short.type]}: ${formatExact(short.stock)} left — building draws ${short.perDay.toFixed(1)} a day, about ${Math.floor(short.daysLeft)} days`}
+          label={`${RESOURCE_LABELS[short.type]}: ${formatExact(short.stock)} left. Building draws ${short.perDay.toFixed(1)} a day, about ${Math.floor(short.daysLeft)} days.`}
           danger
         >
           <ResourceGlyph type={short.type} />
@@ -351,7 +452,7 @@ export function ResourceTicker({ stats, unrestStage, resources, production, heat
       ))}
 
       <div className="resource-ticker__divider" />
-      <Stores resources={resources} production={production} shortages={shortages} />
+      <Stores resources={resources} production={production} shortages={shortages} pinned={storesPinned} onPin={pinStores} />
     </div>
   );
 }

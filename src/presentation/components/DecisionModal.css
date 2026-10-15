@@ -5,13 +5,14 @@
   text-align: center;
 }
 
+/* The event's medallion, engraved like the panels' title icons. */
 .decision-modal__icon {
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  background: var(--panel-bg-raised);
-  border: 2px solid var(--accent-active);
-  box-shadow: none;
+  background: var(--paper);
+  border: 1px solid var(--rule-dark);
+  box-shadow: inset 0 0 0 3px var(--paper-raised), inset 0 0 0 4px var(--rule);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -19,18 +20,22 @@
 }
 
 .decision-modal__prompt {
-  font-size: 1rem;
+  font-size: 1.0625rem;
   color: var(--text);
-  max-width: 26rem;
+  max-width: 30rem;
   margin: 0 0 1.25rem;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
+/* The answers, HOI4-style: full-width plates under a rule, each marked
+   with an oxblood lozenge, its cost or reward set flush right. */
 .decision-modal__options {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.5rem;
   width: 100%;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
 }
 
 .decision-modal__option {
@@ -39,14 +44,29 @@
   justify-content: space-between;
   gap: 1rem;
   width: 100%;
-  padding: 0.75rem 1rem;
+  min-height: 3rem;
+  padding: 0.65rem 1rem 0.65rem 0.85rem;
   text-align: left;
+  background: var(--paper-raised);
 }
 
 .decision-modal__option-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
   font-family: var(--font-display);
+  font-size: 1.02rem;
   font-weight: 700;
   color: var(--text);
+}
+
+.decision-modal__option-label::before {
+  content: "";
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--oxblood);
+  transform: rotate(45deg);
 }
 
 .decision-modal__option-effect {

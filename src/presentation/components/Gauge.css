@@ -87,6 +87,33 @@
   box-shadow: inset 0 0 0 1px rgba(43, 29, 18, 0.35);
 }
 
+/* What an action would do, shown while pointing at it: the stretch it
+   would add (or take away), striped in its tone and gently pulsing. */
+.gauge__fill.is-preview {
+  --preview: var(--wash-good);
+  background: repeating-linear-gradient(135deg, var(--preview) 0 4px, color-mix(in srgb, var(--preview) 30%, transparent) 4px 8px);
+  box-shadow: inset 0 0 0 1.5px var(--rule-dark);
+  animation: gauge-preview 0.9s ease-in-out infinite alternate;
+  transition: none;
+}
+
+.gauge__fill.is-preview.is-bad {
+  --preview: var(--wash-bad);
+}
+
+.gauge__fill.is-preview.is-warn {
+  --preview: var(--wash-warn);
+}
+
+@keyframes gauge-preview {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Past capacity: red hatching, unmistakably not "full". */
 .gauge__overflow {
   position: absolute;

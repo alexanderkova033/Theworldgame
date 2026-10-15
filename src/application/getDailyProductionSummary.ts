@@ -10,18 +10,16 @@ import { getDiplomacyIncomeMultiplier } from "../domain/diplomacy/diplomacyRules
 import { consumeFood, produceFood, produceProcessedFood } from "../domain/food/foodRules";
 import { burnHeatingFuel, getHeatingDemand, getHomelessTotal, getHousingCapacity } from "../domain/housing/housingRules";
 import { getLabourSituation } from "../domain/labour/labourRules";
-import { getActiveLawEffects } from "../domain/laws/lawsRules";
 import { getWorkingCounts } from "../domain/maintenance/maintenanceRules";
-import { getNationEffects } from "../domain/nations/nationEffects";
+import { getModifiers } from "../domain/policy/policyRules";
 import { calculateDailyPoliticalPower } from "../domain/politics/politicsRules";
 import { getNation } from "../domain/nations/nationRules";
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
-import { getActiveResearchEffects, getResearchRates } from "../domain/research/researchRules";
+import { getResearchRates } from "../domain/research/researchRules";
 import type { ResearchCategory } from "../domain/research/types";
 import { calculateDailyProduction } from "../domain/resources/resourceRules";
 import type { ResourceBundle } from "../domain/resources/types";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
-import { getActiveSynergyEffects } from "../domain/synergy/synergyRules";
 import { getDailySalaries } from "../domain/workforce/workforceRules";
 
 export interface DailyProductionSummary {
@@ -29,6 +27,8 @@ export interface DailyProductionSummary {
   industryIncome: number;
   salaries: number; // paid out daily to scientists and police
   totalIncome: number; // net of salaries
+  buildingInstalments: number; // the daily share of every project still being paid off (see createBuildAction)
+  netTreasury: number; // what the treasury actually moves by in a day: income, less wages, less instalments
   season: Season;
   farmFood: number;
   processedFood: number;
@@ -50,26 +50,18 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const { staffed } = getLabourSituation(state);
   const season = getSeason(state.date);
   const efficiencyMultiplier = calculateEfficiencyMultiplier(working.roads);
-  const lawEffects = getActiveLawEffects(state.enactedLawIds);
-  const researchEffects = getActiveResearchEffects(state.enactedResearchIds, state.researchOutcomes);
-  const synergyEffects = getActiveSynergyEffects(state.enactedLawIds, state.enactedResearchIds);
-  const nationEffects = getNationEffects(state.nationId);
-  const incomeMultiplier =
-    efficiencyMultiplier *
-    lawEffects.incomeMultiplier *
-    nationEffects.incomeMultiplier *
-    researchEffects.incomeMultiplier *
-    synergyEffects.incomeMultiplier *
-    getDiplomacyIncomeMultiplier(state.foreignPolitics);
+  const mods = getModifiers(state);
+  const incomeMultiplier = efficiencyMultiplier * mods.incomeMultiplier * getDiplomacyIncomeMultiplier(state.foreignPolitics);
 
   const taxIncome = state.stats.population * BASE_TAX_INCOME_PER_POP * state.taxRate * incomeMultiplier;
   const industryIncome = state.stats.industry * INCOME_PER_INDUSTRY * incomeMultiplier;
-  const salaries = getDailySalaries(state.workforce);
+  const salaries = getDailySalaries(state.workforce, mods.wageMultiplier);
+  const buildingInstalments = state.projects.reduce((sum, project) => sum + project.treasuryCostPerDay, 0);
 
   const { foodProduced: processedFood } = produceProcessedFood(staffed.granaries, staffed.canneries, state.resources);
-  const farmFood = produceFood(staffed.farms, season, researchEffects.winterFarmMultiplier);
+  const farmFood = produceFood(staffed.farms, season, mods);
   const foodProduced = farmFood + processedFood;
-  const foodConsumed = consumeFood(state.stats);
+  const foodConsumed = consumeFood(state.stats, mods);
 
   const nation = getNation(state.nationId);
   const ownedTerrains = nation.provinceIds.map(
@@ -91,6 +83,8 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
     industryIncome,
     salaries,
     totalIncome: taxIncome + industryIncome - salaries,
+    buildingInstalments,
+    netTreasury: taxIncome + industryIncome - salaries - buildingInstalments,
     season,
     farmFood,
     processedFood,
@@ -104,6 +98,6 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
     homeless: getHomelessTotal(state),
     heatingFuel,
     unheatedShare: heating.unheatedShare,
-    politicalPowerPerDay: calculateDailyPoliticalPower(state.stats.popularity, researchEffects.politicalPowerMultiplier),
+    politicalPowerPerDay: calculateDailyPoliticalPower(state.stats.popularity, mods.politicalPowerMultiplier),
   };
 }

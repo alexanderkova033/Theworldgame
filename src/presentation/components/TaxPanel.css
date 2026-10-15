@@ -61,3 +61,10 @@
 .tax-panel__effect.is-loss strong {
   color: var(--danger);
 }
+
+/* What a step of − or + would make it, while pointing at it. */
+.tax-panel__after {
+  font-weight: 700;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}

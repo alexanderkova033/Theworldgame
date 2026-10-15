@@ -25,7 +25,7 @@
    modal's width to work with instead of a cramped 22rem sidebar. */
 .economy-modal {
   display: grid;
-  grid-template-columns: 1.3fr 1fr;
+  grid-template-columns: 1.65fr 1fr;
   gap: 1.1rem;
   align-items: start;
 }
@@ -43,7 +43,7 @@
 /* Reports modal: monthly reports and the event log side by side. */
 .reports-modal {
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
+  grid-template-columns: 1.55fr 1fr;
   gap: 1.1rem;
   align-items: start;
 }
@@ -59,6 +59,10 @@
 .economy-modal__single {
   max-width: 46rem;
   margin: 0 auto;
+}
+
+.economy-modal__single--wide {
+  max-width: 58rem;
 }
 
 .economy-modal.economy-modal--even {

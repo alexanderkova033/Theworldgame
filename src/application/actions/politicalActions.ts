@@ -39,7 +39,7 @@ export function holdRally(state: GameState): GameState {
       politicalPower: state.stats.politicalPower - RALLY_POLITICAL_POWER_COST,
       treasury: state.stats.treasury - RALLY_TREASURY_COST,
     },
-    events: logged(state, `You hold a rally across the country — support +${RALLY_SUPPORT} with every group.`),
+    events: logged(state, `You hold a rally across the country: support +${RALLY_SUPPORT} with every group.`),
   }, ONE_OFF);
 }
 
@@ -59,7 +59,7 @@ export function courtGroup(state: GameState, ideology: Ideology): GameState {
       politicalPower: state.stats.politicalPower - COURT_POLITICAL_POWER_COST,
       treasury: state.stats.treasury - COURT_TREASURY_COST,
     },
-    events: logged(state, `You court the ${ideology} vote with favours and promises — their support +${COURT_SUPPORT}.`),
+    events: logged(state, `You court the ${ideology} vote with favours and promises: their support +${COURT_SUPPORT}.`),
   }, ONE_OFF);
 }
 
@@ -85,6 +85,6 @@ export function crackDown(state: GameState): GameState {
       stability,
       politicalPower: state.stats.politicalPower - CRACKDOWN_POLITICAL_POWER_COST,
     },
-    events: logged(state, `You order a crackdown on unrest — stability +${gain}, support ${CRACKDOWN_SUPPORT}.${calmed}`, "warning"),
+    events: logged(state, `You order a crackdown on unrest: stability +${gain}, support ${CRACKDOWN_SUPPORT}.${calmed}`, "warning"),
   }, { ...ONE_OFF, stability: "crackdown" });
 }

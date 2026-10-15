@@ -28,7 +28,19 @@
 }
 
 .workforce-panel__group + .workforce-panel__group {
-  margin-top: 0.7rem;
+  margin-top: 1rem;
+}
+
+/* A group's head: its name, its places as seats, and what a hire costs
+   and does. */
+.workforce-panel__group-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--rule);
 }
 
 .workforce-panel__group-title {
@@ -37,27 +49,75 @@
   gap: 0.35rem;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-bottom: 0.3rem;
+  font-size: 1rem;
+  color: var(--oxblood);
 }
 
-.workforce-panel__cap {
-  margin-left: auto;
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  font-variant-numeric: tabular-nums;
+.workforce-panel__seats {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px;
   cursor: help;
+}
+
+.workforce-panel__seat {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--rule-dark);
+  background: var(--paper-deep);
+}
+
+.workforce-panel__seat.is-filled {
+  background: var(--oxblood);
+  border-color: var(--oxblood-dark);
+}
+
+.workforce-panel__seats-count {
+  margin-left: 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+
+.workforce-panel__terms {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+
+.workforce-panel__terms > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  cursor: help;
+}
+
+.workforce-panel__terms svg {
+  display: block;
 }
 
 .workforce-panel__row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.3rem 0.5rem;
+  gap: 0.6rem;
+  padding: 0.35rem 0.6rem;
   border-radius: 8px;
-  background: var(--inset);
-  border: 1px solid var(--panel-border);
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+}
+
+/* Nobody hired here yet: set back, so the staffed rows stand out. */
+.workforce-panel__row.is-empty {
+  background: transparent;
+  border-style: dashed;
 }
 
 .workforce-panel__row + .workforce-panel__row {
@@ -66,19 +126,19 @@
 
 .workforce-panel__label {
   flex: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
 }
 
 .workforce-panel__effect {
   display: inline-flex;
   align-items: center;
-  gap: 0.15rem;
-  font-size: 0.8125rem;
+  gap: 0.2rem;
+  font-size: 0.875rem;
+  font-weight: 700;
   color: var(--success);
   font-variant-numeric: tabular-nums;
+  cursor: help;
 }
 
 /* −  3  + : a compact headcount control. */

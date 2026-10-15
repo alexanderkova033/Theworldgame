@@ -41,6 +41,7 @@ Other useful commands:
 npm run build     # Type-check and build a production bundle
 npm run preview   # Preview the production build locally
 npm run lint      # Run the linter
+npm test          # Run the tests (tree shape and scripted balance games)
 ```
 
 ## Current features (MVP)

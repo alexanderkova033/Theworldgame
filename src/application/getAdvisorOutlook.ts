@@ -138,7 +138,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       kind: "provinceUnrest",
       stage: worst.unrestStage,
       text: `${UNREST_NAMES[worst.unrestStage]}: ${getProvinceName(id)}${others}`,
-      detail: `${getProvinceName(id)} is ${worst.unrestStage === "riots" ? "rioting — wrecking its buildings and dragging national stability down" : "on strike"}. Too many there have no home or no work: build homes or jobs there, or crack down.`,
+      detail: `${getProvinceName(id)} is ${worst.unrestStage === "riots" ? "rioting, wrecking its buildings and dragging national stability down" : "on strike"}. Too many there have no home or no work: build homes or jobs there, or crack down.`,
       critical: worst.unrestStage === "riots",
       panel: "economy",
     });
@@ -237,7 +237,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     alerts.push({
       kind: "debt",
       text: `Debt: ${compact(state.debt)}`,
-      detail: "Debt is past the danger line — the interest costs stability and support every day. Repay on the Trade tab.",
+      detail: "Debt is past the danger line. The interest costs stability and support every day. Repay on the Trade tab.",
       critical: true,
       panel: "trade",
     });
@@ -249,7 +249,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     alerts.push({
       kind: "election",
       text: `Election ${months} mo: ${support}%`,
-      detail: `The election is in ${months} month${months === 1 ? "" : "s"} and you'd lose today — you need ${ELECTION_WIN_THRESHOLD}%.`,
+      detail: `The election is in ${months} month${months === 1 ? "" : "s"} and you'd lose today. You need ${ELECTION_WIN_THRESHOLD}%.`,
       critical: months <= ADVISOR_ELECTION_CRITICAL_MONTHS,
       panel: "politics",
     });
@@ -273,7 +273,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     alerts.push({
       kind: "research",
       text: `Research idle: ${idle.length}`,
-      detail: `No direction chosen for ${idle.join(", ")} research — that area makes no progress.`,
+      detail: `No direction chosen for ${idle.join(", ")} research, so that area makes no progress.`,
       critical: false,
       panel: "research",
     });
@@ -307,7 +307,7 @@ function getObjective(state: GameState): AdvisorObjective | null {
       return {
         kind: "farm",
         text: building("farm") ? "Farm being built" : "Build a farm",
-        detail: "More farms feed a growing country — and next winter's farms yield little.",
+        detail: "More farms feed a growing country, and next winter's farms yield little.",
         done,
         panel: "economy",
       };

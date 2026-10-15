@@ -35,8 +35,9 @@ export function getPoliceCap(population: number): number {
   return Math.floor(population / POPULATION_PER_POLICE);
 }
 
-export function getDailySalaries(workforce: Workforce): number {
-  return getTotalScientists(workforce) * SCIENTIST_SALARY + workforce.police * POLICE_SALARY;
+// wageMultiplier: laws and the party's creed (see domain/policy).
+export function getDailySalaries(workforce: Workforce, wageMultiplier = 1): number {
+  return (getTotalScientists(workforce) * SCIENTIST_SALARY + workforce.police * POLICE_SALARY) * wageMultiplier;
 }
 
 export function getPoliceStabilityBonus(police: number): number {
@@ -49,10 +50,10 @@ export function getPoliceBreakdownReduction(police: number): number {
 
 // Unpaid staff walk out: police first (cheapest to lose), then scientists
 // from whichever area has the most, until what's left is affordable.
-export function layOffUntilAffordable(workforce: Workforce, budget: number): { workforce: Workforce; laidOff: number } {
+export function layOffUntilAffordable(workforce: Workforce, budget: number, wageMultiplier = 1): { workforce: Workforce; laidOff: number } {
   let next: Workforce = { scientists: { ...workforce.scientists }, police: workforce.police };
   let laidOff = 0;
-  while (getDailySalaries(next) > Math.max(0, budget)) {
+  while (getDailySalaries(next, wageMultiplier) > Math.max(0, budget)) {
     if (next.police > 0) {
       next = { ...next, police: next.police - 1 };
     } else {

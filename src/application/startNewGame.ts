@@ -2,7 +2,7 @@
 // GameState, with starting infrastructure placed within that nation's own
 // provinces (so different nations feel at least slightly different from day
 // one, even though the underlying economy math is the same for everyone).
-import { STARTING_RESOURCE_STOCK } from "../domain/constants";
+import { STARTING_COAL, STARTING_RESOURCE_STOCK } from "../domain/constants";
 import { getSeason } from "../domain/country/calendar";
 import { createForeignPolitics } from "../domain/diplomacy/diplomacyRules";
 import { createMarket } from "../domain/market/marketRules";
@@ -108,7 +108,7 @@ function createInitialState(nationId: string, partyId: string): GameState {
     resources: {
       wood: STARTING_RESOURCE_STOCK,
       ore: STARTING_RESOURCE_STOCK,
-      coal: STARTING_RESOURCE_STOCK,
+      coal: STARTING_COAL,
       grain: STARTING_RESOURCE_STOCK,
       fish: STARTING_RESOURCE_STOCK,
     },

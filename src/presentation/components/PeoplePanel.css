@@ -187,3 +187,200 @@ button.people-province.is-selected {
   color: var(--danger);
 }
 
+
+/* --- Where people work, and the provinces: tables with named columns --- */
+.people-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.people-section-head .people-section-title {
+  margin: 0;
+  border-bottom: 0;
+}
+
+/* Farms → schools → factories: the order jobs are filled in. */
+.people-work__order {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-bottom: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink-muted);
+  cursor: help;
+}
+
+.people-work__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.people-work__step svg {
+  display: block;
+}
+
+.people-section-title {
+  margin: 1.25rem 0 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--rule);
+  font-style: normal;
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+  color: var(--oxblood);
+}
+
+.people-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.people-table thead th {
+  padding: 0 0.5rem 0.35rem;
+  border-bottom: 1px solid var(--rule-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.people-table thead th:first-child {
+  padding-left: 0;
+}
+
+.people-table td,
+.people-table tbody th {
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid rgba(122, 92, 52, 0.3);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.people-table tbody th {
+  padding-left: 0;
+  font-weight: 700;
+}
+
+.people-table .is-num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.people-table__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-display);
+}
+
+.people-table__name svg {
+  display: block;
+}
+
+.people-table__staffed {
+  display: grid;
+  grid-template-columns: minmax(4rem, 1fr) 3rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.people-table__staffed strong {
+  text-align: right;
+}
+
+.people-table tr.is-short .people-table__staffed strong {
+  color: var(--danger);
+}
+
+.people-table__muted {
+  color: var(--ink-muted);
+}
+
+.people-table td.is-warn {
+  color: var(--warning);
+  font-weight: 700;
+}
+
+.people-table td.is-bad {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.people-table__mood {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+
+.people-table__mood svg {
+  display: block;
+}
+
+/* Provinces: each row picks where to build. */
+.people-table--provinces tbody tr {
+  cursor: pointer;
+}
+
+.people-table--provinces tbody tr:hover {
+  background: rgba(122, 92, 52, 0.1);
+}
+
+.people-table--provinces tbody tr.is-selected {
+  background: var(--paper);
+  box-shadow: inset 4px 0 0 var(--oxblood);
+}
+
+.people-table--provinces tbody tr.is-selected th {
+  padding-left: 0.6rem;
+}
+
+button.people-table__pick {
+  min-height: 0;
+  padding: 0.1rem 0;
+  border: none;
+  background: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink);
+  text-align: left;
+}
+
+button.people-table__pick:hover:not(:disabled) {
+  background: none;
+  text-decoration: underline;
+}
+
+button.people-table__pick:active:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+
+.people-table--provinces tr.is-selected button.people-table__pick {
+  color: var(--oxblood);
+}
+
+/* The picked province offers to go and build there. */
+.people-table__action {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+}
+
+button.people-table__build {
+  min-height: 0;
+  padding: 0.1rem 0.55rem;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}

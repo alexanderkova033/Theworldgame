@@ -13,7 +13,7 @@ import { createMarket } from "../../domain/market/marketRules";
 import { buildStartingHomes, getHousingCapacityByProvince } from "../../domain/housing/housingRules";
 import { getNation } from "../../domain/nations/nationRules";
 import { createProvinceStates } from "../../domain/provinces/provincePopulation";
-import { getResearchNode } from "../../domain/research/researchRules";
+import { getResearchNode, getResearchNodeStatus } from "../../domain/research/researchRules";
 import type { ResearchCategory } from "../../domain/research/types";
 import { emptyLedger } from "../../domain/ledger/ledgerRules";
 import { emptyResourceBundle } from "../../domain/resources/resourceRules";
@@ -117,6 +117,14 @@ function hydrateGameState(raw: Partial<GameState>): GameState {
   // Saves from before provinces had people: everyone lives where the homes are.
   if (!raw.provinces) {
     state.provinces = createProvinceStates(getNation(state.nationId).provinceIds, stats.population, getHousingCapacityByProvince(state), stats.stability);
+  }
+  // Saves from before the trees split into paths may be heading for a
+  // technology that now sits further down another path: let that area
+  // choose again rather than skip the path rule.
+  const unfocused: GameState = { ...state, researchFocus: { industry: null, agriculture: null, administration: null, housing: null } };
+  for (const [category, id] of Object.entries(state.researchFocus)) {
+    const node = id ? getResearchNode(id) : undefined;
+    if (id && (!node || getResearchNodeStatus(unfocused, node) !== "available")) state.researchFocus[category as ResearchCategory] = null;
   }
   return state;
 }

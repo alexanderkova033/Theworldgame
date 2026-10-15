@@ -16,11 +16,11 @@ import type { GameState } from "../country/types";
 import { getWorkingCounts, isWorking } from "../maintenance/maintenanceRules";
 import { getNation } from "../nations/nationRules";
 import type { PlacedBuilding } from "../provinces/types";
-import { getActiveResearchEffects } from "../research/researchRules";
+import { getModifiers } from "../policy/policyRules";
 import type { ResourceBundle } from "../resources/types";
 
 export function getPeoplePerHome(state: GameState): number {
-  return PEOPLE_PER_HOME * getActiveResearchEffects(state.enactedResearchIds, state.researchOutcomes).housingCapacityMultiplier;
+  return PEOPLE_PER_HOME * getModifiers(state).housingCapacityMultiplier;
 }
 
 export function getHousingCapacity(state: GameState): number {
@@ -67,7 +67,7 @@ export function getHomelessStabilityPenalty(homelessShare: number): number {
 // Fuel the working homes need today — nothing outside winter.
 export function getHeatingDemand(state: GameState, season: Season): number {
   if (season !== "winter") return 0;
-  const multiplier = getActiveResearchEffects(state.enactedResearchIds, state.researchOutcomes).heatingMultiplier;
+  const multiplier = getModifiers(state).heatingMultiplier;
   return getWorkingCounts(state).homes * HEATING_FUEL_PER_HOME * multiplier;
 }
 

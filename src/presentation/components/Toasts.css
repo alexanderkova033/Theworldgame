@@ -1,4 +1,12 @@
 /* Bottom-right, above the map, below any open panel (Modal is z-index 50). */
+
+/* While a panel is open the notices stand aside rather than peep out from
+   under its edge; everything they said is in the Reports tab's event log.
+   (The tab panels render before Toasts in App.tsx, so this sibling rule
+   finds them.) */
+.modal-overlay ~ .toasts {
+  display: none;
+}
 .toasts {
   position: fixed;
   right: 1rem;
@@ -10,16 +18,20 @@
   width: min(24rem, calc(100vw - 2rem));
 }
 
+/* A notice on the dark silk of the top bar — chrome, not a page — edged in
+   gilt, with its kind as a coloured bar down the left and an icon to say
+   it again without the colour. A dark green hairline holds it off the map. */
 .toast {
   display: flex;
   align-items: flex-start;
-  gap: 0.6rem;
-  padding: 0.65rem 0.7rem;
-  border-radius: 10px;
-  border: 1px solid var(--panel-border);
-  border-left-width: 5px;
-  background: var(--panel-bg);
-  box-shadow: none;
+  gap: 0.65rem;
+  padding: 0.7rem 0.6rem 0.7rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--bar-rule);
+  border-left: 4px solid var(--accent);
+  background: var(--bar-raised);
+  box-shadow: 0 0 0 1px var(--bar-edge);
+  color: var(--text);
   animation: toast-in 0.18s ease-out;
 }
 
@@ -83,12 +95,14 @@
 
 .toast__title {
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  color: var(--gilt-bright);
 }
 
 .toast__message {
   font-size: 0.9rem;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .toast__actions {
@@ -103,9 +117,18 @@
   font-size: 0.85rem;
 }
 
-.toast__close {
+.toasts .toast__close {
   padding: 0;
-  width: 1.6rem;
-  font-size: 1.1rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.15rem;
   line-height: 1;
+}
+
+.toasts .toast__close:hover:not(:disabled) {
+  border-color: var(--bar-rule);
+  color: var(--text);
 }

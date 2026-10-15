@@ -22,7 +22,7 @@ import { FACTIONS } from "../parties/factionData";
 import type { Ideology } from "../parties/types";
 import type { FactionUpdateResult } from "../parties/factionRules";
 import { getWeightedPopularity } from "../parties/factionRules";
-import { getResearchEffectsFor } from "../research/researchRules";
+import { getModifiers } from "../policy/policyRules";
 
 export interface PopularityConditions {
   taxRate: number;
@@ -31,24 +31,36 @@ export interface PopularityConditions {
   unheatedShare: number; // 0..1
   unemploymentShare: number; // 0..1
   stability: number; // 0..100
+  // From laws, research and the party's creed (see domain/policy); all
+  // optional, and nothing changes without them.
+  taxTolerance?: number; // points of tax accepted beyond the usual
+  hardship?: number; // how much homelessness, cold and joblessness weigh (1 = as usual)
+  policy?: number; // points added to where opinion heads
 }
 
 export interface PopularityDriver {
-  key: "taxes" | "food" | "homes" | "heat" | "jobs" | "order";
+  key: "taxes" | "food" | "homes" | "heat" | "jobs" | "order" | "policy";
   label: string;
   value: number; // points added to (or taken off) where opinion is heading
 }
 
 // Each thing pulling opinion up or down, so the Politics tab can show why.
 export function getPopularityDrivers(c: PopularityConditions): PopularityDriver[] {
+  const hardship = c.hardship ?? 1;
   return [
-    { key: "taxes", label: "Taxes", value: (COMFORTABLE_TAX_RATE - c.taxRate) * 100 * TAX_POPULARITY_PER_POINT },
+    { key: "taxes", label: "Taxes", value: (getAcceptedTaxRate(c.taxTolerance) - c.taxRate) * 100 * TAX_POPULARITY_PER_POINT },
     { key: "food", label: "Food", value: c.isFoodShortage ? -FOOD_SHORTAGE_POPULARITY_PENALTY : 0 },
-    { key: "homes", label: "Homes", value: -c.homelessShare * HOMELESS_POPULARITY_PENALTY },
-    { key: "heat", label: "Heating", value: -c.unheatedShare * COLD_POPULARITY_PENALTY },
-    { key: "jobs", label: "Jobs", value: -c.unemploymentShare * UNEMPLOYMENT_POPULARITY_PENALTY },
+    { key: "homes", label: "Homes", value: -c.homelessShare * HOMELESS_POPULARITY_PENALTY * hardship },
+    { key: "heat", label: "Heating", value: -c.unheatedShare * COLD_POPULARITY_PENALTY * hardship },
+    { key: "jobs", label: "Jobs", value: -c.unemploymentShare * UNEMPLOYMENT_POPULARITY_PENALTY * hardship },
     { key: "order", label: "Order", value: (c.stability - 50) * STABILITY_POPULARITY_WEIGHT },
+    { key: "policy", label: "Laws", value: c.policy ?? 0 },
   ];
+}
+
+// The tax rate people accept without grumbling, after laws and creed.
+export function getAcceptedTaxRate(taxTolerance = 0): number {
+  return COMFORTABLE_TAX_RATE + taxTolerance / 100;
 }
 
 export function getPopularityTarget(c: PopularityConditions): number {
@@ -83,5 +95,5 @@ export function calculateDailyPoliticalPower(popularity: number, multiplier = 1)
 }
 
 export function getDailyPoliticalPower(state: GameState): number {
-  return calculateDailyPoliticalPower(state.stats.popularity, getResearchEffectsFor(state).politicalPowerMultiplier);
+  return calculateDailyPoliticalPower(state.stats.popularity, getModifiers(state).politicalPowerMultiplier);
 }

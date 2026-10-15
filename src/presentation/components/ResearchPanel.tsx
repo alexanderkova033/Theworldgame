@@ -6,12 +6,17 @@
 // into the area, and how far along its current direction is.
 import "./LawsPanel.css";
 import "./ResearchPanel.css";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { clearResearchFocus, focusResearch } from "../../application/actions";
+import type { AdvisorAlert } from "../../application/getAdvisorOutlook";
+import { getHelpedAlerts, getHelpedAlertsByAny } from "../../application/getTreeHints";
 import { CURRENCY_SYMBOL, SCIENTIST_SALARY } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getLawNode } from "../../domain/laws/lawsRules";
-import { RESEARCH_NODES } from "../../domain/research/researchData";
+import { getParty } from "../../domain/parties/partyRules";
+import type { TreePath } from "../../domain/policy/modifiers";
+import { chosenIds, closedBy, getLockouts, isOpenToParty } from "../../domain/policy/treeRules";
+import { RESEARCH_NODES, RESEARCH_PATHS } from "../../domain/research/researchData";
 import {
   getResearchCost,
   getResearchDaysLeft,
@@ -24,11 +29,12 @@ import {
 import type { ResearchCategory, ResearchNode } from "../../domain/research/types";
 import { getSynergiesForResearch } from "../../domain/synergy/synergyRules";
 import { getScientistCap, getTotalScientists, RESEARCH_CATEGORIES } from "../../domain/workforce/workforceRules";
-import { playConfirm } from "../audio/sound";
+import { playQuill } from "../audio/sound";
+import { pickDefaultNode } from "../pickDefaultNode";
 import { CostChips, StatChip } from "./CostChips";
 import { StatIcon } from "./StatIcon";
 import { SubTabs, type SubTab } from "./SubTabs";
-import { InspectorHeader, StatusLine, SynergyLine, TreeColumns, type TreeNodeStatus } from "./TechTree";
+import { InspectorHeader, Lockouts, PathInspector, StatusLine, SynergyLine, TreeColumns, type TreeNodeStatus } from "./TechTree";
 import { AREA_ICONS, AREA_LABELS } from "../researchAreas";
 import { ScientistStepper } from "./WorkforcePanel";
 
@@ -36,7 +42,25 @@ type Dispatch = (action: (state: GameState) => GameState) => void;
 
 interface ResearchPanelProps {
   state: GameState;
+  alerts: AdvisorAlert[]; // what the advisor is warning about: technologies that would help are marked
   dispatch: Dispatch;
+}
+
+// The work one way down a path takes, root excluded (both ways through
+// the fork cost the same), and how long that is at the area's rate today.
+function PathCost({ state, nodes }: { state: GameState; nodes: ResearchNode[] }) {
+  const route = [2, 3, 4, 5, 6, 7].map((tier) => nodes.find((n) => n.tier === tier)).filter((n): n is ResearchNode => !!n);
+  const work = route.reduce((total, n) => total + getResearchCost(n) - (state.researchProgress[n.id] ?? 0), 0);
+  const rate = route[0] ? getResearchRateBreakdown(state, route[0].category).total : 0;
+  return (
+    <div className="law-inspector__enact-cost">
+      <span className="law-inspector__enact-cost-label">The whole way</span>
+      <CostChips>
+        <StatChip type="research" amount={Math.round(work)} />
+      </CostChips>
+      <span className="note">{rate > 0 ? `about ${Math.ceil(work / rate).toLocaleString()} days at today's rate` : "no progress at today's rate"}</span>
+    </div>
+  );
 }
 
 // Every research area, Housing included — taken from the domain list so a
@@ -47,8 +71,53 @@ const CATEGORIES = RESEARCH_CATEGORIES.map((key) => ({
   icon: AREA_ICONS[key],
 }));
 
-function nodesFor(category: string, tier: number): ResearchNode[] {
-  return RESEARCH_NODES.filter((n) => n.category === (category as ResearchCategory) && n.tier === tier);
+// Where a technology stands, in the few words that fit under its name.
+function researchStatusLabel(state: GameState, node: ResearchNode, status: TreeNodeStatus): string {
+  switch (status) {
+    case "enacted":
+      return "Done";
+    case "in-progress":
+      return `Researching, ${Math.round(getResearchProgressRatio(state, node) * 100)}%`;
+    case "available":
+      return getResearchProgressRatio(state, node) > 0 ? `Paused at ${Math.round(getResearchProgressRatio(state, node) * 100)}%` : "Ready to research";
+    case "foreclosed":
+      return "Closed off";
+    case "locked-prerequisite":
+      return "Needs one above";
+    case "locked-cross":
+      return "Needs a law";
+    case "locked-quota":
+    case "locked-party":
+      return "Locked";
+  }
+}
+
+function nodesFor(category: string): ResearchNode[] {
+  return RESEARCH_NODES.filter((n) => n.category === (category as ResearchCategory));
+}
+
+function pathsFor(category: string): TreePath[] {
+  return RESEARCH_PATHS.filter((p) => p.category === category);
+}
+
+function nameOf(id: string): { name: string; elsewhere?: string } {
+  const tech = getResearchNode(id);
+  if (tech) return { name: tech.name };
+  return { name: getLawNode(id)?.name ?? id, elsewhere: "Laws" };
+}
+
+// Why a technology is closed off, naming what closed it.
+function closedReason(state: GameState, node: ResearchNode): string {
+  const why = closedBy(node.id, chosenIds(state));
+  if (!why) return "Closed off.";
+  // A technology in a lane you didn't take: the path is the real reason.
+  const taken = RESEARCH_NODES.find((n) => n.category === node.category && n.tier === 2 && state.enactedResearchIds.includes(n.id));
+  const takenPath = taken && RESEARCH_PATHS.find((p) => p.key === taken.path);
+  if (takenPath && node.path && taken.path !== node.path) return `Closed off: you took the ${takenPath.name} path.`;
+  const by = nameOf(why.by);
+  if (why.reason === "sibling") return `Closed off: ${by.name} was developed instead.`;
+  if (why.reason === "excluded") return `Closed off by ${by.name}${by.elsewhere ? ` (${by.elsewhere})` : ""}.`;
+  return "Closed off: the technology that leads here was passed over.";
 }
 
 // Under each column title: the area's daily rate (with where it comes from
@@ -77,11 +146,11 @@ function AreaHeader({ state, category, dispatch, onSelectNode }: { state: GameSt
           <span className="research-area__bar">
             <span className="research-area__fill" style={{ width: `${Math.round(ratio * 100)}%` }} />
           </span>
-          <span className="research-area__days">{daysLeft === null ? "—" : `${daysLeft}d`}</span>
+          <span className="research-area__days">{daysLeft === null ? "stalled" : `${daysLeft}d`}</span>
         </button>
       ) : (
-        <span className="research-area__idle" title="This area's research is going nowhere — pick a node below">
-          Idle — pick a direction
+        <span className="research-area__idle" title="This area's research is going nowhere. Pick a technology below.">
+          Idle: pick a direction
         </span>
       )}
     </div>
@@ -102,10 +171,17 @@ function ResearchInspector({ node, state, status, onFocus, onStop }: ResearchIns
   const daysLeft = getResearchDaysLeft(state, node);
   const currentFocus = state.researchFocus[node.category];
   const isSwitch = status === "available" && currentFocus !== null && currentFocus !== node.id;
+  const parents = (node.requires ?? []).map((id) => getResearchNode(id)?.name ?? id);
+  const open = status !== "enacted" && status !== "foreclosed";
+  const lockouts = open
+    ? getLockouts(node.id, chosenIds(state))
+        .filter((n) => isOpenToParty(n, getParty(state.partyId).ideology))
+        .map((n) => nameOf(n.id))
+    : [];
 
   return (
     <div className="law-inspector">
-      <InspectorHeader node={node} description={node.description} benefit={node.benefit} cost={node.cost} effects={node.effects} />
+      <InspectorHeader node={node} description={node.description} effects={node.effects} />
 
       {status !== "enacted" && (
         <div className="law-inspector__enact-cost">
@@ -113,7 +189,7 @@ function ResearchInspector({ node, state, status, onFocus, onStop }: ResearchIns
           <CostChips>
             <StatChip type="research" amount={getResearchCost(node)} />
           </CostChips>
-          {daysLeft !== null && <span className="research-inspector__eta">≈ {daysLeft} days at today's rate</span>}
+          {daysLeft !== null && <span className="research-inspector__eta">about {daysLeft} days at today's rate</span>}
         </div>
       )}
 
@@ -132,11 +208,15 @@ function ResearchInspector({ node, state, status, onFocus, onStop }: ResearchIns
         />
       ))}
 
+      {open && <Lockouts names={lockouts} />}
+
       {status === "enacted" && (
-        <StatusLine status="enacted">Complete — {getResearchOutcomeFlavor(state.researchOutcomes[node.id]) ?? "as projected"}.</StatusLine>
+        <StatusLine status="enacted">Done: {getResearchOutcomeFlavor(state.researchOutcomes[node.id]) ?? "as projected"}.</StatusLine>
       )}
-      {status === "foreclosed" && <StatusLine status="foreclosed">A rival technology took this branch.</StatusLine>}
-      {status === "locked-prerequisite" && <StatusLine status="locked">Finish the technology above it first.</StatusLine>}
+      {status === "foreclosed" && <StatusLine status="foreclosed">{closedReason(state, node)}</StatusLine>}
+      {status === "locked-prerequisite" && (
+        <StatusLine status="locked">Needs {parents.length > 1 ? `${parents.slice(0, -1).join(", ")} or ${parents[parents.length - 1]}` : parents[0] ?? "the technology above"} first.</StatusLine>
+      )}
       {status === "locked-cross" && <StatusLine status="locked">Needs {crossNodeName ?? "a Law"} (Laws).</StatusLine>}
 
       {status === "in-progress" && (
@@ -154,7 +234,7 @@ function ResearchInspector({ node, state, status, onFocus, onStop }: ResearchIns
             type="button"
             className="btn-primary law-inspector__vote-button"
             onClick={() => {
-              playConfirm();
+              playQuill();
               onFocus();
             }}
             title={isSwitch ? "Progress on the current direction is kept if you come back to it" : undefined}
@@ -183,30 +263,42 @@ function areaTab(state: GameState, category: ResearchCategory): SubTab {
     alert: idle,
     badge: focusNode ? `${Math.round(getResearchProgressRatio(state, focusNode) * 100)}%` : `${done}/${total}`,
     hint: focusNode
-      ? `Researching ${focusNode.name} — ${Math.round(getResearchProgressRatio(state, focusNode) * 100)}% done`
+      ? `Researching ${focusNode.name}, ${Math.round(getResearchProgressRatio(state, focusNode) * 100)}% done`
       : idle
-        ? "Idle — no direction chosen, so no progress"
-        : `${done} of ${total} tiers done`,
+        ? "Idle: no direction chosen, so no progress"
+        : `${done} of ${total} rows done`,
   };
 }
 
-export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
+export function ResearchPanel({ state, alerts, dispatch }: ResearchPanelProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedPathKey, setSelectedPathKey] = useState<string | null>(null);
   // One area at a time; opens on the first one sitting idle, if any.
   const [area, setArea] = useState<ResearchCategory>(
     () => RESEARCH_CATEGORIES.find((c) => areaTab(state, c).alert) ?? RESEARCH_CATEGORIES[0],
   );
-  const inspectorRef = useRef<HTMLDivElement>(null);
 
-  const selectedNode = selectedId ? (RESEARCH_NODES.find((n) => n.id === selectedId) ?? null) : null;
+  const statusOf = (node: ResearchNode) => getResearchNodeStatus(state, node);
+  // Only what can be chosen now is marked: a hint three rows down would
+  // just be noise.
+  const hintFor = (node: ResearchNode) => (statusOf(node) === "available" ? getHelpedAlerts(node.effects, alerts)[0] : undefined);
+  const pathNodes = (key: string) => RESEARCH_NODES.filter((n) => n.path === key);
+  const pathHints = (key: string) => getHelpedAlertsByAny(pathNodes(key).filter((n) => statusOf(n) !== "foreclosed").map((n) => n.effects), alerts);
+  const shownPath = selectedPathKey ? RESEARCH_PATHS.find((p) => p.key === selectedPathKey && p.category === area) : undefined;
+  const selectNode = (id: string) => {
+    setSelectedPathKey(null);
+    setSelectedId(id);
+  };
+  // The details pane is never empty: until the player picks, it shows the
+  // technology most worth looking at in this area.
+  const shownNode =
+    (selectedId ? RESEARCH_NODES.find((n) => n.id === selectedId && n.category === area) : undefined) ??
+    pickDefaultNode(
+      RESEARCH_NODES.filter((n) => n.category === area),
+      statusOf,
+    ) ??
+    null;
   const scientists = getTotalScientists(state.workforce);
-
-  // The tree can run 4 tiers deep, well past the fold — without this, picking
-  // a node (especially near the bottom of a branch) opens the inspector
-  // somewhere below the visible modal with no indication it appeared at all.
-  useEffect(() => {
-    if (selectedId) inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [selectedId]);
 
   return (
     <div className="law-tree research-tree">
@@ -216,14 +308,19 @@ export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
           title={`Scientists employed, of how many your schools can train. Each costs ${SCIENTIST_SALARY} ${CURRENCY_SYMBOL}/day.`}
         >
           <StatIcon type="research" size={22} />
+          <span className="law-tree__bank-label">Scientists</span>
           <span className="law-tree__bank-value">
             {scientists}/{getScientistCap(state.educationLevel)}
           </span>
           <span className="law-tree__bank-rate is-cost">
-            −{scientists * SCIENTIST_SALARY} {CURRENCY_SYMBOL}/d
+            −{scientists * SCIENTIST_SALARY} {CURRENCY_SYMBOL} a day
           </span>
         </span>
       </div>
+      <p className="note law-tree__guide">
+        Pick a direction for each area and it moves forward every day, faster with scientists and schools. Each area splits into three
+        paths: the first technology on one closes the other two for good.
+      </p>
 
       <SubTabs
         label="Research areas"
@@ -232,32 +329,56 @@ export function ResearchPanel({ state, dispatch }: ResearchPanelProps) {
         onSelect={(key) => {
           setArea(key as ResearchCategory);
           setSelectedId(null);
+          setSelectedPathKey(null);
         }}
       />
 
-      <TreeColumns
-        categories={CATEGORIES.filter((c) => c.key === area)}
-        nodesFor={nodesFor}
-        getStatus={(node) => getResearchNodeStatus(state, node)}
-        getProgress={(node) => getResearchProgressRatio(state, node)}
-        renderColumnExtra={(key) => (
-          <AreaHeader state={state} category={key as ResearchCategory} dispatch={dispatch} onSelectNode={setSelectedId} />
-        )}
-        selectedId={selectedId}
-        onSelect={(id) => setSelectedId(id === selectedId ? null : id)}
-      />
+      <div className="law-tree__body">
+        <TreeColumns
+          categories={CATEGORIES.filter((c) => c.key === area)}
+          nodesFor={nodesFor}
+          pathsFor={pathsFor}
+          getStatus={statusOf}
+          getStatusLabel={(node) => researchStatusLabel(state, node, statusOf(node))}
+          getProgress={(node) => getResearchProgressRatio(state, node)}
+          renderColumnExtra={(key) => (
+            <AreaHeader state={state} category={key as ResearchCategory} dispatch={dispatch} onSelectNode={selectNode} />
+          )}
+          getHint={hintFor}
+          getPathHint={(path) => pathHints(path.key)[0]}
+          selectedId={shownPath ? null : (shownNode?.id ?? null)}
+          selectedPathKey={shownPath?.key ?? null}
+          onSelect={selectNode}
+          onSelectPath={setSelectedPathKey}
+        />
 
-      {selectedNode && (
-        <div ref={inspectorRef}>
-          <ResearchInspector
-            node={selectedNode}
-            state={state}
-            status={getResearchNodeStatus(state, selectedNode)}
-            onFocus={() => dispatch((s) => focusResearch(s, selectedNode.id))}
-            onStop={() => dispatch((s) => clearResearchFocus(s, selectedNode.category))}
-          />
-        </div>
-      )}
+        {shownPath && (
+          <aside className="law-tree__details" aria-label={`${shownPath.name} path`}>
+            <PathInspector
+              path={shownPath}
+              nodes={pathNodes(shownPath.key)}
+              getStatus={statusOf}
+              getEffects={(node) => node.effects}
+              noun="technology"
+              hints={pathHints(shownPath.key)}
+              cost={<PathCost state={state} nodes={pathNodes(shownPath.key)} />}
+              onSelectNode={selectNode}
+            />
+          </aside>
+        )}
+
+        {!shownPath && shownNode && (
+          <aside className="law-tree__details" aria-label={`${shownNode.name} details`}>
+            <ResearchInspector
+              node={shownNode}
+              state={state}
+              status={statusOf(shownNode)}
+              onFocus={() => dispatch((s) => focusResearch(s, shownNode.id))}
+              onStop={() => dispatch((s) => clearResearchFocus(s, shownNode.category))}
+            />
+          </aside>
+        )}
+      </div>
     </div>
   );
 }

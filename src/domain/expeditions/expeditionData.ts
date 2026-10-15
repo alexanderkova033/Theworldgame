@@ -8,7 +8,7 @@ export const ISLAND_EXPEDITIONS: IslandExpeditionData[] = [
     islandId: "island-1",
     islandName: "Kestrel Isles",
     reward: {
-      flavor: "The chartered company struck a fast bargain with the locals — a windfall for the treasury.",
+      flavor: "The chartered company struck a fast bargain with the locals: a windfall for the treasury.",
       treasuryDelta: 2500,
     },
   },

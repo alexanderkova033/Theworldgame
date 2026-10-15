@@ -12,7 +12,7 @@ import {
 } from "../../domain/market/marketRules";
 import type { MarketGood } from "../../domain/market/types";
 import { getNation } from "../../domain/nations/nationRules";
-import { getResearchEffectsFor } from "../../domain/research/researchRules";
+import { getModifiers } from "../../domain/policy/policyRules";
 import { recordAction } from "./recordAction";
 
 const TRADE = { treasury: "trade", food: "trade" } as const;
@@ -27,7 +27,7 @@ function withHolding(state: GameState, good: MarketGood, delta: number): GameSta
 }
 
 export function getMarketBuyCost(state: GameState, good: MarketGood, multiplier = 1): number {
-  return getBuyCost(state.market, good, getBatchSize(good, multiplier), nationHasPort(getNation(state.nationId)), getResearchEffectsFor(state).buyPriceMultiplier);
+  return getBuyCost(state.market, good, getBatchSize(good, multiplier), nationHasPort(getNation(state.nationId)), getModifiers(state).buyPriceMultiplier);
 }
 
 export function canBuyGood(state: GameState, good: MarketGood, multiplier = 1): boolean {

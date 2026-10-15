@@ -24,6 +24,11 @@ const EVENTS: CauseInfo = {
   icon: (size) => <EventIcon size={size} />,
 };
 const TRADE: CauseInfo = { label: "Trade", hint: "Buying and selling on the market", icon: (size) => <NavIcon type="trade" size={size} /> };
+const POLICY: CauseInfo = {
+  label: "Laws and creed",
+  hint: "Laws and technologies in force, and your party's creed",
+  icon: (size) => <NavIcon type="laws" size={size} />,
+};
 const DEBT: CauseInfo = { label: "Debt", hint: "Debt past the danger line", icon: (size) => <LoanIcon size={size} /> };
 
 export const CAUSES: Record<LedgerMetric, Record<string, CauseInfo>> = {
@@ -31,7 +36,7 @@ export const CAUSES: Record<LedgerMetric, Record<string, CauseInfo>> = {
     taxes: { label: "Taxes", hint: "Tax paid by the population", icon: (size) => <StatIcon type="treasury" size={size} /> },
     industry: { label: "Industry", hint: "What the factories earn", icon: (size) => <StatIcon type="industry" size={size} /> },
     salaries: { label: "Wages", hint: "Scientists' and police wages, and hiring fees", icon: (size) => <StatIcon type="police" size={size} /> },
-    construction: { label: "Building", hint: "Building and repairing — down payments and daily instalments", icon: (size) => <NavIcon type="economy" size={size} /> },
+    construction: { label: "Building", hint: "Building and repairing: down payments and daily instalments", icon: (size) => <NavIcon type="economy" size={size} /> },
     trade: TRADE,
     loans: { label: "Loans", hint: "Money borrowed, minus money paid back", icon: (size) => <LoanIcon size={size} /> },
     oneOffs: ONE_OFFS,
@@ -52,6 +57,7 @@ export const CAUSES: Record<LedgerMetric, Record<string, CauseInfo>> = {
     heat: { label: "Heating", hint: "Homes left cold in winter", icon: (size) => <FlameIcon size={size} /> },
     jobs: { label: "Jobs", hint: "People out of work", icon: (size) => <StatIcon type="industry" size={size} /> },
     order: { label: "Order", hint: "How stable the country is", icon: (size) => <StatIcon type="stability" size={size} /> },
+    policy: POLICY,
     settling: { label: "Settling", hint: "Opinion easing back toward 50% when nothing pushes it", icon: (size) => <SettlingIcon size={size} /> },
     debt: DEBT,
     rival: { label: "Rival", hint: "The rival party's campaign", icon: (size) => <NavIcon type="politics" size={size} /> },
@@ -65,6 +71,7 @@ export const CAUSES: Record<LedgerMetric, Record<string, CauseInfo>> = {
     homes: { label: "Homeless", hint: "People without a home", icon: (size) => <BuildingGlyph type="housing" size={size} /> },
     cold: { label: "Cold", hint: "Homes left cold in winter", icon: (size) => <FlameIcon size={size} /> },
     police: { label: "Police", hint: "Police on the payroll", icon: (size) => <StatIcon type="police" size={size} /> },
+    policy: POLICY,
     provinces: { label: "Province riots", hint: "Provinces rioting on their own", icon: (size) => <UnrestStageIcon stage="riots" size={size} /> },
     crackdown: { label: "Crackdowns", hint: "Crackdowns ordered from the Politics tab", icon: (size) => <StatIcon type="police" size={size} /> },
     election: { label: "Election", hint: "A won election's mandate", icon: (size) => <NavIcon type="politics" size={size} /> },

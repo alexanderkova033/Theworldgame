@@ -11,19 +11,8 @@ export function getSynergiesForResearch(researchId: string): Synergy[] {
   return SYNERGIES.filter((s) => s.researchId === researchId);
 }
 
-function getActiveSynergies(enactedLawIds: string[], enactedResearchIds: string[]): Synergy[] {
+// Every pair whose law and technology are both in force; their effects are
+// folded in with everything else in domain/policy/policyRules.ts.
+export function getActiveSynergies(enactedLawIds: string[], enactedResearchIds: string[]): Synergy[] {
   return SYNERGIES.filter((s) => enactedLawIds.includes(s.lawId) && enactedResearchIds.includes(s.researchId));
-}
-
-// Ongoing multipliers from every currently-active synergy, composed the same
-// way getActiveLawEffects/getActiveResearchEffects fold their own nodes
-// together — see simulateDay.ts, which multiplies this in alongside both.
-export function getActiveSynergyEffects(enactedLawIds: string[], enactedResearchIds: string[]): { incomeMultiplier: number; industryMultiplier: number } {
-  let incomeMultiplier = 1;
-  let industryMultiplier = 1;
-  for (const synergy of getActiveSynergies(enactedLawIds, enactedResearchIds)) {
-    incomeMultiplier *= synergy.effects.incomeMultiplier ?? 1;
-    industryMultiplier *= synergy.effects.industryMultiplier ?? 1;
-  }
-  return { incomeMultiplier, industryMultiplier };
 }

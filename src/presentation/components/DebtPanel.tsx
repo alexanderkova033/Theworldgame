@@ -4,7 +4,7 @@ import { CURRENCY_SYMBOL, DEBT_DANGER_THRESHOLD, LOAN_BATCH_SIZE, LOAN_INTEREST_
 import type { GameState } from "../../domain/country/types";
 import { isDebtDangerous } from "../../domain/loans/loanRules";
 import { formatCompact } from "../formatNumber";
-import { playConfirm } from "../audio/sound";
+import { playCoins } from "../audio/sound";
 import { StatIcon } from "./StatIcon";
 
 interface DebtPanelProps {
@@ -66,7 +66,7 @@ export function DebtPanel({ state, dispatch }: DebtPanelProps) {
         <button
           disabled={!canTakeLoan(state)}
           onClick={() => {
-            playConfirm();
+            playCoins();
             dispatch(takeLoan);
           }}
         >
@@ -76,7 +76,7 @@ export function DebtPanel({ state, dispatch }: DebtPanelProps) {
           className="btn-primary"
           disabled={!canRepayLoan(state)}
           onClick={() => {
-            playConfirm();
+            playCoins();
             dispatch(repayLoan);
           }}
         >

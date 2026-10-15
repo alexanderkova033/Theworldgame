@@ -175,6 +175,60 @@ function roadLineWidth(count: number): number {
 // The capital marker: a drawn five-point star (not the "★" glyph — that
 // renders as a flat, font-dependent blob at the small sizes the map uses),
 // using the same star math as BuildingIcon/StatIcon/StartScreen's crests.
+const NATION_NAME_SIZE = 34;
+const NATION_NAME_MIN_SIZE = 20;
+const NATION_NAME_SPACING = 0.16; // em, as in .map-panel__nation-name
+const NATION_NAME_FILL = 0.86; // share of the land's width the name may take
+
+// A nation's name across its land, shrunk to fit if the country is narrow,
+// with the ruling party underneath; the pair is centred on (x, y). Letter
+// spacing adds a gap after the last letter too, so the name is nudged
+// right by half a gap to sit truly in the middle.
+function NationName({ x, y, width, name, isYou, party }: { x: number; y: number; width: number; name: string; isYou: boolean; party: { name: string; fill: string } | null }) {
+  const ref = useRef<SVGTextElement>(null);
+  const [size, setSize] = useState(NATION_NAME_SIZE);
+  useLayoutEffect(() => {
+    const fit = () => {
+      const text = ref.current;
+      if (!text) return;
+      const shown = text.style.fontSize;
+      text.style.fontSize = `${NATION_NAME_SIZE}px`;
+      const natural = text.getComputedTextLength();
+      text.style.fontSize = shown;
+      const room = width * NATION_NAME_FILL;
+      setSize(natural > room ? Math.max(NATION_NAME_MIN_SIZE, (NATION_NAME_SIZE * room) / natural) : NATION_NAME_SIZE);
+    };
+    fit();
+    // The display face may still be loading; measure again once it has.
+    let live = true;
+    document.fonts?.ready.then(() => live && fit());
+    return () => {
+      live = false;
+    };
+  }, [name, width]);
+  const nameY = party ? y - 9 : y;
+  return (
+    <g>
+      <text
+        ref={ref}
+        x={x}
+        y={nameY}
+        dx={(size * NATION_NAME_SPACING) / 2}
+        dominantBaseline="central"
+        className={`map-panel__nation-name ${isYou ? "is-you" : ""}`}
+        style={{ fontSize: size }}
+      >
+        {name}
+      </text>
+      {party && (
+        <text x={x} y={nameY + size * 0.5 + 10} dominantBaseline="central" className="map-panel__nation-party" style={{ fill: party.fill }}>
+          {party.name}
+        </text>
+      )}
+    </g>
+  );
+}
+
 function CapitalBadge({ x, y }: { x: number; y: number }) {
   return (
     <g pointerEvents="none">
@@ -346,10 +400,10 @@ type FlagKey = "homesFull" | "homesOver" | "jobsShort" | "jobsJobless" | "discon
 // The legend's key to the province flags — drawn with the very glyphs the
 // info bars use.
 const FLAG_LEGEND: Array<{ key: FlagKey; label: string; hint: string; glyph: ReactNode }> = [
-  { key: "homesOver", label: "People without a home", hint: "1% or more of the people here have no home — build homes here", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="homes" level="alert" cx={-1} cy={1} /></svg> },
-  { key: "homesFull", label: "Homes nearly full", hint: "95% of the places here are taken — no room to grow", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="homes" level="warn" cx={0} cy={1} /></svg> },
-  { key: "jobsJobless", label: "Out of work", hint: "10% or more of the workers here have no job — build workplaces here", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="jobs" level="alert" cx={-1} cy={1} /></svg> },
-  { key: "jobsShort", label: "Jobs unfilled", hint: "5% or more of the jobs here have nobody to do them — homes here would bring workers", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="jobs" level="warn" cx={0} cy={1} /></svg> },
+  { key: "homesOver", label: "People without a home", hint: "1% or more of the people here have no home. Build homes here.", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="homes" level="alert" cx={-1} cy={1} /></svg> },
+  { key: "homesFull", label: "Homes nearly full", hint: "95% of the places here are taken, so there's no room to grow.", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="homes" level="warn" cx={0} cy={1} /></svg> },
+  { key: "jobsJobless", label: "Out of work", hint: "10% or more of the workers here have no job. Build workplaces here.", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="jobs" level="alert" cx={-1} cy={1} /></svg> },
+  { key: "jobsShort", label: "Jobs unfilled", hint: "5% or more of the jobs here have nobody to do them. Homes here would bring workers.", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="jobs" level="warn" cx={0} cy={1} /></svg> },
   { key: "discontent", label: "Discontent", hint: UNREST_INFO.discontent.effect, glyph: <UnrestStageIcon stage="discontent" size={22} /> },
   { key: "strikes", label: "Strikes", hint: UNREST_INFO.strikes.effect, glyph: <UnrestStageIcon stage="strikes" size={22} /> },
   {
@@ -501,7 +555,7 @@ const MapLayers = memo(function MapLayers({
         const isScouted = scoutedIslandIds.includes(land.id);
         const isExpeditionActive = expeditionIslandIds.includes(land.id);
         const isSelected = land.id === selectedIslandId;
-        const status = isScouted ? "charted" : isExpeditionActive ? "venture under way" : "uncharted — click to charter a venture";
+        const status = isScouted ? "charted" : isExpeditionActive ? "venture under way" : "uncharted: click to charter a venture";
         return (
           <path
             key={land.id}
@@ -720,16 +774,15 @@ const MapLayers = memo(function MapLayers({
           const rulerId = foreignRulers[shape.nationId];
           const ruler = rulerId ? getParty(rulerId) : null;
           return (
-            <g key={`${shape.nationId}-name`}>
-              <text x={shape.labelX} y={shape.labelY - 34} className={`map-panel__nation-name ${isYou ? "is-you" : ""}`}>
-                {shape.name}
-              </text>
-              {ruler && (
-                <text x={shape.labelX} y={shape.labelY - 16} className="map-panel__nation-party" style={{ fill: inkier(ruler.color, 0.3) }}>
-                  {ruler.name}
-                </text>
-              )}
-            </g>
+            <NationName
+              key={`${shape.nationId}-name`}
+              x={shape.labelX}
+              y={shape.labelY}
+              width={shape.labelWidth}
+              name={shape.name}
+              isYou={isYou}
+              party={ruler ? { name: ruler.name, fill: inkier(ruler.color, 0.3) } : null}
+            />
           );
         })}
       </g>
@@ -761,12 +814,13 @@ const MapLayers = memo(function MapLayers({
       );
     })}
 
-    {/* Province info bar: one compact strip per owned province, on its
-        own translucent backing so it reads clearly no matter what
-        terrain or nation color sits underneath — what it produces,
-        then what's built there (one icon + a "×N" count per building
-        type, not one icon per building), instead of scattering icons
-        loose across the map. */}
+    {/* Province info bar, on its own translucent backing so it reads
+        clearly whatever lies underneath. Zoomed out, it appears only on a
+        province with something wrong, and shows only that — broken
+        buildings, short homes or work, unrest — so problems stand out
+        instead of drowning among every province's buildings. Zoom in, or
+        point at or pick a province, and it adds what the province
+        produces and what's built there (one icon + a count per type). */}
     {provinces.map((province) => {
       if (!nation.provinceIds.includes(province.id)) return null;
 
@@ -785,8 +839,13 @@ const MapLayers = memo(function MapLayers({
       if (status && status.jobs !== "ok") flags.push("jobs");
       if (status && status.stage !== "calm") flags.push("stage");
 
+      const showDetail = zoomedIn || province.id === selectedProvinceId || province.id === hoveredProvinceId;
+      if (!showDetail && flags.length === 0 && brokenCount === 0) return null;
+      const shownTypes = showDetail ? buildingTypes : [];
+      const lead = showDetail ? 1 : 0; // the resource slot, when shown
+
       const itemWidth = 20;
-      const itemCount = 1 + buildingTypes.length + (brokenCount > 0 ? 1 : 0) + flags.length; // resource + one slot per building type present + a broken marker + the flags
+      const itemCount = lead + shownTypes.length + (brokenCount > 0 ? 1 : 0) + flags.length; // resource + one slot per building type shown + a broken marker + the flags
       const barWidth = itemCount * itemWidth + 6;
       const barX = province.labelX - barWidth / 2;
       const barY = province.labelY + 10;
@@ -795,14 +854,16 @@ const MapLayers = memo(function MapLayers({
       return (
         <g key={`${province.id}-info`} pointerEvents="none">
           <rect x={barX} y={barY} width={barWidth} height={22} rx={5} className="map-panel__info-bar" />
-          <ResourceIcon
-            type={RESOURCE_BY_TERRAIN[province.terrain]}
-            x={barX + itemWidth / 2 + 3}
-            y={itemCenterY}
-            size={7}
-          />
-          {buildingTypes.map((type, index) => {
-            const cx = barX + itemWidth * (index + 1) + itemWidth / 2 + 3;
+          {showDetail && (
+            <ResourceIcon
+              type={RESOURCE_BY_TERRAIN[province.terrain]}
+              x={barX + itemWidth / 2 + 3}
+              y={itemCenterY}
+              size={7}
+            />
+          )}
+          {shownTypes.map((type, index) => {
+            const cx = barX + itemWidth * (index + lead) + itemWidth / 2 + 3;
             const count = counts.get(type)!;
             return (
               <g key={type}>
@@ -817,14 +878,14 @@ const MapLayers = memo(function MapLayers({
           })}
           {brokenCount > 0 && (
             <g>
-              <circle cx={barX + itemWidth * (buildingTypes.length + 1) + itemWidth / 2 + 3} cy={itemCenterY} r={7} className="map-panel__broken-marker" />
-              <text x={barX + itemWidth * (buildingTypes.length + 1) + itemWidth / 2 + 3} y={itemCenterY + 3.5} className="map-panel__broken-count">
+              <circle cx={barX + itemWidth * (shownTypes.length + lead) + itemWidth / 2 + 3} cy={itemCenterY} r={7} className="map-panel__broken-marker" />
+              <text x={barX + itemWidth * (shownTypes.length + lead) + itemWidth / 2 + 3} y={itemCenterY + 3.5} className="map-panel__broken-count">
                 !
               </text>
             </g>
           )}
           {flags.map((flag, index) => {
-            const cx = barX + itemWidth * (1 + buildingTypes.length + (brokenCount > 0 ? 1 : 0) + index) + itemWidth / 2 + 3;
+            const cx = barX + itemWidth * (lead + shownTypes.length + (brokenCount > 0 ? 1 : 0) + index) + itemWidth / 2 + 3;
             if (flag === "stage") {
               return (
                 <g key={flag} transform={`translate(${cx - 7} ${itemCenterY - 7})`}>
@@ -1170,7 +1231,7 @@ export const MapPanel = memo(function MapPanel({
                     <ResourceIcon type={resourceType} size={8} />
                   </svg>
                   <span>
-                    {TERRAIN_LABELS[province.terrain]} — produces {RESOURCE_LABELS[resourceType]}
+                    {TERRAIN_LABELS[province.terrain]}, produces {RESOURCE_LABELS[resourceType]}
                     {province.terrain === "hills" ? " and Coal" : ""}
                   </span>
                 </div>
@@ -1231,7 +1292,7 @@ export const MapPanel = memo(function MapPanel({
                 )}
                 {buildings.some((b) => !isWorking(b)) && (
                   <div className="map-panel__tooltip-row map-panel__tooltip-broken">
-                    {buildings.filter((b) => !isWorking(b)).length} broken — repair from the Economy tab
+                    {buildings.filter((b) => !isWorking(b)).length} broken. Repair from the Economy tab.
                   </div>
                 )}
                 {buildings.length === 0 && roads === 0 && <div className="map-panel__tooltip-empty">No buildings yet.</div>}
@@ -1247,7 +1308,7 @@ export const MapPanel = memo(function MapPanel({
             setLegendSeen(true);
           }}
           aria-expanded={showLegend}
-          title={anyFlags && !legendSeen ? "Some provinces are flagged — the legend explains the marks" : undefined}
+          title={anyFlags && !legendSeen ? "Some provinces are flagged. The legend explains the marks." : undefined}
         >
           Legend
           {anyFlags && !legendSeen && (
@@ -1303,6 +1364,7 @@ export const MapPanel = memo(function MapPanel({
                 )}
               </span>
             ))}
+            <span className="map-panel__legend-note">Zoomed out, only provinces with a problem show a strip. Zoom in, or point at a province, to see what it produces and what's built there.</span>
             <span className="map-panel__legend-heading">Map</span>
             {NATIONS.map((n) => (
               <span key={n.id} className={`map-panel__legend-item ${n.id === nation.id ? "is-you" : ""}`} title={n.name}>

@@ -19,8 +19,11 @@ import {
 import type { ProjectType } from "../construction/types";
 import type { GameState } from "../country/types";
 import { getWorkingCounts } from "../maintenance/maintenanceRules";
+import { getParty } from "../parties/partyRules";
+import { getModifiers } from "../policy/policyRules";
+import { chosenIds, hasParentDone, isClosedOff, isOpenToParty } from "../policy/treeRules";
 import { RESEARCH_NODES } from "./researchData";
-import type { ResearchCategory, ResearchEffects, ResearchNode, ResearchOutcomeTier } from "./types";
+import type { ResearchCategory, ResearchEffects, ResearchNode } from "./types";
 
 export function getResearchNode(id: string): ResearchNode | undefined {
   return RESEARCH_NODES.find((n) => n.id === id);
@@ -52,7 +55,8 @@ export function getResearchRateBreakdown(state: GameState, category: ResearchCat
           ? working.schools * RESEARCH_PER_SCHOOL
           : working.homes * RESEARCH_PER_HOME;
   const scientists = state.workforce.scientists[category] * RESEARCH_PER_SCIENTIST;
-  const educationMultiplier = 1 + working.schools * EDUCATION_RESEARCH_BONUS;
+  // Schools, and anything in force that speeds research up or slows it down.
+  const educationMultiplier = (1 + working.schools * EDUCATION_RESEARCH_BONUS) * getModifiers(state).researchMultiplier;
   return {
     base: RESEARCH_BASE_RATE_PER_AREA,
     buildings,
@@ -78,96 +82,26 @@ export function isBuildingUnlocked(enactedResearchIds: string[], type: ProjectTy
   return RESEARCH_NODES.some((n) => n.unlocksBuildingType === type && enactedResearchIds.includes(n.id));
 }
 
-// "You don't know if the scientist will actually make something good" — a
-// finished node still rolls how well it actually panned out. Weighted toward
-// "expected" so most results feel like what the node promised, with real
-// upside and downside tails on either end.
-const RESEARCH_OUTCOME_TABLE: Array<{ tier: ResearchOutcomeTier; weight: number; factor: number; flavor: string }> = [
-  { tier: "breakthrough", weight: 0.2, factor: 1.5, flavor: "a genuine breakthrough — the results exceed every projection" },
-  { tier: "expected", weight: 0.6, factor: 1, flavor: "solid, as-projected progress" },
-  { tier: "underwhelming", weight: 0.2, factor: 0.5, flavor: "underwhelming results — half-measures, not the hoped-for leap" },
-];
+export { getResearchOutcomeFactor, getResearchOutcomeFlavor, rollResearchOutcome } from "./researchOutcomes";
 
-export function rollResearchOutcome(): { tier: ResearchOutcomeTier; factor: number; flavor: string } {
-  const roll = Math.random();
-  let cumulative = 0;
-  for (const entry of RESEARCH_OUTCOME_TABLE) {
-    cumulative += entry.weight;
-    if (roll < cumulative) return entry;
-  }
-  return RESEARCH_OUTCOME_TABLE[RESEARCH_OUTCOME_TABLE.length - 1];
-}
-
-export function getResearchOutcomeFactor(tier: ResearchOutcomeTier | undefined): number {
-  return RESEARCH_OUTCOME_TABLE.find((entry) => entry.tier === tier)?.factor ?? 1;
-}
-
-export function getResearchOutcomeFlavor(tier: ResearchOutcomeTier | undefined): string | undefined {
-  return RESEARCH_OUTCOME_TABLE.find((entry) => entry.tier === tier)?.flavor;
-}
-
-// Every ongoing effect a node can have — each one a multiplier on some rule
-// elsewhere (1 = no change).
-export const RESEARCH_MULTIPLIERS = [
-  "incomeMultiplier",
-  "industryMultiplier",
-  "housingCapacityMultiplier",
-  "heatingMultiplier",
-  "farmJobsMultiplier",
-  "factoryJobsMultiplier",
-  "winterFarmMultiplier",
-  "breakdownMultiplier",
-  "repairCostMultiplier",
-  "buyPriceMultiplier",
-  "politicalPowerMultiplier",
-  "pressureMultiplier",
-] as const satisfies ReadonlyArray<keyof ResearchEffects>;
-
-export type ResearchMultiplier = (typeof RESEARCH_MULTIPLIERS)[number];
-export type ActiveResearchEffects = Record<ResearchMultiplier, number>;
-
-// Scales a node's effects by an outcome factor: multiplier fields scale
-// their *deviation from 1* (a 1.5x breakthrough on +8% industry is +12%,
-// not +12x; on -30% workers it's -45%), one-time deltas scale directly.
-export function scaleResearchEffects(effects: ResearchEffects, factor: number): ResearchEffects {
-  const scaled: ResearchEffects = {};
-  for (const key of RESEARCH_MULTIPLIERS) {
-    const value = effects[key];
-    if (value !== undefined) scaled[key] = Math.max(0, 1 + (value - 1) * factor);
-  }
-  if (effects.treasuryDelta !== undefined) scaled.treasuryDelta = Math.round(effects.treasuryDelta * factor);
-  if (effects.foodDelta !== undefined) scaled.foodDelta = Math.round(effects.foodDelta * factor);
-  if (effects.stabilityDelta !== undefined) scaled.stabilityDelta = Math.round(effects.stabilityDelta * factor);
-  if (effects.populationDelta !== undefined) scaled.populationDelta = Math.round(effects.populationDelta * factor);
-  if (effects.popularityDelta !== undefined) scaled.popularityDelta = Math.round(effects.popularityDelta * factor);
-  return scaled;
-}
-
-// Ongoing multipliers from every completed research node, composed the
-// same way getActiveLawEffects folds enacted laws together — each node's own
-// rolled outcome (see rollResearchOutcome) scales its contribution.
-export function getActiveResearchEffects(
-  enactedResearchIds: string[],
-  researchOutcomes: Record<string, ResearchOutcomeTier>,
-): ActiveResearchEffects {
-  const active = Object.fromEntries(RESEARCH_MULTIPLIERS.map((key) => [key, 1])) as ActiveResearchEffects;
-  for (const id of enactedResearchIds) {
-    const node = getResearchNode(id);
-    if (!node) continue;
-    const scaled = scaleResearchEffects(node.effects, getResearchOutcomeFactor(researchOutcomes[id]));
-    for (const key of RESEARCH_MULTIPLIERS) active[key] *= scaled[key] ?? 1;
-  }
-  return active;
-}
-
-export function getResearchEffectsFor(state: GameState): ActiveResearchEffects {
-  return getActiveResearchEffects(state.enactedResearchIds, state.researchOutcomes);
+// A node's one-time effects scaled by how well it turned out (its ongoing
+// ones are scaled the same way in domain/policy/policyRules.ts).
+export function scaleOneTimeEffects(effects: ResearchEffects, factor: number): ResearchEffects {
+  const round = (v: number | undefined) => (v === undefined ? undefined : Math.round(v * factor));
+  return {
+    treasuryDelta: round(effects.treasuryDelta),
+    foodDelta: round(effects.foodDelta),
+    stabilityDelta: round(effects.stabilityDelta),
+    populationDelta: round(effects.populationDelta),
+    popularityDelta: round(effects.popularityDelta),
+  };
 }
 
 export type ResearchNodeStatus =
   | "enacted" // completed
   | "in-progress" // its area's current direction
-  | "foreclosed"
+  | "foreclosed" // closed off for good: see domain/policy/treeRules.ts
+  | "locked-party" // only for a party of another ideology; not shown
   | "locked-prerequisite"
   | "locked-cross" // a required node in the Law tree isn't enacted yet
   | "available"; // can be chosen as its area's direction
@@ -176,17 +110,10 @@ export function getResearchNodeStatus(state: GameState, node: ResearchNode): Res
   if (state.enactedResearchIds.includes(node.id)) return "enacted";
   if (state.researchFocus[node.category] === node.id) return "in-progress";
 
-  const siblingEnacted = RESEARCH_NODES.some(
-    (n) => n.category === node.category && n.tier === node.tier && n.id !== node.id && state.enactedResearchIds.includes(n.id),
-  );
-  if (siblingEnacted) return "foreclosed";
-
-  if (node.tier > 1) {
-    const prerequisiteMet = RESEARCH_NODES.some(
-      (n) => n.category === node.category && n.tier === node.tier - 1 && state.enactedResearchIds.includes(n.id),
-    );
-    if (!prerequisiteMet) return "locked-prerequisite";
-  }
+  if (!isOpenToParty(node, getParty(state.partyId).ideology)) return "locked-party";
+  const chosen = chosenIds(state);
+  if (isClosedOff(node.id, chosen)) return "foreclosed";
+  if (!hasParentDone(node, chosen)) return "locked-prerequisite";
 
   if (node.crossRequirement && !state.enactedLawIds.includes(node.crossRequirement.nodeId)) return "locked-cross";
 

@@ -1,14 +1,19 @@
-// Where today's treasury and food nets actually come from. Shown as two
-// proportion bars rather than a grid of numbers: the *shape* of the bar is
-// the answer ("almost all my income is tax", "I'm eating more than I grow"),
-// with the figures riding along as labels rather than being the whole panel.
+// Where today's food net actually comes from. Shown as a proportion bar
+// rather than a grid of numbers: the *shape* of the bar is the answer ("I'm
+// eating more than I grow"), with the figures riding along as a key under
+// it — point at a stretch of the bar or a figure in the key and both light
+// up. When more is eaten than grown, it says how long the store lasts.
 import "./ProductionPanel.css";
+import { useState } from "react";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
-import { CURRENCY_SYMBOL } from "../../domain/constants";
+import { getForecasts } from "../../application/getForecasts";
+import { FORECAST_DAYS } from "../../domain/constants";
+import type { GameState } from "../../domain/country/types";
 import { formatCompact } from "../formatNumber";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
 interface ProductionPanelProps {
+  state: GameState;
   production: DailyProductionSummary;
 }
 
@@ -26,27 +31,27 @@ interface Part {
   value: number; // positive = adds to the net, negative = subtracts
 }
 
-interface LedgerProps {
-  title: string;
-  suffix?: string;
-  net: number;
-  parts: Part[];
-}
-
-// One net figure with its inputs drawn to scale: each part's share of the
-// total gross flow sets its segment width, so a farm finishing visibly
-// widens the green half of the food bar.
-function Ledger({ title, suffix = "", net, parts }: LedgerProps) {
+export function ProductionPanel({ state, production }: ProductionPanelProps) {
+  const [focus, setFocus] = useState<string | null>(null);
+  const parts: Part[] = [
+    { icon: "food", label: production.season === "winter" ? "Farmed (winter)" : "Farmed", value: production.farmFood },
+    { icon: "industry", label: "Granaries & canneries", value: production.processedFood },
+    { icon: "population", label: "Eaten", value: -production.foodConsumed },
+  ];
+  const net = Math.round(production.netFood) || 0;
+  // Each part's share of the total gross flow sets its segment width, so a
+  // farm finishing visibly widens the green half of the bar.
   const gross = parts.reduce((sum, p) => sum + Math.abs(p.value), 0) || 1;
-  const rounded = Math.round(net) || 0;
+  const runOut = net < 0 ? getForecasts(state, production).food : null;
+  const hover = (label: string) => ({ onMouseEnter: () => setFocus(label), onMouseLeave: () => setFocus(null) });
+  const lit = (label: string) => (focus === label ? "is-focus" : focus ? "is-dim" : "");
 
   return (
-    <div className="production-panel__ledger">
-      <div className="production-panel__ledger-head">
-        <span className="production-panel__ledger-title">{title}</span>
-        <span className={`production-panel__ledger-net ${rounded > 0 ? "is-gain" : rounded < 0 ? "is-loss" : ""}`}>
-          {signed(net)}
-          {suffix}/d
+    <section className="panel production-panel">
+      <div className="production-panel__head">
+        <h2>Food</h2>
+        <span className={`production-panel__net ${net > 0 ? "is-gain" : net < 0 ? "is-loss" : ""}`} title="Food a day, all told">
+          {signed(net)}/d
         </span>
       </div>
 
@@ -54,59 +59,34 @@ function Ledger({ title, suffix = "", net, parts }: LedgerProps) {
         {parts.map((part) => (
           <span
             key={part.label}
-            className={`production-panel__bar-seg ${part.value >= 0 ? "is-gain" : "is-loss"}`}
+            className={`production-panel__bar-seg ${part.value >= 0 ? "is-gain" : "is-loss"} ${lit(part.label)}`}
             style={{ width: `${(Math.abs(part.value) / gross) * 100}%` }}
-            title={`${part.label}: ${signed(part.value)}${suffix}/d`}
+            title={`${part.label}: ${signed(part.value)}/d`}
+            {...hover(part.label)}
           />
         ))}
       </div>
 
       <div className="production-panel__keys">
         {parts.map((part) => (
-          <span className="production-panel__key" key={part.label} title={part.label}>
+          <span className={`production-panel__key ${lit(part.label)}`} key={part.label} title={part.label} {...hover(part.label)}>
             <span className={`production-panel__key-dot ${part.value >= 0 ? "is-gain" : "is-loss"}`} />
             <StatIcon type={part.icon} size={15} />
-            <span className="production-panel__key-value">
-              {signed(part.value)}
-              {suffix}
-            </span>
+            <span className="production-panel__key-value">{signed(part.value)}</span>
           </span>
         ))}
       </div>
-    </div>
-  );
-}
 
-export function ProductionPanel({ production }: ProductionPanelProps) {
-  return (
-    <section className="panel production-panel">
-      <h2>Production</h2>
-
-      <Ledger
-        title="Treasury"
-        suffix={` ${CURRENCY_SYMBOL}`}
-        net={production.totalIncome}
-        parts={[
-          { icon: "treasury", label: "Tax", value: production.taxIncome },
-          { icon: "industry", label: "Industry", value: production.industryIncome },
-          { icon: "population", label: "Salaries", value: -production.salaries },
-        ]}
-      />
-
-      <Ledger
-        title="Food"
-        net={production.netFood}
-        parts={[
-          { icon: "food", label: production.season === "winter" ? "Farmed (winter)" : "Farmed", value: production.farmFood },
-          { icon: "industry", label: "Granaries & canneries", value: production.processedFood },
-          { icon: "population", label: "Eaten", value: -production.foodConsumed },
-        ]}
-      />
-
-      <div className="production-panel__aside" title="Research progress per day, all three areas together">
-        <StatIcon type="research" size={17} />
-        <span>+{production.researchPerDay.toFixed(1)}/d</span>
-      </div>
+      <p className="production-panel__store">
+        <StatIcon type="food" size={18} />
+        <strong>{formatCompact(Math.floor(state.stats.food))}</strong>
+        {net < 0 &&
+          (runOut ? (
+            <span className="is-loss">lasts {runOut.days} days</span>
+          ) : (
+            <span>lasts over {FORECAST_DAYS} days</span>
+          ))}
+      </p>
     </section>
   );
 }

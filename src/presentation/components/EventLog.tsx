@@ -75,7 +75,7 @@ function groupEvents(events: GameEvent[]): MonthGroup[] {
 
 // "— repair it from the Economy tab." says what the button beside it does.
 function tidy(message: string, action?: EventAction): string {
-  return action ? message.replace(/ — repair it from the Economy tab\.$/, ".") : message;
+  return action ? message.replace(/ Repair it from the Economy tab\.$/, "") : message;
 }
 
 function GoButton({ action, onOpenPanel }: { action?: EventAction; onOpenPanel: OpenPanel }) {

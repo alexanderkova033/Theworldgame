@@ -110,13 +110,13 @@ function SaveSlotCard({ slot, onSelect, onContinue, onRename, onDelete }: SaveSl
               className="save-slot-card__danger-button"
               onClick={() => (armedAction === "overwrite" ? onSelect(slot.slotId) : setArmedAction("overwrite"))}
             >
-              {armedAction === "overwrite" ? "Confirm — overwrite this save" : "Overwrite ▸ Start New Game"}
+              {armedAction === "overwrite" ? "Confirm: overwrite this save" : "Overwrite ▸ Start New Game"}
             </button>
             <button
               className="save-slot-card__danger-button"
               onClick={() => (armedAction === "delete" ? onDelete(slot.slotId) : setArmedAction("delete"))}
             >
-              {armedAction === "delete" ? "Confirm — delete this save" : "Delete"}
+              {armedAction === "delete" ? "Confirm: delete this save" : "Delete"}
             </button>
           </div>
         </>
@@ -153,7 +153,7 @@ export function StartScreen({
           <p className="start-screen__eyebrow">A nation-building chronicle</p>
           <h1 className="start-screen__title">The World Game</h1>
           <p className="start-screen__subtitle">
-            The continent enters a new century. Choose a save slot to continue an old chronicle, or start a new one —
+            The continent enters a new century. Choose a save slot to continue an old chronicle, or start a new one.
             each slot is independent, so starting fresh never costs you an old game by accident.
           </p>
 
@@ -183,11 +183,11 @@ export function StartScreen({
         </button>
 
         <p className="start-screen__eyebrow">
-          New game — {saveSlots.find((s) => s.slotId === pendingSlotId)?.name ?? `Save ${pendingSlotId + 1}`}
+          New game in {saveSlots.find((s) => s.slotId === pendingSlotId)?.name ?? `Save ${pendingSlotId + 1}`}
         </p>
         <h1 className="start-screen__title">Choose Your Nation</h1>
         <p className="start-screen__subtitle">
-          The nation you'll carry forward — this choice cannot be undone once the clock starts.
+          The nation you'll carry forward. This choice can't be undone once the clock starts.
         </p>
 
         <svg viewBox={`0 0 ${width} ${height}`} className="start-screen__map" aria-hidden="true">
@@ -205,7 +205,7 @@ export function StartScreen({
                 style={owner ? ({ "--nation-color": owner.color } as CSSProperties) : undefined}
                 onClick={owner ? () => onSelectNation(owner.id) : undefined}
               >
-                <title>{province.name}{owner ? ` — ${owner.name}` : ""}</title>
+                <title>{province.name}{owner ? `, ${owner.name}` : ""}</title>
               </path>
             );
           })}

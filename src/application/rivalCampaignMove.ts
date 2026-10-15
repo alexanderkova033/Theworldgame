@@ -40,7 +40,7 @@ export function pickRivalCampaignMove(state: GameState): RivalCampaignMove {
       };
     }
     return {
-      message: `${rival.name} grudgingly credits the government for ${node.name} — a rare moment of agreement.`,
+      message: `${rival.name} grudgingly credits the government for ${node.name}, a rare moment of agreement.`,
       popularityDelta: RIVAL_CAMPAIGN_POPULARITY_SWING * 0.4,
       effects: node.effects,
     };
