@@ -69,9 +69,10 @@ export function pathRoute(tree: "law" | "research", pathKey: string): string[] {
 export interface PlayOptions {
   days: number;
   follow?: { tree: "law" | "research"; pathKey: string };
+  onDay?: (state: GameState) => void; // sees the country after every simulated day
 }
 
-export function playCarefully(nation: string, party: string, { days, follow }: PlayOptions): GameState {
+export function playCarefully(nation: string, party: string, { days, follow, onDay }: PlayOptions): GameState {
   let s = setTaxRate(takeLoan(startNewGame(nation, party)), 0.12);
   const route = follow ? pathRoute(follow.tree, follow.pathKey) : [];
   const area = follow?.tree === "research" ? (RESEARCH_NODES.find((n) => n.id === route[1])!.category as ResearchCategory) : null;
@@ -110,6 +111,7 @@ export function playCarefully(nation: string, party: string, { days, follow }: P
     }
 
     s = simulateDay({ ...s, isPaused: false });
+    onDay?.(s);
   }
   return s;
 }

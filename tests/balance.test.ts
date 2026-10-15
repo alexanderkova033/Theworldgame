@@ -5,6 +5,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { completeLaw } from "../src/application/actions/enactLaw";
 import { startNewGame } from "../src/application/startNewGame";
+import { ELECTION_WIN_THRESHOLD } from "../src/domain/constants";
 import { LAW_PATHS } from "../src/domain/laws/lawData";
 import { RESEARCH_PATHS } from "../src/domain/research/researchData";
 import { NATIONS, playCarefully, playIdle } from "./support/carefulPlayer";
@@ -40,6 +41,21 @@ describe("a careful player", () => {
       earned.trade += treasury.trade ?? 0;
     }
     expect(earned.income).toBeGreaterThan(earned.trade);
+  });
+
+  // Surviving isn't the whole test: if a careful player never comes near
+  // losing, the game has gone soft. Support should dip close to the line at
+  // some point after the opening months.
+  it.each(NATIONS)("has to work for it in %s", (nation, party) => {
+    let lowest = 100;
+    let day = 0;
+    playCarefully(nation, party, {
+      days: THREE_YEARS,
+      onDay: (s) => {
+        if (++day > 60) lowest = Math.min(lowest, s.stats.popularity);
+      },
+    });
+    expect(lowest).toBeLessThan(ELECTION_WIN_THRESHOLD + 8);
   });
 });
 
