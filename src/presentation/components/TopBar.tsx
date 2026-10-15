@@ -5,7 +5,7 @@ import { ELECTION_WIN_THRESHOLD } from "../../domain/constants";
 import { monthsUntilNextElection } from "../../domain/parties/electionRules";
 import type { CountryStats, GameDate, GameSpeed } from "../../domain/country/types";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
-import type { EconomySection } from "../../application/getAdvisorOutlook";
+import type { PanelKey } from "../navigation";
 import type { HeatingOutlook } from "../../application/getHeatingOutlook";
 import type { Forecasts } from "../../application/getForecasts";
 import type { MaterialShortage } from "../../application/getMaterialShortages";
@@ -18,13 +18,8 @@ import { ResourceTicker } from "./ResourceTicker";
 
 const SPEEDS: GameSpeed[] = [1, 2, 3, 5];
 
-export type PanelKey = "politics" | "economy" | "trade" | "reports" | "laws" | "research" | "ventures";
-
 // Politics has no tab of its own: it opens from the nation's label.
 // Ventures neither: they open from an island on the map, or the event log.
-
-// Opens a tab — for Economy, optionally straight at one of its sections.
-export type OpenPanel = (panel: PanelKey, section?: EconomySection) => void;
 
 const TABS: Array<{ key: PanelKey; label: string; icon: NavIconType }> = [
   { key: "economy", label: "Economy", icon: "economy" },

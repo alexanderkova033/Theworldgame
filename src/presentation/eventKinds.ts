@@ -1,9 +1,8 @@
 // What an event-log message is about, and where to go to deal with it —
 // shared by the toasts and the event log, so both offer the same "Go"
 // button. Classified from the message text the simulation writes.
-import type { EconomySection } from "../application/getAdvisorOutlook";
+import type { EconomySection, PanelKey } from "./navigation";
 import type { GameEvent } from "../domain/country/types";
-import type { PanelKey } from "./components/TopBar";
 
 export interface EventAction {
   label: string;

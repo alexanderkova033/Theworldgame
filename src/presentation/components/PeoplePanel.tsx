@@ -18,7 +18,7 @@ import { BuildingGlyph, FlameIcon, UnrestStageIcon } from "./CauseIcon";
 import { Gauge } from "./Gauge";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
-import type { OpenPanel } from "./TopBar";
+import type { OpenPanel } from "../navigation";
 
 function Meter({
   icon,

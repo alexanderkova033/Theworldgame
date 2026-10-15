@@ -20,7 +20,7 @@ import { BuildingGlyph, UnrestStageIcon } from "./CauseIcon";
 import { Gauge } from "./Gauge";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
-import type { OpenPanel } from "./TopBar";
+import type { OpenPanel } from "../navigation";
 
 const BUILDING_NAMES: Record<ProjectType, [string, string]> = {
   housing: ["Home", "Homes"],

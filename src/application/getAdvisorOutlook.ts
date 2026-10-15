@@ -33,26 +33,6 @@ import type { DailyProductionSummary } from "./getDailyProductionSummary";
 import type { Forecasts } from "./getForecasts";
 import type { HeatingOutlook } from "./getHeatingOutlook";
 
-// Which tab fixes it — the same keys as the top bar's tabs.
-export type AdvisorPanel = "politics" | "economy" | "trade" | "research";
-
-// The Economy tab's sections — an alert about homes opens People, one
-// about broken buildings opens Build (next to Repairs).
-export type EconomySection = "build" | "people" | "staff" | "budget";
-
-const ECONOMY_SECTION: Partial<Record<AdvisorAlertKind | ObjectiveKind, EconomySection>> = {
-  provinceUnrest: "people",
-  food: "build",
-  money: "budget",
-  farmWorkers: "people",
-  factoryWorkers: "people",
-  homeless: "people",
-  broken: "build",
-  stalled: "build",
-  farm: "build",
-  homes: "build",
-};
-
 export type AdvisorAlertKind =
   | "unrest"
   | "provinceUnrest"
@@ -73,9 +53,7 @@ export interface AdvisorAlert {
   text: string; // very short, with the key number: "Coal: 12 days"
   detail: string; // tooltip: what's wrong and what to do
   critical: boolean;
-  panel: AdvisorPanel;
   stage?: GameState["unrestStage"]; // for the unrest alert
-  section?: EconomySection; // which part of the Economy tab, when panel is "economy"
 }
 
 export type ObjectiveKind = "winter" | "farm" | "homes" | "election";
@@ -85,8 +63,6 @@ export interface AdvisorObjective {
   text: string;
   detail: string;
   done: boolean[]; // one tick per objective, in order
-  panel: AdvisorPanel;
-  section?: EconomySection;
 }
 
 export interface AdvisorOutlook {
@@ -123,7 +99,6 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       text: `Unrest: ${UNREST_NAMES[state.unrestStage]}`,
       detail: `Stability ${Math.round(state.stats.stability)}. A crackdown on the Politics tab pulls the country back a stage; police soften strikes and riots.`,
       critical: state.unrestStage !== "discontent",
-      panel: "politics",
     });
   }
 
@@ -140,7 +115,6 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       text: `${UNREST_NAMES[worst.unrestStage]}: ${getProvinceName(id)}${others}`,
       detail: `${getProvinceName(id)} is ${worst.unrestStage === "riots" ? "rioting, wrecking its buildings and dragging national stability down" : "on strike"}. Too many there have no home or no work: build homes or jobs there, or crack down.`,
       critical: worst.unrestStage === "riots",
-      panel: "economy",
     });
   }
 
@@ -152,7 +126,6 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       text: `Coal: ${dayCount(days)}`,
       detail: `Coal and firewood last ${days} more days, with ${heating.winterDaysLeft} days of winter left. Buy coal on the Trade tab.`,
       critical: days < ADVISOR_COAL_CRITICAL_DAYS,
-      panel: "trade",
     });
   } else if (!heating.isWinter && heating.daysUntilWinter <= ADVISOR_WINTER_PREP_DAYS && heating.fuel < heating.fuelNeeded) {
     alerts.push({
@@ -160,7 +133,6 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       text: `Winter coal: ${percent(heating.fuelNeeded > 0 ? heating.fuel / heating.fuelNeeded : 1)}`,
       detail: `Winter starts in ${heating.daysUntilWinter} days. You have ${Math.floor(heating.fuel)} of the ${Math.ceil(heating.fuelNeeded)} coal and wood the homes will burn.`,
       critical: heating.daysUntilWinter <= ADVISOR_WINTER_PREP_CRITICAL_DAYS,
-      panel: "trade",
     });
   }
 
@@ -173,7 +145,6 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       text: `Food: ${dayCount(days)}`,
       detail: `If nothing changes, the food runs out around ${formatDate(date)}. Build farms, or buy food on the Trade tab.`,
       critical,
-      panel: critical ? "trade" : "economy",
     });
   }
 
@@ -186,7 +157,6 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       text: `Money: ${dayCount(days)}`,
       detail: `If nothing changes, the treasury runs dry around ${formatDate(date)}: raise taxes, cut staff, pause building, or take a loan.`,
       critical: days < ADVISOR_MONEY_CRITICAL_DAYS,
-      panel: "economy",
     });
   }
 
@@ -198,7 +168,6 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       text: `Farms: ${percent(labour.foodStaffing)} staffed`,
       detail: "Not enough workers for the farms, granaries and canneries. More homes mean more people; fewer factories free up hands.",
       critical: labour.foodStaffing < ADVISOR_FARM_STAFF_CRITICAL,
-      panel: "economy",
     });
   } else if (labour.industryStaffing < 1) {
     alerts.push({
@@ -206,7 +175,6 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       text: `Factories: ${percent(labour.industryStaffing)} staffed`,
       detail: "Not enough workers left over for the factories. Build homes so more people can settle.",
       critical: false,
-      panel: "economy",
     });
   }
 
@@ -218,7 +186,6 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       text: `Homeless: ${compact(homeless)}`,
       detail: `${percent(homelessShare)} of people have no home. It costs stability and support every day. Build homes.`,
       critical: homelessShare >= ADVISOR_HOMELESS_CRITICAL_SHARE,
-      panel: "economy",
     });
   }
 
@@ -229,7 +196,6 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       text: `Broken: ${broken}`,
       detail: `${broken} building${broken === 1 ? " has" : "s have"} broken down and produce nothing until repaired.`,
       critical: false,
-      panel: "economy",
     });
   }
 
@@ -239,7 +205,6 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       text: `Debt: ${compact(state.debt)}`,
       detail: "Debt is past the danger line. The interest costs stability and support every day. Repay on the Trade tab.",
       critical: true,
-      panel: "trade",
     });
   }
 
@@ -251,7 +216,6 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       text: `Election ${months} mo: ${support}%`,
       detail: `The election is in ${months} month${months === 1 ? "" : "s"} and you'd lose today. You need ${ELECTION_WIN_THRESHOLD}%.`,
       critical: months <= ADVISOR_ELECTION_CRITICAL_MONTHS,
-      panel: "politics",
     });
   }
 
@@ -262,7 +226,6 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       text: `Stalled: ${stalled}`,
       detail: `${stalled} building project${stalled === 1 ? " is" : "s are"} stalled for lack of money or materials, and slipping backward.`,
       critical: false,
-      panel: "economy",
     });
   }
 
@@ -275,14 +238,12 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       text: `Research idle: ${idle.length}`,
       detail: `No direction chosen for ${idle.join(", ")} research, so that area makes no progress.`,
       critical: false,
-      panel: "research",
     });
   }
 
   return alerts
     .sort((a, b) => Number(b.critical) - Number(a.critical) || ALERT_ORDER.indexOf(a.kind) - ALERT_ORDER.indexOf(b.kind))
-    .slice(0, ADVISOR_MAX_ALERTS)
-    .map((alert) => (alert.panel === "economy" ? { ...alert, section: ECONOMY_SECTION[alert.kind] } : alert));
+    .slice(0, ADVISOR_MAX_ALERTS);
 }
 
 // The opening steps, each worked out from the state: through the first
@@ -301,7 +262,6 @@ function getObjective(state: GameState): AdvisorObjective | null {
         text: "Survive the first winter",
         detail: "Keep the homes heated and people fed until spring (March).",
         done,
-        panel: "trade",
       };
     case 1:
       return {
@@ -309,7 +269,6 @@ function getObjective(state: GameState): AdvisorObjective | null {
         text: building("farm") ? "Farm being built" : "Build a farm",
         detail: "More farms feed a growing country, and next winter's farms yield little.",
         done,
-        panel: "economy",
       };
     case 2:
       return {
@@ -317,7 +276,6 @@ function getObjective(state: GameState): AdvisorObjective | null {
         text: building("housing") ? "Homes being built" : "Build homes",
         detail: "The country grows; every family needs a roof. More people also means more workers.",
         done,
-        panel: "economy",
       };
     default:
       return {
@@ -325,7 +283,6 @@ function getObjective(state: GameState): AdvisorObjective | null {
         text: `Win the election (${monthsUntilNextElection(state.date)} mo)`,
         detail: `Hold ${ELECTION_WIN_THRESHOLD}% support or more on election day.`,
         done,
-        panel: "politics",
       };
   }
 }
@@ -333,5 +290,5 @@ function getObjective(state: GameState): AdvisorObjective | null {
 export function getAdvisorOutlook(state: GameState, production: DailyProductionSummary, heating: HeatingOutlook, forecasts: Forecasts): AdvisorOutlook {
   const alerts = getAlerts(state, production, heating, forecasts);
   const objective = alerts.length === 0 ? getObjective(state) : null;
-  return { alerts, objective: objective && objective.panel === "economy" ? { ...objective, section: ECONOMY_SECTION[objective.kind] } : objective };
+  return { alerts, objective };
 }

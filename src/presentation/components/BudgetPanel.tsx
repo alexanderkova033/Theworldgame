@@ -11,7 +11,7 @@
 import "./BudgetPanel.css";
 import { useState, type ReactNode } from "react";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
-import type { EconomySection } from "../../application/getAdvisorOutlook";
+import type { EconomySection } from "../navigation";
 import { getForecasts } from "../../application/getForecasts";
 import { formatDate } from "../../domain/country/calendar";
 import { CURRENCY_SYMBOL } from "../../domain/constants";

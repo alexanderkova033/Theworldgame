@@ -15,8 +15,7 @@ import { formatSignedChange } from "../formatNumber";
 import { getCauseInfo, METRIC_LABELS } from "../causes";
 import { getEventKind } from "../eventKinds";
 import { WrenchIcon } from "./RepairsPanel";
-import type { EconomySection } from "../../application/getAdvisorOutlook";
-import type { OpenPanel, PanelKey } from "./TopBar";
+import type { EconomySection, OpenPanel, PanelKey } from "../navigation";
 
 const TOAST_LIFETIME_MS = 8000;
 const MAX_TOASTS = 4;

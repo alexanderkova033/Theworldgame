@@ -59,7 +59,7 @@ import { NavIcon } from "./NavIcon";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import { SubTabs } from "./SubTabs";
 import { EffectList } from "./TechTree";
-import type { PanelKey } from "./TopBar";
+import type { PanelKey } from "../navigation";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
 

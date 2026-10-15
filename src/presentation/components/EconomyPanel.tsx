@@ -8,7 +8,7 @@
 // something there needs the player; the advisor strip and toasts open the
 // right section directly (see App.tsx).
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
-import type { EconomySection } from "../../application/getAdvisorOutlook";
+import type { EconomySection } from "../navigation";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
@@ -24,7 +24,7 @@ import { RepairsPanel } from "./RepairsPanel";
 import { StatIcon } from "./StatIcon";
 import { SubTabs, type SubTab } from "./SubTabs";
 import { TaxPanel } from "./TaxPanel";
-import type { OpenPanel } from "./TopBar";
+import type { OpenPanel } from "../navigation";
 import { WorkforcePanel } from "./WorkforcePanel";
 
 interface EconomyPanelProps {

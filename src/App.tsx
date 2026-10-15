@@ -9,7 +9,7 @@ import { NATIONS } from "./domain/nations/nationData";
 import type { GameSpeed } from "./domain/country/types";
 import { getPartiesForNation, getParty } from "./domain/parties/partyRules";
 import { dismissDecision, resolveDecision } from "./application/actions";
-import { getAdvisorOutlook, type EconomySection } from "./application/getAdvisorOutlook";
+import { getAdvisorOutlook } from "./application/getAdvisorOutlook";
 import { getDailyProductionSummary } from "./application/getDailyProductionSummary";
 import { getForecasts } from "./application/getForecasts";
 import { getHeatingOutlook } from "./application/getHeatingOutlook";
@@ -33,7 +33,8 @@ import { ReportsPanel } from "./presentation/components/ReportsPanel";
 import { ResearchPanel } from "./presentation/components/ResearchPanel";
 import { StartScreen } from "./presentation/components/StartScreen";
 import { Toasts } from "./presentation/components/Toasts";
-import { TopBar, type PanelKey } from "./presentation/components/TopBar";
+import { TopBar } from "./presentation/components/TopBar";
+import type { EconomySection, PanelKey } from "./presentation/navigation";
 import { TradePanel } from "./presentation/components/TradePanel";
 import { useGameClock } from "./presentation/hooks/useGameClock";
 

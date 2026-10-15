@@ -7,7 +7,7 @@ import { useState } from "react";
 import { formatDate, formatMonthYear } from "../../domain/country/calendar";
 import type { EventSeverity, GameEvent } from "../../domain/country/types";
 import { getEventKind, type EventAction } from "../eventKinds";
-import type { OpenPanel } from "./TopBar";
+import type { OpenPanel } from "../navigation";
 
 interface EventLogProps {
   events: GameEvent[]; // newest first
