@@ -25,7 +25,7 @@ import {
   CRACKDOWN_SUPPORT,
   CURRENCY_SYMBOL,
   ELECTIONS_TO_WIN_GAME,
-  ELECTION_WIN_THRESHOLD,
+  ELECTION_WIN_THRESHOLDS,
   RALLY_POLITICAL_POWER_COST,
   RALLY_SUPPORT,
   RALLY_TREASURY_COST,
@@ -39,7 +39,7 @@ import {
 } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getDecision } from "../../domain/decisions/decisionRules";
-import { monthsUntilNextElection } from "../../domain/parties/electionRules";
+import { getElectionThreshold, monthsUntilNextElection } from "../../domain/parties/electionRules";
 import { FACTIONS, getFactionWeights } from "../../domain/parties/factionData";
 import { getParty, getRivalParty } from "../../domain/parties/partyRules";
 import type { Ideology, Party } from "../../domain/parties/types";
@@ -243,11 +243,12 @@ function Chamber({
       className="chamber"
       viewBox={`${-radius - pad} ${-radius - pad} ${2 * (radius + pad)} ${radius + pad + seatRadius + 2}`}
       role="img"
-      aria-label={`If the vote were today: ${party.name} ${yours} seats, ${rival.name} ${CHAMBER.seats - yours}. ${ELECTION_WIN_THRESHOLD} seats win.`}
+      aria-label={`If the vote were today: ${party.name} ${yours} seats, ${rival.name} ${CHAMBER.seats - yours}. ${getElectionThreshold(state.electionsWon)} seats win.`}
       onMouseLeave={() => onFocus(null)}
     >
-      {/* The line to win, straight up the middle of the chamber. */}
-      <line x1={0} y1={-radius * CHAMBER.inner + seatRadius + 2} x2={0} y2={-radius - pad + 1} className="chamber__line" />
+      {/* The line to win: half the chamber for the first election, further
+          round for each one after. */}
+      <WinLine threshold={getElectionThreshold(state.electionsWon)} inner={radius * CHAMBER.inner - seatRadius - 2} outer={radius + pad - 1} />
       {seats.map((seat, i) => (
         <circle
           key={i}
@@ -295,6 +296,16 @@ function PartyCreed({ party, isYours }: { party: Party; isYours: boolean }) {
       <EffectList effects={party.creed} />
     </div>
   );
+}
+
+// A ray from the chamber's centre at the seat that wins: seats fill from
+// the left, so 50% is straight up and a higher bar leans right.
+function WinLine({ threshold, inner, outer }: { threshold: number; inner: number; outer: number }) {
+  const angle = Math.PI * (1 - threshold / 100);
+  const at = (r: number) => ({ x: Math.cos(angle) * r, y: -Math.sin(angle) * r });
+  const from = at(inner);
+  const to = at(outer);
+  return <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} className="chamber__line" />;
 }
 
 // --- Election -------------------------------------------------------------
@@ -363,7 +374,7 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
   const popularity = Math.round(state.stats.popularity);
   const rivalPopularity = 100 - popularity;
   const monthsLeft = monthsUntilNextElection(state.date);
-  const margin = popularity - ELECTION_WIN_THRESHOLD;
+  const margin = popularity - getElectionThreshold(state.electionsWon);
   const isWinning = margin >= 0;
   const recentDecisions = state.decisionHistory.slice(0, 3);
   const canCourt = canCourtGroup(state);
@@ -410,7 +421,7 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
             />
           </div>
         </div>
-        <div className="politics-hero__side" title={`Win ${ELECTIONS_TO_WIN_GAME} elections in a row for outright victory. Lose one and the game ends.`}>
+        <div className="politics-hero__side" title={`Win ${ELECTIONS_TO_WIN_GAME} elections in a row for outright victory. Lose one and the game ends. Each asks for more support: ${ELECTION_WIN_THRESHOLDS.join("%, then ")}%.`}>
           <span className="politics-hero__pips">
             {Array.from({ length: ELECTIONS_TO_WIN_GAME }, (_, i) => (
               <span key={i} className={`politics-hero__pip ${i < state.electionsWon ? "is-won" : ""}`} style={{ "--party-color": party.color } as CSSProperties} />
@@ -501,8 +512,8 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
                 <span className="politics-group__bar">
                   <Gauge
                     max={100}
-                    segments={withPreview(approval, approval >= ELECTION_WIN_THRESHOLD ? "good" : approval >= 40 ? "warn" : "bad", gain, 100)}
-                    markers={[{ at: ELECTION_WIN_THRESHOLD }]}
+                    segments={withPreview(approval, approval >= getElectionThreshold(state.electionsWon) ? "good" : approval >= 40 ? "warn" : "bad", gain, 100)}
+                    markers={[{ at: getElectionThreshold(state.electionsWon) }]}
                     label={`${IDEOLOGY_GROUPS[ideology]}: ${approval}% back you`}
                   />
                 </span>
@@ -722,9 +733,9 @@ export function PoliticsPanel({ state, dispatch, onOpenPanel, section, onSection
             key: "support",
             label: "Support",
             icon: <StatIcon type="popularity" size={22} />,
-            alert: popularity < ELECTION_WIN_THRESHOLD || getPopularityOutlook(state).target < ELECTION_WIN_THRESHOLD,
+            alert: popularity < getElectionThreshold(state.electionsWon) || getPopularityOutlook(state).target < getElectionThreshold(state.electionsWon),
             badge: `${popularity}% · ${months} mo`,
-            hint: `Election in ${months} months: ${popularity >= ELECTION_WIN_THRESHOLD ? "you'd win today" : "you'd lose today"}`,
+            hint: `Election in ${months} months: ${popularity >= getElectionThreshold(state.electionsWon) ? "you'd win today" : "you'd lose today"}`,
           },
           {
             key: "unrest",

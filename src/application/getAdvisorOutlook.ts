@@ -17,12 +17,11 @@ import {
   ADVISOR_MONEY_WARN_DAYS,
   ADVISOR_WINTER_PREP_CRITICAL_DAYS,
   ADVISOR_WINTER_PREP_DAYS,
-  ELECTION_WIN_THRESHOLD,
 } from "../domain/constants";
 import type { GameState } from "../domain/country/types";
 import { getLabourSituation } from "../domain/labour/labourRules";
 import { isDebtDangerous } from "../domain/loans/loanRules";
-import { monthsUntilNextElection } from "../domain/parties/electionRules";
+import { getElectionThreshold, monthsUntilNextElection } from "../domain/parties/electionRules";
 import { isLocalTrouble } from "../domain/provinces/provinceOrder";
 import { getProvinceName } from "../domain/provinces/provinceRules";
 import { getResearchNodeStatus } from "../domain/research/researchRules";
@@ -210,11 +209,12 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
 
   const months = monthsUntilNextElection(state.date);
   const support = Math.round(state.stats.popularity);
-  if (months <= ADVISOR_ELECTION_WARN_MONTHS && support < ELECTION_WIN_THRESHOLD) {
+  const needed = getElectionThreshold(state.electionsWon);
+  if (months <= ADVISOR_ELECTION_WARN_MONTHS && support < needed) {
     alerts.push({
       kind: "election",
       text: `Election ${months} mo: ${support}%`,
-      detail: `The election is in ${months} month${months === 1 ? "" : "s"} and you'd lose today. You need ${ELECTION_WIN_THRESHOLD}%.`,
+      detail: `The election is in ${months} month${months === 1 ? "" : "s"} and you'd lose today. You need ${needed}%.`,
       critical: months <= ADVISOR_ELECTION_CRITICAL_MONTHS,
     });
   }
@@ -281,7 +281,7 @@ function getObjective(state: GameState): AdvisorObjective | null {
       return {
         kind: "election",
         text: `Win the election (${monthsUntilNextElection(state.date)} mo)`,
-        detail: `Hold ${ELECTION_WIN_THRESHOLD}% support or more on election day.`,
+        detail: `Hold ${getElectionThreshold(state.electionsWon)}% support or more on election day.`,
         done,
       };
   }

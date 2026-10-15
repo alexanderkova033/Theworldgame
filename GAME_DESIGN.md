@@ -18,7 +18,7 @@ The currency is the **Crown** (`Cr`).
 
 ## How a game is won or lost
 
-- **General elections** come every 18 months. You need at least 50% popularity to win.
+- **General elections** come every 18 months. The first needs 50% support, the second 54%, the third 58%: voters ask more of a government the longer it governs. The vote counts support as election day begins, before that morning's campaign moves land.
 - **Lose an election** and the opposition takes power: the game is over.
 - **Win three in a row** and your party has won outright. A careful game takes about four and a half in-game years.
 - **Stability at zero** is a collapse: order breaks down and the government falls.

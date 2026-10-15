@@ -1,6 +1,6 @@
 // A careful player, for the balance tests: borrows once, keeps people fed,
 // housed and warm, repairs what breaks, pays the loan back, rallies when
-// support slips and takes whichever option of a decision keeps support up.
+// support slips toward the line to win and takes whichever option of a decision keeps support up.
 // Optionally it also follows one path of the Laws or Research tree.
 import { buildFarm } from "../../src/application/actions/buildFarm";
 import { buildHousing } from "../../src/application/actions/buildHousing";
@@ -21,6 +21,7 @@ import { getDecision } from "../../src/domain/decisions/decisionRules";
 import { LAW_NODES } from "../../src/domain/laws/lawData";
 import { canEnactLaw, getLawNode } from "../../src/domain/laws/lawsRules";
 import { getNation } from "../../src/domain/nations/nationRules";
+import { getElectionThreshold } from "../../src/domain/parties/electionRules";
 import { RESEARCH_NODES } from "../../src/domain/research/researchData";
 import { getResearchNodeStatus } from "../../src/domain/research/researchRules";
 import type { ResearchCategory } from "../../src/domain/research/types";
@@ -93,7 +94,7 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
     if (s.stats.population > production.housingCapacity * 0.97 && !s.projects.some((p) => p.type === "housing")) s = tryBuild(s, buildHousing);
     if (s.stats.food < 20000 && canBuyGood(s, "food", 5)) s = buyGood(s, "food", 5);
     if (s.debt > 0 && s.stats.treasury > 2500 && canRepayLoan(s)) s = repayLoan(s);
-    if (s.stats.popularity < 56 && canHoldRally(s)) s = holdRally(s);
+    if (s.stats.popularity < getElectionThreshold(s.electionsWon) + 6 && canHoldRally(s)) s = holdRally(s);
     if (s.pendingDecisionId) {
       const decision = getDecision(s.pendingDecisionId)!;
       const best = [...decision.options].sort((a, b) => (b.effects.popularityDelta ?? 0) - (a.effects.popularityDelta ?? 0))[0];

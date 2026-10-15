@@ -1,7 +1,6 @@
 import "./TopBar.css";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { formatDate, type Season } from "../../domain/country/calendar";
-import { ELECTION_WIN_THRESHOLD } from "../../domain/constants";
 import { monthsUntilNextElection } from "../../domain/parties/electionRules";
 import type { CountryStats, GameDate, GameSpeed } from "../../domain/country/types";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
@@ -131,6 +130,7 @@ function SpeakerIcon({ muted }: { muted: boolean }) {
 }
 
 interface TopBarProps {
+  electionThreshold: number; // support needed to win the next election
   nationName: string;
   partyName: string;
   partyColor: string;
@@ -157,6 +157,7 @@ interface TopBarProps {
 }
 
 export function TopBar({
+  electionThreshold,
   nationName,
   partyName,
   partyColor,
@@ -212,20 +213,21 @@ export function TopBar({
           style={{ "--party-color": partyColor } as CSSProperties}
           onClick={() => onOpenPanel("politics")}
           aria-current={activePanel === "politics" ? "true" : undefined}
-          aria-label={`Politics: ${nationName}, ${partyName}: support ${supportPercent}%, election in ${electionMonths} months`}
+          aria-label={`Politics: ${nationName}, ${partyName}: support ${supportPercent}%, ${electionThreshold}% needed, election in ${electionMonths} months`}
           title="Politics: the election, support, unrest and the neighbours"
         >
           <span className="top-bar__nation-name">{nationName}</span>
           <span className="top-bar__party">{partyName}</span>
-          <span className={`top-bar__nation-politics ${supportPercent < ELECTION_WIN_THRESHOLD ? "is-losing" : ""}`}>
+          <span className={`top-bar__nation-politics ${supportPercent < electionThreshold ? "is-losing" : ""}`}>
             <NavIcon type="politics" size={15} />
-            {supportPercent}% · vote in {electionMonths} mo
+            {supportPercent}% of {electionThreshold}% · {electionMonths} mo
           </span>
         </button>
 
         <div className="top-bar__ticker">
           <ResourceTicker
             stats={stats}
+            electionThreshold={electionThreshold}
             unrestStage={unrestStage}
             resources={resources}
             production={production}

@@ -29,6 +29,7 @@ import { accrueInterest, getDebtPopularityPenalty, getDebtStabilityPenalty, isDe
 import { advanceRepairs, getWorkingCounts, rollBreakdowns } from "../domain/maintenance/maintenanceRules";
 import { getNation } from "../domain/nations/nationRules";
 import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../domain/parties/factionRules";
+import { getElectionThreshold } from "../domain/parties/electionRules";
 import { getParty } from "../domain/parties/partyRules";
 import { applyMigration, planMigration } from "../domain/provinces/provinceMigration";
 import { getProvinceRiotDrag, isLocalTrouble, pickRiotZone, updateProvinceOrder } from "../domain/provinces/provinceOrder";
@@ -62,7 +63,6 @@ import {
   ELECTIONS_TO_WIN_GAME,
   ELECTION_INTERVAL_MONTHS,
   ELECTION_WIN_STABILITY_BONUS,
-  ELECTION_WIN_THRESHOLD,
   MAX_EVENT_LOG_LENGTH,
   POPULARITY_BASE_TARGET,
   POPULARITY_DRIFT_RATE,
@@ -650,8 +650,13 @@ export function simulateDay(state: GameState): GameState {
   let electionsWon = working.electionsWon;
   if (!isGameOver && isEveryNMonths(date, ELECTION_INTERVAL_MONTHS)) {
     const party = getParty(working.partyId);
-    const popularity = finalStats.popularity;
-    if (popularity >= ELECTION_WIN_THRESHOLD) {
+    // The vote counts support as election day dawns: the rival's and the
+    // neighbours' moves rolled this same morning (12b, 12c) land after it,
+    // since nobody could answer them. A campaign the month before still
+    // counts, and there's time to see it coming.
+    const popularity = updatedStats.popularity;
+    const threshold = getElectionThreshold(working.electionsWon);
+    if (popularity >= threshold) {
       electionsWon += 1;
       const mandate = Math.min(100, finalStats.stability + ELECTION_WIN_STABILITY_BONUS);
       lateLedger = book(lateLedger, "stability", { election: mandate - finalStats.stability });
@@ -671,7 +676,7 @@ export function simulateDay(state: GameState): GameState {
         events.unshift({
           id: generateId("event"),
           date,
-          message: `${party.name} wins the general election with ${Math.round(popularity)}% support (${electionsWon}/${ELECTIONS_TO_WIN_GAME} for outright victory).`,
+          message: `${party.name} wins the general election with ${Math.round(popularity)}% support (${electionsWon}/${ELECTIONS_TO_WIN_GAME} for outright victory). The next one needs ${getElectionThreshold(electionsWon)}%.`,
           severity: "info",
           topic: "elections",
         });
@@ -679,7 +684,7 @@ export function simulateDay(state: GameState): GameState {
     } else {
       isGameOver = true;
       outcome = "voted-out";
-      gameOverReason = `${party.name} lost the general election with only ${Math.round(popularity)}% support. The opposition takes power.`;
+      gameOverReason = `${party.name} lost the general election with ${Math.round(popularity)}% support, short of the ${threshold}% it needed. The opposition takes power.`;
       events.unshift({
         id: generateId("event"),
         date,

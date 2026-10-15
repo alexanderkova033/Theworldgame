@@ -30,6 +30,7 @@ import { StatIcon } from "./StatIcon";
 
 interface ResourceTickerProps {
   stats: CountryStats;
+  electionThreshold: number;
   unrestStage: UnrestStage;
   resources: ResourceBundle;
   production: DailyProductionSummary;
@@ -340,7 +341,7 @@ function Stores({
   );
 }
 
-export function ResourceTicker({ stats, unrestStage, resources, production, heating, debt, shortages, lastDayLedger, monthLedger, forecasts, onOpenReports }: ResourceTickerProps) {
+export function ResourceTicker({ stats, electionThreshold, unrestStage, resources, production, heating, debt, shortages, lastDayLedger, monthLedger, forecasts, onOpenReports }: ResourceTickerProps) {
   const why = { lastDay: lastDayLedger, month: monthLedger, onOpenReports };
   const [storesPinned, setStoresPinned] = useState(readStoresPinned);
   const pinStores = (pinned: boolean) => {
@@ -404,7 +405,7 @@ export function ResourceTicker({ stats, unrestStage, resources, production, heat
         {stageUrgent && <Alert />}
       </WhyChip>
 
-      <WhyChip {...why} metric="support" label={`Support: ${formatExact(stats.popularity)}%. Elections need 50%.`} danger={stats.popularity < 50}>
+      <WhyChip {...why} metric="support" label={`Support: ${formatExact(stats.popularity)}%. The next election needs ${electionThreshold}%.`} danger={stats.popularity < electionThreshold}>
         <StatIcon type="popularity" size={20} />
         <span>{formatExact(stats.popularity)}%</span>
         {stats.popularity < 50 && <Alert />}

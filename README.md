@@ -13,7 +13,7 @@ You govern one of three fictional nations on an invented continent, in a period 
 - **Trade for what your land lacks.** Terrain produces wood, ore, grain or fish; coal heats homes in winter. A supply-and-demand market sells the rest.
 - **Govern.** Set taxes, hold rallies, court factions, take loans, hire scientists and police, and answer decisions as they arrive.
 - **Choose a direction.** A Laws tree and a Research tree, each with four branches of three paths. Picking a path closes the others for good.
-- **Win elections.** One comes every 18 months and you need 50% support. Lose one and the game ends; win three in a row and you've won. If stability hits zero, the government collapses.
+- **Win elections.** One comes every 18 months. The first needs 50% support, the second 54%, the third 58%. Lose one and the game ends; win three in a row and you've won. If stability hits zero, the government collapses.
 
 The army and recruitment were removed on purpose: they had no reachable UI. See [ROADMAP.md](ROADMAP.md) for where the game is headed.
 

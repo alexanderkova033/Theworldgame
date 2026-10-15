@@ -7,6 +7,7 @@ import { emptyLedger, mergeLedgers } from "./domain/ledger/ledgerRules";
 import { getNation } from "./domain/nations/nationRules";
 import { NATIONS } from "./domain/nations/nationData";
 import type { GameSpeed } from "./domain/country/types";
+import { getElectionThreshold } from "./domain/parties/electionRules";
 import { getPartiesForNation, getParty } from "./domain/parties/partyRules";
 import { dismissDecision, resolveDecision } from "./application/actions";
 import { getAdvisorOutlook } from "./application/getAdvisorOutlook";
@@ -269,6 +270,7 @@ function App() {
   return (
     <div className="game-layout">
       <TopBar
+        electionThreshold={getElectionThreshold(state.electionsWon)}
         nationName={nation.name}
         partyName={party.name}
         partyColor={party.color}
