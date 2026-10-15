@@ -28,6 +28,19 @@ describe("a careful player", () => {
     const end = playCarefully(nation, party, { days: THREE_YEARS });
     expect(end.stats.politicalPower).toBeLessThan(650);
   });
+
+  // Daily income should be the country's living, not market sales, or the
+  // "+10% income" laws and research barely register.
+  it.each(NATIONS)("lives mostly on taxes and industry in %s", (nation, party) => {
+    const end = playCarefully(nation, party, { days: THREE_YEARS });
+    const earned = { income: 0, trade: 0 };
+    for (const report of end.monthlyReports) {
+      const treasury = report.ledger?.treasury ?? {};
+      earned.income += (treasury.taxes ?? 0) + (treasury.industry ?? 0);
+      earned.trade += treasury.trade ?? 0;
+    }
+    expect(earned.income).toBeGreaterThan(earned.trade);
+  });
 });
 
 describe("an idle player", () => {

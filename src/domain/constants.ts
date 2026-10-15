@@ -31,7 +31,7 @@ export const ROAD_ORE_COST = 10; // gravel for the roadbed
 // how scarce that stock is, and it recovers toward a moving equilibrium.
 export const MARKET_BUY_MARKUP = 1.4; // buying pays this over the mid price...
 export const MARKET_PORT_BUY_MARKUP = 1.2; // ...less with a coastal port
-export const MARKET_SELL_FACTOR = 0.7; // selling gets this share of the mid price
+export const MARKET_SELL_FACTOR = 0.55; // selling gets this share of the mid price
 export const MARKET_RECOVERY_PER_DAY = 0.04; // share of the gap to normal stock closed each day
 export const MARKET_PRICE_FLOOR = 0.25; // mid price never below this × base...
 export const MARKET_PRICE_CEILING = 4; // ...or above this × base
@@ -61,7 +61,7 @@ export const FOOD_PER_FISH = 500; // food produced per unit of fish processed
 
 // --- Industry ---
 export const INDUSTRY_PER_FACTORY = 4;
-export const INCOME_PER_INDUSTRY = 1.5;
+export const INCOME_PER_INDUSTRY = 2;
 export const FACTORY_COST = 1600;
 export const FACTORY_BUILD_DAYS = 120;
 export const MAX_FACTORIES_PER_PROVINCE = 2;
@@ -223,7 +223,7 @@ export const RIVAL_CAMPAIGN_POPULARITY_SWING = 2.5; // base popularity swing fro
 export const FACTION_SENSITIVITY = 3;
 
 // --- Economy / taxes ---
-export const BASE_TAX_INCOME_PER_POP = 0.012; // tax per person at a 100% rate, per day — kept low so the treasury is always tight
+export const BASE_TAX_INCOME_PER_POP = 0.016; // tax per person at a 100% rate, per day — kept low so the treasury is always tight
 export const COMFORTABLE_TAX_RATE = 0.15; // the rate people accept without complaint
 export const MIN_TAX_RATE = 0.05;
 export const MAX_TAX_RATE = 0.4;
