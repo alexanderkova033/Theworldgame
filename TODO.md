@@ -18,7 +18,7 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **Old saves.** A law being drafted under the old tree layout still finishes even if it now sits on another path. Research directions that became unreachable are cleared on load.
 - **Hints on the trees** only mark nodes that can be chosen right now; a path's name is marked if anything on it would help.
 - **Small screens.** Below about 1150px the details pane drops under the tree; below about 700px the tree scrolls sideways.
-- **README and GAME_DESIGN.md are out of date** in places (they still describe the early MVP: roads, no laws, no research areas).
+- **TECHNICAL_DESIGN.md** may still describe the early MVP in places. README, GAME_DESIGN and ROADMAP were brought up to date on 2026-10-15.
 
 ## Process reminders
 

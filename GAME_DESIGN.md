@@ -2,99 +2,98 @@
 
 ## Core concept
 
-The World Game is a single-country nation-building simulator. Instead of fighting wars, the player's main job is to grow their country's economy, infrastructure, and population while keeping their government stable and popular.
+The World Game is a single-country nation-building simulator. Instead of fighting wars, you grow your country's economy, housing and population while keeping your government stable and popular enough to keep winning elections.
 
-Time moves continuously and automatically, one in-game day at a time, rather than in discrete player turns. The player reacts to a running simulation: queue up buildings and policies, then watch (and periodically adjust) how the country evolves over months and years.
+Time moves continuously, one in-game day at a time, rather than in turns. You react to a running simulation: order buildings, pass laws, steer research, then watch (and adjust) how the country evolves over months and years.
 
-The intended feel is closer to a management/economy game (think city-builder or *Democracy*) wearing the visual language of a grand strategy game.
+The intended feel is closer to a management game (a city-builder, or *Democracy*) wearing the visual language of a grand strategy game, set in a hand-coloured ledger.
 
 ## Setting
 
-The game takes place on an invented continent in a period that *feels* like the years just before 1914 — steam and rail infrastructure, early factories, telegraphs, expanding public education, and simmering great-power tension in the background. Nothing is tied to any real country or history: this sidesteps the real-world politics and research burden of a historical setting, avoids the (extremely crowded) WW2-strategy-game space, and means the map, nations, and events can be designed freely rather than constrained by real geography.
+An invented continent in a period that *feels* like the years just before 1914: steam and rail, early factories, schools spreading, and tension in the background. Nothing is tied to a real country or history, so the map, nations and events can be designed freely.
 
-Before play begins, the player picks one of three nations sharing the continent — **Astravia**, **Caldenreich**, or **Veldoria** — at a start screen. This choice is permanent for that game; there is no way to switch nations mid-playthrough. The other two nations' territory is still visible on the map (so the world feels populated), but isn't yet controllable — playable AI neighbors are a roadmap item.
+Before play you choose one of three nations (**Astravia**, **Caldenreich** or **Veldoria**) and then one of its parties to lead. Both choices are permanent for that game. The other two nations are on the map with their own governments, which you can lean on but not run.
 
-The currency is the **Crown** (shown as `Cr`), shared across the continent. Each nation controls a handful of the map's sixteen provinces (see "Map and provinces" below).
+The currency is the **Crown** (`Cr`).
 
-## Main stats/resources
+## How a game is won or lost
 
-Every country tracks the following core stats (see `CountryStats` in `src/domain/country/types.ts`):
+- **General elections** come every 18 months. You need at least 50% popularity to win.
+- **Lose an election** and the opposition takes power: the game is over.
+- **Win three in a row** and your party has won outright. A careful game takes about four and a half in-game years.
+- **Stability at zero** is a collapse: order breaks down and the government falls.
+
+## Main stats
 
 | Stat | Meaning |
 |---|---|
-| **Treasury** | Money available to spend. Goes up from taxes/trade, down from upkeep and construction. |
-| **Population** | Number of people. Grows slowly over time if food and stability are healthy. |
-| **Food** | Stockpiled food. Produced by farms, consumed by population every day. |
-| **Industry** | Industrial output capacity. Produced by factories; boosts income and construction speed. |
-| **Stability** | How well-ordered the country is (0–100). Low stability risks unrest/collapse. |
-| **Research Points** | Accumulated science output, spent on research projects. |
-| **Popularity** | Government approval (0–100). Affected by taxes, stability, and food shortages. |
-
-The MVP simulates the player's chosen nation only — the other two nations exist on the map but aren't separately simulated yet. Playable/AI multi-nation simulation is a roadmap item.
-
-**Scope note:** Army Strength has been removed from `CountryStats` entirely. Nothing could recruit, so it was permanently 0 — and with army upkeep the only expense in the model, daily expenses were permanently 0 too. Both are gone; a military layer is a roadmap item to design from scratch. The tax rate is still simulated (it drives income and popularity drift) but is fixed at its starting value, with no player control.
+| **Treasury** | Money to spend. Taxes and industry fill it daily; building, wages, rallies and loan interest drain it. |
+| **Population** | People, province by province. They need food, homes, work and, in winter, heat. |
+| **Food** | The national stock. Farms grow it (more in autumn, much less in winter); everyone eats about one a day. |
+| **Industry** | Output from working factories. Raises income and unlocks the later labour laws. |
+| **Stability** | Order, 0 to 100. Falls with hunger, homelessness, cold, debt and low support. |
+| **Popularity** | Support for your government, 0 to 100: a weighted average of how each faction feels about you. |
+| **Political power** | Builds up daily, faster when you're popular. Spent on laws, rallies, courting a faction, crackdowns and pressure abroad. |
 
 ## Map and provinces
 
-The continent is divided into sixteen provinces, rendered as a stylized SVG map (an organic coastline with province borders, similar in spirit to a Paradox-style province map). These are a north/south or east/west split of the original eight regions (Redgate, Thornwick, Marrow Coast, Caldermoor, Ashford, Duskhaven, Veldshire, Brindlewood), so you'll see pairs like "North Redgate"/"South Redgate" sharing a name and a stretch of coastline. Each of the three nations controls four to six of them; the player's own territory is colored in their nation's crest color, with a star marking the capital. The other two nations render in *their* crest colors too (dimmed, non-interactive) rather than a flat "foreign" grey, so you can tell them apart at a glance. A few small unclaimed islands (Kestrel Isles, Solmere, Vashtel Cay) sit further out on the map — purely decorative for now, a hint that the world extends beyond the one continent. With sixteen provinces packed into the same coastline, the map supports scroll-to-zoom and click-and-drag panning so every label stays readable.
+Sixteen provinces on one continent, each nation holding four to six, plus three unclaimed islands offshore. Every province has its own people, homes and jobs. Each day some of the homeless and jobless move to provinces with free homes and open work; unrest puts people off a province.
 
-The player picks one of their own provinces before starting a build action ("Building in: Redgate — click the map to change"), and every completed farm, factory, or road is remembered as a small pictorial icon on the province it was built in. Roads are the exception: instead of a single icon, each road built adds a visible lane to an actual road line connecting that province back to the capital, so building more roads is always visibly different.
+You build in whichever of your provinces is selected. Each building type is capped per province, so growth means spreading out:
 
-Provinces are geographic and visual in the MVP — **the national economy is still one shared pool** (treasury, food, industry, and so on are national totals, not per-province). Splitting the economy so each province has its own local stats is a natural next step, tracked in ROADMAP.md.
+| Building | Cost | Does |
+|---|---|---|
+| Farm | 800 Cr + wood | Grows food. Needs workers. |
+| Factory | 1,600 Cr + ore | Adds industry. Needs workers. |
+| Road | 450 Cr + ore | Speeds the economy; drawn as a road to the capital. |
+| Housing | 350 Cr + wood | Homes for people. |
+| Granary | 900 Cr + wood | Turns grain into food over time. |
+| Cannery | 1,100 Cr + ore | Turns fish into food. |
+| School | 400 Cr + wood | Speeds research and allows more scientists. |
 
-## Resources and trade
+Construction pays part of the price when ordered and the rest during the build. Buildings wear out at random and need repairs.
 
-Inspired by *Catan*: each province's terrain determines a raw resource it produces every day, for as long as you own it — forest → **Wood**, hills → **Ore**, plains → **Grain**, coast → **Fish**. There's no dice roll; production is steady and automatic, but which terrains your nation happens to control still shapes what you have plenty of and what you're short on. A small map badge on each of your provinces shows what it produces, matching the terrain texture underneath.
+## Resources and the market
 
-This creates real asymmetry between the three nations: Astravia has no hills at all, so it can never produce Ore on its own; Veldoria has neither forest nor hills, so it's short on both Wood and Ore. Building costs treasury *and* a matching resource — a Farm needs Wood, a Factory and a Road both need Ore — so a nation without the right terrain has to trade to build at all.
+Each province's terrain produces a raw resource daily: forest gives **wood**, hills **ore**, plains **grain**, coast **fish**. **Coal** heats homes in winter. No nation has every terrain, so you trade.
 
-Trading happens with "the continental market" (an abstract bank, not the other two nations directly — they aren't simulated yet, see above): any resource for any other, at a fixed rate, batched so one click moves a meaningful amount rather than one unit at a time. A nation that owns at least one coastal province has a **port** and trades at a better rate (2:1 instead of 4:1) — Catan's maritime trade, made automatic rather than tied to a specific dock.
+The market holds a stock of every good, and prices follow how scarce it is. Buying pays a markup over the mid price (less with a coastal port); selling gets a little over half of it. Daily taxes and industry are meant to be your living; the market fills gaps.
 
-## Time system
+You can also take loans in batches. Interest compounds daily, and heavy debt costs stability and support.
 
-- The game clock advances one **day** at a time. A day is the smallest simulation unit ("tick").
-- The player can **pause** and **resume** the clock at any time; while paused, nothing changes.
-- The player can set a **speed**: 1x, 2x, 3x, or 5x, which controls how many real-world milliseconds pass per in-game day (higher speed = shorter real time per day).
-- Every 30 in-game days is treated as one **month** for reporting purposes (a simplified calendar, not real calendar months — see TECHNICAL_DESIGN.md for why).
-- At the start of a new month, a **monthly report** is generated summarizing the previous month's income, expenses, and stat deltas.
-- Every **6 months**, a random world event fires — a mix of good and bad fortune (a bountiful harvest, a drought, a trade boom, civil unrest, a festival, a mineral strike, a timber blight) that nudges treasury, food, stability, or a resource up or down by a percentage. It's logged to the event log like anything else, colored by severity. Nothing the player does changes when the next one lands — it's a fixed cadence, not a random chance each day — so events are a predictable rhythm to plan around rather than a surprise that could strike on any given tick.
+## Politics
 
-## Economy system
+- **Taxes** are a lever: more money, less support above the rate people accept.
+- **Factions** each have their own approval; your popularity is their weighted average.
+- **Rallies** lift every faction a little; **courting** lifts one a lot; a **crackdown** restores order at a cost in support.
+- A **rival party** campaigns against you, and **decisions** arrive as letters asking you to choose.
+- **Foreign affairs**: pressure a neighbour's election toward the party you back. A friendly government there means better trade.
 
-- **Income** comes from taxes on population and industry, scaled by the current tax rate.
-- **Costs** come from active construction projects, which pay 60% up front and drain the rest in daily installments until they finish.
-- Net treasury change each day = income − whatever those projects draw.
-- **Industry** increases the efficiency of income generation and shortens construction time.
-- **Roads** provide a global "economic efficiency" multiplier that boosts income and reduces construction time, representing better logistics.
+## Laws and research
 
-## Construction system
+Both are trees with four branches. Each branch has one shared root and then three paths; choosing a path closes the other two for good. Some laws and research reinforce each other.
 
-- The player starts **projects** (farm, factory, road, research, etc.) which cost treasury up front.
-- Each project type has a fixed **duration** in in-game days (e.g., a factory takes 120 days).
-- Projects show live progress (days elapsed / total days) in the Projects panel.
-- When a project completes, its effect is applied permanently to the country (e.g., a completed farm permanently increases food production), and an event is logged.
-- Multiple projects can run at once across different provinces — there's no limit on that.
-- **Each individual province** does have a cap, though: at most 3 farms, 2 factories, and 5 roads per province (built *or* being built — queuing a 4th farm when 3 already exist is blocked the same as if all 3 were finished). This is what makes having sixteen smaller provinces matter mechanically, not just visually — a nation that wants more farms needs more provinces to spread them across, not just one province piled high.
+- **Laws** (labour, sustenance, order, revenue) cost political power and Crowns and go to a vote. Your party and the rival take stances that move the odds. A law also needs the country to reach a stat first, such as a population, a stock of food or a number of factories, and the game says how to get there.
+- **Research** (industry, agriculture, administration, housing) has no vote and no price. You choose the direction, and each area progresses daily from its buildings, its scientists and your schools.
 
-## Stability, taxes, population, and research interactions
+## Unrest
 
-These systems are intentionally simple in the MVP but designed to be tuned and expanded later:
+Falling stability brings stages before collapse: discontent slows industry, strikes stop factories, riots wreck buildings. Police soften strikes and riots, and a crackdown pulls the country back a stage.
 
-- **Taxes**: Higher tax rate → more income, but lower popularity over time. Popularity slowly drifts back toward a neutral baseline when taxes are moderate.
-- **Food**: Every person consumes 1 food per day. If food stock runs low or goes negative, stability drops. Building farms is the main way to keep up with a growing population.
-- **Stability**: Falls when food is scarce or popularity is very low. Very low stability increases the risk of a "collapse" event (early MVP: this is logged as a warning; full collapse consequences are a roadmap item).
-- **Population**: Grows slowly when food and stability are both healthy; growth stalls or reverses under famine or unrest.
-- **Research**: Education investment and research points slowly increase the country's ability to complete research projects; research projects (once completed) are meant to unlock/improve future systems.
+## Time
+
+- One **day** is one tick. Pause, or run at 1x, 2x, 3x or 5x.
+- The calendar is simplified: 30-day months, 12 months a year.
+- Each month ends with a **report** that explains why the numbers moved (the ledger).
+- A **random world event** lands every 6 months.
+- At higher speeds the game pauses itself when something dangerous happens for the first time in a season.
 
 ## Intended player experience
 
-A session should feel like:
+1. Start small: a modest treasury, a loan to consider, and a few buildings.
+2. Keep people fed, housed, employed and warm, trading for what your land doesn't produce.
+3. Pick a law path and a research direction that suit your nation and party.
+4. Watch support before each election, and spend political power when it matters.
+5. Read the reports to see why things moved, then adjust.
 
-1. Start with a small, modest country: limited treasury, low industry, small population, a small stockpile of resources, and a handful of starting buildings scattered across the map.
-2. Click a province on the map, then queue a few early buildings there (a farm or two, maybe a road) — checking that you have both the Crowns and the matching resource, trading at the market if you're short.
-3. Let time pass at increased speed while watching stats and the event log.
-4. Periodically pause to react to problems (falling stability, food shortages, an unpopular tax rate) or to queue new projects.
-5. Read monthly reports to understand macro trends (are we growing, stagnating, or declining?).
-6. Gradually snowball: more industry funds more projects, more research unlocks more capability, and the country becomes larger and more complex to manage.
-
-The MVP is deliberately small — one country, ~10 stats, ~7 actions — so that the core loop (watch time pass, react, grow) is solid before adding breadth like trade, diplomacy, or war.
+The game stays deliberately small: one country to run, a handful of buildings, and two trees. Breadth (simulated neighbours, war) waits until this loop is solid and fun.
