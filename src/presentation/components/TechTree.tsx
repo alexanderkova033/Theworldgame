@@ -143,6 +143,8 @@ function NodeBadge({
       <span className="law-node__name">{node.name}</span>
       {node.ideology && <span className="law-node__party">Your party only</span>}
       {statusLabel && <span className="law-node__status">{statusLabel}</span>}
+      {/* Work done so far: shown as a bar on research cards (ResearchPanel.css). */}
+      {progress > 0 && <span className="law-node__progress" style={{ width: `${Math.round(progress * 100)}%` }} aria-hidden="true" />}
     </button>
   );
 }

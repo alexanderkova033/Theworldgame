@@ -1,3 +1,8 @@
+/* Laws ink in oxblood; the Research tree overrides this (ResearchPanel.css). */
+.law-tree {
+  --tree-accent: var(--oxblood);
+}
+
 /* The tree used to sit directly on the modal's own flat background — a
    sea of empty brown around a handful of small circles. Sinking it into
    its own recessed, textured tablet (same diagonal hatch as the page body,
@@ -180,7 +185,12 @@
 }
 
 /* Two badges share a lane on the forked rows, so labels may wrap. */
-.law-tree__cell .law-node__status {
+.law-tree__cell /* Laws show their drafting as a ring round the medallion instead. */
+.law-node__progress {
+  display: none;
+}
+
+.law-node__status {
   white-space: normal;
 }
 
@@ -205,9 +215,9 @@
   stroke-width: 3;
 }
 
-/* The ways open from here: oxblood, like the Ready labels. */
+/* The ways open from here: the tree's accent, like the Ready labels. */
 .law-tree__link.is-open {
-  stroke: var(--oxblood);
+  stroke: var(--tree-accent);
   stroke-width: 2.4;
 }
 
@@ -261,10 +271,10 @@
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-/* Open to pass: an oxblood ring whose outer hairline breathes. */
+/* Open to pass: an accent ring whose outer hairline breathes. */
 .law-node--available .law-node__icon {
-  border-color: var(--oxblood);
-  box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--oxblood);
+  border-color: var(--tree-accent);
+  box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--tree-accent);
   animation: law-node-pulse 2.6s ease-in-out infinite;
 }
 
@@ -277,10 +287,10 @@
 
 @keyframes law-node-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--oxblood);
+    box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--tree-accent);
   }
   50% {
-    box-shadow: 0 0 0 4px var(--paper-raised), 0 0 0 5px rgba(123, 33, 33, 0.55);
+    box-shadow: 0 0 0 4px var(--paper-raised), 0 0 0 5px color-mix(in srgb, var(--tree-accent) 55%, transparent);
   }
 }
 
@@ -719,7 +729,7 @@
 .law-tree__work-fill {
   display: block;
   height: 100%;
-  background: var(--oxblood);
+  background: var(--tree-accent);
   transition: width 0.3s ease;
 }
 
@@ -812,7 +822,7 @@
   padding: 1rem 1.1rem 1.1rem;
   background: var(--paper);
   border: 1px solid var(--rule-dark);
-  border-top: 5px solid var(--oxblood);
+  border-top: 5px solid var(--tree-accent);
   border-radius: 8px;
 }
 
@@ -838,11 +848,11 @@
   width: 8.25rem;
 }
 
-/* The picked node: framed in oxblood, so the pane beside is plainly its. */
+/* The picked node: framed in the accent, so the pane beside is plainly its. */
 .law-node.is-selected,
 .law-node.is-selected:hover {
   background: var(--paper);
-  box-shadow: inset 0 0 0 2px var(--oxblood);
+  box-shadow: inset 0 0 0 2px var(--tree-accent);
 }
 
 .law-node__status {
@@ -860,7 +870,7 @@
 /* Open to act on: the loudest label on the tree. */
 .law-node--available .law-node__status {
   color: #f8ebc6;
-  background: var(--oxblood);
+  background: var(--tree-accent);
 }
 
 .law-node--enacted .law-node__status {
@@ -902,14 +912,14 @@ button.law-tree__lane-head {
 }
 
 button.law-tree__lane-head:hover {
-  border-color: var(--oxblood);
+  border-color: var(--tree-accent);
   background: var(--paper);
   transform: none;
 }
 
 button.law-tree__lane-head.is-selected {
-  border-color: var(--oxblood);
-  box-shadow: inset 0 0 0 1px var(--oxblood);
+  border-color: var(--tree-accent);
+  box-shadow: inset 0 0 0 1px var(--tree-accent);
   background: var(--paper);
 }
 
@@ -926,7 +936,7 @@ button.law-tree__lane-head.is-selected {
   align-items: center;
   justify-content: center;
   background: var(--paper-raised);
-  border: 2px solid var(--oxblood);
+  border: 2px solid var(--tree-accent);
 }
 
 .law-node__hint svg {
@@ -987,7 +997,7 @@ button.law-tree__lane-head.is-selected {
 }
 
 .path-step:hover {
-  border-color: var(--oxblood);
+  border-color: var(--tree-accent);
   transform: none;
 }
 
@@ -1014,11 +1024,11 @@ button.law-tree__lane-head.is-selected {
   align-items: center;
   gap: 0.3rem;
   padding: 0.15rem 0.55rem 0.15rem 0.3rem;
-  border: 1.5px solid var(--oxblood);
+  border: 1.5px solid var(--tree-accent);
   border-radius: 999px;
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--oxblood);
+  color: var(--tree-accent);
 }
 
 .path-inspector__cost {
