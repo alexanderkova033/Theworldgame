@@ -62,7 +62,7 @@ function hydrateMarket(raw: Partial<GameState>): GameState["market"] {
   };
 }
 
-function hydrateGameState(raw: Partial<GameState>): GameState {
+export function hydrateGameState(raw: Partial<GameState>): GameState {
   const stats = hydrateStats(raw.stats);
   const state: GameState = {
     nationId: raw.nationId!,
