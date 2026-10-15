@@ -41,8 +41,8 @@ function RewardIcon({ reward }: { reward: ExpeditionReward }) {
   return <StatIcon type="treasury" size={34} />;
 }
 
-// Lists every unclaimed island at once — opened deliberately (top bar button
-// or clicking an island on the map), so there's no need to make the player
+// Lists every unclaimed island at once — opened deliberately (an island on
+// the map, or a venture line in the event log), so there's no need to make the player
 // pick an island first the way the old always-visible sidebar panel did.
 export function ExpeditionPanel({ state, selectedIslandId, dispatch }: ExpeditionPanelProps) {
   return (

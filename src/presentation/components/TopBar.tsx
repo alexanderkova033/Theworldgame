@@ -21,6 +21,7 @@ const SPEEDS: GameSpeed[] = [1, 2, 3, 5];
 export type PanelKey = "politics" | "economy" | "trade" | "reports" | "laws" | "research" | "ventures";
 
 // Politics has no tab of its own: it opens from the nation's label.
+// Ventures neither: they open from an island on the map, or the event log.
 
 // Opens a tab — for Economy, optionally straight at one of its sections.
 export type OpenPanel = (panel: PanelKey, section?: EconomySection) => void;
@@ -31,7 +32,6 @@ const TABS: Array<{ key: PanelKey; label: string; icon: NavIconType }> = [
   { key: "reports", label: "Reports", icon: "reports" },
   { key: "laws", label: "Laws", icon: "laws" },
   { key: "research", label: "Research", icon: "research" },
-  { key: "ventures", label: "Ventures", icon: "ventures" },
 ];
 
 // A small hourglass in place of a bare date string.
