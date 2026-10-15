@@ -683,14 +683,8 @@
   color: var(--ink-muted);
 }
 
-.politics-creed__platform {
-  margin: 0.25rem 0 0.35rem;
-  font-size: 0.875rem;
-  color: var(--ink-muted);
-}
-
 .politics-creed__cares {
-  margin: 0 0 0.5rem;
+  margin: 0.35rem 0 0.5rem;
   font-size: 0.85rem;
   line-height: 1.45;
 }

@@ -281,12 +281,11 @@ function PartyCreed({ party, isYours }: { party: Party; isYours: boolean }) {
   const cares = IDEOLOGY_CARES[party.ideology];
   return (
     <div className={`politics-creed ${isYours ? "is-yours" : ""}`} style={{ "--party-color": party.color } as CSSProperties}>
-      <div className="politics-creed__head">
+      <div className="politics-creed__head" title={party.platform}>
         <span className="politics-parties__swatch" style={isYours ? { background: washed(party.color) } : { background: paled(party.color), borderColor: inked(party.color) }} />
         <strong>{party.name}</strong>
         <span className="politics-creed__who">{isYours ? "you" : "rival"}</span>
       </div>
-      <p className="politics-creed__platform">{party.platform}</p>
       <p className="politics-creed__cares">
         <span>For</span> {cares.for}
         <br />

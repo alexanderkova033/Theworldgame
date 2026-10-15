@@ -100,18 +100,18 @@ function quotaHint(state: GameState, quota: LawNode["quota"]): string {
   switch (quota.stat) {
     case "industry": {
       const n = factoriesShort(state, quota.threshold);
-      return `Each working factory adds ${INDUSTRY_PER_FACTORY}. Build ${n} more ${n === 1 ? "factory" : "factories"} from the Build tab, and staff them.`;
+      return `Build ${n} more ${n === 1 ? "factory" : "factories"}, and staff ${n === 1 ? "it" : "them"}.`;
     }
     case "population":
-      return "People settle where there are homes and food. Build homes and farms.";
+      return "Build homes and farms.";
     case "food":
-      return "Food piles up when farms grow more than people eat. Build farms, or buy food on the market.";
+      return "Build farms, or buy food.";
     case "treasury":
-      return "Taxes and industry fill the treasury every day. Save up, or put off other spending.";
+      return "Save up.";
     case "stability":
-      return "Stability rises when people are fed, housed, warm and in work. Police help too.";
+      return "Keep people fed, housed, warm and in work, or hire police.";
     case "popularity":
-      return "Support rises with fair taxes, full stomachs and rallies.";
+      return "Lower taxes, keep people fed, or hold a rally.";
   }
 }
 
@@ -337,11 +337,13 @@ export function LawsPanel({ state, alerts, dispatch }: LawsPanelProps) {
             }}
           />
         )}
+        <span
+          className="law-tree__help"
+          title="Each branch splits into three paths. The first law you pass on one closes the other two for good, and only one law per row can pass. Proposing a law spends political power and money, then parliament votes."
+        >
+          How it works
+        </span>
       </div>
-      <p className="note law-tree__guide">
-        Each branch splits into three paths. The first law you pass on one closes the other two for good, and only one law per row can
-        pass. Proposing a law spends political power and money, then parliament votes.
-      </p>
 
       <SubTabs
         label="Law categories"

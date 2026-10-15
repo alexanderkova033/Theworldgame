@@ -24,16 +24,10 @@ export function DebtPanel({ state, dispatch }: DebtPanelProps) {
 
   const content = (
     <>
-      <p
-        className="panel-hint"
-        title={`Debt compounds daily with no fixed term. Past ${formatCompact(
-          DEBT_DANGER_THRESHOLD,
-        )} ${CURRENCY_SYMBOL} the interest alone costs stability and support every day.`}
+      <div
+        className={`debt-panel__status ${dangerous ? "is-dangerous" : state.debt > 0 ? "is-active" : ""}`}
+        title={`Debt compounds daily with no fixed term. Past ${formatCompact(DEBT_DANGER_THRESHOLD)} ${CURRENCY_SYMBOL} the interest alone costs stability and support every day.`}
       >
-        Compounds daily · dangerous past {formatCompact(DEBT_DANGER_THRESHOLD)} {CURRENCY_SYMBOL}
-      </p>
-
-      <div className={`debt-panel__status ${dangerous ? "is-dangerous" : state.debt > 0 ? "is-active" : ""}`}>
         <span className="debt-panel__status-icon">
           <LoanIcon size={22} />
         </span>

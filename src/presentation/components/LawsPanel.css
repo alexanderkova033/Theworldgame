@@ -777,8 +777,14 @@
 }
 
 /* --- Two panes: the tree, and the picked node's details beside it -------- */
-.law-tree__guide {
-  margin-top: -0.25rem;
+/* The tree's rules, on hover. */
+.law-tree__help {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: help;
 }
 
 .law-tree__bank-label {

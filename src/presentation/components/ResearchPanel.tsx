@@ -315,11 +315,13 @@ export function ResearchPanel({ state, alerts, dispatch }: ResearchPanelProps) {
             −{scientists * SCIENTIST_SALARY} {CURRENCY_SYMBOL} a day
           </span>
         </span>
+        <span
+          className="law-tree__help"
+          title="Pick a direction for each area and it moves forward every day, faster with scientists and schools. Each area splits into three paths: the first step on one closes the other two for good."
+        >
+          How it works
+        </span>
       </div>
-      <p className="note law-tree__guide">
-        Pick a direction for each area and it moves forward every day, faster with scientists and schools. Each area splits into three
-        paths: the first step on one closes the other two for good.
-      </p>
 
       <SubTabs
         label="Research areas"
