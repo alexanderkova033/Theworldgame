@@ -1,74 +1,53 @@
 # Roadmap
 
-This roadmap is intentionally staged: each version should be a playable, stable improvement over the last. Nothing here is a promise or a deadline — it's a map of plausible next steps.
+This roadmap is intentionally staged: each step should leave a playable, stable game. Nothing here is a promise or a deadline. It's a map of plausible next steps.
 
-## MVP (current)
+## Shipped
 
-- [x] Continuous day-by-day time system with pause/resume and 1x/2x/3x/5x speed.
-- [x] Single-country simulation: treasury, population, food, industry, stability, army, research, popularity.
-- [x] Player actions: build farm, build factory, build road, invest in education, recruit soldiers, raise/lower taxes, start research.
-- [x] Construction/research projects that take in-game time and show progress.
-- [x] Daily simulation ticks driving all systems.
-- [x] Monthly reports.
-- [x] Event log.
-- [x] Clean/screaming architecture separating domain rules, use cases, and UI.
-- [x] Fictional setting (a pre-1914-feeling continent) instead of a real historical war.
-- [x] Visual map: 16 provinces, click-to-select, completed buildings shown as icons (national economy still one shared pool — see Version 0.2).
-- [x] Permanent nation picker: choose Astravia, Caldenreich, or Veldoria on a start screen before the game begins; no way to change it afterward. The other two nations' territory shows on the map but isn't simulated yet (see Version 0.4).
-- [x] Visual polish pass: serif display type, brass/gold accent palette, panel depth/shadows, gradient+shadow map rendering, shape-based building and stat icons.
-- [x] Map-centric layout (map as the central canvas, side panels instead of everything stacked below it), a bigger world (extra unclaimed islands beyond the main continent), other nations rendered in their own colors instead of flat grey, and a real road network that visibly changes as roads are built, not just a slightly-thicker line.
-- [x] Development/Military/Taxes actions (and their stats) temporarily hidden from the UI to focus on the core build/food/economy loop — see "Deliberately paused" below.
-- [x] Catan-inspired raw resources: terrain produces Wood/Ore/Grain/Fish, buildings cost a matching resource alongside Crowns, and nations trade with the continental market (better rate with a coastal port). This pulled the "additional resources" idea forward from Version 0.3 below, scoped to bank trading rather than needing the other nations simulated first.
-- [x] Random world events every 6 in-game months (droughts, trade booms, civil unrest, festivals, mineral finds, timber blight — a mix of positive and negative, hitting treasury/food/stability/resources). Pulled forward from Version 0.2 below.
-- [x] The original 8 provinces split into 16 (same coastline and nation borders, just finer-grained), and a per-province build cap (3 farms / 2 factories / 5 roads) so growth means spreading across more territory, not piling everything into one province.
-- [x] Build-action descriptions (what a Farm/Factory/Road actually produces, shown right on the button) and a food rebalance (farms no longer trivially oversupply the starting population) plus an Import Food option on the Trade panel for nations short on farmland.
-- [x] A first, scoped step into two Version 0.3/0.4 ideas below: fixed-pair Laws (irreversible policy trade-offs, not yet a full toggleable tree) and scouting expeditions to the unclaimed islands (a one-time reward + "scouted" flag, not yet ownable territory).
+The early MVP (a day-by-day clock, one nation, farms, factories and roads, monthly reports) has grown into a full game loop:
 
-## Deliberately paused (hidden, not deleted)
+- [x] Choose one of three fictional nations and a party to lead it. The choice is permanent.
+- [x] Sixteen provinces on one continent, each with its own people, homes and jobs. People move between provinces toward free homes and work.
+- [x] Buildings: farms, factories, roads, housing, granaries, canneries and schools, each capped per province. Buildings wear out and need repairs.
+- [x] Resources (wood, ore, coal, grain, fish) from terrain, and a market with supply-and-demand prices. A coastal port buys cheaper.
+- [x] Seasons and heating: winter cuts farm output and burns fuel.
+- [x] Taxes as a lever, with popularity reacting to them. Loans with compounding interest.
+- [x] Popularity split across factions, political power, rallies, courting a group and crackdowns.
+- [x] General elections every 18 months. Losing one ends the game; three wins in a row is outright victory. Stability reaching zero is a collapse.
+- [x] A Laws tree and a Research tree: four branches each, three paths per branch, and choosing a path closes the other two for good. Laws are voted on, and both parties take stances. Some laws and research reinforce each other.
+- [x] Unrest in stages (discontent, strikes, riots) before collapse, and police to soften it.
+- [x] Decisions that arrive as letters and ask for a choice, random world events, and a rival party that campaigns against you.
+- [x] Foreign affairs: lean on a neighbour's election. A friendly government there means better trade.
+- [x] Scientists and police on the payroll.
+- [x] Ventures to three unclaimed islands for one-time rewards (opened from the map).
+- [x] Three named save slots, an advisor strip for "what needs you now", and a ledger that explains why each number moved.
+- [x] Scripted balance tests: a careful player survives and wins, an idle one loses, and no single path wrecks a country.
 
-Removed from the UI on purpose while the basics get solid — the domain/application code for all of these is untouched, so bringing each back is a presentation-layer change, not a rebuild:
+Removed on purpose: the army and recruitment. It had no reachable UI and was dead weight in the state and the map. It comes back only with real depth (see "Long-term").
 
-- [ ] Re-add Taxes actions (raise/lower) and the Popularity stat.
-- [ ] Re-add Development actions (Invest in Education, Start Research) and the Research Points stat.
-- [ ] Re-add Military actions (Recruit Soldiers) and the Army Strength stat, plus its existing map marker.
+## Next: depth in what's already there
 
-## Version 0.2 — Make it a real game loop
+- [ ] A sink or a use for political power when a player only researches (see TODO.md).
+- [ ] Rebellions: let riots grow into an active uprising in one province, not just a stage.
+- [ ] Event chains, and events scoped to one province or terrain.
+- [ ] Later production chains: steel or similar goods made from ore and coal.
+- [ ] Settings: difficulty and starting country size.
 
-- [ ] Split the economy per-province: each province gets its own local stats (food, industry, etc.) instead of one national pool, so *where* you build actually matters mechanically, not just visually.
-- [ ] Save/load (localStorage first; file export/import later).
-- [ ] Basic win/lose-adjacent conditions or milestones (e.g., stability collapse consequences, population milestones).
-- [ ] More granular construction: build queue/limits, cancel a project, multiple farms/factories with independent progress.
-- [ ] Better balancing pass with data-driven constants (a single tunable config file, sanity-checked against long simulated playtests).
-- [ ] Basic settings: difficulty, starting country size.
-- [ ] Population with distinct jobs/occupations (farmers, factory workers, etc.) instead of one undifferentiated population number — likely depends on the per-province economy split above.
+## Later: beyond one country
 
-## Version 0.3 — Depth in existing systems
-
-- [ ] Later-era resources (steel, oil, coal) that consume the Catan-style raw resources (wood/ore) to produce, adding a production chain on top of the current flat terrain output.
-- [ ] Technology tree: research points unlock discrete, named technologies with real effects instead of a generic multiplier.
-- [ ] Political parties and government types, each with different bonuses/penalties.
-- [ ] Elections: popularity determines whether the player's government (or a rival) stays in power.
-- [ ] Laws: toggleable policies with trade-offs (beyond the tax slider) — a first, fixed set of mutually-exclusive law pairs already shipped in the MVP; this item is the fuller, freely-toggleable/expandable version.
-- [ ] Rebellions: low stability can spawn an active rebellion mechanic, not just a passive risk.
-- [ ] More random-event variety and weighting (rare vs. common events, event chains, events scoped to a specific province/terrain rather than always national).
-
-## Version 0.4 — Beyond one isolated country
-
-- [ ] Simulate the two non-player nations too (Caldenreich/Veldoria or Astravia, whichever the player didn't pick) instead of just displaying their territory.
-- [ ] Direct nation-to-nation trade (not just the abstract market bank) once the other two nations are actually simulated and have their own resource stockpiles to trade from.
-- [ ] Diplomacy: treaties, alliances, rivalries between nations.
-- [ ] Basic AI nation behavior (simple heuristics, not full parity with the player).
-- [ ] Turn the decorative islands (Kestrel Isles, Solmere, Vashtel Cay) into real, ownable territory — new nations to play as, or land the player's nation can colonize/settle. (The MVP already lets you scout them via a timed expedition for a one-time reward; this item is the fuller colonization/ownership version.)
+- [ ] Simulate the two neighbouring nations' economies, not just their elections.
+- [ ] Direct trade between nations once they have stockpiles of their own.
+- [ ] Treaties, alliances and rivalries.
+- [ ] Turn the islands into real territory to settle, instead of one-time rewards.
 
 ## Long-term dream version
 
-- [ ] Wars and fronts, if/when it makes sense to reintroduce a military layer with real depth.
-- [ ] Rich AI countries with distinct personalities/strategies.
-- [ ] Historical and custom scenarios (different starting years, map, or country setups).
-- [ ] Deep political simulation: coalitions, factional infighting, ideology shifts.
-- [ ] Full economic simulation: supply chains, market prices, private sector actors.
-- [ ] Multiplayer or shared-world play (a much later, non-trivial architectural shift).
+- [ ] Wars and fronts, if a military layer with real depth ever makes sense.
+- [ ] AI countries with distinct personalities.
+- [ ] Historical and custom scenarios (different starting years, maps, or setups).
+- [ ] Coalitions, factional infighting and ideology shifts.
+- [ ] Multiplayer or a shared world (a much later, non-trivial change).
 
 ## Explicitly out of scope for now
 
-To keep the MVP small, the following are deferred rather than partially built: a backend/server, multiplayer, real-world map data, and detailed military mechanics. These are revisited only once the core loop (time, economy, stability, construction) is solid and fun on its own.
+A backend or server, multiplayer, real-world map data, and military mechanics. These are revisited only once the core loop is solid and fun on its own.
