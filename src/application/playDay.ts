@@ -6,7 +6,7 @@
 // at 1x speed, where the player is already watching every day.
 import { getSeason } from "../domain/country/calendar";
 import { generateId } from "../domain/country/id";
-import type { GameDate, GameState } from "../domain/country/types";
+import type { EventTopic, GameDate, GameState } from "../domain/country/types";
 import { getHeatingDemand } from "../domain/housing/housingRules";
 import { isDebtDangerous } from "../domain/loans/loanRules";
 import { getProvincesRiotingAlone } from "../domain/provinces/provinceOrder";
@@ -27,17 +27,17 @@ function isCold(state: GameState): boolean {
 }
 
 // Dangers that appeared between yesterday and today, with why it matters.
-function newDangers(before: GameState, after: GameState): Array<{ kind: string; reason: string }> {
-  const dangers: Array<{ kind: string; reason: string }> = [];
+function newDangers(before: GameState, after: GameState): Array<{ kind: string; reason: string; topic: EventTopic }> {
+  const dangers: Array<{ kind: string; reason: string; topic: EventTopic }> = [];
   if ((after.unrestStage === "strikes" || after.unrestStage === "riots") && isWorseStage(after.unrestStage, before.unrestStage)) {
-    dangers.push({ kind: `unrest-${after.unrestStage}`, reason: after.unrestStage === "riots" ? "the country is rioting" : "strikes have broken out" });
+    dangers.push({ kind: `unrest-${after.unrestStage}`, reason: after.unrestStage === "riots" ? "the country is rioting" : "strikes have broken out", topic: "unrest" });
   }
   const riotingBefore = getProvincesRiotingAlone(before.provinces, before.unrestStage);
   const newlyRioting = getProvincesRiotingAlone(after.provinces, after.unrestStage).filter((id) => !riotingBefore.includes(id));
-  if (newlyRioting.length > 0) dangers.push({ kind: "provinceRiots", reason: `${getProvinceName(newlyRioting[0])} is rioting` });
-  if (isCold(after) && !isCold(before)) dangers.push({ kind: "cold", reason: "the homes have run out of coal and wood" });
-  if (after.stats.food <= 0 && before.stats.food > 0) dangers.push({ kind: "hunger", reason: "the food has run out" });
-  if (isDebtDangerous(after.debt) && !isDebtDangerous(before.debt)) dangers.push({ kind: "debt", reason: "debt is past the danger line" });
+  if (newlyRioting.length > 0) dangers.push({ kind: "provinceRiots", reason: `${getProvinceName(newlyRioting[0])} is rioting`, topic: "provinceUnrest" });
+  if (isCold(after) && !isCold(before)) dangers.push({ kind: "cold", reason: "the homes have run out of coal and wood", topic: "cold" });
+  if (after.stats.food <= 0 && before.stats.food > 0) dangers.push({ kind: "hunger", reason: "the food has run out", topic: "hunger" });
+  if (isDebtDangerous(after.debt) && !isDebtDangerous(before.debt)) dangers.push({ kind: "debt", reason: "debt is past the danger line", topic: "money" });
   return dangers;
 }
 
@@ -62,6 +62,8 @@ export function applyDangerPause(before: GameState, after: GameState): GameState
         date: after.date,
         message: `Paused: ${reasons}. Resume when you're ready (Space).`,
         severity: "danger",
+        topic: "paused",
+        about: fresh[0].topic,
       },
       ...after.events,
     ],

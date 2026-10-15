@@ -37,7 +37,7 @@ function toastFromEvent(event: GameEvent): Toast | null {
       key: event.id,
       kind: "breakdown",
       title: "Breakdown",
-      message: event.message.replace(" Repair it from the Economy tab.", ""),
+      message: event.message,
       action: action ?? { label: "Repair", panel: "economy", section: "build" },
     };
   }

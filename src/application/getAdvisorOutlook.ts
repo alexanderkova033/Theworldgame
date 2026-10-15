@@ -97,7 +97,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       kind: "unrest",
       stage: state.unrestStage,
       text: `Unrest: ${UNREST_NAMES[state.unrestStage]}`,
-      detail: `Stability ${Math.round(state.stats.stability)}. A crackdown on the Politics tab pulls the country back a stage; police soften strikes and riots.`,
+      detail: `Stability ${Math.round(state.stats.stability)}. A crackdown pulls the country back a stage; police soften strikes and riots.`,
       critical: state.unrestStage !== "discontent",
     });
   }
@@ -124,7 +124,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     alerts.push({
       kind: "coal",
       text: `Coal: ${dayCount(days)}`,
-      detail: `Coal and firewood last ${days} more days, with ${heating.winterDaysLeft} days of winter left. Buy coal on the Trade tab.`,
+      detail: `Coal and firewood last ${days} more days, with ${heating.winterDaysLeft} days of winter left. Buy coal.`,
       critical: days < ADVISOR_COAL_CRITICAL_DAYS,
     });
   } else if (!heating.isWinter && heating.daysUntilWinter <= ADVISOR_WINTER_PREP_DAYS && heating.fuel < heating.fuelNeeded) {
@@ -143,7 +143,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     alerts.push({
       kind: "food",
       text: `Food: ${dayCount(days)}`,
-      detail: `If nothing changes, the food runs out around ${formatDate(date)}. Build farms, or buy food on the Trade tab.`,
+      detail: `If nothing changes, the food runs out around ${formatDate(date)}. Build farms, or buy food.`,
       critical,
     });
   }
@@ -203,7 +203,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     alerts.push({
       kind: "debt",
       text: `Debt: ${compact(state.debt)}`,
-      detail: "Debt is past the danger line. The interest costs stability and support every day. Repay on the Trade tab.",
+      detail: "Debt is past the danger line. The interest costs stability and support every day. Repay some.",
       critical: true,
     });
   }

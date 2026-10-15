@@ -31,6 +31,6 @@ export function pressureGovernment(state: GameState, nationId: string, partyId: 
     ...state,
     stats: { ...state.stats, politicalPower: state.stats.politicalPower - PRESSURE_POLITICAL_POWER_COST },
     foreignPolitics: { ...state.foreignPolitics, [nationId]: applyPressure(gov, partyId, strength) },
-    events: [{ id: generateId("event"), date: state.date, message, severity: strength >= 0 ? "info" : "warning" }, ...state.events],
+    events: [{ id: generateId("event"), date: state.date, message, severity: strength >= 0 ? "info" : "warning", topic: "politics" }, ...state.events],
   };
 }

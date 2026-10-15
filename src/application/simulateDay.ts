@@ -149,6 +149,7 @@ export function simulateDay(state: GameState): GameState {
         date: state.date,
         message: `${project.label} construction has stalled: there isn't enough to pay for it.`,
         severity: "warning",
+        topic: "stall",
       });
     } else if (!advanced.isStalled && project.isStalled) {
       events.unshift({
@@ -156,6 +157,7 @@ export function simulateDay(state: GameState): GameState {
         date: state.date,
         message: `${project.label} construction resumes.`,
         severity: "info",
+        topic: "stall",
       });
     }
     return advanced;
@@ -178,6 +180,7 @@ export function simulateDay(state: GameState): GameState {
       date: state.date,
       message: `${project.label} construction complete.`,
       severity: "info",
+      topic: "built",
     });
   }
 
@@ -197,6 +200,7 @@ export function simulateDay(state: GameState): GameState {
       date: state.date,
       message: `Venture to ${islandName} complete. ${flavor}`,
       severity: "info",
+      topic: "venture",
     });
   }
 
@@ -223,6 +227,7 @@ export function simulateDay(state: GameState): GameState {
       date: state.date,
       message: `${BUILDING_NAMES[building.type]} in ${getProvinceName(building.provinceId)} is repaired and back in service.`,
       severity: "info",
+      topic: "repaired",
     });
   }
   const breakdowns = rollBreakdowns(repairs.placedBuildings, getPoliceBreakdownReduction(working.workforce.police), mods.breakdownMultiplier);
@@ -230,8 +235,9 @@ export function simulateDay(state: GameState): GameState {
     events.unshift({
       id: generateId("event"),
       date: state.date,
-      message: `${BUILDING_NAMES[building.type]} in ${getProvinceName(building.provinceId)} has broken down. Repair it from the Economy tab.`,
+      message: `${BUILDING_NAMES[building.type]} in ${getProvinceName(building.provinceId)} has broken down.`,
       severity: "warning",
+      topic: "breakdown",
     });
   }
   working = { ...working, placedBuildings: breakdowns.placedBuildings };
@@ -245,8 +251,9 @@ export function simulateDay(state: GameState): GameState {
       events.unshift({
         id: generateId("event"),
         date: state.date,
-        message: `Rioters in ${getProvinceName(riot.wrecked.provinceId)}: a ${BUILDING_NAMES[riot.wrecked.type]} has broken down. Repair it from the Economy tab.`,
+        message: `Rioters in ${getProvinceName(riot.wrecked.provinceId)}: a ${BUILDING_NAMES[riot.wrecked.type]} has broken down.`,
         severity: "danger",
+        topic: "breakdown",
       });
     }
   }
@@ -289,8 +296,9 @@ export function simulateDay(state: GameState): GameState {
     events.unshift({
       id: generateId("event"),
       date: state.date,
-      message: "No coal or wood left to heat homes, and people are freezing. Buy coal on the Trade tab.",
+      message: "No coal or wood left to heat homes, and people are freezing.",
       severity: "danger",
+      topic: "cold",
     });
   }
 
@@ -309,6 +317,7 @@ export function simulateDay(state: GameState): GameState {
       date: state.date,
       message: "Debt has grown dangerous. The interest alone is now dragging down stability and support.",
       severity: "warning",
+      topic: "money",
     });
   }
 
@@ -329,6 +338,7 @@ export function simulateDay(state: GameState): GameState {
       date: state.date,
       message: `The treasury can't cover wages, and ${laidOff} unpaid staff walk off the job.`,
       severity: "warning",
+      topic: "money",
     });
   }
   const salaries = getDailySalaries(workforce, mods.wageMultiplier);
@@ -348,6 +358,7 @@ export function simulateDay(state: GameState): GameState {
       date: state.date,
       message: "Food shortage! The population is going hungry.",
       severity: "warning",
+      topic: "hunger",
     });
   }
 
@@ -402,6 +413,7 @@ export function simulateDay(state: GameState): GameState {
       date: state.date,
       message: worse ? UNREST_WORSENS[unrestStage] : UNREST_EASES[unrestStage],
       severity: !worse ? "info" : unrestStage === "discontent" ? "warning" : "danger",
+      topic: "unrest",
     });
   }
 
@@ -419,6 +431,7 @@ export function simulateDay(state: GameState): GameState {
       date: state.date,
       message: "The government has collapsed. Your reign ends here.",
       severity: "danger",
+      topic: "unrest",
     });
   }
 
@@ -493,9 +506,10 @@ export function simulateDay(state: GameState): GameState {
             ? `Riots in ${name}! Too many there have no home or no work. Build there, or crack down: it drags the whole country down.`
             : `Strikes in ${name}. Too many there have no home or no work.`,
         severity: change.to === "riots" ? "danger" : "warning",
+        topic: "provinceUnrest",
       });
     } else if (change.from === "riots" && isLocalTrouble(change.from, unrestStage)) {
-      events.unshift({ id: generateId("event"), date: state.date, message: `The riots in ${name} die down.`, severity: "info" });
+      events.unshift({ id: generateId("event"), date: state.date, message: `The riots in ${name} die down.`, severity: "info", topic: "provinceUnrest" });
     }
   }
   working = { ...working, provinces: order.provinces };
@@ -506,6 +520,7 @@ export function simulateDay(state: GameState): GameState {
       date: state.date,
       message: "The homes are full and families are sleeping rough. Build more homes.",
       severity: "warning",
+      topic: "homes",
     });
   }
 
@@ -554,6 +569,7 @@ export function simulateDay(state: GameState): GameState {
       date,
       message: `${randomEvent.name}: ${randomEvent.message}`,
       severity: randomEvent.severity,
+      topic: "world",
     });
   }
 
@@ -575,6 +591,7 @@ export function simulateDay(state: GameState): GameState {
       date,
       message: move.message,
       severity: move.popularityDelta < 0 ? "warning" : "info",
+      topic: "elections",
     });
   }
 
@@ -593,6 +610,7 @@ export function simulateDay(state: GameState): GameState {
         date,
         message: `${nation.name} changes government: the ${newParty.name} takes power${friendly ? ". A friendly government: trade terms improve." : "."}`,
         severity: friendly ? "info" : "warning",
+        topic: "elections",
       });
     }
 
@@ -612,6 +630,7 @@ export function simulateDay(state: GameState): GameState {
             ? `${nation.name}'s ${party.name} campaigns for you across the border: support +${move.supportDelta}.`
             : `${nation.name}'s ${party.name} is funding your opposition: support ${move.supportDelta}.`,
         severity: move.supportDelta > 0 ? "info" : "warning",
+        topic: "elections",
       });
     }
   }
@@ -619,7 +638,7 @@ export function simulateDay(state: GameState): GameState {
   // 12d. The turn of the season.
   const seasonMessage = isFirstDayOfMonth(date) ? SEASON_MESSAGES[date.month] : undefined;
   if (!isGameOver && seasonMessage) {
-    events.unshift({ id: generateId("event"), date, ...seasonMessage });
+    events.unshift({ id: generateId("event"), date, ...seasonMessage, topic: "season" });
   }
 
   // 13. A general election, roughly every ELECTION_INTERVAL_MONTHS — the
@@ -646,6 +665,7 @@ export function simulateDay(state: GameState): GameState {
           date,
           message: `${party.name} wins the general election outright: ${electionsWon} elections running. Victory!`,
           severity: "info",
+          topic: "elections",
         });
       } else {
         events.unshift({
@@ -653,6 +673,7 @@ export function simulateDay(state: GameState): GameState {
           date,
           message: `${party.name} wins the general election with ${Math.round(popularity)}% support (${electionsWon}/${ELECTIONS_TO_WIN_GAME} for outright victory).`,
           severity: "info",
+          topic: "elections",
         });
       }
     } else {
@@ -664,6 +685,7 @@ export function simulateDay(state: GameState): GameState {
         date,
         message: `${party.name} loses the general election. You are voted out of office.`,
         severity: "danger",
+        topic: "elections",
       });
     }
   }

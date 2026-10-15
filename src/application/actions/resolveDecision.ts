@@ -46,6 +46,7 @@ export function resolveDecision(state: GameState, decisionId: string, optionId: 
         date: state.date,
         message: `${decision.title}: chose to "${option.label.toLowerCase()}."`,
         severity: "info",
+        topic: "decision",
       },
       ...state.events,
     ],

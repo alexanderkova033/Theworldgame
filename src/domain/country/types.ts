@@ -48,11 +48,36 @@ export interface PolicyInProgress {
   daysRemaining: number;
 }
 
+// What an event is about, so the log can group repeats and point to the
+// fix without reading its words.
+export type EventTopic =
+  | "paused" // the game stopped itself; `about` says for what
+  | "hunger"
+  | "cold"
+  | "homes"
+  | "money"
+  | "unrest"
+  | "provinceUnrest"
+  | "politics"
+  | "elections"
+  | "laws"
+  | "research"
+  | "decision"
+  | "built"
+  | "stall"
+  | "breakdown"
+  | "repaired"
+  | "venture"
+  | "season"
+  | "world";
+
 export interface GameEvent {
   id: string;
   date: GameDate;
   message: string;
   severity: EventSeverity;
+  topic?: EventTopic; // absent on events from older saves
+  about?: EventTopic; // for a pause: the danger that stopped the game
 }
 
 export interface DailyDelta {

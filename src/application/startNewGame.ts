@@ -134,6 +134,7 @@ function createInitialState(nationId: string, partyId: string): GameState {
         date: STARTING_DATE,
         message: `${nation.name} enters the new century in the depth of winter. The fields lie fallow; the granaries hold last autumn's harvest until spring.`,
         severity: "info",
+        topic: "season",
       },
     ],
     monthlyReports: [],

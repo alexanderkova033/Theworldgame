@@ -56,6 +56,7 @@ export function completeResearch(state: GameState, researchId: string): GameStat
         date: state.date,
         message: "",
         severity: "info",
+        topic: "research",
       },
       ...state.events,
     ],

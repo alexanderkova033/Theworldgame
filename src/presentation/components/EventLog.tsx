@@ -73,10 +73,6 @@ function groupEvents(events: GameEvent[]): MonthGroup[] {
   return months;
 }
 
-// "— repair it from the Economy tab." says what the button beside it does.
-function tidy(message: string, action?: EventAction): string {
-  return action ? message.replace(/ Repair it from the Economy tab\.$/, "") : message;
-}
 
 function GoButton({ action, onOpenPanel }: { action?: EventAction; onOpenPanel: OpenPanel }) {
   if (!action) return null;
@@ -95,7 +91,7 @@ function EventLine({ event, action, onOpenPanel, count }: { event: GameEvent; ac
       </span>
       <span className="event-log__body">
         <span className="event-log__date">{formatDate(event.date)}</span>
-        <span>{tidy(event.message, action)}</span>
+        <span>{event.message}</span>
       </span>
       {count !== undefined && <span className="event-log__count">×{count}</span>}
       <GoButton action={action} onOpenPanel={onOpenPanel} />

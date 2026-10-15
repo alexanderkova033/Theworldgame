@@ -20,7 +20,7 @@ import { applyCrackdown } from "../../domain/unrest/unrestRules";
 import { ONE_OFF, recordAction } from "./recordAction";
 
 function logged(state: GameState, message: string, severity: GameEvent["severity"] = "info"): GameEvent[] {
-  return [{ id: generateId("event"), date: state.date, message, severity }, ...state.events];
+  return [{ id: generateId("event"), date: state.date, message, severity, topic: "politics" }, ...state.events];
 }
 
 export function canHoldRally(state: GameState): boolean {
