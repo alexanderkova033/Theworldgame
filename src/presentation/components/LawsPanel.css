@@ -790,7 +790,7 @@
 
 .law-tree__body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+  grid-template-columns: minmax(min-content, 1fr) minmax(16rem, 24rem);
   align-items: start;
   gap: 1rem;
 }
@@ -815,8 +815,9 @@
   padding-top: 0;
 }
 
-/* Below this the three lanes need the whole width: details go underneath. */
-@media (max-width: 1150px) {
+/* Below this the three lanes need the whole width: details go underneath,
+   and picking a node scrolls to them (see revealTreeDetails.ts). */
+@media (max-width: 1050px) {
   .law-tree__body {
     grid-template-columns: 1fr;
   }

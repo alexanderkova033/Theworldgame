@@ -26,6 +26,7 @@ import { getResearchNode } from "../../domain/research/researchRules";
 import { getSynergiesForLaw } from "../../domain/synergy/synergyRules";
 import { playGavel } from "../audio/sound";
 import { pickDefaultNode } from "../pickDefaultNode";
+import { revealTreeDetails } from "../revealTreeDetails";
 import { formatCompact } from "../formatNumber";
 import { CostChips, DaysChip, ResourceChip, StatChip, TreasuryChip } from "./CostChips";
 import { StatIcon } from "./StatIcon";
@@ -393,8 +394,14 @@ export function LawsPanel({ state, alerts, dispatch }: LawsPanelProps) {
           getPathHint={(path) => pathHints(path.key)[0]}
           selectedId={shownPath ? null : (shownNode?.id ?? null)}
           selectedPathKey={shownPath?.key ?? null}
-          onSelect={selectNode}
-          onSelectPath={setSelectedPathKey}
+          onSelect={(id) => {
+            selectNode(id);
+            revealTreeDetails();
+          }}
+          onSelectPath={(key) => {
+            setSelectedPathKey(key);
+            revealTreeDetails();
+          }}
         />
 
         {shownPath && (

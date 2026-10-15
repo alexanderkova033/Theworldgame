@@ -31,6 +31,7 @@ import { getSynergiesForResearch } from "../../domain/synergy/synergyRules";
 import { getScientistCap, getTotalScientists, RESEARCH_CATEGORIES } from "../../domain/workforce/workforceRules";
 import { playQuill } from "../audio/sound";
 import { pickDefaultNode } from "../pickDefaultNode";
+import { revealTreeDetails } from "../revealTreeDetails";
 import { CostChips, StatChip } from "./CostChips";
 import { StatIcon } from "./StatIcon";
 import { SubTabs, type SubTab } from "./SubTabs";
@@ -348,8 +349,14 @@ export function ResearchPanel({ state, alerts, dispatch }: ResearchPanelProps) {
           getPathHint={(path) => pathHints(path.key)[0]}
           selectedId={shownPath ? null : (shownNode?.id ?? null)}
           selectedPathKey={shownPath?.key ?? null}
-          onSelect={selectNode}
-          onSelectPath={setSelectedPathKey}
+          onSelect={(id) => {
+            selectNode(id);
+            revealTreeDetails();
+          }}
+          onSelectPath={(key) => {
+            setSelectedPathKey(key);
+            revealTreeDetails();
+          }}
         />
 
         {shownPath && (

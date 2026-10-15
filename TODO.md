@@ -17,7 +17,7 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **Income multipliers are still modest in Crowns.** Taxes and industry now pay a third more and market sales pay less, so daily income is most of a careful player's money (net about 24 Cr a day). Astravia still earns about 19k from selling grain over three years, next to 26k from income.
 - **Old saves.** A law being drafted under the old tree layout still finishes even if it now sits on another path. Research directions that became unreachable are cleared on load.
 - **Hints on the trees** only mark nodes that can be chosen right now; a path's name is marked if anything on it would help.
-- **Small screens.** Below about 1150px the details pane drops under the tree; below about 700px the tree scrolls sideways.
+- **Small screens.** Below 1050px the tree details drop under the tree (picking a node scrolls to them); below about 700px the tree scrolls sideways.
 - **TECHNICAL_DESIGN.md** may still describe the early MVP in places. README, GAME_DESIGN and ROADMAP were brought up to date on 2026-10-15.
 
 ## Process reminders
