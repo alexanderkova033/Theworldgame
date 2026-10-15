@@ -23,7 +23,7 @@ const EVENTS: CauseInfo = {
   hint: "Random events and what ventures brought home",
   icon: (size) => <EventIcon size={size} />,
 };
-const TRADE: CauseInfo = { label: "Trade", hint: "Buying and selling on the market", icon: (size) => <NavIcon type="trade" size={size} /> };
+const TRADE: CauseInfo = { label: "Trade", hint: "Buying and selling on the market", icon: (size) => <NavIcon type="money" size={size} /> };
 const POLICY: CauseInfo = {
   label: "Laws and creed",
   hint: "Laws and technologies in force, and your party's creed",
@@ -36,7 +36,7 @@ export const CAUSES: Record<LedgerMetric, Record<string, CauseInfo>> = {
     taxes: { label: "Taxes", hint: "Tax paid by the population", icon: (size) => <StatIcon type="treasury" size={size} /> },
     industry: { label: "Industry", hint: "What the factories earn", icon: (size) => <StatIcon type="industry" size={size} /> },
     salaries: { label: "Wages", hint: "Scientists' and police wages, and hiring fees", icon: (size) => <StatIcon type="police" size={size} /> },
-    construction: { label: "Building", hint: "Building and repairing: down payments and daily instalments", icon: (size) => <NavIcon type="economy" size={size} /> },
+    construction: { label: "Building", hint: "Building and repairing: down payments and daily instalments", icon: (size) => <NavIcon type="build" size={size} /> },
     trade: TRADE,
     loans: { label: "Loans", hint: "Money borrowed, minus money paid back", icon: (size) => <LoanIcon size={size} /> },
     oneOffs: ONE_OFFS,

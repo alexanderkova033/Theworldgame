@@ -2,12 +2,10 @@
 // shared by the toasts and the event log so both offer the same "Go"
 // button. Read from the topic the simulation tags each event with.
 import type { EventTopic, GameEvent } from "../domain/country/types";
-import type { EconomySection, PanelKey } from "./navigation";
+import { BUDGET, BUILDINGS, MARKET, PEOPLE, SUPPORT, UNREST, type Destination } from "./navigation";
 
-export interface EventAction {
+export interface EventAction extends Destination {
   label: string;
-  panel: PanelKey;
-  section?: EconomySection;
 }
 
 export interface EventKind {
@@ -17,20 +15,20 @@ export interface EventKind {
   action?: EventAction;
 }
 
-const BUY_FOOD: EventAction = { label: "Buy food", panel: "trade" };
-const BUY_COAL: EventAction = { label: "Buy coal", panel: "trade" };
-const BUDGET: EventAction = { label: "Budget", panel: "economy", section: "budget" };
-const PEOPLE: EventAction = { label: "People", panel: "economy", section: "people" };
-const POLITICS: EventAction = { label: "Politics", panel: "politics" };
-const BUILD: EventAction = { label: "Build", panel: "economy", section: "build" };
+const BUY_FOOD: EventAction = { label: "Buy food", ...MARKET };
+const BUY_COAL: EventAction = { label: "Buy coal", ...MARKET };
+const SEE_BUDGET: EventAction = { label: "Budget", ...BUDGET };
+const SEE_PEOPLE: EventAction = { label: "People", ...PEOPLE };
+const POLITICS: EventAction = { label: "Politics", ...SUPPORT };
+const BUILD: EventAction = { label: "Build", ...BUILDINGS };
 
 const KINDS: Record<Exclude<EventTopic, "paused">, Omit<EventKind, "kind">> = {
   hunger: { plural: "days of food shortage", foldable: true, action: BUY_FOOD },
   cold: { plural: "heating warnings", foldable: true, action: BUY_COAL },
-  homes: { plural: "housing warnings", foldable: true, action: PEOPLE },
-  money: { plural: "money warnings", foldable: true, action: BUDGET },
-  unrest: { plural: "unrest changes", foldable: false, action: POLITICS },
-  provinceUnrest: { plural: "province unrest", foldable: false, action: PEOPLE },
+  homes: { plural: "housing warnings", foldable: true, action: SEE_PEOPLE },
+  money: { plural: "money warnings", foldable: true, action: SEE_BUDGET },
+  unrest: { plural: "unrest changes", foldable: false, action: { label: "Unrest", ...UNREST } },
+  provinceUnrest: { plural: "province unrest", foldable: false, action: SEE_PEOPLE },
   politics: { plural: "political actions", foldable: true, action: POLITICS },
   elections: { plural: "campaign moves", foldable: true, action: POLITICS },
   laws: { plural: "law votes", foldable: false, action: { label: "Laws", panel: "laws" } },

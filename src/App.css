@@ -21,22 +21,21 @@
   display: flex;
 }
 
-/* Economy modal: build cards and trade side by side now that there's a full
-   modal's width to work with instead of a cramped 22rem sidebar. */
-.economy-modal {
+/* A window section: the main panel, and a narrower column beside it. */
+.window-layout {
   display: grid;
   grid-template-columns: 1.65fr 1fr;
   gap: 1.1rem;
   align-items: start;
 }
 
-.economy-modal__side {
+.window-layout__side {
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
 }
 
-.economy-modal__side .panel {
+.window-layout__side .panel {
   margin-bottom: 0;
 }
 
@@ -49,28 +48,19 @@
 }
 
 @media (max-width: 900px) {
-  .economy-modal,
+  .window-layout,
   .reports-modal {
     grid-template-columns: 1fr;
   }
 }
 
-/* Economy sections with one panel, or two of equal weight. */
-.economy-modal__single {
-  max-width: 46rem;
-  margin: 0 auto;
-}
-
-.economy-modal__single--wide {
-  max-width: 58rem;
-}
-
-.economy-modal.economy-modal--even {
+/* Two panels of equal weight. */
+.window-layout.window-layout--even {
   grid-template-columns: 1fr 1fr;
 }
 
 /* A steady height across sections, so the modal doesn't re-centre (and the
    tabs jump) every time a shorter section opens. */
-.economy-panel {
+.window-panel {
   min-height: min(44rem, calc(100vh - var(--top-bar-height) - 8rem));
 }

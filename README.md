@@ -42,7 +42,7 @@ npm test          # Run the tests (tree shape and scripted balance games)
 - **Start screen**: pick a nation (a card or the map), then a party. Three save slots let you come back later.
 - **Top bar**: the date, pause/resume and speed (1x, 2x, 3x, 5x), your key stats, and the tabs.
 - **Map**: click one of your provinces to build there and see how it's doing. Click an island to charter a venture.
-- **Tabs**: Economy (build, people, staff, budget), Trade (market and loans), Reports, Laws and Research. Click your nation's name for Politics.
+- **Tabs**: Build (buildings, people), Money (budget with taxes and loans, market), Politics (support, unrest with police, abroad), Laws, Research and Reports. Every thing lives in exactly one place.
 - **Advisor strip**: the two or three things that need you most right now. Click one to go straight there.
 
 ## Project structure

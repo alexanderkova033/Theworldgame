@@ -360,7 +360,7 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
         }
         action={
           fuelShort ? (
-            <button type="button" className="btn-primary people-meter__action" onClick={() => onOpenPanel("trade")}>
+            <button type="button" className="btn-primary people-meter__action" onClick={() => onOpenPanel("money", "market")}>
               Buy coal
             </button>
           ) : undefined

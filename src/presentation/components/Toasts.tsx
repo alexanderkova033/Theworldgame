@@ -15,7 +15,7 @@ import { formatSignedChange } from "../formatNumber";
 import { getCauseInfo, METRIC_LABELS } from "../causes";
 import { getEventKind } from "../eventKinds";
 import { WrenchIcon } from "./RepairsPanel";
-import type { EconomySection, OpenPanel, PanelKey } from "../navigation";
+import { BUILDINGS, type Destination, type OpenPanel } from "../navigation";
 
 const TOAST_LIFETIME_MS = 8000;
 const MAX_TOASTS = 4;
@@ -25,7 +25,7 @@ interface Toast {
   kind: "report" | "breakdown" | "info" | "warning" | "danger";
   title: string;
   message: string;
-  action: { label: string; panel: PanelKey; section?: EconomySection };
+  action: Destination & { label: string };
 }
 
 // Every toast's button goes where the event's problem is dealt with (see
@@ -38,7 +38,7 @@ function toastFromEvent(event: GameEvent): Toast | null {
       kind: "breakdown",
       title: "Breakdown",
       message: event.message,
-      action: action ?? { label: "Repair", panel: "economy", section: "build" },
+      action: action ?? { label: "Repair", ...BUILDINGS },
     };
   }
   return {

@@ -18,7 +18,7 @@ import { getProvinceOverview, getProvinceStatus, type ProvinceStatus } from "./a
 import { playDanger, playGameOver, playLetter } from "./presentation/audio/sound";
 import { AdvisorStrip } from "./presentation/components/AdvisorStrip";
 import { DecisionModal } from "./presentation/components/DecisionModal";
-import { EconomyPanel } from "./presentation/components/EconomyPanel";
+import { BuildPanel } from "./presentation/components/BuildPanel";
 import { EventLog } from "./presentation/components/EventLog";
 import { ExpeditionPanel } from "./presentation/components/ExpeditionPanel";
 import { GameEndScreen } from "./presentation/components/GameEndScreen";
@@ -34,8 +34,8 @@ import { ResearchPanel } from "./presentation/components/ResearchPanel";
 import { StartScreen } from "./presentation/components/StartScreen";
 import { Toasts } from "./presentation/components/Toasts";
 import { TopBar } from "./presentation/components/TopBar";
-import type { EconomySection, PanelKey } from "./presentation/navigation";
-import { TradePanel } from "./presentation/components/TradePanel";
+import { FIRST_SECTIONS, politicsSectionFor, type PanelKey, type Section, type Sections } from "./presentation/navigation";
+import { MoneyPanel } from "./presentation/components/MoneyPanel";
 import { useGameClock } from "./presentation/hooks/useGameClock";
 
 const SPEED_KEYS: Record<string, GameSpeed> = { "1": 1, "2": 2, "3": 3, "5": 5 };
@@ -74,9 +74,10 @@ function App() {
   // on-demand overlay (HOI4-style tabs) instead of a permanent sidebar —
   // see Modal.tsx and TopBar.tsx.
   const [openModal, setOpenModal] = useState<PanelKey | null>(null);
-  // Which section of the Economy tab is showing — remembered between visits,
-  // and set directly when an advisor chip or toast points somewhere.
-  const [economySection, setEconomySection] = useState<EconomySection>("build");
+  // Which section each window shows: remembered between visits, and set
+  // directly when an advisor chip or toast points somewhere.
+  const [sections, setSections] = useState<Sections>(FIRST_SECTIONS);
+  const setSection = useCallback(<K extends keyof Sections>(panel: K, section: Sections[K]) => setSections((s) => ({ ...s, [panel]: section })), []);
 
   // How many of state.events the player has actually seen — everything past
   // that count shows up as an unread badge on the Reports tab, since the
@@ -248,8 +249,12 @@ function App() {
   // Non-null past the `!state` guard above — it's memoized from that same value.
   const dailyProduction = production!;
 
-  function openPanel(panel: PanelKey, section?: EconomySection) {
-    if (section) setEconomySection(section);
+  function openPanel(panel: PanelKey, section?: Section) {
+    if (panel === "build" || panel === "money" || panel === "politics") {
+      // Politics with no section given opens on whatever is most urgent.
+      const next = section ?? (panel === "politics" ? politicsSectionFor(state!) : undefined);
+      if (next) setSections((s) => ({ ...s, [panel]: next }));
+    }
     // Always opens/switches to the tab — never toggles it closed. An
     // earlier version closed the panel when you clicked its already-active
     // tab again, but that made an accidental double-click (easy to trigger
@@ -315,13 +320,13 @@ function App() {
 
       {openModal === "politics" && (
         <Modal title="Politics" icon={<NavIcon type="politics" size={22} />} onClose={() => setOpenModal(null)}>
-          <PoliticsPanel state={state} dispatch={dispatch} onOpenPanel={openPanel} />
+          <PoliticsPanel state={state} dispatch={dispatch} onOpenPanel={openPanel} section={sections.politics} onSection={(section) => setSection("politics", section)} />
         </Modal>
       )}
 
-      {openModal === "economy" && (
-        <Modal title="Economy" icon={<NavIcon type="economy" size={22} />} onClose={() => setOpenModal(null)} wide>
-          <EconomyPanel
+      {openModal === "build" && (
+        <Modal title="Build" icon={<NavIcon type="build" size={22} />} onClose={() => setOpenModal(null)} wide>
+          <BuildPanel
             state={state}
             dispatch={dispatch}
             production={dailyProduction}
@@ -329,22 +334,29 @@ function App() {
             selectedProvinceId={currentProvinceId}
             onSelectProvince={setSelectedProvinceId}
             onOpenPanel={openPanel}
-            section={economySection}
-            onSection={setEconomySection}
+            section={sections.build}
+            onSection={(section) => setSection("build", section)}
           />
         </Modal>
       )}
 
-      {openModal === "trade" && (
-        <Modal title="Trade" icon={<NavIcon type="trade" size={22} />} onClose={() => setOpenModal(null)} wide>
-          <TradePanel state={state} production={dailyProduction} dispatch={dispatch} />
+      {openModal === "money" && (
+        <Modal title="Money" icon={<NavIcon type="money" size={22} />} onClose={() => setOpenModal(null)} wide>
+          <MoneyPanel
+            state={state}
+            production={dailyProduction}
+            dispatch={dispatch}
+            onOpenPanel={openPanel}
+            section={sections.money}
+            onSection={(section) => setSection("money", section)}
+          />
         </Modal>
       )}
 
       {openModal === "reports" && (
         <Modal title="Reports" icon={<NavIcon type="reports" size={22} />} onClose={() => setOpenModal(null)} wide>
           <div className="reports-modal">
-            {/* Active projects already live on the Economy tab, right next to
+            {/* Active projects already live on the Build tab, right next to
                 the Build actions that create them — showing the same list
                 again here was pure duplication. Reports stays the historical
                 record: monthly summaries + the event log. */}

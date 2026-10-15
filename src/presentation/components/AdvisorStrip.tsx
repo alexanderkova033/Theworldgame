@@ -41,7 +41,7 @@ const ALERT_ICONS: Record<AdvisorAlertKind, () => ReactNode> = {
   broken: () => <WrenchIcon size={ICON_SIZE - 2} />,
   debt: () => <LoanIcon size={ICON_SIZE} />,
   election: () => <NavIcon type="politics" size={ICON_SIZE} />,
-  stalled: () => <NavIcon type="economy" size={ICON_SIZE} />,
+  stalled: () => <NavIcon type="build" size={ICON_SIZE} />,
   research: () => <StatIcon type="research" size={ICON_SIZE} />,
 };
 

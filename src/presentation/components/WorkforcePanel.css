@@ -1,56 +1,6 @@
-.workforce-panel__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.6rem;
-}
-
-.workforce-panel__header h2 {
-  margin: 0;
-}
-
-.workforce-panel__salaries {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--danger);
-}
-
-.workforce-panel__salaries svg,
-.workforce-panel__group-title svg,
-.workforce-panel__row > svg,
-.workforce-panel__effect svg {
+.workforce-panel__row > svg {
   display: block;
   flex-shrink: 0;
-}
-
-.workforce-panel__group + .workforce-panel__group {
-  margin-top: 1rem;
-}
-
-/* A group's head: its name, its places as seats, and what a hire costs
-   and does. */
-.workforce-panel__group-head {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.4rem 0.9rem;
-  margin-bottom: 0.4rem;
-  padding-bottom: 0.3rem;
-  border-bottom: 1px solid var(--rule);
-}
-
-.workforce-panel__group-title {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1rem;
-  color: var(--oxblood);
 }
 
 .workforce-panel__seats {
@@ -120,9 +70,6 @@
   border-style: dashed;
 }
 
-.workforce-panel__row + .workforce-panel__row {
-  margin-top: 0.3rem;
-}
 
 .workforce-panel__label {
   flex: 1;
@@ -130,16 +77,6 @@
   font-weight: 600;
 }
 
-.workforce-panel__effect {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2rem;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--success);
-  font-variant-numeric: tabular-nums;
-  cursor: help;
-}
 
 /* −  3  + : a compact headcount control. */
 .staff-stepper {

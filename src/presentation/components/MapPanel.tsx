@@ -1292,7 +1292,7 @@ export const MapPanel = memo(function MapPanel({
                 )}
                 {buildings.some((b) => !isWorking(b)) && (
                   <div className="map-panel__tooltip-row map-panel__tooltip-broken">
-                    {buildings.filter((b) => !isWorking(b)).length} broken. Repair from the Economy tab.
+                    {buildings.filter((b) => !isWorking(b)).length} broken. Repair from the Build tab.
                   </div>
                 )}
                 {buildings.length === 0 && roads === 0 && <div className="map-panel__tooltip-empty">No buildings yet.</div>}

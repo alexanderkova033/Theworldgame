@@ -263,7 +263,7 @@ function blockedReason(item: BuildItem, cost: number, state: GameState, province
   const moneyShort = upfront(cost) - state.stats.treasury;
   if (moneyShort > 0) return `Need ${Math.ceil(moneyShort).toLocaleString()} more ${CURRENCY_SYMBOL} to start.`;
   const resourceShort = upfront(item.resourceCost) - state.resources[item.resourceType];
-  if (resourceShort > 0) return `Need ${Math.ceil(resourceShort)} more ${item.resourceType} to start. Buy it on the Trade tab.`;
+  if (resourceShort > 0) return `Need ${Math.ceil(resourceShort)} more ${item.resourceType} to start. Buy it on the market.`;
   return null;
 }
 

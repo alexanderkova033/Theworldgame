@@ -568,19 +568,6 @@
   font-size: 0.85rem;
 }
 
-.politics-driver__tax {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.politics-driver__tax button {
-  width: 1.7rem;
-  padding: 0.15rem 0;
-}
-
 /* --- Act: spend political power (pointing previews on the gauge) --- */
 .politics-actions {
   display: grid;
@@ -629,36 +616,6 @@
 
 .politics-action__effect > span:not(.politics-figure) {
   color: var(--text-muted);
-}
-
-.politics-action[aria-pressed="true"] {
-  border-color: var(--oxblood);
-  box-shadow: inset 0 0 0 1px var(--oxblood);
-}
-
-.politics-court {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 0.5rem;
-}
-
-.politics-court button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.3rem 0.6rem;
-  font-family: var(--font-body);
-}
-
-.politics-court svg {
-  display: block;
-}
-
-.politics-court__gain {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: var(--success);
 }
 
 @media (max-width: 560px) {

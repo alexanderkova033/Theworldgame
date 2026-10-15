@@ -11,7 +11,7 @@
 import "./BudgetPanel.css";
 import { useState, type ReactNode } from "react";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
-import type { EconomySection } from "../navigation";
+import { BUILDINGS, PEOPLE, type Destination, type OpenPanel } from "../navigation";
 import { getForecasts } from "../../application/getForecasts";
 import { formatDate } from "../../domain/country/calendar";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
@@ -30,7 +30,7 @@ interface BudgetLine {
   detail: string;
   value: number;
   hint?: string; // how it's reckoned, for the curious
-  go?: { section: EconomySection; label: string };
+  go?: Destination & { label: string };
 }
 
 function plural(n: number, one: string, many: string): string {
@@ -42,7 +42,7 @@ function money(value: number): string {
   return `${rounded > 0 ? "+" : rounded < 0 ? "−" : ""}${Math.abs(rounded).toLocaleString()}`;
 }
 
-function Line({ line, focus, onFocus, onSection }: { line: BudgetLine; focus: LineKey | null; onFocus: (key: LineKey | null) => void; onSection: (section: EconomySection) => void }) {
+function Line({ line, focus, onFocus, onOpenPanel }: { line: BudgetLine; focus: LineKey | null; onFocus: (key: LineKey | null) => void; onOpenPanel: OpenPanel }) {
   return (
     <tr
       className={`budget-sheet__line ${focus === line.key ? "is-focus" : ""}`}
@@ -58,7 +58,7 @@ function Line({ line, focus, onFocus, onSection }: { line: BudgetLine; focus: Li
         <span className="budget-sheet__detail">
           {line.detail}
           {line.go && (
-            <button type="button" className="budget-sheet__go" onClick={() => onSection(line.go!.section)}>
+            <button type="button" className="budget-sheet__go" onClick={() => onOpenPanel(line.go!.panel, line.go!.section)}>
               {line.go.label} ›
             </button>
           )}
@@ -94,7 +94,7 @@ function Bar({ name, lines, scale, tone, focus, onFocus }: { name: string; lines
   );
 }
 
-export function BudgetPanel({ state, production, onSection }: { state: GameState; production: DailyProductionSummary; onSection: (section: EconomySection) => void }) {
+export function BudgetPanel({ state, production, onOpenPanel }: { state: GameState; production: DailyProductionSummary; onOpenPanel: OpenPanel }) {
   const [focus, setFocus] = useState<LineKey | null>(null);
   const scientists = getTotalScientists(state.workforce);
   const police = state.workforce.police;
@@ -115,7 +115,7 @@ export function BudgetPanel({ state, production, onSection }: { state: GameState
       detail: state.stats.industry > 0 ? `${formatCompact(state.stats.industry)} industry at work` : "No factories at work yet",
       value: production.industryIncome,
       hint: "What the factories earn. They run only as well as they're staffed.",
-      go: { section: "people", label: "Workers" },
+      go: { ...PEOPLE, label: "Workers" },
     },
   ];
   const spending: BudgetLine[] = [
@@ -125,16 +125,15 @@ export function BudgetPanel({ state, production, onSection }: { state: GameState
       label: "Wages",
       detail: scientists + police > 0 ? `${plural(scientists, "scientist", "scientists")} and ${plural(police, "policeman", "police")}` : "Nobody on the payroll",
       value: -production.salaries,
-      go: { section: "staff", label: "Staff" },
     },
     {
       key: "building",
-      icon: <NavIcon type="economy" size={20} />,
+      icon: <NavIcon type="build" size={20} />,
       label: "Building",
       detail: projects > 0 ? `Instalments on ${plural(projects, "project", "projects")}` : "Nothing being built",
       value: -production.buildingInstalments,
       hint: "A new building takes 60% of its price the day you order it; the rest comes out here, a little each day, until it's finished.",
-      go: { section: "build", label: "Build" },
+      go: { ...BUILDINGS, label: "Build" },
     },
   ];
 
@@ -175,7 +174,7 @@ export function BudgetPanel({ state, production, onSection }: { state: GameState
             <td className="budget-sheet__subtotal is-gain">{money(totalIn)}</td>
           </tr>
           {income.map((line) => (
-            <Line key={line.key} line={line} focus={focus} onFocus={setFocus} onSection={onSection} />
+            <Line key={line.key} line={line} focus={focus} onFocus={setFocus} onOpenPanel={onOpenPanel} />
           ))}
         </tbody>
         <tbody>
@@ -186,7 +185,7 @@ export function BudgetPanel({ state, production, onSection }: { state: GameState
             <td className="budget-sheet__subtotal is-loss">{money(-totalOut)}</td>
           </tr>
           {spending.map((line) => (
-            <Line key={line.key} line={line} focus={focus} onFocus={setFocus} onSection={onSection} />
+            <Line key={line.key} line={line} focus={focus} onFocus={setFocus} onOpenPanel={onOpenPanel} />
           ))}
         </tbody>
         <tfoot>
@@ -201,7 +200,7 @@ export function BudgetPanel({ state, production, onSection }: { state: GameState
 
       <p
         className="budget-sheet__outlook"
-        title={state.debt > 0 ? "Debt isn't paid from this budget. It grows on its own until you repay it on the Trade tab." : undefined}
+        title={state.debt > 0 ? "Debt isn't paid from this budget. It grows on its own until you repay it." : undefined}
       >
         <StatIcon type="treasury" size={18} />
         <strong>

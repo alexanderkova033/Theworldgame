@@ -1,10 +1,9 @@
-// Trade, as one board: a row per good (the four raw resources and food),
-// each with what you hold, what the market holds, today's price, and
-// Buy / Sell. Prices are supply and demand (see domain/market): selling
-// floods the market and the price drops, buying drains it and the price
-// climbs, and both settle back over the following weeks. Money and loans
-// sit alongside.
-import "./TradePanel.css";
+// The market, as one board: a row per good (the raw resources, coal and
+// food), each with what you hold, today's price, and Buy / Sell. Prices are
+// supply and demand (see domain/market): selling floods the market and the
+// price drops, buying drains it and the price climbs, and both settle back
+// over the following weeks.
+import "./MarketPanel.css";
 import { useState } from "react";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import { buyGood, canBuyGood, canSellGood, getMarketBuyCost, getMarketSellRevenue, sellGood } from "../../application/actions";
@@ -15,13 +14,12 @@ import type { MarketGood } from "../../domain/market/types";
 import { getNation } from "../../domain/nations/nationRules";
 import { formatCompact } from "../formatNumber";
 import { playCoins } from "../audio/sound";
-import { DebtPanel } from "./DebtPanel";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
 
-interface TradePanelProps {
+interface MarketPanelProps {
   state: GameState;
   production: DailyProductionSummary;
   dispatch: Dispatch;
@@ -50,9 +48,9 @@ function GoodIcon({ good }: { good: MarketGood }) {
 // Scarce / plentiful, in words and an arrow — not a coloured dot.
 function Trend({ state, good }: { state: GameState; good: MarketGood }) {
   const ratio = getPriceRatio(state.market, good);
-  if (ratio > 1.1) return <span className="trade-row__trend is-up">↑ scarce</span>;
-  if (ratio < 0.9) return <span className="trade-row__trend is-down">↓ plentiful</span>;
-  return <span className="trade-row__trend">normal</span>;
+  if (ratio > 1.1) return <span className="market-row__trend is-up">↑ scarce</span>;
+  if (ratio < 0.9) return <span className="market-row__trend is-down">↓ plentiful</span>;
+  return <span className="market-row__trend">normal</span>;
 }
 
 // Food is priced per thousand — a single unit is a fraction of a Crown.
@@ -68,7 +66,7 @@ interface RowProps {
   dispatch: Dispatch;
 }
 
-function TradeRow({ state, good, perDay, quantity, dispatch }: RowProps) {
+function MarketRow({ state, good, perDay, quantity, dispatch }: RowProps) {
   const have = good === "food" ? state.stats.food : state.resources[good];
   const amount = getBatchSize(good, quantity);
   const buyCost = getMarketBuyCost(state, good, quantity);
@@ -77,12 +75,12 @@ function TradeRow({ state, good, perDay, quantity, dispatch }: RowProps) {
   const marketStock = state.market.supply[good];
 
   return (
-    <div className="trade-row">
-      <span className="trade-row__good">
+    <div className="market-row">
+      <span className="market-row__good">
         <GoodIcon good={good} />
-        <span className="trade-row__name">{LABELS[good]}</span>
+        <span className="market-row__name">{LABELS[good]}</span>
       </span>
-      <span className="trade-row__stock" title={`You have ${Math.floor(have).toLocaleString()}, changing by ${rounded} a day`}>
+      <span className="market-row__stock" title={`You have ${Math.floor(have).toLocaleString()}, changing by ${rounded} a day`}>
         <strong>{formatCompact(Math.floor(have))}</strong>
         <span className={rounded > 0 ? "is-gain" : rounded < 0 ? "is-loss" : ""}>
           {rounded > 0 ? "+" : ""}
@@ -90,38 +88,38 @@ function TradeRow({ state, good, perDay, quantity, dispatch }: RowProps) {
         </span>
       </span>
       <span
-        className="trade-row__price"
+        className="market-row__price"
         title={`The market holds ${formatCompact(Math.floor(marketStock))}; normal is about ${formatCompact(GOOD_SPECS[good].equilibrium)}. Selling adds to it and lowers the price; buying drains it and raises the price.`}
       >
         {priceLabel(good, getMidPrice(good, marketStock))}
         <Trend state={state} good={good} />
       </span>
-      <span className="trade-row__actions">
+      <span className="market-row__actions">
         <button
           type="button"
-          className="trade-row__button btn-primary"
+          className="market-row__button btn-primary"
           disabled={!canBuyGood(state, good, quantity)}
           onClick={() => {
             playCoins();
             dispatch((s) => buyGood(s, good, quantity));
           }}
         >
-          <span className="trade-row__button-label">Buy {formatCompact(amount)}</span>
-          <span className="trade-row__button-money">
+          <span className="market-row__button-label">Buy {formatCompact(amount)}</span>
+          <span className="market-row__button-money">
             −{Math.round(buyCost).toLocaleString()} {CURRENCY_SYMBOL}
           </span>
         </button>
         <button
           type="button"
-          className="trade-row__button"
+          className="market-row__button"
           disabled={!canSellGood(state, good, quantity)}
           onClick={() => {
             playCoins();
             dispatch((s) => sellGood(s, good, quantity));
           }}
         >
-          <span className="trade-row__button-label">Sell {formatCompact(amount)}</span>
-          <span className="trade-row__button-money">
+          <span className="market-row__button-label">Sell {formatCompact(amount)}</span>
+          <span className="market-row__button-money">
             +{Math.round(sellRevenue).toLocaleString()} {CURRENCY_SYMBOL}
           </span>
         </button>
@@ -130,16 +128,16 @@ function TradeRow({ state, good, perDay, quantity, dispatch }: RowProps) {
   );
 }
 
-export function TradePanel({ state, production, dispatch }: TradePanelProps) {
+export function MarketPanel({ state, production, dispatch }: MarketPanelProps) {
   const [quantity, setQuantity] = useState(1);
   const hasPort = nationHasPort(getNation(state.nationId));
 
   return (
-    <div className="trade">
-      <section className="panel trade__board">
-        <div className="trade__head">
+    <div className="market">
+      <section className="panel market__board">
+        <div className="market__head">
           <h2>Market</h2>
-          <div className="trade__quantity" role="group" aria-label="How much per trade">
+          <div className="market__quantity" role="group" aria-label="How much per trade">
             <span>Amount</span>
             {QUANTITIES.map((q) => (
               <button key={q} type="button" className={quantity === q ? "is-active" : ""} aria-pressed={quantity === q} onClick={() => setQuantity(q)}>
@@ -149,12 +147,12 @@ export function TradePanel({ state, production, dispatch }: TradePanelProps) {
           </div>
         </div>
         {hasPort && (
-          <span className="trade__port" title="A coastal port makes buying cheaper">
+          <span className="market__port" title="A coastal port makes buying cheaper">
             ⚓ Port: cheaper buying
           </span>
         )}
 
-        <div className="trade__columns" aria-hidden="true">
+        <div className="market__columns" aria-hidden="true">
           <span>Good</span>
           <span>You have</span>
           <span title="Supply and demand: selling floods the market and the price drops, buying drains it and the price climbs. Both recover over a few weeks.">Price ⓘ</span>
@@ -162,7 +160,7 @@ export function TradePanel({ state, production, dispatch }: TradePanelProps) {
         </div>
 
         {MARKET_GOODS.map((good) => (
-          <TradeRow
+          <MarketRow
             key={good}
             state={state}
             good={good}
@@ -172,22 +170,6 @@ export function TradePanel({ state, production, dispatch }: TradePanelProps) {
           />
         ))}
       </section>
-
-      <aside className="trade__side">
-        <section className="panel trade__money">
-          <h2>Treasury</h2>
-          <div className="trade__treasury">
-            <StatIcon type="treasury" size={30} />
-            <strong>{Math.floor(state.stats.treasury).toLocaleString()}</strong>
-            <span className={production.netTreasury >= 0 ? "is-gain" : "is-loss"}>
-              {production.netTreasury >= 0 ? "+" : ""}
-              {Math.round(production.netTreasury)}/d
-            </span>
-          </div>
-        </section>
-
-        <DebtPanel state={state} dispatch={dispatch} />
-      </aside>
     </div>
   );
 }

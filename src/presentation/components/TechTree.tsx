@@ -444,11 +444,11 @@ function EffectIcon({ icon }: { icon: EffectIconKey }) {
     case "repairs":
       return <WrenchIcon size={14} />;
     case "trade":
-      return <NavIcon type="trade" size={15} />;
+      return <NavIcon type="money" size={15} />;
     case "neighbours":
       return <NavIcon type="ventures" size={15} />;
     case "build":
-      return <NavIcon type="economy" size={15} />;
+      return <NavIcon type="build" size={15} />;
     default:
       return <StatIcon type={icon} size={15} />;
   }

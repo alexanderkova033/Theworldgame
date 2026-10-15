@@ -1,8 +1,6 @@
-// The salaried workforce: scientists per research area, and police. Each
-// group heads with its places as seats (filled per hire) and what one hire
-// costs and does; each row is an icon, what that row's staff produce, and a
-// −/+ stepper. The same stepper is reused in the
-// Research tab's column headers (see ResearchPanel.tsx).
+// Hired staff: the scientist stepper used in each Research area, and the
+// police shown on the Unrest page. Each group heads with its places as
+// seats (filled per hire) and what one hire costs and does.
 import "./WorkforcePanel.css";
 import type { ReactNode } from "react";
 import {
@@ -24,21 +22,16 @@ import {
   SCIENTIST_SALARY,
 } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
-import { getResearchRateBreakdown } from "../../domain/research/researchRules";
 import type { ResearchCategory } from "../../domain/research/types";
 import {
-  getDailySalaries,
   getPoliceBreakdownReduction,
   getPoliceCap,
   getPoliceStabilityBonus,
   getScientistCap,
   getTotalScientists,
-  RESEARCH_CATEGORIES,
 } from "../../domain/workforce/workforceRules";
 import { playCoins } from "../audio/sound";
-import { AREA_ICONS, AREA_LABELS } from "../researchAreas";
-import { getModifiers } from "../../domain/policy/policyRules";
-import { NavIcon } from "./NavIcon";
+import { AREA_LABELS } from "../researchAreas";
 import { StatIcon } from "./StatIcon";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
@@ -128,95 +121,40 @@ function HireTerms({ hire, wage, children }: { hire: number; wage: number; child
   );
 }
 
-export function WorkforcePanel({ state, dispatch }: { state: GameState; dispatch: Dispatch }) {
-  const salaries = Math.round(getDailySalaries(state.workforce, getModifiers(state).wageMultiplier));
-  const scientistCap = getScientistCap(state.educationLevel);
+// The police, shown on the Unrest page: they add stability every day and
+// make buildings break down less often. One officer per so many people.
+export function PoliceForce({ state, dispatch }: { state: GameState; dispatch: Dispatch }) {
   const policeCap = getPoliceCap(state.stats.population);
   const police = state.workforce.police;
-  const scientists = getTotalScientists(state.workforce);
 
   return (
-    <section className="panel workforce-panel">
-      <div className="workforce-panel__header">
-        <h2>Workforce</h2>
-        <span className="workforce-panel__salaries" title={`Wages, paid out of the treasury every day`}>
-          Wages
-          <StatIcon type="treasury" size={16} />
-          {salaries > 0 ? `−${salaries}` : 0}/d
-        </span>
+    <div className="police-force">
+      <div className="politics-section-head">
+        <h3 className="politics-subhead">Police</h3>
+        <Seats used={police} cap={policeCap} label={`Officers employed: one for every ${POPULATION_PER_POLICE.toLocaleString()} people`} />
       </div>
-
-      <div className="workforce-panel__group">
-        <div className="workforce-panel__group-head">
-          <span className="workforce-panel__group-title">
-            <StatIcon type="research" size={18} />
-            Scientists
+      <div className={`workforce-panel__row ${police > 0 ? "" : "is-empty"}`}>
+        <StatIcon type="police" size={20} />
+        <span className="workforce-panel__label">Officers</span>
+        <HireTerms hire={POLICE_HIRE_COST} wage={POLICE_SALARY}>
+          <span title={`Stability a day from each officer. Now: +${getPoliceStabilityBonus(police).toFixed(2)}/d`}>
+            <StatIcon type="stability" size={15} />+{POLICE_STABILITY_PER_OFFICER}/d each
           </span>
-          <Seats used={scientists} cap={scientistCap} label="Scientists employed. Schools train more" />
-          <HireTerms hire={SCIENTIST_HIRE_COST} wage={SCIENTIST_SALARY}>
-            <span title={`Each moves research in its own area ${RESEARCH_PER_SCIENTIST} points a day`}>
-              <StatIcon type="research" size={15} />+{RESEARCH_PER_SCIENTIST}/d each
-            </span>
-          </HireTerms>
-        </div>
-        {RESEARCH_CATEGORIES.map((category) => {
-          const rate = getResearchRateBreakdown(state, category);
-          const output = rate.scientists * rate.educationMultiplier;
-          return (
-            <div className={`workforce-panel__row ${state.workforce.scientists[category] > 0 ? "" : "is-empty"}`} key={category}>
-              <StatIcon type={AREA_ICONS[category]} size={20} />
-              <span className="workforce-panel__label">{AREA_LABELS[category]}</span>
-              {output > 0 && (
-                <span className="workforce-panel__effect" title={`${AREA_LABELS[category]} research a day from its scientists`}>
-                  <StatIcon type="research" size={14} />+{output.toFixed(1)}/d
-                </span>
-              )}
-              <ScientistStepper state={state} category={category} dispatch={dispatch} />
-            </div>
-          );
-        })}
+          {police > 0 && <span title="Fewer buildings break down">−{Math.round(getPoliceBreakdownReduction(police) * 100)}% breakdowns</span>}
+        </HireTerms>
+        <StaffStepper
+          count={police}
+          canAdd={canHirePolice(state)}
+          addHint={
+            police >= policeCap
+              ? "No more officers needed for this population"
+              : `Hire an officer: ${POLICE_HIRE_COST} ${CURRENCY_SYMBOL}, then ${POLICE_SALARY} ${CURRENCY_SYMBOL}/day, for steadier stability and fewer breakdowns`
+          }
+          removeHint="Let an officer go"
+          onAdd={() => dispatch(hirePolice)}
+          onRemove={() => dispatch(dismissPolice)}
+        />
       </div>
-
-      <div className="workforce-panel__group">
-        <div className="workforce-panel__group-head">
-          <span className="workforce-panel__group-title">
-            <StatIcon type="police" size={18} />
-            Police
-          </span>
-          <Seats used={police} cap={policeCap} label={`Officers employed: one for every ${POPULATION_PER_POLICE.toLocaleString()} people`} />
-          <HireTerms hire={POLICE_HIRE_COST} wage={POLICE_SALARY}>
-            <span title="Each officer adds stability every day, and makes buildings break down less often">
-              <StatIcon type="stability" size={15} />+{POLICE_STABILITY_PER_OFFICER}/d each
-            </span>
-          </HireTerms>
-        </div>
-        <div className={`workforce-panel__row ${police > 0 ? "" : "is-empty"}`}>
-          <StatIcon type="police" size={20} />
-          <span className="workforce-panel__label">Constables</span>
-          {police > 0 && (
-            <>
-              <span className="workforce-panel__effect" title="Stability a day from the police">
-                <StatIcon type="stability" size={14} />+{getPoliceStabilityBonus(police).toFixed(2)}/d
-              </span>
-              <span className="workforce-panel__effect" title="Fewer buildings break down">
-                <NavIcon type="economy" size={14} />−{Math.round(getPoliceBreakdownReduction(police) * 100)}% breakdowns
-              </span>
-            </>
-          )}
-          <StaffStepper
-            count={police}
-            canAdd={canHirePolice(state)}
-            addHint={
-              police >= policeCap
-                ? "No more officers needed for this population"
-                : `Hire an officer: ${POLICE_HIRE_COST} ${CURRENCY_SYMBOL}, then ${POLICE_SALARY} ${CURRENCY_SYMBOL}/day, for steadier stability and fewer breakdowns`
-            }
-            removeHint="Let an officer go"
-            onAdd={() => dispatch(hirePolice)}
-            onRemove={() => dispatch(dismissPolice)}
-          />
-        </div>
-      </div>
-    </section>
+    </div>
   );
 }

@@ -18,15 +18,14 @@ import { ResourceTicker } from "./ResourceTicker";
 
 const SPEEDS: GameSpeed[] = [1, 2, 3, 5];
 
-// Politics has no tab of its own: it opens from the nation's label.
-// Ventures neither: they open from an island on the map, or the event log.
-
+// Ventures have no tab: they open from an island on the map, or the event log.
 const TABS: Array<{ key: PanelKey; label: string; icon: NavIconType }> = [
-  { key: "economy", label: "Economy", icon: "economy" },
-  { key: "trade", label: "Trade", icon: "trade" },
-  { key: "reports", label: "Reports", icon: "reports" },
+  { key: "build", label: "Build", icon: "build" },
+  { key: "money", label: "Money", icon: "money" },
+  { key: "politics", label: "Politics", icon: "politics" },
   { key: "laws", label: "Laws", icon: "laws" },
   { key: "research", label: "Research", icon: "research" },
+  { key: "reports", label: "Reports", icon: "reports" },
 ];
 
 // A small hourglass in place of a bare date string.

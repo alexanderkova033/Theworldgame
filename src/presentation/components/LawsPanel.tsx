@@ -100,7 +100,7 @@ function quotaHint(state: GameState, quota: LawNode["quota"]): string {
   switch (quota.stat) {
     case "industry": {
       const n = factoriesShort(state, quota.threshold);
-      return `Each working factory adds ${INDUSTRY_PER_FACTORY}. Build ${n} more ${n === 1 ? "factory" : "factories"} from the Economy tab, and staff them.`;
+      return `Each working factory adds ${INDUSTRY_PER_FACTORY}. Build ${n} more ${n === 1 ? "factory" : "factories"} from the Build tab, and staff them.`;
     }
     case "population":
       return "People settle where there are homes and food. Build housing and farms.";

@@ -213,7 +213,7 @@ export function ProvinceCard({ state, province, onOpenPanel, onClose }: Province
         )}
       </dl>
 
-      <button type="button" className="province-card__more" onClick={() => onOpenPanel("economy", "build")}>
+      <button type="button" className="province-card__more" onClick={() => onOpenPanel("build", "buildings")}>
         Build here…
       </button>
     </section>

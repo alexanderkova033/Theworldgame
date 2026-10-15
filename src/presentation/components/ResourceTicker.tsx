@@ -321,7 +321,7 @@ function Stores({
             );
           })}
           <div className="resource-ticker__store-foot">
-            <p className="resource-ticker__store-hint">Buy and sell on the Trade tab.</p>
+            <p className="resource-ticker__store-hint">Buy and sell on the Money tab.</p>
             <button
               type="button"
               className="resource-ticker__pin-button"
