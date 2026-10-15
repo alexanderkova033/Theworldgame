@@ -88,7 +88,7 @@ export function updateFactionPopularity(
 
 // Political power is the currency Laws spend (LawEnactCost.politicalPower).
 // A popular government has more capital to spend: at 50% popularity this is
-// 0.8/day, a tier-1 law roughly every month of saving.
+// 0.6/day, a tier-1 law roughly every month of saving.
 // multiplier: administrative research (ResearchEffects.politicalPowerMultiplier).
 export function calculateDailyPoliticalPower(popularity: number, multiplier = 1): number {
   return (POLITICAL_POWER_BASE_RATE + Math.max(0, popularity) * POLITICAL_POWER_PER_POPULARITY) * multiplier;

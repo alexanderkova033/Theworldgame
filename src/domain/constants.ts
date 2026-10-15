@@ -194,8 +194,8 @@ export const REPAIR_DAYS = 10;
 // --- Laws & political power (see domain/laws, domain/politics) ---
 // Political power trickles in daily — faster the more popular the government
 // — and every law spends a tier-scaled chunk of it (LawEnactCost.politicalPower).
-export const POLITICAL_POWER_BASE_RATE = 0.4; // per day, even at zero popularity
-export const POLITICAL_POWER_PER_POPULARITY = 0.008; // extra per day per popularity point (+0.4/day at 50%)
+export const POLITICAL_POWER_BASE_RATE = 0.3; // per day, even at zero popularity
+export const POLITICAL_POWER_PER_POPULARITY = 0.006; // extra per day per popularity point (+0.3/day at 50%)
 // A passed law is drafted into force over this many days (one law at a time).
 export const LAW_DAYS_BY_TIER: Record<1 | 2 | 3 | 4 | 5 | 6 | 7, number> = { 1: 15, 2: 20, 3: 30, 4: 45, 5: 55, 6: 60, 7: 70 };
 // What putting a law to the vote costs, by its row on the tree: political

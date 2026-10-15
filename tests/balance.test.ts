@@ -20,6 +20,14 @@ describe("a careful player", () => {
     expect(end.isGameOver).toBe(false);
     expect(end.electionsWon).toBeGreaterThanOrEqual(1);
   });
+
+  // Political power is meant to run short, so laws are a choice. Before the
+  // rate was cut, a careful player banked 650 to 900 of it with nothing to
+  // spend it on.
+  it.each(NATIONS)("doesn't bank a hoard of political power in %s", (nation, party) => {
+    const end = playCarefully(nation, party, { days: THREE_YEARS });
+    expect(end.stats.politicalPower).toBeLessThan(650);
+  });
 });
 
 describe("an idle player", () => {

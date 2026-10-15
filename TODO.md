@@ -13,7 +13,7 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 
 ## Known rough edges
 
-- **Political power piles up.** A careful player banks around 1,000 over three years. Law costs were raised, but rallies and pushes on neighbours are still cheap next to the income. It needs a sink or a lower daily rate.
+- **Political power for researchers.** The daily rate was cut by a quarter, so a player following a law path now ends three years with 50 to 600. A player who only researches still banks 600 to 900, because research never spends it.
 - **Income multipliers are small in Crowns.** Daily income is around 25 Cr, so "+10% income" is about 2.5 Cr a day. Paths built on income rely on one-time payments to compete; raising the base income would make them read better.
 - **Labour laws past row III need factories** (industry 4, then 8). That's on purpose, but a player who never builds factories sees the whole branch stall without being told why beyond "Needs industry".
 - **Old saves.** A law being drafted under the old tree layout still finishes even if it now sits on another path. Research directions that became unreachable are cleared on load.
