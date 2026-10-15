@@ -289,7 +289,7 @@ export const DECISION_GLUT_FOOD_DAYS = 45; // autumn: food in store for more day
 export const DECISION_UNREST_STABILITY = 30;
 
 // --- Politics: parties & elections ---
-export const ELECTION_INTERVAL_MONTHS = 24; // a general election is held every N in-game months
+export const ELECTION_INTERVAL_MONTHS = 18; // a general election is held every N in-game months
 export const ELECTION_WIN_THRESHOLD = 50; // popularity % needed to win an election
 export const ELECTIONS_TO_WIN_GAME = 3; // election wins needed for outright victory (a single loss ends the game, so these are inherently consecutive)
 export const ELECTION_WIN_STABILITY_BONUS = 5; // a mandate bump to stability on winning

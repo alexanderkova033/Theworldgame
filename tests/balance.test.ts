@@ -22,6 +22,12 @@ describe("a careful player", () => {
     expect(end.electionsWon).toBeGreaterThanOrEqual(1);
   });
 
+  // The whole game: three elections in a row, inside five years.
+  it.each(NATIONS)("wins outright in %s within five years", (nation, party) => {
+    const end = playCarefully(nation, party, { days: 5 * 365 });
+    expect(end.outcome).toBe("victory");
+  });
+
   // Political power is meant to run short, so laws are a choice. Before the
   // rate was cut, a careful player banked 650 to 900 of it with nothing to
   // spend it on.

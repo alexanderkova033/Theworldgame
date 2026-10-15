@@ -7,7 +7,7 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - `npx tsc -b` (types), `npm run lint` (five fast-refresh and hook-dependency warnings are old and known), `npm run build`.
 - `npm test` runs the Vitest suite in `tests/`:
   - `trees.test.ts`: the shape of the Laws and Research trees (one root per branch, three paths that never cross, forks at rows 4 and 5, no em dashes in player text).
-  - `balance.test.ts`: scripted three-year games. A careful player survives and wins the first election in every nation, an idle one is gone within two years, and following any single path doesn't wreck a country.
+  - `balance.test.ts`: scripted games. A careful player survives three years, wins the first election, wins outright within five years and comes close to losing at least once. It doesn't hoard political power and lives mostly on taxes and industry. An idle player is gone within two years, and following any single path doesn't wreck a country.
 - Balance changes: run the tests, and look at the numbers they report if a path starts to fail. The scripted player lives in `tests/support/carefulPlayer.ts`.
 - UI changes: check the screen in a browser, at a normal window and at about 1000px wide.
 
