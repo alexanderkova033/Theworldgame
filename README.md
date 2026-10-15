@@ -66,7 +66,8 @@ src/
     constants.ts        Every tunable number.
 
   application/        Use cases that combine domain rules.
-    simulateDay.ts       The daily tick: calls each rule in order.
+    simulateDay.ts       The daily tick: runs the steps below in order.
+    day/                 One file per step of the day (buildings, goods, money, food, order, ...).
     startNewGame.ts      Builds the opening GameState.
     actions/             One file per player action.
     get*.ts              Read models for the UI (advisor, forecasts, province overview...).
