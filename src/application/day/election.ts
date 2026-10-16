@@ -27,7 +27,7 @@ export function holdElection(day: Day, working: GameState, date: GameDate, today
   // it, since nobody could answer them. A campaign the month before still
   // counts, and there's time to see it coming.
   const popularity = today.supportAtDawn;
-  const threshold = getElectionThreshold(working.electionsWon);
+  const threshold = getElectionThreshold(working);
   if (popularity < threshold) {
     log(day, { date, message: `${party.name} loses the general election. You are voted out of office.`, severity: "danger", topic: "elections" });
     return {
@@ -50,7 +50,7 @@ export function holdElection(day: Day, working: GameState, date: GameDate, today
   }
   log(day, {
     date,
-    message: `${party.name} wins the general election with ${Math.round(popularity)}% support (${electionsWon}/${ELECTIONS_TO_WIN_GAME} for outright victory). The next one needs ${getElectionThreshold(electionsWon)}%.`,
+    message: `${party.name} wins the general election with ${Math.round(popularity)}% support (${electionsWon}/${ELECTIONS_TO_WIN_GAME} for outright victory). The next one needs ${getElectionThreshold({ electionsWon, difficulty: working.difficulty })}%.`,
     severity: "info",
     topic: "elections",
   });

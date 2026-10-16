@@ -9,7 +9,8 @@ import { isFriendly, rollForeignMeddling, updateForeignPolitics } from "../../do
 import { getNation } from "../../domain/nations/nationRules";
 import { applyFactionEffects, applyUniformDelta, type getFactionWeights } from "../../domain/parties/factionRules";
 import { getParty } from "../../domain/parties/partyRules";
-import { applyRandomEventEffect, pickRandomEvent } from "../../domain/randomEvents/randomEventRules";
+import { getDifficulty } from "../../domain/difficulty/difficultyData";
+import { applyRandomEventEffect, pickRandomEvent, scaleEventLosses } from "../../domain/randomEvents/randomEventRules";
 import { pickRivalCampaignMove } from "../rivalCampaignMove";
 import { book, bookChange, log, type Day } from "./dayContext";
 
@@ -35,11 +36,12 @@ export function turnOfTheMonth(
   today: NewMonth & { isGameOver: boolean; factionWeights: ReturnType<typeof getFactionWeights> },
 ): NewMonth {
   let { stats, resources, factionApproval, foreignPolitics } = today;
+  const difficulty = getDifficulty(working.difficulty);
 
   // A random world event, every RANDOM_EVENT_INTERVAL_MONTHS.
   if (isEveryNMonths(date, RANDOM_EVENT_INTERVAL_MONTHS)) {
     const randomEvent = pickRandomEvent();
-    const applied = applyRandomEventEffect(stats, resources, randomEvent.effect);
+    const applied = applyRandomEventEffect(stats, resources, scaleEventLosses(randomEvent.effect, difficulty.badEventScale));
     bookChange(day, "late", stats, applied.stats, { treasury: "events", food: "events", stability: "events" });
     stats = applied.stats;
     resources = applied.resources;
@@ -49,13 +51,15 @@ export function turnOfTheMonth(
   // The rival party's campaign move, roughly once a month: a visible, mildly
   // random swing that reacts to your own laws and research when the rival
   // feels strongly about one (see rivalCampaignMove.ts).
-  if (!today.isGameOver && isFirstDayOfMonth(date) && Math.random() < RIVAL_CAMPAIGN_CHANCE_PER_MONTH) {
+  if (!today.isGameOver && isFirstDayOfMonth(date) && Math.random() < RIVAL_CAMPAIGN_CHANCE_PER_MONTH * difficulty.rivalChance) {
     const move = pickRivalCampaignMove(working);
-    const applied = applyFactionEffects(factionApproval, today.factionWeights, move.effects ?? {}, move.popularityDelta);
+    // Harder rivals hit harder; a grudging word of credit stays as it is.
+    const swing = move.popularityDelta < 0 ? move.popularityDelta * difficulty.rivalSwing : move.popularityDelta;
+    const applied = applyFactionEffects(factionApproval, today.factionWeights, move.effects ?? {}, swing);
     factionApproval = applied.factionApproval;
     book(day, "late", "support", { rival: applied.popularity - stats.popularity });
     stats = { ...stats, popularity: applied.popularity };
-    log(day, { date, message: move.message, severity: move.popularityDelta < 0 ? "warning" : "info", topic: "elections" });
+    log(day, { date, message: move.message, severity: swing < 0 ? "warning" : "info", topic: "elections" });
   }
 
   // The neighbours' politics move once a month: their electorates relax

@@ -290,10 +290,8 @@ export const DECISION_UNREST_STABILITY = 30;
 
 // --- Politics: parties & elections ---
 export const ELECTION_INTERVAL_MONTHS = 18; // a general election is held every N in-game months
-// Support needed to win each election in turn: the first, the second, the
-// third. Voters ask more of a government the longer it has been in power,
-// so the last stretch is the hardest, not the easiest.
-export const ELECTION_WIN_THRESHOLDS = [50, 54, 58];
+// The support each election needs is set per difficulty (domain/difficulty):
+// voters ask more of a government the longer it has been in power.
 export const ELECTIONS_TO_WIN_GAME = 3; // election wins needed for outright victory (a single loss ends the game, so these are inherently consecutive)
 export const ELECTION_WIN_STABILITY_BONUS = 5; // a mandate bump to stability on winning
 

@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import type { LedgerMetric } from "../domain/ledger/types";
 import { formatRate, formatSigned } from "./formatNumber";
-import { BuildingGlyph, CrackdownIcon, EventIcon, FlameIcon, JobsIcon, LoanIcon, NeighboursIcon, SettlingIcon, TaxIcon, UnrestStageIcon, WagesIcon } from "./components/CauseIcon";
+import { BuildingGlyph, CrackdownIcon, EventIcon, FlameIcon, JobsIcon, LoanIcon, NeighboursIcon, SettlingIcon, TaxIcon, UnrestStageIcon, VotersIcon, WagesIcon } from "./components/CauseIcon";
 import { NavIcon } from "./components/NavIcon";
 import { StatIcon } from "./components/StatIcon";
 
@@ -58,6 +58,7 @@ export const CAUSES: Record<LedgerMetric, Record<string, CauseInfo>> = {
     jobs: { label: "Jobs", hint: "People without work", icon: (size) => <JobsIcon size={size} /> },
     order: { label: "Stability", hint: "How stable the country is", icon: (size) => <StatIcon type="stability" size={size} /> },
     policy: POLICY,
+    expectations: { label: "Expectations", hint: "What voters ask of you at this difficulty", icon: (size) => <VotersIcon size={size} /> },
     settling: { label: "Settling", hint: "Opinion easing back toward 50% when nothing pushes it", icon: (size) => <SettlingIcon size={size} /> },
     debt: DEBT,
     rival: { label: "Rival", hint: "The rival party's campaign", icon: (size) => <NavIcon type="politics" size={size} /> },

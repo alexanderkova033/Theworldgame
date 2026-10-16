@@ -58,7 +58,7 @@ describe("a careful player", () => {
     playCarefully(nation, party, {
       days: THREE_YEARS,
       onDay: (s) => {
-        if (++day > 60) closest = Math.min(closest, s.stats.popularity - getElectionThreshold(s.electionsWon));
+        if (++day > 60) closest = Math.min(closest, s.stats.popularity - getElectionThreshold(s));
       },
     });
     expect(closest).toBeLessThan(8);

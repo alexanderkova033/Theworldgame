@@ -9,6 +9,7 @@ import { getDebtPopularityPenalty } from "../../domain/loans/loanRules";
 import { getFactionWeights } from "../../domain/parties/factionRules";
 import { getPopularityDrivers, getPopularityTarget, updateFactionPopularity, type PopularityConditions } from "../../domain/politics/politicsRules";
 import { book, type Day } from "./dayContext";
+import { getDifficulty } from "../../domain/difficulty/difficultyData";
 
 export interface Support {
   factionApproval: GameState["factionApproval"];
@@ -32,6 +33,7 @@ export function moveSupport(
     taxTolerance: day.mods.taxTolerance,
     hardship: day.mods.hardshipMultiplier,
     policy: day.mods.supportTarget,
+    expectations: getDifficulty(working.difficulty).expectations,
   };
   const target = getPopularityTarget(conditions);
   const debtPenalty = getDebtPopularityPenalty(today.debt);

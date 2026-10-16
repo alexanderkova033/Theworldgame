@@ -65,6 +65,7 @@ function hydrateMarket(raw: Partial<GameState>): GameState["market"] {
 export function hydrateGameState(raw: Partial<GameState>): GameState {
   const stats = hydrateStats(raw.stats);
   const state: GameState = {
+    difficulty: raw.difficulty ?? "normal",
     nationId: raw.nationId!,
     partyId: raw.partyId!,
     electionsWon: raw.electionsWon ?? 0,

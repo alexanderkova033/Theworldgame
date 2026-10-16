@@ -1,4 +1,5 @@
-import { ELECTION_INTERVAL_MONTHS, ELECTION_WIN_THRESHOLDS, MONTHS_PER_YEAR } from "../constants";
+import { ELECTION_INTERVAL_MONTHS, MONTHS_PER_YEAR } from "../constants";
+import { getDifficulty, type Difficulty } from "../difficulty/difficultyData";
 import type { GameDate } from "../country/types";
 
 // How many in-game months until the next general election fires — see
@@ -10,7 +11,9 @@ export function monthsUntilNextElection(date: GameDate): number {
   return remainder === 0 ? ELECTION_INTERVAL_MONTHS : ELECTION_INTERVAL_MONTHS - remainder;
 }
 
-// Support needed to win the next election, given how many you've won so far.
-export function getElectionThreshold(electionsWon: number): number {
-  return ELECTION_WIN_THRESHOLDS[Math.min(electionsWon, ELECTION_WIN_THRESHOLDS.length - 1)];
+// Support needed to win the next election: more for each one already won,
+// and more on harder difficulties.
+export function getElectionThreshold(state: { electionsWon: number; difficulty?: Difficulty }): number {
+  const lines = getDifficulty(state.difficulty).electionThresholds;
+  return lines[Math.min(state.electionsWon, lines.length - 1)];
 }

@@ -36,10 +36,11 @@ export interface PopularityConditions {
   taxTolerance?: number; // points of tax accepted beyond the usual
   hardship?: number; // how much homelessness, cold and joblessness weigh (1 = as usual)
   policy?: number; // points added to where opinion heads
+  expectations?: number; // the difficulty level: voters asking more or less (see domain/difficulty)
 }
 
 export interface PopularityDriver {
-  key: "taxes" | "food" | "homes" | "heat" | "jobs" | "order" | "policy";
+  key: "taxes" | "food" | "homes" | "heat" | "jobs" | "order" | "policy" | "expectations";
   label: string;
   value: number; // points added to (or taken off) where opinion is heading
 }
@@ -55,6 +56,7 @@ export function getPopularityDrivers(c: PopularityConditions): PopularityDriver[
     { key: "jobs", label: "Jobs", value: -c.unemploymentShare * UNEMPLOYMENT_POPULARITY_PENALTY * hardship },
     { key: "order", label: "Stability", value: (c.stability - 50) * STABILITY_POPULARITY_WEIGHT },
     { key: "policy", label: "Laws", value: c.policy ?? 0 },
+    { key: "expectations", label: "Expectations", value: c.expectations ?? 0 }, // the difficulty level (see domain/difficulty)
   ];
 }
 

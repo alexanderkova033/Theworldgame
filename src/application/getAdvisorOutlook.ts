@@ -209,7 +209,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
 
   const months = monthsUntilNextElection(state.date);
   const support = Math.round(state.stats.popularity);
-  const needed = getElectionThreshold(state.electionsWon);
+  const needed = getElectionThreshold(state);
   if (months <= ADVISOR_ELECTION_WARN_MONTHS && support < needed) {
     alerts.push({
       kind: "election",
@@ -281,7 +281,7 @@ function getObjective(state: GameState): AdvisorObjective | null {
       return {
         kind: "election",
         text: `Win the election (${monthsUntilNextElection(state.date)} mo)`,
-        detail: `Hold ${getElectionThreshold(state.electionsWon)}% support or more on election day.`,
+        detail: `Hold ${getElectionThreshold(state)}% support or more on election day.`,
         done,
       };
   }

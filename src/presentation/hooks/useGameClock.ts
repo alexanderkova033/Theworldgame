@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { playDay } from "../../application/playDay";
 import { startNewGame } from "../../application/startNewGame";
 import type { GameSpeed, GameState } from "../../domain/country/types";
+import type { Difficulty } from "../../domain/difficulty/difficultyData";
 import { clearSlot, getSlotPreviews, loadSlot, persistSlot, renameSlot as renameSlotStorage, type SaveSlotPreview } from "./gameSave";
 
 export type { SavedGamePreview, SaveSlotPreview } from "./gameSave";
@@ -65,9 +66,9 @@ export function useGameClock() {
     };
   }, [state, activeSlotId, refreshSlots]);
 
-  const startGame = useCallback((nationId: string, partyId: string, slotId: number) => {
+  const startGame = useCallback((nationId: string, partyId: string, slotId: number, difficulty: Difficulty = "normal") => {
     setActiveSlotId(slotId);
-    setState(startNewGame(nationId, partyId));
+    setState(startNewGame(nationId, partyId, difficulty));
   }, []);
 
   const continueGame = useCallback((slotId: number) => {

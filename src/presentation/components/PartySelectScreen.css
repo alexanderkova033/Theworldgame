@@ -138,3 +138,54 @@
   color: color-mix(in srgb, var(--party-color) 55%, var(--ink));
   font-weight: 700;
 }
+
+/* How hard the game is: four levels side by side, and what the chosen one
+   changes from Normal. */
+.difficulty-picker {
+  max-width: 36rem;
+  margin: 0 auto 1.4rem;
+  text-align: center;
+}
+
+.difficulty-picker__levels {
+  display: inline-flex;
+  border: 1px solid var(--rule-dark);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.difficulty-picker__level {
+  min-width: 6.5rem;
+  border: none;
+  border-radius: 0;
+  border-right: 1px solid var(--rule-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.difficulty-picker__level:last-child {
+  border-right: none;
+}
+
+.difficulty-picker__level.is-active,
+.difficulty-picker__level.is-active:hover:not(:disabled) {
+  background: var(--leather);
+  color: #f4ead0;
+}
+
+.difficulty-picker__summary {
+  margin: 0.6rem 0 0.3rem;
+  font-style: italic;
+}
+
+.difficulty-picker__changes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+}

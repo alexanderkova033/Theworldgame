@@ -4,6 +4,7 @@
 // one, even though the underlying economy math is the same for everyone).
 import { STARTING_COAL, STARTING_RESOURCE_STOCK } from "../domain/constants";
 import { getSeason } from "../domain/country/calendar";
+import { getDifficulty, type Difficulty } from "../domain/difficulty/difficultyData";
 import { createForeignPolitics } from "../domain/diplomacy/diplomacyRules";
 import { createMarket } from "../domain/market/marketRules";
 import { buildStartingHomes, getHousingCapacityByProvince } from "../domain/housing/housingRules";
@@ -59,8 +60,8 @@ function buildStartingBuildings(nationId: string, farmCount: number): PlacedBuil
   return buildings;
 }
 
-export function startNewGame(nationId: string, partyId: string): GameState {
-  const state = createInitialState(nationId, partyId);
+export function startNewGame(nationId: string, partyId: string, difficulty: Difficulty = "normal"): GameState {
+  const state = createInitialState(nationId, partyId, difficulty);
   // Everyone starts out living where the homes are.
   return {
     ...state,
@@ -68,14 +69,16 @@ export function startNewGame(nationId: string, partyId: string): GameState {
   };
 }
 
-function createInitialState(nationId: string, partyId: string): GameState {
+function createInitialState(nationId: string, partyId: string, difficulty: Difficulty): GameState {
   const nation = getNation(nationId);
+  const level = getDifficulty(difficulty);
   const farmCount = EXTRA_STARTING_FARM_NATIONS.includes(nationId) ? 4 : 3;
   const factoryCount = 1;
   const roadCount = 0;
   const stability = 60 + (STARTING_STABILITY_BONUS[nationId] ?? 0);
 
   return {
+    difficulty,
     nationId,
     partyId,
     electionsWon: 0,
@@ -96,9 +99,9 @@ function createInitialState(nationId: string, partyId: string): GameState {
     educationLevel: 0,
 
     stats: {
-      treasury: 0,
+      treasury: level.startingTreasury,
       population: STARTING_POPULATION,
-      food: STARTING_FOOD,
+      food: STARTING_FOOD * level.startingFoodShare,
       industry: calculateIndustryOutput(factoryCount),
       stability,
       politicalPower: 0,

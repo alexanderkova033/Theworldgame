@@ -249,8 +249,8 @@ function App() {
         nation={pendingNation}
         parties={getPartiesForNation(pendingNationId)}
         onBack={() => setPendingNationId(null)}
-        onSelectParty={(partyId) => {
-          startGame(pendingNationId, partyId, pendingSlotId ?? 0);
+        onSelectParty={(partyId, difficulty) => {
+          startGame(pendingNationId, partyId, pendingSlotId ?? 0, difficulty);
           setSelectedProvinceId(pendingNation.capitalProvinceId);
         }}
       />
@@ -296,7 +296,7 @@ function App() {
   return (
     <div className="game-layout">
       <TopBar
-        electionThreshold={getElectionThreshold(state.electionsWon)}
+        electionThreshold={getElectionThreshold(state)}
         nationName={nation.name}
         partyName={party.name}
         partyColor={party.color}

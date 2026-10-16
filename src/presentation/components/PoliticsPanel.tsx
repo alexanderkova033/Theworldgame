@@ -24,7 +24,6 @@ import {
   CRACKDOWN_SUPPORT,
   CURRENCY_SYMBOL,
   ELECTIONS_TO_WIN_GAME,
-  ELECTION_WIN_THRESHOLDS,
   RALLY_POLITICAL_POWER_COST,
   RALLY_SUPPORT,
   RALLY_TREASURY_COST,
@@ -37,6 +36,7 @@ import {
   UNREST_STRIKES_BELOW,
 } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
+import { getDifficulty } from "../../domain/difficulty/difficultyData";
 import { getElectionThreshold, monthsUntilNextElection } from "../../domain/parties/electionRules";
 import { FACTIONS, getFactionWeights } from "../../domain/parties/factionData";
 import { getParty, getRivalParty } from "../../domain/parties/partyRules";
@@ -85,6 +85,8 @@ function DriverIcon({ driver }: { driver: PopularityDriver["key"] }) {
       return <StatIcon type="stability" size={22} />;
     case "policy":
       return <NavIcon type="laws" size={22} />;
+    case "expectations":
+      return <VotersIcon size={22} />;
   }
 }
 
@@ -236,12 +238,12 @@ function Chamber({
       className="chamber"
       viewBox={`${-radius - pad} ${-radius - pad} ${2 * (radius + pad)} ${radius + pad + seatRadius + 2}`}
       role="img"
-      aria-label={`If the vote were today: ${party.name} ${yours} seats, ${rival.name} ${CHAMBER.seats - yours}. ${getElectionThreshold(state.electionsWon)} seats win.`}
+      aria-label={`If the vote were today: ${party.name} ${yours} seats, ${rival.name} ${CHAMBER.seats - yours}. ${getElectionThreshold(state)} seats win.`}
       onMouseLeave={() => onFocus(null)}
     >
       {/* The line to win: half the chamber for the first election, further
           round for each one after. */}
-      <WinLine threshold={getElectionThreshold(state.electionsWon)} inner={radius * CHAMBER.inner - seatRadius - 2} outer={radius + pad - 1} />
+      <WinLine threshold={getElectionThreshold(state)} inner={radius * CHAMBER.inner - seatRadius - 2} outer={radius + pad - 1} />
       {seats.map((seat, i) => (
         <circle
           key={i}
@@ -359,13 +361,14 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
       </button>
     ),
     policy: go({ panel: "laws" }, "Laws"),
+    expectations: null, // the difficulty level: nothing to fix
   };
   const party = getParty(state.partyId);
   const rival = getRivalParty(state.partyId);
   const popularity = Math.round(state.stats.popularity);
   const rivalPopularity = 100 - popularity;
   const monthsLeft = monthsUntilNextElection(state.date);
-  const margin = popularity - getElectionThreshold(state.electionsWon);
+  const margin = popularity - getElectionThreshold(state);
   const isWinning = margin >= 0;
   const order = stabilityFromSupport(state.stats.popularity);
 
@@ -409,7 +412,7 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
             />
           </div>
         </div>
-        <div className="politics-hero__side" title={`Win ${ELECTIONS_TO_WIN_GAME} elections in a row for outright victory. Lose one and the game ends. Each asks for more support: ${ELECTION_WIN_THRESHOLDS.join("%, then ")}%.`}>
+        <div className="politics-hero__side" title={`Win ${ELECTIONS_TO_WIN_GAME} elections in a row for outright victory. Lose one and the game ends. Each asks for more support: ${getDifficulty(state.difficulty).electionThresholds.join("%, then ")}%.`}>
           <span className="politics-hero__pips">
             {Array.from({ length: ELECTIONS_TO_WIN_GAME }, (_, i) => (
               <span key={i} className={`politics-hero__pip ${i < state.electionsWon ? "is-won" : ""}`} style={{ "--party-color": party.color } as CSSProperties} />
@@ -440,7 +443,7 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
       <h3 className="politics-subhead">What moves it</h3>
       <div className="politics-drivers">
         {/* Laws and creed only get a card when they actually push. */}
-        {outlook.drivers.filter((d) => d.key !== "policy" || Math.round(d.value) !== 0).map((driver) => (
+        {outlook.drivers.filter((d) => (d.key !== "policy" && d.key !== "expectations") || Math.round(d.value) !== 0).map((driver) => (
           <DriverCard key={driver.key} driver={driver}>
             {fixes[driver.key]}
           </DriverCard>
@@ -514,8 +517,8 @@ function VotersView({ state, dispatch }: { state: GameState; dispatch: Dispatch 
                 <span className="politics-group__bar">
                   <Gauge
                     max={100}
-                    segments={withPreview(approval, approval >= getElectionThreshold(state.electionsWon) ? "good" : approval >= 40 ? "warn" : "bad", gain, 100)}
-                    markers={[{ at: getElectionThreshold(state.electionsWon) }]}
+                    segments={withPreview(approval, approval >= getElectionThreshold(state) ? "good" : approval >= 40 ? "warn" : "bad", gain, 100)}
+                    markers={[{ at: getElectionThreshold(state) }]}
                     label={`${IDEOLOGY_GROUPS[ideology]}: ${approval}% back you`}
                   />
                 </span>
@@ -712,9 +715,9 @@ export function PoliticsPanel({ state, dispatch, onOpenPanel, section, onSection
             key: "support",
             label: "Support",
             icon: <StatIcon type="popularity" size={22} />,
-            alert: popularity < getElectionThreshold(state.electionsWon) || getPopularityOutlook(state).target < getElectionThreshold(state.electionsWon),
+            alert: popularity < getElectionThreshold(state) || getPopularityOutlook(state).target < getElectionThreshold(state),
             badge: `${popularity}% · ${months} mo`,
-            hint: `Election in ${months} months: ${popularity >= getElectionThreshold(state.electionsWon) ? "you'd win today" : "you'd lose today"}`,
+            hint: `Election in ${months} months: ${popularity >= getElectionThreshold(state) ? "you'd win today" : "you'd lose today"}`,
           },
           {
             key: "voters",

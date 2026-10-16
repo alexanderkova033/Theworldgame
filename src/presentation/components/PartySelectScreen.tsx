@@ -1,5 +1,6 @@
 import "./PartySelectScreen.css";
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
+import { DIFFICULTIES, DIFFICULTY_SETTINGS, type Difficulty } from "../../domain/difficulty/difficultyData";
 import type { Nation } from "../../domain/nations/types";
 import type { Party } from "../../domain/parties/types";
 import { describeEffects } from "../../domain/policy/modifiers";
@@ -11,13 +12,15 @@ interface PartySelectScreenProps {
   nation: Nation;
   parties: Party[];
   onBack: () => void;
-  onSelectParty: (partyId: string) => void;
+  onSelectParty: (partyId: string, difficulty: Difficulty) => void;
 }
 
 // The second half of starting a game: which of the nation's two parties the
 // player actually leads. This is the choice the whole rest of the game
 // measures you against — win elections as this party, or get voted out.
 export function PartySelectScreen({ nation, parties, onBack, onSelectParty }: PartySelectScreenProps) {
+  const [difficulty, setDifficulty] = useState<Difficulty>("normal");
+  const level = DIFFICULTY_SETTINGS[difficulty];
   return (
     <div className="start-screen party-select-screen">
       <MapWatermark />
@@ -35,13 +38,37 @@ export function PartySelectScreen({ nation, parties, onBack, onSelectParty }: Pa
           two parties govern differently, so pick the one whose strengths you want.
         </p>
 
+        {/* How hard: every change from Normal, listed in plain words. */}
+        <div className="difficulty-picker">
+          <div className="difficulty-picker__levels" role="radiogroup" aria-label="Difficulty">
+            {DIFFICULTIES.map((key) => (
+              <button
+                key={key}
+                type="button"
+                role="radio"
+                aria-checked={difficulty === key}
+                className={`difficulty-picker__level ${difficulty === key ? "is-active" : ""}`}
+                onClick={() => setDifficulty(key)}
+              >
+                {DIFFICULTY_SETTINGS[key].name}
+              </button>
+            ))}
+          </div>
+          <p className="difficulty-picker__summary">{level.summary}</p>
+          <ul className="difficulty-picker__changes">
+            {level.changes.map((change) => (
+              <li key={change}>{change}</li>
+            ))}
+          </ul>
+        </div>
+
         <div className="party-select-screen__grid">
           {parties.map((party) => (
             <button
               key={party.id}
               className="party-card"
               style={{ "--party-color": party.color } as CSSProperties}
-              onClick={() => onSelectParty(party.id)}
+              onClick={() => onSelectParty(party.id, difficulty)}
             >
               <span className="party-card__crest">
                 <PartyCrestEmblem ideology={party.ideology} />

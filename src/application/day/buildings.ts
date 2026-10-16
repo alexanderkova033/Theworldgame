@@ -2,6 +2,7 @@
 // and buildings wear out.
 import { advanceProject, isProjectComplete } from "../../domain/construction/constructionRules";
 import type { GameState } from "../../domain/country/types";
+import { getDifficulty } from "../../domain/difficulty/difficultyData";
 import { getIslandExpeditionData } from "../../domain/expeditions/expeditionData";
 import { advanceExpedition, isExpeditionComplete } from "../../domain/expeditions/expeditionRules";
 import { advanceRepairs, rollBreakdowns } from "../../domain/maintenance/maintenanceRules";
@@ -113,7 +114,7 @@ export function advanceBuildings(day: Day): GameState {
       topic: "repaired",
     });
   }
-  const breakdowns = rollBreakdowns(repairs.placedBuildings, getPoliceBreakdownReduction(working.workforce.police), day.mods.breakdownMultiplier);
+  const breakdowns = rollBreakdowns(repairs.placedBuildings, getPoliceBreakdownReduction(working.workforce.police), day.mods.breakdownMultiplier * getDifficulty(state.difficulty).breakdownMultiplier);
   for (const building of breakdowns.broken) {
     log(day, {
       date: state.date,

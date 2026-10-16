@@ -5,6 +5,7 @@ import type { DecisionHistoryEntry } from "../decisions/types";
 import type { ForeignGovernment } from "../diplomacy/types";
 import type { MarketState } from "../market/types";
 import type { Expedition } from "../expeditions/types";
+import type { Difficulty } from "../difficulty/difficultyData";
 import type { Ledger } from "../ledger/types";
 import type { Ideology } from "../parties/types";
 import type { PlacedBuilding, ProvinceState } from "../provinces/types";
@@ -98,6 +99,7 @@ export interface MonthlyReport {
 }
 
 export interface GameState {
+  difficulty: Difficulty; // chosen before the game starts; fixed after — see domain/difficulty
   nationId: string; // chosen at the start screen; fixed for the rest of the game
   partyId: string; // chosen right after the nation, on the same screen flow — see PartySelectScreen
   electionsWon: number; // consecutive wins by construction: a single loss ends the game (see simulateDay.ts)

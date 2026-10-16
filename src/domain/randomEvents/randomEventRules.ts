@@ -33,3 +33,20 @@ export function applyRandomEventEffect(
 
   return { stats: nextStats, resources: nextResources };
 }
+
+// An event's losses made harsher (scale > 1) or milder (< 1); its gains
+// stay as they are. Difficulty uses this (see domain/difficulty).
+export function scaleEventLosses(effect: RandomEventEffect, scale: number): RandomEventEffect {
+  if (scale === 1) return effect;
+  const loss = (m: number | undefined) => (m !== undefined && m < 1 ? Math.max(0, 1 - (1 - m) * scale) : m);
+  return {
+    ...effect,
+    treasuryMultiplier: loss(effect.treasuryMultiplier),
+    foodMultiplier: loss(effect.foodMultiplier),
+    populationMultiplier: loss(effect.populationMultiplier),
+    stabilityDelta: effect.stabilityDelta !== undefined && effect.stabilityDelta < 0 ? effect.stabilityDelta * scale : effect.stabilityDelta,
+    resourceMultipliers: effect.resourceMultipliers
+      ? Object.fromEntries(Object.entries(effect.resourceMultipliers).map(([type, m]) => [type, loss(m as number)]))
+      : undefined,
+  };
+}

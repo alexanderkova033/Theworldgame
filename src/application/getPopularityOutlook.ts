@@ -7,6 +7,7 @@ import { getLabourSituation } from "../domain/labour/labourRules";
 import { burnHeatingFuel, getHeatingDemand, getNationalHomelessShare } from "../domain/housing/housingRules";
 import { getModifiers } from "../domain/policy/policyRules";
 import { getPopularityDrivers, getPopularityTarget, type PopularityConditions, type PopularityDriver } from "../domain/politics/politicsRules";
+import { getDifficulty } from "../domain/difficulty/difficultyData";
 
 export interface PopularityOutlook {
   target: number;
@@ -25,6 +26,7 @@ export function getPopularityOutlook(state: GameState): PopularityOutlook {
     taxTolerance: mods.taxTolerance,
     hardship: mods.hardshipMultiplier,
     policy: mods.supportTarget,
+    expectations: getDifficulty(state.difficulty).expectations,
   };
   return { target: getPopularityTarget(conditions), drivers: getPopularityDrivers(conditions) };
 }

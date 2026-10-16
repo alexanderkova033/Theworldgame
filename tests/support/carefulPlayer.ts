@@ -17,6 +17,7 @@ import { getDailyProductionSummary } from "../../src/application/getDailyProduct
 import { simulateDay } from "../../src/application/simulateDay";
 import { startNewGame } from "../../src/application/startNewGame";
 import type { GameState } from "../../src/domain/country/types";
+import type { Difficulty } from "../../src/domain/difficulty/difficultyData";
 import { getDecision } from "../../src/domain/decisions/decisionRules";
 import { LAW_NODES } from "../../src/domain/laws/lawData";
 import { canEnactLaw, getLawNode } from "../../src/domain/laws/lawsRules";
@@ -71,10 +72,18 @@ export interface PlayOptions {
   days: number;
   follow?: { tree: "law" | "research"; pathKey: string };
   onDay?: (state: GameState) => void; // sees the country after every simulated day
+  difficulty?: Difficulty;
+  // A sloppy player reacts late: it rallies only once support is below the
+  // line, repairs only once three buildings are down, leaves taxes where they
+  // start, builds homes only once people are already homeless and buys food
+  // only when it's nearly gone. Difficulty levels are measured against both.
+  skill?: "careful" | "sloppy";
 }
 
-export function playCarefully(nation: string, party: string, { days, follow, onDay }: PlayOptions): GameState {
-  let s = setTaxRate(takeLoan(startNewGame(nation, party)), 0.12);
+export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty, skill = "careful" }: PlayOptions): GameState {
+  const sloppy = skill === "sloppy";
+  let s = takeLoan(startNewGame(nation, party, difficulty));
+  if (!sloppy) s = setTaxRate(s, 0.12);
   const route = follow ? pathRoute(follow.tree, follow.pathKey) : [];
   const area = follow?.tree === "research" ? (RESEARCH_NODES.find((n) => n.id === route[1])!.category as ResearchCategory) : null;
   for (let day = 0; day < days && !s.isGameOver; day++) {
@@ -86,15 +95,16 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
     for (const good of ["grain", "fish"] as const) if (s.resources[good] >= 10 + keep(good) && canSellGood(s, good)) s = sellGood(s, good);
     if (s.stats.treasury < 100 && s.debt < 4000) s = takeLoan(s);
     if (production.heatingFuel > 0 && s.resources.coal + s.resources.wood < production.heatingFuel * 3) s = ensure(s, "coal", 5);
-    for (const building of s.placedBuildings.filter((b) => b.condition === "broken")) {
+    const broken = s.placedBuildings.filter((b) => b.condition === "broken");
+    for (const building of sloppy && broken.length < 3 ? [] : broken) {
       s = repairBuilding(ensure(s, building.type === "factory" || building.type === "road" || building.type === "cannery" ? "ore" : "wood", 6), building.id);
     }
     const farmsPlanned = s.farmCount + s.projects.filter((p) => p.type === "farm").length;
-    if (farmsPlanned < Math.ceil((s.stats.population * 1.1) / 2650)) s = tryBuild(s, buildFarm);
-    if (s.stats.population > production.housingCapacity * 0.97 && !s.projects.some((p) => p.type === "housing")) s = tryBuild(s, buildHousing);
-    if (s.stats.food < 20000 && canBuyGood(s, "food", 5)) s = buyGood(s, "food", 5);
+    if (farmsPlanned < Math.ceil((s.stats.population * (sloppy ? 0.95 : 1.1)) / 2650)) s = tryBuild(s, buildFarm);
+    if (s.stats.population > production.housingCapacity * (sloppy ? 1.02 : 0.97) && !s.projects.some((p) => p.type === "housing")) s = tryBuild(s, buildHousing);
+    if (s.stats.food < (sloppy ? 3000 : 20000) && canBuyGood(s, "food", 5)) s = buyGood(s, "food", 5);
     if (s.debt > 0 && s.stats.treasury > 2500 && canRepayLoan(s)) s = repayLoan(s);
-    if (s.stats.popularity < getElectionThreshold(s.electionsWon) + 6 && canHoldRally(s)) s = holdRally(s);
+    if (s.stats.popularity < getElectionThreshold(s) + (sloppy ? 0 : 6) && canHoldRally(s)) s = holdRally(s);
     if (s.pendingDecisionId) {
       const decision = getDecision(s.pendingDecisionId)!;
       const best = [...decision.options].sort((a, b) => (b.effects.popularityDelta ?? 0) - (a.effects.popularityDelta ?? 0))[0];
