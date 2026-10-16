@@ -30,6 +30,15 @@
   --oxblood-dark: #561414;
   --prussian: #24506e; /* Prussian blue ink: research, where laws use oxblood */
   --prussian-dark: #173750;
+  /* Each window's own ink, for its headings, ornaments and open tab, so
+     the six read as six rooms of one house. All at least 4.5:1 on --paper. */
+  --ink-build: #25503a; /* verdigris: building and growing */
+  --ink-money: #5c400b; /* umber gold: the counting house */
+  --ink-politics: #5c2654; /* plum: the chamber */
+  --ink-laws: var(--oxblood); /* the statute book */
+  --ink-research: var(--prussian); /* the workshop */
+  --ink-reports: #5a3e1e; /* sepia: the record */
+  --window-ink: var(--oxblood); /* set per window (Modal.css) */
   --gilt: #b08a3e;
   --gilt-bright: #e2c27a;
   --leather: #223a2f; /* green morocco */
@@ -279,7 +288,7 @@ h2 {
   position: relative;
   font-size: 1.15rem;
   letter-spacing: 0.01em;
-  color: var(--oxblood);
+  color: var(--window-ink);
   font-weight: 700;
   text-align: center;
   padding-bottom: 0.95rem;
@@ -294,7 +303,9 @@ h2::after {
   transform: translateX(-50%);
   width: min(11rem, 80%);
   height: 12px;
-  background: var(--ornament) center/contain no-repeat;
+  /* The ornament's shape, inked in the window's colour. */
+  background: var(--window-ink);
+  mask: var(--ornament) center/contain no-repeat;
 }
 
 /* A heading set left in a panel's header row: the ornament runs from the
@@ -304,7 +315,7 @@ h2::after {
   left: 0;
   transform: none;
   width: 9rem;
-  background-position: left center;
+  mask-position: left center;
 }
 
 h3 {

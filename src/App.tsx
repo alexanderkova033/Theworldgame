@@ -322,13 +322,13 @@ function App() {
       </main>
 
       {openModal === "politics" && (
-        <Modal title="Politics" icon={<NavIcon type="politics" size={22} />} onClose={() => setOpenModal(null)}>
+        <Modal title="Politics" window="politics" icon={<NavIcon type="politics" size={22} />} onClose={() => setOpenModal(null)}>
           <PoliticsPanel state={state} dispatch={dispatch} onOpenPanel={openPanel} section={sections.politics} onSection={(section) => setSection("politics", section)} />
         </Modal>
       )}
 
       {openModal === "build" && (
-        <Modal title="Build" icon={<NavIcon type="build" size={22} />} onClose={() => setOpenModal(null)} wide>
+        <Modal title="Build" window="build" icon={<NavIcon type="build" size={22} />} onClose={() => setOpenModal(null)} wide>
           <BuildPanel
             state={state}
             dispatch={dispatch}
@@ -344,7 +344,7 @@ function App() {
       )}
 
       {openModal === "money" && (
-        <Modal title="Money" icon={<StatIcon type="treasury" size={22} />} onClose={() => setOpenModal(null)} wide>
+        <Modal title="Money" window="money" icon={<StatIcon type="treasury" size={22} />} onClose={() => setOpenModal(null)} wide>
           <MoneyPanel
             state={state}
             production={dailyProduction}
@@ -357,7 +357,7 @@ function App() {
       )}
 
       {openModal === "reports" && (
-        <Modal title="Reports" icon={<NavIcon type="reports" size={22} />} onClose={() => setOpenModal(null)} wide>
+        <Modal title="Reports" window="reports" icon={<NavIcon type="reports" size={22} />} onClose={() => setOpenModal(null)} wide>
           <div className="reports-modal">
             {/* Active projects already live on the Build tab, right next to
                 the Build actions that create them — showing the same list
@@ -370,19 +370,19 @@ function App() {
       )}
 
       {openModal === "laws" && (
-        <Modal title="Laws" icon={<NavIcon type="laws" size={22} />} onClose={() => setOpenModal(null)} wide>
+        <Modal title="Laws" window="laws" icon={<NavIcon type="laws" size={22} />} onClose={() => setOpenModal(null)} wide>
           <LawsPanel state={state} alerts={advisor?.alerts ?? []} dispatch={dispatch} />
         </Modal>
       )}
 
       {openModal === "research" && (
-        <Modal title="Research" icon={<NavIcon type="research" size={22} />} onClose={() => setOpenModal(null)} wide>
+        <Modal title="Research" window="research" icon={<NavIcon type="research" size={22} />} onClose={() => setOpenModal(null)} wide>
           <ResearchPanel state={state} alerts={advisor?.alerts ?? []} dispatch={dispatch} />
         </Modal>
       )}
 
       {openModal === "ventures" && (
-        <Modal title="Ventures" icon={<NavIcon type="ventures" size={22} />} onClose={() => setOpenModal(null)}>
+        <Modal title="Ventures" window="ventures" icon={<NavIcon type="ventures" size={22} />} onClose={() => setOpenModal(null)}>
           <ExpeditionPanel state={state} selectedIslandId={selectedIslandId} dispatch={dispatch} />
         </Modal>
       )}

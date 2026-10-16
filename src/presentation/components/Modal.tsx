@@ -11,6 +11,9 @@ interface ModalProps {
   // scaled up rather than a plain text-titled box indistinguishable from any
   // other modal.
   icon?: React.ReactNode;
+  // Which window this is: each inks its headings and open tab in its own
+  // colour (see the --ink-* tokens in index.css).
+  window?: string;
 }
 
 // A generic overlay for panels that are an occasional decision rather than an
@@ -19,7 +22,7 @@ interface ModalProps {
 //
 // Not aria-modal: the top bar stays live above it on purpose (switch tabs,
 // pause), so the rest of the page isn't inert while it's open.
-export function Modal({ title, onClose, children, wide = false, icon }: ModalProps) {
+export function Modal({ title, onClose, children, wide = false, icon, window: windowKey }: ModalProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +53,7 @@ export function Modal({ title, onClose, children, wide = false, icon }: ModalPro
       <div
         ref={dialogRef}
         className={`modal ${wide ? "modal--wide" : ""}`}
+        data-window={windowKey}
         role="dialog"
         aria-labelledby={titleId}
         tabIndex={-1}

@@ -45,7 +45,11 @@ export function SubTabs({ tabs, active, onSelect, label }: { tabs: SubTab[]; act
           tabIndex={tab.key === active ? 0 : -1}
           className={`sub-tab ${tab.key === active ? "is-active" : ""} ${tab.alert ? "is-alert" : ""}`}
           title={tab.hint}
-          onClick={() => onSelect(tab.key)}
+          onClick={() => {
+            // A new section starts at its top, not where the last one was scrolled to.
+            if (tab.key !== active) listRef.current?.closest(".modal__body")?.scrollTo({ top: 0 });
+            onSelect(tab.key);
+          }}
         >
           {tab.icon}
           <span className="sub-tab__label">{tab.label}</span>

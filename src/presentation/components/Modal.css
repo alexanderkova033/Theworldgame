@@ -38,6 +38,15 @@
   outline-offset: -2px;
 }
 
+/* Each window in its own ink (tokens in index.css), shown as a ribbon
+   under the title band and in its headings and open tab. */
+.modal[data-window="build"] { --window-ink: var(--ink-build); }
+.modal[data-window="money"] { --window-ink: var(--ink-money); }
+.modal[data-window="politics"] { --window-ink: var(--ink-politics); }
+.modal[data-window="laws"] { --window-ink: var(--ink-laws); }
+.modal[data-window="research"] { --window-ink: var(--ink-research); }
+.modal[data-window="reports"] { --window-ink: var(--ink-reports); }
+
 .modal.modal--wide {
   max-width: 64rem;
 }
@@ -73,6 +82,9 @@
   padding: 0.5rem 0.6rem 0.5rem 1rem;
   background: var(--damask) 0 0/48px 64px repeat, var(--bar);
   border-bottom: 3px double rgba(226, 194, 122, 0.55);
+  box-shadow: 0 4px 0 var(--window-ink);
+  position: relative;
+  z-index: 1;
 }
 
 .modal__header h2 {

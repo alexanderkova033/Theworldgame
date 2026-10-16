@@ -232,7 +232,7 @@ button.people-province.is-selected {
   font-style: normal;
   font-size: 1rem;
   letter-spacing: 0.03em;
-  color: var(--oxblood);
+  color: var(--window-ink);
 }
 
 .people-table {
