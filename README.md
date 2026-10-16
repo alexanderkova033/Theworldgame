@@ -8,12 +8,13 @@ You govern one of three fictional nations on an invented continent, in a period 
 
 ## What the game is
 
-- **Choose a nation and a party.** Astravia, Caldenreich or Veldoria, then one of its parties. Both are permanent for the game.
+- **Choose a difficulty, a nation and a party.** Easy, Normal, Hard or Ruthless; then Astravia, Caldenreich or Veldoria; then one of its parties. All three are permanent for the game.
+- **Learn it as it opens.** The game starts with building, taxes and loans only. The market, laws, research, voters, the streets, neighbours and ventures each arrive in their own chapter, with a short briefing and objectives.
 - **Build across your provinces.** Farms, factories, roads, housing, granaries, canneries and schools, each capped per province. Every province has its own people, homes and jobs, and people move toward free homes and work.
 - **Trade for what your land lacks.** Terrain produces wood, ore, grain or fish; coal heats homes in winter. A supply-and-demand market sells the rest.
 - **Govern.** Set taxes, hold rallies, court factions, take loans, hire scientists and police, and answer decisions as they arrive.
-- **Choose a direction.** A Laws tree and a Research tree, each with four branches of three paths. Picking a path closes the others for good.
-- **Win elections.** One comes every 18 months. The first needs 50% support, the second 54%, the third 58%. Lose one and the game ends; win three in a row and you've won. If stability hits zero, the government collapses.
+- **Choose a direction.** A Laws tree and a Research tree, each with four branches of three paths. Picking a path closes the others for good. Some laws and research come in pairs that do more together, and a technology can turn out a breakthrough.
+- **Win elections.** One comes every 18 months. On Normal the first needs 50% support, the second 54%, the third 58%. Lose one and the game ends; win three in a row and you've won. If stability hits zero, the government collapses. After a loss the end screen explains how it happened, and you may go back to the start of the last chapter as often as the difficulty allows.
 
 The army and recruitment were removed on purpose: they had no reachable UI. See [ROADMAP.md](ROADMAP.md) for where the game is headed.
 
@@ -62,6 +63,8 @@ src/
     politics/ parties/  Popularity, political power, factions, elections, the rival.
     laws/ research/ policy/ synergy/
                         The two trees, the rules they share, and links between them.
+    chapters/ difficulty/
+                        Which systems are open yet, and what each level changes.
     decisions/ randomEvents/ unrest/ diplomacy/ expeditions/ loans/ workforce/ nations/ ledger/
     constants.ts        Every tunable number.
 
@@ -69,11 +72,12 @@ src/
     simulateDay.ts       The daily tick: runs the steps below in order.
     day/                 One file per step of the day (buildings, goods, money, food, order, ...).
     startNewGame.ts      Builds the opening GameState.
+    chapters.ts          Opens chapters on their triggers and marks them done.
     actions/             One file per player action.
     get*.ts              Read models for the UI (advisor, forecasts, province overview...).
 
   presentation/        React UI. Depends on domain and application, never the reverse.
-    hooks/               The game clock and save slots.
+    hooks/               The game clock, save slots and checkpoints.
     components/          Screens, panels, the map and icons.
     audio/               Sound effects.
   App.tsx              Wires the simulation and the clock to the UI.

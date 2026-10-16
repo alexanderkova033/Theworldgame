@@ -12,16 +12,48 @@ The intended feel is closer to a management game (a city-builder, or *Democracy*
 
 An invented continent in a period that *feels* like the years just before 1914: steam and rail, early factories, schools spreading, and tension in the background. Nothing is tied to a real country or history, so the map, nations and events can be designed freely.
 
-Before play you choose one of three nations (**Astravia**, **Caldenreich** or **Veldoria**) and then one of its parties to lead. Both choices are permanent for that game. The other two nations are on the map with their own governments, which you can lean on but not run.
+Before play you choose a difficulty, then one of three nations (**Astravia**, **Caldenreich** or **Veldoria**) and then one of its parties to lead. Both choices are permanent for that game. The other two nations are on the map with their own governments, which you can lean on but not run.
 
 The currency is the **Crown** (`Cr`).
 
 ## How a game is won or lost
 
-- **General elections** come every 18 months. The first needs 50% support, the second 54%, the third 58%: voters ask more of a government the longer it governs. The vote counts support as election day begins, before that morning's campaign moves land.
+- **General elections** come every 18 months. On Normal the first needs 50% support, the second 54%, the third 58%: voters ask more of a government the longer it governs. The vote counts support as election day begins, before that morning's campaign moves land.
 - **Lose an election** and the opposition takes power: the game is over.
 - **Win three in a row** and your party has won outright. A careful game takes about four and a half in-game years.
 - **Stability at zero** is a collapse: order breaks down and the government falls.
+- **After a loss** the end screen says how it happened: the number that failed over its last four months against the line it had to hold, the three causes that pulled it down most, and one thing to do differently.
+- **Checkpoints.** The game is saved each time a chapter opens. After a loss you may go back to the start of that chapter, as often as the difficulty allows.
+
+## Difficulty
+
+Four levels, chosen before the nation. Each changes only what its card says, and the scripted players in `tests/balance.test.ts` keep them apart: a careless player mostly wins on Easy and mostly loses from Normal up, and a careful one can still lose on Ruthless.
+
+| Level | Election lines | Voters expect | Political power | Start | Rival | Bad luck | Retries |
+|---|---|---|---|---|---|---|---|
+| Easy (Steward) | 50, 52, 54% | less | +15% | 2,000 Cr | weaker | halved | 5 |
+| Normal (Minister) | 50, 54, 58% | a little more | as is | nothing extra | as is | as is | 3 |
+| Hard (Chancellor) | 52, 56, 60% | more | −15% | nothing extra | stronger | 1.5× | 1 |
+| Ruthless (Iron Chancellor) | 54, 58, 62% | much more | −30% | half the food | much stronger | 2× | 0 |
+
+"Bad luck" scales the losses from random events and how often buildings break down.
+
+## Chapters
+
+Systems arrive as they matter, and not before. A game opens with only building, taxes and loans. Each later system is shut, in the rules and not just the interface, until its chapter opens. A chapter opens on a trigger in play or by a fixed month at the latest, pauses the game, and arrives as a short briefing letter with one or two objectives. Every nation has the same chapters with the same latest months; what happens in play decides which comes first.
+
+| Chapter | Opens | By month |
+|---|---|---|
+| The First Winter | at the start: build, tax, borrow | |
+| The Exchange Opens | the market | 2 |
+| The Assembly Sits | laws, once political power has built up | 6 |
+| The Royal Society | research, scientists and schools | 9 |
+| Know Your Voters | courting factions, when support runs close to the line | 13 |
+| Trouble in the Streets | police and crackdowns, at the first unrest | 14 |
+| Envoys Arrive | pressure abroad, once a neighbour campaigns | 15 |
+| A Captain's Offer | ventures to the islands | 20 |
+
+Open chapters and their objectives sit in a slip at the top right of the map.
 
 ## Main stats
 
@@ -71,10 +103,12 @@ You can also take loans in batches. Interest compounds daily, and heavy debt cos
 
 ## Laws and research
 
-Both are trees with four branches. Each branch has one shared root and then three paths; choosing a path closes the other two for good. Some laws and research reinforce each other.
+Both are trees with four branches. Each branch has one shared root and then three paths; choosing a path closes the other two for good.
+
+Some laws and research come in **pairs**: with both in force, each does more. A chain-link mark on a node shows how much of its pair is in force (faint with neither, gilt with one, green with both), so the missing half is easy to find from either tree.
 
 - **Laws** (labour, sustenance, order, revenue) cost political power and Crowns and go to a vote. Your party and the rival take stances that move the odds. A law also needs the country to reach a stat first, such as a population, a stock of food or a number of factories, and the game says how to get there.
-- **Research** (industry, agriculture, administration, housing) has no vote and no price. You choose the direction, and each area progresses daily from its buildings, its scientists and your schools.
+- **Research** (industry, agriculture, administration, housing) has no vote and no price. You choose the direction, and each area progresses daily from its buildings, its scientists and your schools. A finished technology still rolls how well it turned out: one in five is a **breakthrough** worth half as much again, announced with its own gilt notice and bells, and one in five disappoints.
 
 ## Unrest
 
@@ -90,10 +124,10 @@ Falling stability brings stages before collapse: discontent slows industry, stri
 
 ## Intended player experience
 
-1. Start small: a modest treasury, a loan to consider, and a few buildings.
-2. Keep people fed, housed, employed and warm, trading for what your land doesn't produce.
-3. Pick a law path and a research direction that suit your nation and party.
+1. Start small: a modest treasury, a loan to consider, and a few buildings. Nothing else is open yet.
+2. Keep people fed, housed, employed and warm. Each new system arrives with a briefing when it starts to matter.
+3. Pick a law path and a research direction that suit your nation and party, and look for their pairs.
 4. Watch support before each election, and spend political power when it matters.
-5. Read the reports to see why things moved, then adjust.
+5. Read the reports to see why things moved, then adjust. If it goes wrong, the end screen says why.
 
 The game stays deliberately small: one country to run, a handful of buildings, and two trees. Breadth (simulated neighbours, war) waits until this loop is solid and fun.
