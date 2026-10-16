@@ -315,7 +315,7 @@ function App() {
             (() => {
               const province = provinceOverview.find((p) => p.id === currentProvinceId);
               return province ? (
-                <ProvinceCard state={state} province={province} onOpenPanel={openPanel} onClose={closeProvinceCard} />
+                <ProvinceCard state={state} dispatch={dispatch} province={province} onOpenPanel={openPanel} onClose={closeProvinceCard} />
               ) : null;
             })()}
         </div>

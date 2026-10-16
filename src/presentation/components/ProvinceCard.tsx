@@ -1,11 +1,18 @@
 // The province you clicked on the map, as a card docked at the map's edge:
-// what it needs most, in one sentence, then a short fact sheet — its people
-// and homes, who's moving in or out, work, mood, what the land yields, and
-// what stands or is going up there. It informs rather than builds: one link
-// at the foot opens Economy › Build already pointed at this province.
+// what it needs most, in one sentence, with up to three one-click fixes for
+// it (see getProvinceSuggestions), then a short fact sheet: its people and
+// homes, who's moving in or out, work, mood, what the land yields, and
+// what stands or is going up there. A link at the foot opens the Build
+// window, already pointed at this province, for anything else.
 import "./ProvinceCard.css";
 import { useEffect, type ReactNode } from "react";
+import { buyAndBuild, repairBuilding } from "../../application/actions";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
+import { getProvinceSuggestions, type Suggestion } from "../../application/getProvinceSuggestions";
+import { CURRENCY_SYMBOL } from "../../domain/constants";
+import { getRepairCost } from "../../domain/maintenance/maintenanceRules";
+import { getModifiers } from "../../domain/policy/policyRules";
+import { playBuild } from "../audio/sound";
 import type { ProjectType } from "../../domain/construction/types";
 import { getSeason } from "../../domain/country/calendar";
 import type { GameState } from "../../domain/country/types";
@@ -79,16 +86,75 @@ function ResourceGlyph({ type }: { type: ResourceType }) {
   );
 }
 
+type Dispatch = (action: (state: GameState) => GameState) => void;
+
+// One fix the province needs, as a row: what, why, and the button that does it.
+function SuggestionRow({ state, suggestion, provinceId, dispatch }: { state: GameState; suggestion: Suggestion; provinceId: string; dispatch: Dispatch }) {
+  if (suggestion.kind === "repair") {
+    const cost = getRepairCost(suggestion.type, getModifiers(state).repairCostMultiplier);
+    const name = BUILDING_NAMES[suggestion.type][0];
+    return (
+      <li className="province-card__fix">
+        <BuildingGlyph type={suggestion.type} size={22} />
+        <span className="province-card__fix-text">
+          <strong>Repair {name.toLowerCase()}</strong>
+          <span>{suggestion.why}</span>
+        </span>
+        <button
+          type="button"
+          disabled={!suggestion.can}
+          title={`${Math.round(cost.treasury).toLocaleString()} ${CURRENCY_SYMBOL} and ${cost.resourceAmount} ${cost.resourceType}${suggestion.can ? "" : ": not enough yet"}`}
+          onClick={() => dispatch((s) => repairBuilding(s, suggestion.buildingId))}
+        >
+          Repair
+        </button>
+      </li>
+    );
+  }
+  const { action, how, plan } = suggestion;
+  const name = action.config.label;
+  const price = `${suggestion.cost.toLocaleString()} ${CURRENCY_SYMBOL}, ${action.config.resourceCost} ${action.config.resourceType}`;
+  const title =
+    how === "build"
+      ? `Build ${name.toLowerCase()} here: ${price}`
+      : how === "buy"
+        ? `Buys ${Math.round(plan!.amount)} ${action.config.resourceType} for ${Math.round(plan!.goodsCost).toLocaleString()} ${CURRENCY_SYMBOL}, then builds: ${price}`
+        : `${suggestion.blockedBy}. Costs ${price}.`;
+  return (
+    <li className="province-card__fix">
+      <BuildingGlyph type={action.config.type} size={22} />
+      <span className="province-card__fix-text">
+        <strong>{name}</strong>
+        <span>{how === "blocked" ? suggestion.blockedBy : suggestion.why}</span>
+      </span>
+      <button
+        type="button"
+        className="btn-primary"
+        disabled={how === "blocked"}
+        title={title}
+        onClick={() => {
+          playBuild();
+          dispatch((s) => (action.canBuild(s, provinceId) ? action(s, provinceId) : buyAndBuild(s, action, provinceId)));
+        }}
+      >
+        {how === "buy" ? "Buy & build" : "Build"}
+      </button>
+    </li>
+  );
+}
+
 interface ProvinceCardProps {
   state: GameState;
+  dispatch: Dispatch;
   province: ProvinceOverview;
   onOpenPanel: OpenPanel;
   onClose: () => void;
 }
 
-export function ProvinceCard({ state, province, onOpenPanel, onClose }: ProvinceCardProps) {
+export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }: ProvinceCardProps) {
   const status = getProvinceStatus(province);
   const need = getNeed(province);
+  const suggestions = getProvinceSuggestions(state, province);
   const terrain = MAP_GEOMETRY.provinces.find((p) => p.id === province.id)?.terrain;
   const yields = terrain ? calculateDailyProduction([terrain], getSeason(state.date)) : null;
   const yieldTypes = yields ? RESOURCE_TYPES.filter((type) => yields[type] > 0) : [];
@@ -122,6 +188,13 @@ export function ProvinceCard({ state, province, onOpenPanel, onClose }: Province
       </header>
 
       <p className={`province-card__need ${need.urgent ? "is-urgent" : ""}`}>{need.text}</p>
+      {suggestions.length > 0 && (
+        <ul className="province-card__fixes" aria-label={`What ${province.name} needs`}>
+          {suggestions.map((suggestion) => (
+            <SuggestionRow key={suggestion.key} state={state} suggestion={suggestion} provinceId={province.id} dispatch={dispatch} />
+          ))}
+        </ul>
+      )}
 
       <dl className="province-card__facts">
         <Fact icon={<BuildingGlyph type="housing" size={16} />} label="Homes" alert={status.homes === "over"}>
@@ -215,7 +288,7 @@ export function ProvinceCard({ state, province, onOpenPanel, onClose }: Province
       </dl>
 
       <button type="button" className="province-card__more" onClick={() => onOpenPanel("build", "buildings")}>
-        Build here…
+        All buildings…
       </button>
     </section>
   );

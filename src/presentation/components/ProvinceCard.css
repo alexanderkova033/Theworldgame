@@ -77,6 +77,54 @@ button.province-card__close:hover:not(:disabled) {
   color: var(--danger);
 }
 
+/* The fixes for that need, each a row with its own button. */
+.province-card__fixes {
+  list-style: none;
+  margin: 0 0 0.6rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.province-card__fix {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.45rem;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.province-card__fix svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.province-card__fix-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.province-card__fix-text strong {
+  font-size: 0.9rem;
+}
+
+.province-card__fix-text span {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.province-card__fix button {
+  flex-shrink: 0;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8125rem;
+}
+
 /* The fact sheet: a label column and a value column, ruled between rows. */
 .province-card__facts {
   margin: 0;
