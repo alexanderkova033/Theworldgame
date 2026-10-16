@@ -8,9 +8,17 @@ import { getParty } from "../../domain/parties/partyRules";
 import { StatIcon } from "./StatIcon";
 import { formatAmount } from "../formatNumber";
 
+export interface Retry {
+  chapterTitle: string; // the chapter the checkpoint was taken at
+  left: number;
+  total: number; // what the difficulty allows in a game
+}
+
 interface GameEndScreenProps {
   state: GameState;
   onNewGame: () => void;
+  retry: Retry | null; // null when there's no checkpoint to go back to
+  onRetry: () => void;
 }
 
 const OUTCOME_COPY: Record<GameOutcome, { eyebrow: (nation: string) => string; title: string; className: string }> = {
@@ -34,7 +42,7 @@ const OUTCOME_COPY: Record<GameOutcome, { eyebrow: (nation: string) => string; t
 // Shown once GameState.isGameOver flips true (see simulateDay.ts): a
 // stability collapse, a lost general election, or — the actual win
 // condition — enough election wins in a row to cement outright rule.
-export function GameEndScreen({ state, onNewGame }: GameEndScreenProps) {
+export function GameEndScreen({ state, onNewGame, retry, onRetry }: GameEndScreenProps) {
   const nation = getNation(state.nationId);
   const party = getParty(state.partyId);
   const outcome = state.outcome ?? "collapsed";
@@ -95,6 +103,25 @@ export function GameEndScreen({ state, onNewGame }: GameEndScreenProps) {
             </div>
           </div>
         </div>
+
+        {/* Going back costs everything since that chapter began, and the
+            difficulty decides how often it's allowed. */}
+        {outcome !== "victory" && retry && (
+          <div className="game-end-screen__retry">
+            {retry.left > 0 ? (
+              <>
+                <button className="game-end-screen__button" onClick={onRetry}>
+                  Go back to the start of “{retry.chapterTitle}”
+                </button>
+                <span className="game-end-screen__retries">
+                  {retry.left} of {retry.total} {retry.total === 1 ? "retry" : "retries"} left
+                </span>
+              </>
+            ) : (
+              <span className="game-end-screen__retries">{retry.total === 0 ? "No going back on this difficulty." : "No retries left."}</span>
+            )}
+          </div>
+        )}
 
         <button className="game-end-screen__button btn-primary" onClick={onNewGame}>
           Start a New Game

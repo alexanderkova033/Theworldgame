@@ -101,3 +101,17 @@
   font-size: 1rem;
   padding: 0.75rem 1.5rem;
 }
+
+/* Going back to the last chapter, while retries last. */
+.game-end-screen__retry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+}
+
+.game-end-screen__retries {
+  font-size: 0.9rem;
+  font-style: italic;
+}

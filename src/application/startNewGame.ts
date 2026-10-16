@@ -149,5 +149,6 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     dangerPauses: [],
     decisionHistory: [],
     chapters: newChapterProgress(),
+    retriesUsed: 0,
   };
 }

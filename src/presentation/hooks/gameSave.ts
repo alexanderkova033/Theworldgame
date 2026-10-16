@@ -117,6 +117,7 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     provinces: raw.provinces ?? {},
     // Games saved before chapters existed keep every system open.
     chapters: raw.chapters ?? allChaptersOpen(),
+    retriesUsed: raw.retriesUsed ?? 0,
   };
   // Saves from before provinces had people: everyone lives where the homes are.
   if (!raw.provinces) {
@@ -136,6 +137,9 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
 export const SAVE_SLOT_COUNT = 3;
 
 const SLOT_KEY_PREFIX = "theworldgame-save-v2-slot-";
+// The game as it stood when its latest chapter opened, kept apart from the
+// slot so a lost game can go back to it (see GameEndScreen).
+const CHECKPOINT_KEY_PREFIX = "theworldgame-save-v2-checkpoint-";
 const SLOT_NAMES_KEY = "theworldgame-slot-names-v1";
 const LEGACY_SAVE_KEY = "theworldgame-save-v1"; // the old single-save key, pre-slots
 
@@ -238,4 +242,29 @@ export function getSlotPreviews(): SaveSlotPreview[] {
       preview: saved ? { nationId: saved.nationId, partyId: saved.partyId, date: saved.date } : null,
     };
   });
+}
+
+export function persistCheckpoint(slotId: number, state: GameState): void {
+  try {
+    localStorage.setItem(CHECKPOINT_KEY_PREFIX + slotId, JSON.stringify(state));
+  } catch {
+    // Storage full or unavailable: no checkpoint, never a reason to interrupt play.
+  }
+}
+
+export function loadCheckpoint(slotId: number): GameState | null {
+  try {
+    const raw = localStorage.getItem(CHECKPOINT_KEY_PREFIX + slotId);
+    return raw ? hydrateGameState(JSON.parse(raw) as Partial<GameState>) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearCheckpoint(slotId: number): void {
+  try {
+    localStorage.removeItem(CHECKPOINT_KEY_PREFIX + slotId);
+  } catch {
+    // Nothing to clear.
+  }
 }

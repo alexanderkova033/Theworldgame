@@ -11,7 +11,7 @@ import { playDay } from "../../application/playDay";
 import { startNewGame } from "../../application/startNewGame";
 import type { GameSpeed, GameState } from "../../domain/country/types";
 import type { Difficulty } from "../../domain/difficulty/difficultyData";
-import { clearSlot, getSlotPreviews, loadSlot, persistSlot, renameSlot as renameSlotStorage, type SaveSlotPreview } from "./gameSave";
+import { clearCheckpoint, clearSlot, getSlotPreviews, loadCheckpoint, loadSlot, persistCheckpoint, persistSlot, renameSlot as renameSlotStorage, type SaveSlotPreview } from "./gameSave";
 
 export type { SavedGamePreview, SaveSlotPreview } from "./gameSave";
 
@@ -66,7 +66,17 @@ export function useGameClock() {
     };
   }, [state, activeSlotId, refreshSlots]);
 
+  // A checkpoint each time a chapter opens: the game as that chapter began.
+  const checkpointChapters = useRef(0);
+  useEffect(() => {
+    if (!state || activeSlotId === null || state.isGameOver) return;
+    if (state.chapters.opened.length <= checkpointChapters.current) return;
+    checkpointChapters.current = state.chapters.opened.length;
+    persistCheckpoint(activeSlotId, state);
+  }, [state, activeSlotId]);
+
   const startGame = useCallback((nationId: string, partyId: string, slotId: number, difficulty: Difficulty = "normal") => {
+    checkpointChapters.current = 0;
     setActiveSlotId(slotId);
     setState(startNewGame(nationId, partyId, difficulty));
   }, []);
@@ -74,6 +84,7 @@ export function useGameClock() {
   const continueGame = useCallback((slotId: number) => {
     const saved = loadSlot(slotId);
     if (saved) {
+      checkpointChapters.current = saved.chapters.opened.length;
       setState(saved);
       setActiveSlotId(slotId);
     }
@@ -91,6 +102,7 @@ export function useGameClock() {
   const deleteSlot = useCallback(
     (slotId: number) => {
       clearSlot(slotId);
+      clearCheckpoint(slotId);
       refreshSlots();
     },
     [refreshSlots],
@@ -103,6 +115,18 @@ export function useGameClock() {
     },
     [refreshSlots],
   );
+
+  // After a loss: the last checkpoint, if there is one, and back to it. The
+  // count of retries goes up and carries over; whether any are left is the
+  // difficulty's call (see domain/difficulty).
+  const peekCheckpoint = useCallback(() => (activeSlotId === null ? null : loadCheckpoint(activeSlotId)), [activeSlotId]);
+  const retryFromCheckpoint = useCallback(() => {
+    if (activeSlotId === null || !state) return;
+    const checkpoint = loadCheckpoint(activeSlotId);
+    if (!checkpoint) return;
+    checkpointChapters.current = checkpoint.chapters.opened.length;
+    setState({ ...checkpoint, retriesUsed: state.retriesUsed + 1, isPaused: true });
+  }, [activeSlotId, state]);
 
   const pause = useCallback(() => setState((s) => (s ? { ...s, isPaused: true } : s)), []);
   const resume = useCallback(() => setState((s) => (s ? { ...s, isPaused: false } : s)), []);
@@ -126,5 +150,7 @@ export function useGameClock() {
     resume,
     setSpeed,
     dispatch,
+    peekCheckpoint,
+    retryFromCheckpoint,
   };
 }

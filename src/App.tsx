@@ -44,11 +44,13 @@ import { isFeatureOpen } from "./domain/chapters/chapterData";
 import { readBriefing } from "./application/chapters";
 import { ChapterBriefing } from "./presentation/components/ChapterBriefing";
 import { Objectives } from "./presentation/components/Objectives";
+import { getChapter } from "./domain/chapters/chapterData";
+import { getDifficulty } from "./domain/difficulty/difficultyData";
 
 const SPEED_KEYS: Record<string, GameSpeed> = { "1": 1, "2": 2, "3": 3, "5": 5 };
 
 function App() {
-  const { state, saveSlots, startGame, continueGame, resetGame, deleteSlot, renameSlot, pause, resume, setSpeed, dispatch } =
+  const { state, saveSlots, startGame, continueGame, resetGame, deleteSlot, renameSlot, pause, resume, setSpeed, dispatch, peekCheckpoint, retryFromCheckpoint } =
     useGameClock();
 
   // Which save slot a new game will be written into — chosen on the Start
@@ -271,9 +273,13 @@ function App() {
   }
 
   if (state.isGameOver) {
+    const checkpoint = state.outcome === "victory" ? null : peekCheckpoint();
+    const allowed = getDifficulty(state.difficulty).retries;
     return (
       <GameEndScreen
         state={state}
+        retry={checkpoint ? { chapterTitle: getChapter(checkpoint.chapters.opened[checkpoint.chapters.opened.length - 1]).title, left: allowed - state.retriesUsed, total: allowed } : null}
+        onRetry={retryFromCheckpoint}
         onNewGame={() => {
           resetGame();
           setPendingNationId(null);

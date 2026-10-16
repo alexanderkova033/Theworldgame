@@ -152,4 +152,5 @@ export interface GameState {
   dangerPauses: string[]; // "season:danger" keys already paused for this season — see application/playDay.ts
   decisionHistory: DecisionHistoryEntry[];
   chapters: ChapterProgress; // which systems are open yet, and the briefings (see domain/chapters)
+  retriesUsed: number; // times this game went back to a checkpoint after a loss (see domain/difficulty)
 }
