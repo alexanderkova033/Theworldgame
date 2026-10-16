@@ -265,7 +265,7 @@
   font-style: normal;
   font-size: 0.95rem;
   letter-spacing: 0.04em;
-  color: var(--oxblood);
+  color: var(--window-ink);
 }
 
 /* --- Election, 3. voter groups: hover lights their seats --- */
@@ -284,12 +284,8 @@
   border-top: 1px solid rgba(122, 92, 52, 0.35);
 }
 
-.politics-group.is-focus {
+.politics-group:hover {
   background: var(--paper-raised);
-}
-
-.politics-group > svg {
-  display: block;
 }
 
 .politics-group__name {
@@ -385,36 +381,6 @@
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
-}
-
-/* --- Election, 4. recent decisions --- */
-.politics-decisions ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.politics-decisions li {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0;
-}
-
-.politics-decisions li svg {
-  display: block;
-  flex-shrink: 0;
-}
-
-.politics-decisions__text {
-  flex: 1;
-  font-size: 0.9rem;
-}
-
-.politics-decisions__date {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  white-space: nowrap;
 }
 
 /* --- One answer per page, in large type (Support, Unrest) --- */
@@ -701,7 +667,7 @@
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: var(--oxblood);
+  color: var(--window-ink);
 }
 
 .politics-creed .law-inspector__effects {

@@ -6,7 +6,7 @@
 // Every thing lives in exactly one window:
 //   Build     buildings · people (homes, jobs, heating, food)
 //   Money     budget (taxes, loans) · market
-//   Politics  support (election, groups, rallies) · unrest (police, crackdowns) · neighbours
+//   Politics  support (the chamber, what moves it, rallies) · voters (groups, courting, parties) · unrest (police, crackdowns) · neighbours
 //   Laws, Research, Reports, and Ventures (opened from an island on the map)
 import type { AdvisorAlert, AdvisorAlertKind, AdvisorObjective, ObjectiveKind } from "../application/getAdvisorOutlook";
 import type { GameState } from "../domain/country/types";
@@ -15,7 +15,7 @@ export type PanelKey = "build" | "money" | "politics" | "laws" | "research" | "r
 
 export type BuildSection = "buildings" | "people";
 export type MoneySection = "budget" | "market";
-export type PoliticsSection = "support" | "unrest" | "neighbours";
+export type PoliticsSection = "support" | "voters" | "unrest" | "neighbours";
 export type Section = BuildSection | MoneySection | PoliticsSection;
 
 export interface Sections {

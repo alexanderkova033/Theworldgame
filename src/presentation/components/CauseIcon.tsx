@@ -213,3 +213,19 @@ export function PairIcon({ size }: { size: number }) {
     </svg>
   );
 }
+
+// Voters: a small crowd, three heads, the groups who decide elections.
+export function VotersIcon({ size }: { size: number }) {
+  return (
+    <svg viewBox="-10 -10 20 20" width={size} height={size} aria-hidden="true">
+      <g stroke="#5e4528" strokeWidth={0.6}>
+        <circle cx={-5.2} cy={-2.2} r={2.4} fill="#c9a57a" />
+        <path d="M-9.2,7.5 C-9.2,2.5 -1.2,2.5 -1.2,7.5 Z" fill="#8a6a46" />
+        <circle cx={5.2} cy={-2.2} r={2.4} fill="#c9a57a" />
+        <path d="M1.2,7.5 C1.2,2.5 9.2,2.5 9.2,7.5 Z" fill="#8a6a46" />
+        <circle cx={0} cy={-4} r={2.8} fill="#d8b98c" />
+        <path d="M-4.6,8.5 C-4.6,1.8 4.6,1.8 4.6,8.5 Z" fill="#6b4a26" />
+      </g>
+    </svg>
+  );
+}

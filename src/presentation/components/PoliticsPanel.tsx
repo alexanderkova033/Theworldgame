@@ -16,7 +16,6 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { canCourtGroup, canCrackDown, canHoldRally, courtGroup, crackDown, holdRally } from "../../application/actions";
 import { getPopularityOutlook } from "../../application/getPopularityOutlook";
 import { IDEOLOGY_CARES } from "../../domain/parties/rivalRules";
-import { formatDate } from "../../domain/country/calendar";
 import {
   COURT_POLITICAL_POWER_COST,
   COURT_SUPPORT,
@@ -38,7 +37,6 @@ import {
   UNREST_STRIKES_BELOW,
 } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
-import { getDecision } from "../../domain/decisions/decisionRules";
 import { getElectionThreshold, monthsUntilNextElection } from "../../domain/parties/electionRules";
 import { FACTIONS, getFactionWeights } from "../../domain/parties/factionData";
 import { getParty, getRivalParty } from "../../domain/parties/partyRules";
@@ -48,8 +46,7 @@ import { getDailyPoliticalPower } from "../../domain/politics/politicsRules";
 import { getCrackdownStability } from "../../domain/unrest/unrestRules";
 import { playCoins, playDrum, playRally } from "../audio/sound";
 import { UNREST_INFO, UNREST_STEPS } from "../unrestStages";
-import { BuildingGlyph, CrackdownIcon, FlameIcon, HourglassIcon, JobsIcon, NeighboursIcon, RallyIcon, TaxIcon, UnrestStageIcon } from "./CauseIcon";
-import { DecisionIcon } from "./DecisionModal";
+import { BuildingGlyph, CrackdownIcon, FlameIcon, HourglassIcon, JobsIcon, NeighboursIcon, RallyIcon, TaxIcon, UnrestStageIcon, VotersIcon } from "./CauseIcon";
 import { ForeignAffairs } from "./ForeignAffairs";
 import { Gauge, SignedBar, withPreview, type GaugeTone } from "./Gauge";
 import { NavIcon } from "./NavIcon";
@@ -346,7 +343,6 @@ function stabilityFromSupport(popularity: number): number {
 
 function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameState; dispatch: Dispatch; onOpenPanel: OpenPanel; onSection: (section: PoliticsSection) => void }) {
   const [focus, setFocus] = useState<Ideology | null>(null);
-  const [courting, setCourting] = useState<Ideology | null>(null);
   const [rallying, setRallying] = useState(false);
   const outlook = getPopularityOutlook(state);
   const target = Math.round(outlook.target);
@@ -370,16 +366,12 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
   };
   const party = getParty(state.partyId);
   const rival = getRivalParty(state.partyId);
-  const weights = getFactionWeights(state.nationId);
   const popularity = Math.round(state.stats.popularity);
   const rivalPopularity = 100 - popularity;
   const monthsLeft = monthsUntilNextElection(state.date);
   const margin = popularity - getElectionThreshold(state.electionsWon);
   const isWinning = margin >= 0;
-  const recentDecisions = state.decisionHistory.slice(0, 3);
-  const canCourt = canCourtGroup(state);
   const order = stabilityFromSupport(state.stats.popularity);
-  const courtGain = (ideology: Ideology) => Math.min(COURT_SUPPORT, 100 - state.factionApproval[ideology]);
 
   return (
     <>
@@ -399,7 +391,7 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
             rival={rival}
             focus={focus}
             onFocus={setFocus}
-            gain={courting ? courtGain(courting) * weights[courting] : rallying ? RALLY_SUPPORT : null}
+            gain={rallying ? RALLY_SUPPORT : null}
           />
           <div className="politics-hero__under">
             <span className={`politics-hero__verdict ${isWinning ? "is-winning" : "is-losing"}`}>
@@ -476,9 +468,23 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
         />
       </div>
 
-      {/* 4. Who your support comes from — each row lights up its seats,
-          and can be courted from right here. */}
-      <div className="politics-groups" onMouseLeave={() => setFocus(null)}>
+    </>
+  );
+}
+
+// --- Voters: who backs you, group by group, and the two parties ----------
+function VotersView({ state, dispatch }: { state: GameState; dispatch: Dispatch }) {
+  const [courting, setCourting] = useState<Ideology | null>(null);
+  const party = getParty(state.partyId);
+  const rival = getRivalParty(state.partyId);
+  const weights = getFactionWeights(state.nationId);
+  const canCourt = canCourtGroup(state);
+  const courtGain = (ideology: Ideology) => Math.min(COURT_SUPPORT, 100 - state.factionApproval[ideology]);
+
+  return (
+    <>
+      {/* Who your support comes from, and courting each group right here. */}
+      <div className="politics-groups">
         <div className="politics-section-head">
           <h3 className="politics-subhead">Who backs you</h3>
           <span className="politics-head-cost">
@@ -494,7 +500,7 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
             const isRivals = ideology === rival.ideology;
             const gain = courting === ideology ? courtGain(ideology) : null;
             return (
-              <div className={`politics-group ${focus === ideology ? "is-focus" : ""}`} key={ideology} onMouseEnter={() => setFocus(ideology)}>
+              <div className="politics-group" key={ideology}>
                 <span className="politics-group__name">
                   {IDEOLOGY_GROUPS[ideology]}
                   {isYours && (
@@ -538,35 +544,12 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
           })}
       </div>
 
-      {/* 5. What each party would do in power: the creeds, side by side. */}
+      {/* What each party would do in power: the creeds, side by side. */}
       <h3 className="politics-subhead">The two parties</h3>
       <div className="politics-creeds">
         <PartyCreed party={party} isYours />
         <PartyCreed party={rival} isYours={false} />
       </div>
-
-      {/* 6. What you've decided lately. */}
-      {recentDecisions.length > 0 && (
-        <div className="politics-decisions">
-          <h3 className="politics-subhead">Recent decisions</h3>
-          <ul>
-            {recentDecisions.map((entry) => {
-              const decision = getDecision(entry.decisionId);
-              const option = decision?.options.find((o) => o.id === entry.optionId);
-              if (!decision || !option) return null;
-              return (
-                <li key={entry.id}>
-                  <DecisionIcon icon={decision.icon} size={20} />
-                  <span className="politics-decisions__text">
-                    <strong>{decision.title}</strong>: {option.label}
-                  </span>
-                  <span className="politics-decisions__date">{formatDate(entry.date)}</span>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
     </>
   );
 }
@@ -738,6 +721,12 @@ export function PoliticsPanel({ state, dispatch, onOpenPanel, section, onSection
             hint: `Election in ${months} months: ${popularity >= getElectionThreshold(state.electionsWon) ? "you'd win today" : "you'd lose today"}`,
           },
           {
+            key: "voters",
+            label: "Voters",
+            icon: <VotersIcon size={22} />,
+            hint: "Who backs you, group by group, and what each party stands for",
+          },
+          {
             key: "unrest",
             label: "Unrest",
             icon: <UnrestStageIcon stage={state.unrestStage} size={22} />,
@@ -757,6 +746,7 @@ export function PoliticsPanel({ state, dispatch, onOpenPanel, section, onSection
       />
 
       {section === "support" && <SupportView state={state} dispatch={dispatch} onOpenPanel={onOpenPanel} onSection={onSection} />}
+      {section === "voters" && <VotersView state={state} dispatch={dispatch} />}
       {section === "unrest" && <UnrestView state={state} dispatch={dispatch} />}
       {section === "neighbours" && <ForeignAffairs state={state} dispatch={dispatch} />}
     </section>
