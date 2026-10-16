@@ -41,6 +41,7 @@ const KINDS: Record<Exclude<EventTopic, "paused">, Omit<EventKind, "kind">> = {
   venture: { plural: "ventures", foldable: false, action: { label: "Ventures", panel: "ventures" } },
   season: { plural: "seasons", foldable: false },
   world: { plural: "world events", foldable: false },
+  chapter: { plural: "chapters", foldable: false },
 };
 
 const OTHER: EventKind = { kind: "other", plural: "events", foldable: false };

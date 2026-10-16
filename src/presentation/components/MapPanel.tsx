@@ -55,6 +55,7 @@ interface MapPanelProps {
   expeditionIslandIds: string[]; // islands with an expedition currently in progress
   selectedIslandId: string | null;
   onSelectIsland: (islandId: string) => void;
+  venturesOpen: boolean; // islands can be chartered (see domain/chapters)
   foreignRulers: Record<string, string>; // nationId -> ruling party id, for every nation but the player's
   provinceStatus: Record<string, ProvinceStatus>; // coarse flags for the info bars — stable between flips, so the map isn't redrawn daily
   provinceOverview: ProvinceOverview[]; // today's numbers, for the tooltip only
@@ -325,6 +326,7 @@ interface MapLayersProps {
   onProvinceClick: (provinceId: string) => void;
   onProvinceKeySelect: (provinceId: string) => void;
   onIslandClick: (islandId: string) => void;
+  venturesOpen: boolean;
   onHoverProvince: Dispatch<SetStateAction<string | null>>;
 }
 
@@ -448,6 +450,7 @@ const MapLayers = memo(function MapLayers({
   onProvinceClick,
   onProvinceKeySelect,
   onIslandClick,
+  venturesOpen,
   onHoverProvince,
 }: MapLayersProps) {
   const { coastPath, provinces, otherLandmasses } = MAP_GEOMETRY;
@@ -557,17 +560,17 @@ const MapLayers = memo(function MapLayers({
         const isScouted = scoutedIslandIds.includes(land.id);
         const isExpeditionActive = expeditionIslandIds.includes(land.id);
         const isSelected = land.id === selectedIslandId;
-        const status = isScouted ? "charted" : isExpeditionActive ? "venture under way" : "uncharted: click to charter a venture";
+        const status = isScouted ? "charted" : isExpeditionActive ? "venture under way" : venturesOpen ? "uncharted: click to charter a venture" : "uncharted";
         return (
           <path
             key={land.id}
             d={land.path}
             className={[
               "map-panel__unclaimed-land",
-              "map-panel__unclaimed-land--clickable",
+              venturesOpen ? "map-panel__unclaimed-land--clickable" : "",
               isSelected ? "is-selected" : "",
             ].join(" ")}
-            onClick={() => onIslandClick(land.id)}
+            onClick={venturesOpen ? () => onIslandClick(land.id) : undefined}
           >
             <title>
               {land.name} ({status})
@@ -919,6 +922,7 @@ export const MapPanel = memo(function MapPanel({
   expeditionIslandIds,
   selectedIslandId,
   onSelectIsland,
+  venturesOpen,
   foreignRulers,
   provinceStatus,
   provinceOverview,
@@ -1192,6 +1196,7 @@ export const MapPanel = memo(function MapPanel({
             onProvinceClick={handleProvinceClick}
             onProvinceKeySelect={onSelectProvince}
             onIslandClick={handleIslandClick}
+            venturesOpen={venturesOpen}
             onHoverProvince={setHoveredProvinceId}
           />
         </svg>

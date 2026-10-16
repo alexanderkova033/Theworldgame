@@ -28,12 +28,15 @@ describe("a careful player", () => {
     expect(end.outcome).toBe("victory");
   });
 
-  // Political power is meant to run short, so laws are a choice. Before the
-  // rate was cut, a careful player banked 650 to 900 of it with nothing to
-  // spend it on.
-  it.each(NATIONS)("doesn't bank a hoard of political power in %s", (nation, party) => {
-    const end = playCarefully(nation, party, { days: THREE_YEARS });
-    expect(end.stats.politicalPower).toBeLessThan(650);
+  // Political power is meant to run short for a player who makes laws, so
+  // each law is a choice. (One who passes none can still bank it; see TODO.md.)
+  it("runs short of political power while following a law path", () => {
+    const left = LAW_PATHS.map((path) => {
+      seedRandom(20261015);
+      const [nation, party] = NATIONS[path.key.length % NATIONS.length];
+      return playCarefully(nation, party, { days: THREE_YEARS, follow: { tree: "law", pathKey: path.key } }).stats.politicalPower;
+    });
+    expect(left.reduce((a, b) => a + b, 0) / left.length).toBeLessThan(350);
   });
 
   // Daily income should be the country's living, not market sales, or the

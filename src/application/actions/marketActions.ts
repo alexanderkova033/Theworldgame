@@ -14,6 +14,7 @@ import type { MarketGood } from "../../domain/market/types";
 import { getNation } from "../../domain/nations/nationRules";
 import { getModifiers } from "../../domain/policy/policyRules";
 import { recordAction } from "./recordAction";
+import { isFeatureOpen, recordDeed } from "../../domain/chapters/chapterData";
 
 const TRADE = { treasury: "trade", food: "trade" } as const;
 
@@ -32,7 +33,7 @@ export function getMarketBuyCost(state: GameState, good: MarketGood, multiplier 
 
 export function canBuyGood(state: GameState, good: MarketGood, multiplier = 1): boolean {
   const amount = getBatchSize(good, multiplier);
-  return marketHasStock(state.market, good, amount) && state.stats.treasury >= getMarketBuyCost(state, good, multiplier);
+  return isFeatureOpen(state, "market") && marketHasStock(state.market, good, amount) && state.stats.treasury >= getMarketBuyCost(state, good, multiplier);
 }
 
 export function buyGood(state: GameState, good: MarketGood, multiplier = 1): GameState {
@@ -40,7 +41,7 @@ export function buyGood(state: GameState, good: MarketGood, multiplier = 1): Gam
   const amount = getBatchSize(good, multiplier);
   const cost = getMarketBuyCost(state, good, multiplier);
   const paid = { ...state, stats: { ...state.stats, treasury: state.stats.treasury - cost } };
-  return recordAction(state, { ...withHolding(paid, good, amount), market: withSupplyChange(state.market, good, -amount) }, TRADE);
+  return recordDeed(recordAction(state, { ...withHolding(paid, good, amount), market: withSupplyChange(state.market, good, -amount) }, TRADE), "traded");
 }
 
 export function getMarketSellRevenue(state: GameState, good: MarketGood, multiplier = 1): number {
@@ -48,7 +49,7 @@ export function getMarketSellRevenue(state: GameState, good: MarketGood, multipl
 }
 
 export function canSellGood(state: GameState, good: MarketGood, multiplier = 1): boolean {
-  return holding(state, good) >= getBatchSize(good, multiplier);
+  return isFeatureOpen(state, "market") && holding(state, good) >= getBatchSize(good, multiplier);
 }
 
 export function sellGood(state: GameState, good: MarketGood, multiplier = 1): GameState {
@@ -56,5 +57,5 @@ export function sellGood(state: GameState, good: MarketGood, multiplier = 1): Ga
   const amount = getBatchSize(good, multiplier);
   const revenue = getMarketSellRevenue(state, good, multiplier);
   const paid = { ...state, stats: { ...state.stats, treasury: state.stats.treasury + revenue } };
-  return recordAction(state, { ...withHolding(paid, good, -amount), market: withSupplyChange(state.market, good, amount) }, TRADE);
+  return recordDeed(recordAction(state, { ...withHolding(paid, good, -amount), market: withSupplyChange(state.market, good, amount) }, TRADE), "traded");
 }

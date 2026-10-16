@@ -53,7 +53,7 @@ import { NavIcon } from "./NavIcon";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import { SubTabs } from "./SubTabs";
 import { EffectList } from "./TechTree";
-import { BUDGET, BUILDINGS, MARKET, PEOPLE, type Destination, type OpenPanel, type PoliticsSection } from "../navigation";
+import { BUDGET, BUILDINGS, lockedReason, MARKET, PEOPLE, type Destination, type OpenPanel, type PoliticsSection } from "../navigation";
 import { PoliceForce } from "./WorkforcePanel";
 import { formatAmount, formatRate, formatSigned } from "../formatNumber";
 
@@ -722,12 +722,14 @@ export function PoliticsPanel({ state, dispatch, onOpenPanel, section, onSection
           {
             key: "voters",
             label: "Voters",
+            locked: lockedReason(state, "politics", "voters") ?? undefined,
             icon: <VotersIcon size={22} />,
             hint: "Who backs you, group by group, and what each party stands for",
           },
           {
             key: "unrest",
             label: "Unrest",
+            locked: lockedReason(state, "politics", "unrest") ?? undefined,
             icon: <UnrestStageIcon stage={state.unrestStage} size={22} />,
             alert: state.unrestStage === "strikes" || state.unrestStage === "riots",
             badge: stage.name,
@@ -736,6 +738,7 @@ export function PoliticsPanel({ state, dispatch, onOpenPanel, section, onSection
           {
             key: "neighbours",
             label: "Neighbours",
+            locked: lockedReason(state, "politics", "neighbours") ?? undefined,
             icon: <NeighboursIcon size={22} />,
             hint: "The neighbours' governments, and leaning on them",
           },

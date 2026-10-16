@@ -7,7 +7,8 @@ import { buildHousing } from "../../src/application/actions/buildHousing";
 import { enactLaw } from "../../src/application/actions/enactLaw";
 import { canRepayLoan, repayLoan, takeLoan } from "../../src/application/actions/loanActions";
 import { buyGood, canBuyGood, canSellGood, sellGood } from "../../src/application/actions/marketActions";
-import { canHoldRally, holdRally } from "../../src/application/actions/politicalActions";
+import { canCourtGroup, canCrackDown, canHoldRally, courtGroup, crackDown, holdRally } from "../../src/application/actions/politicalActions";
+import { getFactionWeights } from "../../src/domain/parties/factionRules";
 import { repairBuilding } from "../../src/application/actions/repairBuilding";
 import { focusResearch } from "../../src/application/actions/researchActions";
 import { resolveDecision } from "../../src/application/actions/resolveDecision";
@@ -105,6 +106,14 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
     if (s.stats.food < (sloppy ? 3000 : 20000) && canBuyGood(s, "food", 5)) s = buyGood(s, "food", 5);
     if (s.debt > 0 && s.stats.treasury > 2500 && canRepayLoan(s)) s = repayLoan(s);
     if (s.stats.popularity < getElectionThreshold(s) + (sloppy ? 0 : 6) && canHoldRally(s)) s = holdRally(s);
+    // Once open, a careful player also courts the biggest group when support
+    // slips, and cracks down on strikes or riots.
+    if (!sloppy && s.stats.popularity < getElectionThreshold(s) + 6 && canCourtGroup(s)) {
+      const weights = getFactionWeights(s.nationId);
+      const biggest = (Object.keys(weights) as Array<keyof typeof weights>).sort((a, b) => weights[b] - weights[a])[0];
+      if (s.factionApproval[biggest] < 70) s = courtGroup(s, biggest);
+    }
+    if (!sloppy && (s.unrestStage === "strikes" || s.unrestStage === "riots") && canCrackDown(s)) s = crackDown(s);
     if (s.pendingDecisionId) {
       const decision = getDecision(s.pendingDecisionId)!;
       const best = [...decision.options].sort((a, b) => (b.effects.popularityDelta ?? 0) - (a.effects.popularityDelta ?? 0))[0];

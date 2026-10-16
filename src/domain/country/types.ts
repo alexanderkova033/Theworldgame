@@ -13,6 +13,7 @@ import type { ResearchCategory, ResearchOutcomeTier } from "../research/types";
 import type { ResourceBundle } from "../resources/types";
 import type { UnrestStage } from "../unrest/types";
 import type { Workforce } from "../workforce/types";
+import type { ChapterProgress } from "../chapters/chapterData";
 
 export interface GameDate {
   year: number;
@@ -70,7 +71,8 @@ export type EventTopic =
   | "repaired"
   | "venture"
   | "season"
-  | "world";
+  | "world"
+  | "chapter"; // a chapter opening or completed (see domain/chapters)
 
 export interface GameEvent {
   id: string;
@@ -149,4 +151,5 @@ export interface GameState {
   pendingDecisionId: string | null; // a decision popup waiting on the player — see domain/decisions
   dangerPauses: string[]; // "season:danger" keys already paused for this season — see application/playDay.ts
   decisionHistory: DecisionHistoryEntry[];
+  chapters: ChapterProgress; // which systems are open yet, and the briefings (see domain/chapters)
 }

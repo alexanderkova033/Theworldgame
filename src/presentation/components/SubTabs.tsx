@@ -7,6 +7,7 @@
 // expects.
 import "./SubTabs.css";
 import { useRef, type KeyboardEvent, type ReactNode } from "react";
+import { LockIcon } from "./CauseIcon";
 
 export interface SubTab {
   key: string;
@@ -15,6 +16,7 @@ export interface SubTab {
   badge?: ReactNode; // a short status: progress, a count, a rate
   alert?: boolean; // needs attention — drawn with a "!" as well as colour
   hint?: string; // tooltip
+  locked?: string; // still shut: when it opens (see domain/chapters)
 }
 
 export function SubTabs({ tabs, active, onSelect, label }: { tabs: SubTab[]; active: string; onSelect: (key: string) => void; label: string }) {
@@ -43,15 +45,16 @@ export function SubTabs({ tabs, active, onSelect, label }: { tabs: SubTab[]; act
           role="tab"
           aria-selected={tab.key === active}
           tabIndex={tab.key === active ? 0 : -1}
-          className={`sub-tab ${tab.key === active ? "is-active" : ""} ${tab.alert ? "is-alert" : ""}`}
-          title={tab.hint}
+          className={`sub-tab ${tab.key === active ? "is-active" : ""} ${tab.alert ? "is-alert" : ""} ${tab.locked ? "is-locked" : ""}`}
+          title={tab.locked ? `${tab.label}: ${tab.locked}` : tab.hint}
+          disabled={!!tab.locked}
           onClick={() => {
             // A new section starts at its top, not where the last one was scrolled to.
             if (tab.key !== active) listRef.current?.closest(".modal__body")?.scrollTo({ top: 0 });
             onSelect(tab.key);
           }}
         >
-          {tab.icon}
+          {tab.locked ? <LockIcon size={18} /> : tab.icon}
           <span className="sub-tab__label">{tab.label}</span>
           {tab.alert && (
             <span className="sub-tab__alert" aria-label="Needs attention">

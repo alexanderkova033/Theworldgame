@@ -5,6 +5,7 @@ import { applyFactionEffects, applyUniformDelta, getFactionWeights } from "../..
 import { deductResource } from "../../domain/resources/resourceRules";
 import { ONE_OFF, recordAction } from "./recordAction";
 import { describePolicyImpact } from "../describePolicyImpact";
+import { isFeatureOpen } from "../../domain/chapters/chapterData";
 
 export { canEnactLaw };
 
@@ -19,7 +20,7 @@ const FAILED_VOTE_POPULARITY_PENALTY = 5;
 // the node stays open to try again later; only the popularity hit for the
 // failed attempt is permanent.
 export function enactLaw(state: GameState, lawId: string): GameState {
-  if (!canEnactLaw(state, lawId)) return state;
+  if (!isFeatureOpen(state, "laws") || !canEnactLaw(state, lawId)) return state;
   const law = getLawNode(lawId);
   if (!law) return state;
 

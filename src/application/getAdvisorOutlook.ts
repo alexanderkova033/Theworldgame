@@ -1,8 +1,7 @@
 // Use case: "what needs you now" — the two or three most urgent problems,
 // read from calculations the rest of the game already makes (heating,
 // food, labour, housing, repairs, debt, elections, construction, research).
-// When nothing is wrong, the next early-game objective instead, worked out
-// from the state itself — there's no separate tutorial progress to save.
+// The early-game objectives live in the chapters now (application/chapters.ts).
 import {
   ADVISOR_COAL_CRITICAL_DAYS,
   ADVISOR_ELECTION_CRITICAL_MONTHS,
@@ -18,6 +17,7 @@ import {
   ADVISOR_WINTER_PREP_CRITICAL_DAYS,
   ADVISOR_WINTER_PREP_DAYS,
 } from "../domain/constants";
+import { isFeatureOpen } from "../domain/chapters/chapterData";
 import type { GameState } from "../domain/country/types";
 import { getLabourSituation } from "../domain/labour/labourRules";
 import { isDebtDangerous } from "../domain/loans/loanRules";
@@ -55,18 +55,8 @@ export interface AdvisorAlert {
   stage?: GameState["unrestStage"]; // for the unrest alert
 }
 
-export type ObjectiveKind = "winter" | "farm" | "homes" | "election";
-
-export interface AdvisorObjective {
-  kind: ObjectiveKind;
-  text: string;
-  detail: string;
-  done: boolean[]; // one tick per objective, in order
-}
-
 export interface AdvisorOutlook {
   alerts: AdvisorAlert[]; // most urgent first, at most ADVISOR_MAX_ALERTS
-  objective: AdvisorObjective | null; // only when there are no alerts; null once every objective is met
 }
 
 // Most urgent first when equally critical — the order the problems are
@@ -232,7 +222,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
   const idle = RESEARCH_CATEGORIES.filter(
     (category) => !state.researchFocus[category] && RESEARCH_NODES.some((n) => n.category === category && getResearchNodeStatus(state, n) === "available"),
   );
-  if (idle.length > 0) {
+  if (idle.length > 0 && isFeatureOpen(state, "research")) {
     alerts.push({
       kind: "research",
       text: `Research idle: ${idle.length}`,
@@ -246,49 +236,6 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     .slice(0, ADVISOR_MAX_ALERTS);
 }
 
-// The opening steps, each worked out from the state: through the first
-// winter, a first farm, first homes, the first election.
-function getObjective(state: GameState): AdvisorObjective | null {
-  const builtByYou = (type: string) => state.placedBuildings.some((b) => b.type === type && !b.id.startsWith("starting-"));
-  const building = (type: string) => state.projects.some((p) => p.type === type);
-  const done = [state.date.year > 1 || state.date.month >= 3, builtByYou("farm"), builtByYou("housing"), state.electionsWon > 0];
-  const next = done.indexOf(false);
-  if (next === -1) return null;
-
-  switch (next) {
-    case 0:
-      return {
-        kind: "winter",
-        text: "Survive the first winter",
-        detail: "Keep the homes heated and people fed until spring (March).",
-        done,
-      };
-    case 1:
-      return {
-        kind: "farm",
-        text: building("farm") ? "Farm being built" : "Build a farm",
-        detail: "More farms feed a growing country, and next winter's farms yield little.",
-        done,
-      };
-    case 2:
-      return {
-        kind: "homes",
-        text: building("housing") ? "Homes being built" : "Build homes",
-        detail: "The country grows; every family needs a roof. More people also means more workers.",
-        done,
-      };
-    default:
-      return {
-        kind: "election",
-        text: `Win the election (${monthsUntilNextElection(state.date)} mo)`,
-        detail: `Hold ${getElectionThreshold(state)}% support or more on election day.`,
-        done,
-      };
-  }
-}
-
 export function getAdvisorOutlook(state: GameState, production: DailyProductionSummary, heating: HeatingOutlook, forecasts: Forecasts): AdvisorOutlook {
-  const alerts = getAlerts(state, production, heating, forecasts);
-  const objective = alerts.length === 0 ? getObjective(state) : null;
-  return { alerts, objective };
+  return { alerts: getAlerts(state, production, heating, forecasts) };
 }

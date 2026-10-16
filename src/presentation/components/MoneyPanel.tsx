@@ -6,7 +6,7 @@ import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { isDebtDangerous } from "../../domain/loans/loanRules";
 import { formatSigned } from "../formatNumber";
-import type { MoneySection, OpenPanel } from "../navigation";
+import { lockedReason, type MoneySection, type OpenPanel } from "../navigation";
 import { BudgetPanel } from "./BudgetPanel";
 import { DebtPanel } from "./DebtPanel";
 import { MarketPanel } from "./MarketPanel";
@@ -43,6 +43,7 @@ export function MoneyPanel({ state, production, dispatch, onOpenPanel, section, 
           {
             key: "market",
             label: "Market",
+            locked: lockedReason(state, "money", "market") ?? undefined,
             icon: <NavIcon type="market" size={22} />,
             hint: "Buy and sell goods",
           },

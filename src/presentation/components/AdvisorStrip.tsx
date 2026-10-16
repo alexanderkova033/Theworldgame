@@ -1,8 +1,7 @@
 // "What needs you now": a slim row under the tabs with the two or three most
-// urgent problems, each a chip that opens the tab that fixes it. With
-// nothing wrong it shows the next early-game objective instead, with a tick
-// per step. Everything comes from getAdvisorOutlook, computed once per day
-// in App.tsx — this only draws it.
+// urgent problems, each a chip that opens the tab that fixes it. Everything
+// comes from getAdvisorOutlook, computed once per day in App.tsx; this only
+// draws it. The chapter objectives have their own box on the map.
 import "./AdvisorStrip.css";
 import { useEffect, useState, type ReactNode } from "react";
 import type { HeatingOutlook } from "../../application/getHeatingOutlook";
@@ -11,13 +10,13 @@ import { CURRENCY_SYMBOL, QUICK_FIX_CONFIRM_SHARE } from "../../domain/constants
 import type { GameState } from "../../domain/country/types";
 import { playConfirm } from "../audio/sound";
 import { formatAmount } from "../formatNumber";
-import type { AdvisorAlertKind, AdvisorOutlook, ObjectiveKind } from "../../application/getAdvisorOutlook";
-import { BuildingGlyph, FlameIcon, LoanIcon, UnrestStageIcon } from "./CauseIcon";
+import type { AdvisorAlertKind, AdvisorOutlook } from "../../application/getAdvisorOutlook";
+import { BuildingGlyph, LoanIcon, UnrestStageIcon } from "./CauseIcon";
 import { NavIcon } from "./NavIcon";
 import { WrenchIcon } from "./RepairsPanel";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
-import { alertDestination, objectiveDestination, type OpenPanel } from "../navigation";
+import { alertDestination, type OpenPanel } from "../navigation";
 
 const ICON_SIZE = 18;
 
@@ -49,22 +48,6 @@ const ALERT_ICONS: Record<AdvisorAlertKind, () => ReactNode> = {
 // Laws and Research trees mark what would help with it).
 export function AdvisorAlertIcon({ kind }: { kind: AdvisorAlertKind }) {
   return <>{ALERT_ICONS[kind]()}</>;
-}
-
-const OBJECTIVE_ICONS: Record<ObjectiveKind, () => ReactNode> = {
-  winter: () => <FlameIcon size={ICON_SIZE} />,
-  farm: () => <BuildingGlyph type="farm" size={ICON_SIZE} />,
-  homes: () => <BuildingGlyph type="housing" size={ICON_SIZE} />,
-  election: () => <NavIcon type="politics" size={ICON_SIZE} />,
-};
-
-function FlagIcon() {
-  return (
-    <svg viewBox="-10 -10 20 20" width={16} height={16} aria-hidden="true">
-      <line x1={-6} y1={-8.5} x2={-6} y2={9} stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" />
-      <path d="M-5,-8 L7,-5 L-5,-1.5 Z" fill="currentColor" />
-    </svg>
-  );
 }
 
 function CheckIcon() {
@@ -128,7 +111,7 @@ interface AdvisorStripProps {
 }
 
 export function AdvisorStrip({ outlook, state, heating, dispatch, onOpenPanel }: AdvisorStripProps) {
-  const { alerts, objective } = outlook;
+  const { alerts } = outlook;
 
   return (
     <div className="advisor-strip" role="region" aria-label="What needs you now">
@@ -140,7 +123,7 @@ export function AdvisorStrip({ outlook, state, heating, dispatch, onOpenPanel }:
           type="button"
           className={`advisor-chip ${alert.critical ? "is-critical" : "is-warning"}`}
           title={alert.detail}
-          onClick={() => { const to = alertDestination(alert); onOpenPanel(to.panel, to.section); }}
+          onClick={() => { const to = alertDestination(alert, state); onOpenPanel(to.panel, to.section); }}
         >
           {alert.critical && (
             <span className="advisor-chip__alert" aria-label="Urgent">
@@ -157,24 +140,7 @@ export function AdvisorStrip({ outlook, state, heating, dispatch, onOpenPanel }:
         );
       })}
 
-      {objective && (
-        <button type="button" className="advisor-chip is-objective" title={objective.detail} onClick={() => { const to = objectiveDestination(objective); onOpenPanel(to.panel, to.section); }}>
-          <span className="advisor-chip__flag">
-            <FlagIcon />
-          </span>
-          <span className="advisor-chip__icon">{OBJECTIVE_ICONS[objective.kind]()}</span>
-          <span>{objective.text}</span>
-          <span className="advisor-chip__ticks" aria-label={`${objective.done.filter(Boolean).length} of ${objective.done.length} done`}>
-            {objective.done.map((isDone, i) => (
-              <span key={i} className={`advisor-chip__tick ${isDone ? "is-done" : ""}`} aria-hidden="true">
-                {isDone && <CheckIcon />}
-              </span>
-            ))}
-          </span>
-        </button>
-      )}
-
-      {alerts.length === 0 && !objective && (
+      {alerts.length === 0 && (
         <span className="advisor-chip is-quiet">
           <CheckIcon />
           All quiet

@@ -17,6 +17,7 @@ import { createProvinceStates } from "../domain/provinces/provincePopulation";
 import type { PlacedBuilding } from "../domain/provinces/types";
 import { emptyLedger } from "../domain/ledger/ledgerRules";
 import { emptyWorkforce } from "../domain/workforce/workforceRules";
+import { newChapterProgress } from "../domain/chapters/chapterData";
 
 // The reign opens on New Year's Day, in the dead of winter (see getSeason):
 // farms barely yield, so the very first thing the player sees is food
@@ -147,5 +148,6 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     pendingDecisionId: null,
     dangerPauses: [],
     decisionHistory: [],
+    chapters: newChapterProgress(),
   };
 }

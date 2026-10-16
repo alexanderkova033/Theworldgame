@@ -37,9 +37,13 @@ import { ResearchPanel } from "./presentation/components/ResearchPanel";
 import { StartScreen } from "./presentation/components/StartScreen";
 import { Toasts } from "./presentation/components/Toasts";
 import { TopBar } from "./presentation/components/TopBar";
-import { FIRST_SECTIONS, politicsSectionFor, type PanelKey, type Section, type Sections } from "./presentation/navigation";
+import { FIRST_SECTIONS, lockedReason, politicsSectionFor, reachable, type PanelKey, type Section, type Sections } from "./presentation/navigation";
 import { MoneyPanel } from "./presentation/components/MoneyPanel";
 import { useGameClock } from "./presentation/hooks/useGameClock";
+import { isFeatureOpen } from "./domain/chapters/chapterData";
+import { readBriefing } from "./application/chapters";
+import { ChapterBriefing } from "./presentation/components/ChapterBriefing";
+import { Objectives } from "./presentation/components/Objectives";
 
 const SPEED_KEYS: Record<string, GameSpeed> = { "1": 1, "2": 2, "3": 3, "5": 5 };
 
@@ -214,6 +218,15 @@ function App() {
     wasGameOver.current = state?.isGameOver ?? false;
   }, [state?.isGameOver]);
 
+  // A chapter opened (see application/chapters.ts): its letter arrives, and
+  // whatever tab is open closes for it.
+  const unreadBriefings = state?.chapters.unread.length ?? 0;
+  useEffect(() => {
+    if (unreadBriefings === 0) return;
+    playLetter();
+    setOpenModal(null);
+  }, [unreadBriefings]);
+
   // A decision popped up (see simulateDay.ts step 14): a letter arrives,
   // and whatever tab is open closes so it isn't competing with the popup
   // for attention.
@@ -277,7 +290,9 @@ function App() {
   // Non-null past the `!state` guard above — it's memoized from that same value.
   const dailyProduction = production!;
 
-  function openPanel(panel: PanelKey, section?: Section) {
+  function openPanel(wanted: PanelKey, wantedSection?: Section) {
+    // A shut window or section opens somewhere open instead (see navigation.ts).
+    const { panel, section } = reachable(state!, { panel: wanted, section: wantedSection });
     if (panel === "build" || panel === "money" || panel === "politics") {
       // Politics with no section given opens on whatever is most urgent.
       const next = section ?? (panel === "politics" ? politicsSectionFor(state!) : undefined);
@@ -296,6 +311,7 @@ function App() {
   return (
     <div className="game-layout">
       <TopBar
+        locked={{ laws: lockedReason(state, "laws") ?? undefined, research: lockedReason(state, "research") ?? undefined }}
         electionThreshold={getElectionThreshold(state)}
         nationName={nation.name}
         partyName={party.name}
@@ -333,6 +349,7 @@ function App() {
             expeditionIslandIds={expeditionIslandIds}
             selectedIslandId={selectedIslandId}
             onSelectIsland={handleSelectIsland}
+            venturesOpen={isFeatureOpen(state, "ventures")}
             foreignRulers={foreignRulers}
             provinceStatus={provinceStatus}
             provinceOverview={provinceOverview}
@@ -346,6 +363,7 @@ function App() {
                 <ProvinceCard state={state} dispatch={dispatch} province={province} onOpenPanel={openPanel} onClose={closeProvinceCard} />
               ) : null;
             })()}
+          <Objectives state={state} />
         </div>
       </main>
 
@@ -417,6 +435,16 @@ function App() {
 
       <Toasts events={state.events} monthlyReports={state.monthlyReports} isPaused={state.isPaused} onOpenPanel={openPanel} />
 
+      {/* A chapter's briefing comes first; a decision letter waits behind it. */}
+      <ChapterBriefing
+        state={state}
+        onRead={(id) => {
+          dispatch((s) => readBriefing(s, id));
+          // The opening letter is read before the clock first starts.
+          if (id !== "first-winter") resume();
+        }}
+      />
+      {state.chapters.unread.length === 0 && (
       <DecisionModal
         state={state}
         onResolve={(decisionId, optionId) => {
@@ -428,6 +456,7 @@ function App() {
           resume();
         }}
       />
+      )}
     </div>
   );
 }

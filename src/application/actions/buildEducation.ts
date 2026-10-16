@@ -13,4 +13,5 @@ export const buildEducation = createBuildAction({
   resourceType: "wood",
   resourceCost: EDUCATION_WOOD_COST,
   maxPerProvince: MAX_EDUCATION_PER_PROVINCE,
+  feature: "research", // schools serve research, so they open with it
 });

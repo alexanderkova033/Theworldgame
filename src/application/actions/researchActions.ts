@@ -2,10 +2,14 @@ import { generateId } from "../../domain/country/id";
 import type { GameState } from "../../domain/country/types";
 import { describePolicyImpact } from "../describePolicyImpact";
 import { applyFactionEffects, getFactionWeights } from "../../domain/parties/factionRules";
-import { canFocusResearch, getOnlyNextStep, getResearchNode, rollResearchOutcome, scaleOneTimeEffects } from "../../domain/research/researchRules";
+import { canFocusResearch as canFocusOn, getOnlyNextStep, getResearchNode, rollResearchOutcome, scaleOneTimeEffects } from "../../domain/research/researchRules";
 import type { ResearchCategory } from "../../domain/research/types";
+import { isFeatureOpen } from "../../domain/chapters/chapterData";
 
-export { canFocusResearch };
+// Research must be open (see domain/chapters) as well as the step itself.
+export function canFocusResearch(state: GameState, researchId: string): boolean {
+  return isFeatureOpen(state, "research") && canFocusOn(state, researchId);
+}
 
 // Point a research area at a node. That's the whole decision — the area's
 // buildings and scientists do the rest (see advancePolicies.ts). Switching

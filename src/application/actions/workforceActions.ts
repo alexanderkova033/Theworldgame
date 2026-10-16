@@ -6,9 +6,10 @@ import type { GameState } from "../../domain/country/types";
 import type { ResearchCategory } from "../../domain/research/types";
 import { getPoliceCap, getScientistCap, getTotalScientists } from "../../domain/workforce/workforceRules";
 import { recordAction } from "./recordAction";
+import { isFeatureOpen } from "../../domain/chapters/chapterData";
 
 export function canHireScientist(state: GameState): boolean {
-  return state.stats.treasury >= SCIENTIST_HIRE_COST && getTotalScientists(state.workforce) < getScientistCap(state.educationLevel);
+  return isFeatureOpen(state, "research") && state.stats.treasury >= SCIENTIST_HIRE_COST && getTotalScientists(state.workforce) < getScientistCap(state.educationLevel);
 }
 
 export function hireScientist(state: GameState, category: ResearchCategory): GameState {
@@ -29,7 +30,7 @@ export function dismissScientist(state: GameState, category: ResearchCategory): 
 }
 
 export function canHirePolice(state: GameState): boolean {
-  return state.stats.treasury >= POLICE_HIRE_COST && state.workforce.police < getPoliceCap(state.stats.population);
+  return isFeatureOpen(state, "unrest") && state.stats.treasury >= POLICE_HIRE_COST && state.workforce.police < getPoliceCap(state.stats.population);
 }
 
 export function hirePolice(state: GameState): GameState {

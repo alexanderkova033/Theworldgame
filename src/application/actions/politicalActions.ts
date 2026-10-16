@@ -18,6 +18,7 @@ import type { Ideology } from "../../domain/parties/types";
 import { crackDownProvinces } from "../../domain/provinces/provinceOrder";
 import { applyCrackdown } from "../../domain/unrest/unrestRules";
 import { ONE_OFF, recordAction } from "./recordAction";
+import { isFeatureOpen, recordDeed } from "../../domain/chapters/chapterData";
 
 function logged(state: GameState, message: string, severity: GameEvent["severity"] = "info"): GameEvent[] {
   return [{ id: generateId("event"), date: state.date, message, severity, topic: "politics" }, ...state.events];
@@ -44,13 +45,13 @@ export function holdRally(state: GameState): GameState {
 }
 
 export function canCourtGroup(state: GameState): boolean {
-  return state.stats.politicalPower >= COURT_POLITICAL_POWER_COST && state.stats.treasury >= COURT_TREASURY_COST;
+  return isFeatureOpen(state, "voters") && state.stats.politicalPower >= COURT_POLITICAL_POWER_COST && state.stats.treasury >= COURT_TREASURY_COST;
 }
 
 export function courtGroup(state: GameState, ideology: Ideology): GameState {
   if (!canCourtGroup(state)) return state;
   const factionApproval = { ...state.factionApproval, [ideology]: Math.min(100, state.factionApproval[ideology] + COURT_SUPPORT) };
-  return recordAction(state, {
+  return recordDeed(recordAction(state, {
     ...state,
     factionApproval,
     stats: {
@@ -60,11 +61,11 @@ export function courtGroup(state: GameState, ideology: Ideology): GameState {
       treasury: state.stats.treasury - COURT_TREASURY_COST,
     },
     events: logged(state, `You court the ${ideology} vote with favours and promises: their support +${COURT_SUPPORT}.`),
-  }, ONE_OFF);
+  }, ONE_OFF), "courted");
 }
 
 export function canCrackDown(state: GameState): boolean {
-  return state.stats.politicalPower >= CRACKDOWN_POLITICAL_POWER_COST;
+  return isFeatureOpen(state, "unrest") && state.stats.politicalPower >= CRACKDOWN_POLITICAL_POWER_COST;
 }
 
 export function crackDown(state: GameState): GameState {

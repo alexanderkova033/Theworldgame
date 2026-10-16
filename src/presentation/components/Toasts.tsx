@@ -31,6 +31,8 @@ interface Toast {
 // Every toast's button goes where the event's problem is dealt with (see
 // eventKinds.ts) — the event log otherwise.
 function toastFromEvent(event: GameEvent): Toast | null {
+  // A chapter arrives as its own briefing letter; a toast would only repeat it.
+  if (event.topic === "chapter") return null;
   const { kind, action } = getEventKind(event);
   if (kind === "breakdown") {
     return {

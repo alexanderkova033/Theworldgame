@@ -229,3 +229,13 @@ export function VotersIcon({ size }: { size: number }) {
     </svg>
   );
 }
+
+// A padlock: something not open yet (a building, a window, a section).
+export function LockIcon({ size }: { size: number }) {
+  return (
+    <svg viewBox="-10 -10 20 20" width={size} height={size} aria-hidden="true">
+      <rect x={-4.5} y={-1} width={9} height={7.5} rx={1.3} fill="currentColor" />
+      <path d="M-2.8,-1 L-2.8,-3.8 A2.8,2.8 0 0 1 2.8,-3.8 L2.8,-1" fill="none" stroke="currentColor" strokeWidth={1.7} />
+    </svg>
+  );
+}

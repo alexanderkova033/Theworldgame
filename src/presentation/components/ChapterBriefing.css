@@ -1,0 +1,69 @@
+/* A chapter's briefing: a letter, what it opens, and its objectives. */
+.briefing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.briefing__letter {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-left: 4px solid var(--gilt);
+  background: var(--paper-raised);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.briefing__opens {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-weight: 700;
+  color: var(--success);
+}
+
+.briefing__head {
+  margin: 0;
+  font-style: normal;
+  color: var(--window-ink);
+}
+
+.briefing__objectives {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.briefing__objectives li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.briefing__objectives li.is-done {
+  color: var(--ink-muted);
+  text-decoration: line-through;
+}
+
+.briefing__box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 1.5px solid var(--rule-dark);
+  border-radius: 3px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--success);
+  background: var(--paper-raised);
+}
+
+.briefing__go {
+  align-self: flex-end;
+  padding: 0.45rem 1.4rem;
+}

@@ -58,6 +58,8 @@ import { BuildingIcon } from "./BuildingIcon";
 import { WrenchIcon } from "./RepairsPanel";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
+import { LockIcon } from "./CauseIcon";
+import { chapterFor, isFeatureOpen } from "../../domain/chapters/chapterData";
 
 interface ActionsPanelProps {
   state: GameState;
@@ -80,15 +82,6 @@ function HourglassIcon() {
   return (
     <svg viewBox="-10 -10 20 20" width={12} height={12}>
       <path d="M-5,-7 L5,-7 L5,-5.5 L1.2,0 L5,5.5 L5,7 L-5,7 L-5,5.5 L-1.2,0 L-5,-5.5 Z" fill="currentColor" />
-    </svg>
-  );
-}
-
-function LockIcon() {
-  return (
-    <svg viewBox="-10 -10 20 20" width={18} height={18}>
-      <rect x={-4.5} y={-1} width={9} height={7.5} rx={1.3} fill="currentColor" />
-      <path d="M-2.8,-1 L-2.8,-3.8 A2.8,2.8 0 0 1 2.8,-3.8 L2.8,-1" fill="none" stroke="currentColor" strokeWidth={1.7} />
     </svg>
   );
 }
@@ -257,7 +250,8 @@ const BUILD_ITEMS: BuildItem[] = [
 
 // Why this building can't go up right now — the first thing in the way,
 // in words. Null when it can.
-function blockedReason(item: BuildItem, cost: number, state: GameState, provinceName: string, count: number, max: number, unlockName: string | undefined, isLocked: boolean): string | null {
+function blockedReason(item: BuildItem, cost: number, state: GameState, provinceName: string, count: number, max: number, unlockName: string | undefined, isLocked: boolean, shutUntil?: string): string | null {
+  if (shutUntil) return `Locked. ${shutUntil}.`;
   if (isLocked) return `Locked. Research “${unlockName ?? "a new technique"}” first.`;
   if (count >= max) return `No room: all ${max} are built or underway in ${provinceName}.`;
   const moneyShort = upfront(cost) - state.stats.treasury;
@@ -324,7 +318,10 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
           <h3 className="build-group__title">{group.title}</h3>
           <ul className="build-list">
             {BUILD_ITEMS.filter((item) => item.group === group.key).map((item) => {
-              const isLocked = item.unlockedBy !== undefined && !isBuildingUnlocked(state.enactedResearchIds, item.type);
+              // Shut until a research step (granaries, canneries) or a chapter (schools) opens it.
+              const feature = item.action.config.feature;
+              const shutUntil = feature && !isFeatureOpen(state, feature) ? chapterFor(feature).until : undefined;
+              const isLocked = shutUntil !== undefined || (item.unlockedBy !== undefined && !isBuildingUnlocked(state.enactedResearchIds, item.type));
               const count = countBuildingsInProvince(state, item.type, selectedProvinceId);
               const max = item.action.maxPerProvince;
               const canBuild = !isLocked && item.action.canBuild(state, selectedProvinceId);
@@ -343,7 +340,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
               const plan = !isLocked && !canBuild ? planBuyAndBuild(state, item.action, selectedProvinceId) : null;
               const reason = plan
                 ? `Need ${Math.ceil(upfront(item.resourceCost) - state.resources[item.resourceType])} more ${item.resourceType}. Buy & build gets ${Math.round(plan.amount)} for ${formatAmount(Math.round(plan.goodsCost))} ${CURRENCY_SYMBOL}.`
-                : blockedReason(item, cost, state, provinceName, count, max, unlockName, isLocked);
+                : blockedReason(item, cost, state, provinceName, count, max, unlockName, isLocked, shutUntil);
               const workers = item.type in jobsPer ? jobsPer[item.type as JobBuilding] : 0;
 
               return (
@@ -354,7 +351,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
                     </svg>
                     {isLocked && (
                       <span className="build-row__lock">
-                        <LockIcon />
+                        <LockIcon size={18} />
                       </span>
                     )}
                   </span>

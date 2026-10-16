@@ -19,6 +19,7 @@ import { emptyLedger } from "../../domain/ledger/ledgerRules";
 import { emptyResourceBundle } from "../../domain/resources/resourceRules";
 import { getStageForStability } from "../../domain/unrest/unrestRules";
 import { emptyWorkforce } from "../../domain/workforce/workforceRules";
+import { allChaptersOpen } from "../../domain/chapters/chapterData";
 
 // GameState has grown fields release over release (debt, researchOutcomes,
 // resourceDemand, ...), and a save is just a blind JSON round-trip with no
@@ -114,6 +115,8 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     dangerPauses: raw.dangerPauses ?? [],
     decisionHistory: raw.decisionHistory ?? [],
     provinces: raw.provinces ?? {},
+    // Games saved before chapters existed keep every system open.
+    chapters: raw.chapters ?? allChaptersOpen(),
   };
   // Saves from before provinces had people: everyone lives where the homes are.
   if (!raw.provinces) {

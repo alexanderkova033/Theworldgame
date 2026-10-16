@@ -15,6 +15,7 @@ import { isMuted, setMuted } from "../audio/sound";
 import { NavIcon } from "./NavIcon";
 import { StatIcon } from "./StatIcon";
 import { ResourceTicker } from "./ResourceTicker";
+import { LockIcon } from "./CauseIcon";
 
 const SPEEDS: GameSpeed[] = [1, 2, 3, 5];
 
@@ -130,6 +131,7 @@ function SpeakerIcon({ muted }: { muted: boolean }) {
 }
 
 interface TopBarProps {
+  locked: Partial<Record<PanelKey, string>>; // tabs still shut, and when they open (see domain/chapters)
   electionThreshold: number; // support needed to win the next election
   nationName: string;
   partyName: string;
@@ -157,6 +159,7 @@ interface TopBarProps {
 }
 
 export function TopBar({
+  locked,
   electionThreshold,
   nationName,
   partyName,
@@ -245,13 +248,15 @@ export function TopBar({
           {TABS.map((tab) => (
             <button
               key={tab.key}
-              className={`top-bar__tab ${activePanel === tab.key ? "is-active" : ""}`}
+              className={`top-bar__tab ${activePanel === tab.key ? "is-active" : ""} ${locked[tab.key] ? "is-locked" : ""}`}
               onClick={() => onOpenPanel(tab.key)}
+              disabled={!!locked[tab.key]}
+              title={locked[tab.key] ? `${tab.label}: ${locked[tab.key]}` : undefined}
               aria-current={activePanel === tab.key ? "true" : undefined}
               aria-label={tab.key === "reports" && reportsBadgeCount > 0 ? `${tab.label}, ${reportsBadgeCount} unread` : tab.label}
             >
               <span className="top-bar__tab-icon">
-                {tab.icon()}
+                {locked[tab.key] ? <LockIcon size={18} /> : tab.icon()}
                 {tab.key === "reports" && reportsBadgeCount > 0 && (
                   <span className="top-bar__tab-badge" aria-hidden="true">
                     {reportsBadgeCount > 9 ? "9+" : reportsBadgeCount}

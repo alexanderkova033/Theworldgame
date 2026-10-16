@@ -9,9 +9,10 @@ import { applyPressure, getPressureStrength } from "../../domain/diplomacy/diplo
 import { getNation } from "../../domain/nations/nationRules";
 import { getParty } from "../../domain/parties/partyRules";
 import { getModifiers } from "../../domain/policy/policyRules";
+import { isFeatureOpen, recordDeed } from "../../domain/chapters/chapterData";
 
 export function canPressureGovernment(state: GameState, nationId: string): boolean {
-  return nationId in state.foreignPolitics && state.stats.politicalPower >= PRESSURE_POLITICAL_POWER_COST;
+  return isFeatureOpen(state, "neighbours") && nationId in state.foreignPolitics && state.stats.politicalPower >= PRESSURE_POLITICAL_POWER_COST;
 }
 
 export function pressureGovernment(state: GameState, nationId: string, partyId: string): GameState {
@@ -27,10 +28,10 @@ export function pressureGovernment(state: GameState, nationId: string, partyId: 
       ? `You lean on ${nation.name} in favour of the ${party.name}: support +${strength}.`
       : `Your meddling in ${nation.name} backfires. A weak government at home makes the ${party.name} look like your puppet (${strength}).`;
 
-  return {
+  return recordDeed({
     ...state,
     stats: { ...state.stats, politicalPower: state.stats.politicalPower - PRESSURE_POLITICAL_POWER_COST },
     foreignPolitics: { ...state.foreignPolitics, [nationId]: applyPressure(gov, partyId, strength) },
     events: [{ id: generateId("event"), date: state.date, message, severity: strength >= 0 ? "info" : "warning", topic: "politics" }, ...state.events],
-  };
+  }, "pressed");
 }

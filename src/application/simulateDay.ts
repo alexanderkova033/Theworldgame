@@ -16,6 +16,7 @@
 //   8 newMonth    world events, the rival, the neighbours, the season
 //   9 election    a general election, every so often
 //   - a decision may arrive (here)
+//   - a chapter may open, or be completed (chapters.ts)
 import { advanceDay, isFirstDayOfMonth } from "../domain/country/calendar";
 import type { CountryStats, DailyDelta, GameState } from "../domain/country/types";
 import { MAX_EVENT_LOG_LENGTH } from "../domain/constants";
@@ -39,6 +40,7 @@ import { keepOrder } from "./day/order";
 import { movePeople } from "./day/people";
 import { moveSupport } from "./day/support";
 import { generateMonthlyReport } from "./generateMonthlyReport";
+import { advanceChapters } from "./chapters";
 
 export function simulateDay(state: GameState): GameState {
   const day = beginDay(state);
@@ -175,7 +177,7 @@ export function simulateDay(state: GameState): GameState {
     ];
   }
 
-  return {
+  return advanceChapters({
     ...working,
     date,
     isPaused: isGameOver || pendingDecisionId ? true : working.isPaused,
@@ -205,5 +207,5 @@ export function simulateDay(state: GameState): GameState {
     pendingLedger: emptyLedger(),
     lastDayLedger: mergeLedgers(delta.ledger ?? emptyLedger(), day.late),
     monthlyReports,
-  };
+  });
 }

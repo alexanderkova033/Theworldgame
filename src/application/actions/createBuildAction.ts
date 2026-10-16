@@ -11,6 +11,7 @@ import { getModifiers } from "../../domain/policy/policyRules";
 import { isBuildingUnlocked } from "../../domain/research/researchRules";
 import type { ResourceType } from "../../domain/resources/types";
 import { recordAction } from "./recordAction";
+import { isFeatureOpen, type Feature } from "../../domain/chapters/chapterData";
 
 export interface BuildActionConfig {
   type: ProjectType;
@@ -25,6 +26,8 @@ export interface BuildActionConfig {
   // domain/research/researchRules.ts. Checked here, not just in the UI, so
   // the rule holds even if a caller skips ActionsPanel's own gating.
   requiresResearch?: boolean;
+  // A building that belongs to a system still shut (see domain/chapters).
+  feature?: Feature;
 }
 
 // A build action is a function, but also carries its own affordability
@@ -68,6 +71,7 @@ export function getBuildCost(state: GameState, baseCost: number): number {
 export function createBuildAction(config: BuildActionConfig): BuildAction {
   function canBuild(state: GameState, provinceId: string): boolean {
     return (
+      (!config.feature || isFeatureOpen(state, config.feature)) &&
       (!config.requiresResearch || isBuildingUnlocked(state.enactedResearchIds, config.type)) &&
       canAfford(state.stats, upfrontCost(getBuildCost(state, config.cost))) &&
       canAffordResource(state.resources, config.resourceType, upfrontCost(config.resourceCost)) &&

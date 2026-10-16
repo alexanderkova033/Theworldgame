@@ -5,10 +5,12 @@ import { buildHousing } from "../src/application/actions/buildHousing";
 import { buyAndBuild, planBuyAndBuild } from "../src/application/actions/buyAndBuild";
 import { takeLoan } from "../src/application/actions/loanActions";
 import { startNewGame } from "../src/application/startNewGame";
+import { allChaptersOpen } from "../src/domain/chapters/chapterData";
 import { getNation } from "../src/domain/nations/nationRules";
 
 describe("buy and build", () => {
-  const start = takeLoan(startNewGame("astravia", "astravia-harvest-union"));
+  // Later in a game, once the exchange has opened.
+  const start = { ...takeLoan(startNewGame("astravia", "astravia-harvest-union")), chapters: allChaptersOpen() };
   const province = getNation(start.nationId).provinceIds[0];
   const empty = { ...start, resources: { ...start.resources, wood: 0 } };
 
@@ -26,6 +28,12 @@ describe("buy and build", () => {
     const broke = { ...empty, stats: { ...empty.stats, treasury: 0 } };
     expect(planBuyAndBuild(broke, buildHousing, province)).toBeNull();
     expect(buyAndBuild(broke, buildHousing, province)).toBe(broke);
+  });
+
+  it("is shut while the market is", () => {
+    const early = { ...empty, chapters: startNewGame("astravia", "astravia-harvest-union").chapters };
+    expect(planBuyAndBuild(early, buildHousing, province)).toBeNull();
+    expect(buyAndBuild(early, buildHousing, province)).toBe(early);
   });
 
   it("offers nothing when the material is already in store", () => {
