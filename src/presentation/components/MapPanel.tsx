@@ -15,7 +15,7 @@ import { BUILDING_COLORS, BuildingIcon } from "./BuildingIcon";
 import { NATION_SHAPES } from "../nationFrontiers";
 import { starPoints } from "./iconShapes";
 import type { ProvinceOverview, ProvinceStatus } from "../../application/getProvinceOverview";
-import { formatCompact } from "../formatNumber";
+import { formatAmount } from "../formatNumber";
 import { UNREST_INFO } from "../unrestStages";
 import { JobsIcon, UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
@@ -1244,16 +1244,16 @@ export const MapPanel = memo(function MapPanel({
                     <div className={`map-panel__tooltip-row ${place.homeless >= 1 ? "is-alert" : ""}`}>
                       <StatIcon type="population" size={18} />
                       <span>
-                        {formatCompact(place.population)} people · homes for {formatCompact(place.capacity)}
-                        {place.homeless >= 1 ? ` · ${formatCompact(place.homeless)} homeless` : ""}
+                        {formatAmount(place.population)} people · homes for {formatAmount(place.capacity)}
+                        {place.homeless >= 1 ? ` · ${formatAmount(place.homeless)} homeless` : ""}
                       </span>
                     </div>
                     <div className={`map-panel__tooltip-row ${place.workers > 0 && place.unemployed / place.workers >= 0.1 ? "is-alert" : ""}`}>
                       <JobsIcon size={18} />
                       <span>
-                        {formatCompact(place.workers)} workers · {formatCompact(place.jobs)} jobs
-                        {place.unemployed >= 1 ? ` · ${formatCompact(place.unemployed)} jobless` : ""}
-                        {place.openJobs >= 1 ? ` · ${formatCompact(place.openJobs)} unfilled` : ""}
+                        {formatAmount(place.workers)} workers · {formatAmount(place.jobs)} jobs
+                        {place.unemployed >= 1 ? ` · ${formatAmount(place.unemployed)} jobless` : ""}
+                        {place.openJobs >= 1 ? ` · ${formatAmount(place.openJobs)} unfilled` : ""}
                       </span>
                     </div>
                     <div className="map-panel__tooltip-row">
@@ -1268,7 +1268,7 @@ export const MapPanel = memo(function MapPanel({
                           {place.migration > 0 ? "→" : "←"}
                         </span>
                         <span>
-                          {place.migration > 0 ? "Moving in" : "Moving out"}: {formatCompact(Math.abs(place.migration))} a day
+                          {place.migration > 0 ? "Moving in" : "Moving out"}: {formatAmount(Math.abs(place.migration))} a day
                         </span>
                       </div>
                     )}

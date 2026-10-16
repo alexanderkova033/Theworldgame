@@ -53,7 +53,7 @@ import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { getResearchNode, isBuildingUnlocked } from "../../domain/research/researchRules";
 import type { ResourceType } from "../../domain/resources/types";
 import { playBuild } from "../audio/sound";
-import { formatCompact } from "../formatNumber";
+import { formatAmount } from "../formatNumber";
 import { BuildingIcon } from "./BuildingIcon";
 import { WrenchIcon } from "./RepairsPanel";
 import { ResourceIcon } from "./ResourceIcon";
@@ -137,10 +137,10 @@ const BUILD_ITEMS: BuildItem[] = [
     buildDays: HOUSING_BUILD_DAYS,
     yields: (
       <>
-        <StatIcon type="population" size={16} />+{formatCompact(PEOPLE_PER_HOME)}
+        <StatIcon type="population" size={16} />+{formatAmount(PEOPLE_PER_HOME)}
       </>
     ),
-    hint: `Houses ${PEOPLE_PER_HOME.toLocaleString()} people (more with Homes research). Burns ${HEATING_FUEL_PER_HOME} coal (or wood) a day in winter`,
+    hint: `Houses ${formatAmount(PEOPLE_PER_HOME)} people (more with Homes research). Burns ${HEATING_FUEL_PER_HOME} coal (or wood) a day in winter`,
   },
   {
     type: "farm",
@@ -156,11 +156,11 @@ const BUILD_ITEMS: BuildItem[] = [
     // should say so.
     yields: (season, mods) => (
       <>
-        <StatIcon type="food" size={16} />+{formatCompact(produceFood(1, season, mods))}
+        <StatIcon type="food" size={16} />+{formatAmount(produceFood(1, season, mods))}
         {season === "winter" && <span className="build-tile__season">❄</span>}
       </>
     ),
-    hint: `Produces ${FOOD_PER_FARM.toLocaleString()} food per day, more at harvest and far less in winter`,
+    hint: `Produces ${formatAmount(FOOD_PER_FARM)} food per day, more at harvest and far less in winter`,
   },
   {
     type: "factory",
@@ -227,10 +227,10 @@ const BUILD_ITEMS: BuildItem[] = [
       <>
         <ResourceGlyph type="grain" />
         <span className="build-tile__arrow">→</span>
-        <StatIcon type="food" size={16} />+{formatCompact(GRAIN_PROCESSED_PER_GRANARY * FOOD_PER_GRAIN)}
+        <StatIcon type="food" size={16} />+{formatAmount(GRAIN_PROCESSED_PER_GRANARY * FOOD_PER_GRAIN)}
       </>
     ),
-    hint: `Turns up to ${GRAIN_PROCESSED_PER_GRANARY} Grain/day into ${(GRAIN_PROCESSED_PER_GRANARY * FOOD_PER_GRAIN).toLocaleString()} food/day, stock permitting`,
+    hint: `Turns up to ${GRAIN_PROCESSED_PER_GRANARY} Grain/day into ${formatAmount((GRAIN_PROCESSED_PER_GRANARY * FOOD_PER_GRAIN))} food/day, stock permitting`,
     unlockedBy: "agriculture-grain-mills",
   },
   {
@@ -247,10 +247,10 @@ const BUILD_ITEMS: BuildItem[] = [
       <>
         <ResourceGlyph type="fish" />
         <span className="build-tile__arrow">→</span>
-        <StatIcon type="food" size={16} />+{formatCompact(FISH_PROCESSED_PER_CANNERY * FOOD_PER_FISH)}
+        <StatIcon type="food" size={16} />+{formatAmount(FISH_PROCESSED_PER_CANNERY * FOOD_PER_FISH)}
       </>
     ),
-    hint: `Turns up to ${FISH_PROCESSED_PER_CANNERY} Fish/day into ${(FISH_PROCESSED_PER_CANNERY * FOOD_PER_FISH).toLocaleString()} food/day, stock permitting`,
+    hint: `Turns up to ${FISH_PROCESSED_PER_CANNERY} Fish/day into ${formatAmount((FISH_PROCESSED_PER_CANNERY * FOOD_PER_FISH))} food/day, stock permitting`,
     unlockedBy: "agriculture-cannery-works",
   },
 ];
@@ -261,7 +261,7 @@ function blockedReason(item: BuildItem, cost: number, state: GameState, province
   if (isLocked) return `Locked. Research “${unlockName ?? "a new technique"}” first.`;
   if (count >= max) return `No room: all ${max} are built or underway in ${provinceName}.`;
   const moneyShort = upfront(cost) - state.stats.treasury;
-  if (moneyShort > 0) return `Need ${Math.ceil(moneyShort).toLocaleString()} more ${CURRENCY_SYMBOL} to start.`;
+  if (moneyShort > 0) return `Need ${formatAmount(Math.ceil(moneyShort))} more ${CURRENCY_SYMBOL} to start.`;
   const resourceShort = upfront(item.resourceCost) - state.resources[item.resourceType];
   if (resourceShort > 0) return `Need ${Math.ceil(resourceShort)} more ${item.resourceType} to start, and the money to buy it.`;
   return null;
@@ -342,7 +342,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
               // Short only of material that money can cover: buy it and build in one click.
               const plan = !isLocked && !canBuild ? planBuyAndBuild(state, item.action, selectedProvinceId) : null;
               const reason = plan
-                ? `Need ${Math.ceil(upfront(item.resourceCost) - state.resources[item.resourceType])} more ${item.resourceType}. Buy & build gets ${Math.round(plan.amount)} for ${Math.round(plan.goodsCost).toLocaleString()} ${CURRENCY_SYMBOL}.`
+                ? `Need ${Math.ceil(upfront(item.resourceCost) - state.resources[item.resourceType])} more ${item.resourceType}. Buy & build gets ${Math.round(plan.amount)} for ${formatAmount(Math.round(plan.goodsCost))} ${CURRENCY_SYMBOL}.`
                 : blockedReason(item, cost, state, provinceName, count, max, unlockName, isLocked);
               const workers = item.type in jobsPer ? jobsPer[item.type as JobBuilding] : 0;
 
@@ -375,20 +375,20 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
                         {/* What you have against what it costs, so the gap reads at a glance. */}
                         <span
                           className={`build-row__cost ${treasuryShort ? "is-short" : treasuryPartial ? "is-partial" : ""}`}
-                          title={`You have ${treasury.toLocaleString()} ${CURRENCY_SYMBOL}. It costs ${cost.toLocaleString()} in all: ${upfront(cost).toLocaleString()} when ordered, the rest during the build.`}
+                          title={`You have ${formatAmount(treasury)} ${CURRENCY_SYMBOL}. It costs ${formatAmount(cost)} in all: ${formatAmount(upfront(cost))} when ordered, the rest during the build.`}
                         >
                           <StatIcon type="treasury" size={14} />
                           <span>
-                            <span className="build-row__have">{formatCompact(treasury)}</span>/{formatCompact(cost)} {CURRENCY_SYMBOL}
+                            <span className="build-row__have">{formatAmount(treasury)}</span>/{formatAmount(cost)} {CURRENCY_SYMBOL}
                           </span>
                         </span>
                         <span
                           className={`build-row__cost ${resourceShort ? "is-short" : resourcePartial ? "is-partial" : ""}`}
-                          title={`You have ${stock.toLocaleString()} ${item.resourceType}. It takes ${item.resourceCost} in all: ${upfront(item.resourceCost)} when ordered, the rest during the build.`}
+                          title={`You have ${formatAmount(stock)} ${item.resourceType}. It takes ${item.resourceCost} in all: ${upfront(item.resourceCost)} when ordered, the rest during the build.`}
                         >
                           <ResourceGlyph type={item.resourceType} />
                           <span>
-                            <span className="build-row__have">{formatCompact(stock)}</span>/{item.resourceCost} {item.resourceType}
+                            <span className="build-row__have">{formatAmount(stock)}</span>/{item.resourceCost} {item.resourceType}
                           </span>
                         </span>
                         <span className="build-row__cost" title={`${item.buildDays} days to build`}>
@@ -396,9 +396,9 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
                           {item.buildDays} days
                         </span>
                         {workers > 0 && (
-                          <span className="build-row__cost" title={`Needs ${workers.toLocaleString()} workers from your population. Without them it runs below capacity.`}>
+                          <span className="build-row__cost" title={`Needs ${formatAmount(workers)} workers from your population. Without them it runs below capacity.`}>
                             <StatIcon type="population" size={14} />
-                            {formatCompact(workers)} workers
+                            {formatAmount(workers)} workers
                           </span>
                         )}
                       </span>
@@ -433,7 +433,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
                       className="btn-primary build-row__button"
                       disabled={!canBuild && !plan}
                       aria-label={canBuild ? `Build ${item.name} in ${provinceName}` : plan ? `Buy ${item.resourceType} and build ${item.name} in ${provinceName}` : `${item.name}: ${reason}`}
-                      title={plan ? `Buys ${Math.round(plan.amount)} ${item.resourceType} for ${Math.round(plan.goodsCost).toLocaleString()} ${CURRENCY_SYMBOL}, then orders the ${item.name.toLowerCase()}` : undefined}
+                      title={plan ? `Buys ${Math.round(plan.amount)} ${item.resourceType} for ${formatAmount(Math.round(plan.goodsCost))} ${CURRENCY_SYMBOL}, then orders the ${item.name.toLowerCase()}` : undefined}
                       onClick={() => {
                         playBuild();
                         dispatch((s) => (item.action.canBuild(s, selectedProvinceId) ? item.action(s, selectedProvinceId) : buyAndBuild(s, item.action, selectedProvinceId)));

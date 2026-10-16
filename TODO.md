@@ -8,6 +8,7 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - `npm test` runs the Vitest suite in `tests/`:
   - `saves.test.ts`: saves from older versions (any field missing, events without topics) load and play a month.
   - `vocabulary.test.ts`: one name for each thing (see `src/presentation/glossary.ts`).
+  - `numbers.test.ts`: one way to write a number (see `src/presentation/formatNumber.ts`); no `toLocaleString` in the interface outside it.
   - `trees.test.ts`: the shape of the Laws and Research trees (one root per branch, three paths that never cross, forks at rows 4 and 5, no em dashes in player text).
   - `balance.test.ts`: scripted games. A careful player survives three years, wins the first election, wins outright within five years and comes close to losing at least once. It doesn't hoard political power and lives mostly on taxes and industry. An idle player is gone within two years, and following any single path doesn't wreck a country.
 - Balance changes: run the tests, and look at the numbers they report if a path starts to fail. The scripted player lives in `tests/support/carefulPlayer.ts`.

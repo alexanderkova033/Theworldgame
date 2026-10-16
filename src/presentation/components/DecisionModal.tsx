@@ -7,6 +7,7 @@ import { BuildingGlyph } from "./CauseIcon";
 import { Modal } from "./Modal";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon, type StatIconType } from "./StatIcon";
+import { formatSigned } from "../formatNumber";
 
 interface DecisionModalProps {
   state: GameState;
@@ -24,17 +25,13 @@ function effectIcons(effects: DecisionEffects): StatIconType[] {
   return icons;
 }
 
-function formatDelta(value: number, suffix: string): string {
-  return `${value > 0 ? "+" : ""}${value}${suffix}`;
-}
-
 function formatEffects(effects: DecisionEffects): string {
   const parts: string[] = [];
-  if (effects.treasuryDelta) parts.push(formatDelta(effects.treasuryDelta, " Cr"));
-  if (effects.foodDelta) parts.push(formatDelta(effects.foodDelta, " food"));
-  if (effects.stabilityDelta) parts.push(formatDelta(effects.stabilityDelta, " stability"));
-  if (effects.populationDelta) parts.push(formatDelta(effects.populationDelta, " pop"));
-  if (effects.popularityDelta) parts.push(formatDelta(effects.popularityDelta, " popularity"));
+  if (effects.treasuryDelta) parts.push(`${formatSigned(effects.treasuryDelta)} Cr`);
+  if (effects.foodDelta) parts.push(`${formatSigned(effects.foodDelta)} food`);
+  if (effects.stabilityDelta) parts.push(`${formatSigned(effects.stabilityDelta, true)} stability`);
+  if (effects.populationDelta) parts.push(`${formatSigned(effects.populationDelta)} people`);
+  if (effects.popularityDelta) parts.push(`${formatSigned(effects.popularityDelta, true)} support`);
   return parts.join(" · ");
 }
 

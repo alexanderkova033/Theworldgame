@@ -6,6 +6,7 @@ import type { GameOutcome, GameState } from "../../domain/country/types";
 import { getNation } from "../../domain/nations/nationRules";
 import { getParty } from "../../domain/parties/partyRules";
 import { StatIcon } from "./StatIcon";
+import { formatAmount } from "../formatNumber";
 
 interface GameEndScreenProps {
   state: GameState;
@@ -71,7 +72,7 @@ export function GameEndScreen({ state, onNewGame }: GameEndScreenProps) {
             <div className="icon-tile__body">
               <span className="icon-tile__label">Final Treasury</span>
               <span className="icon-tile__value">
-                {Math.round(state.stats.treasury).toLocaleString()} {CURRENCY_SYMBOL}
+                {formatAmount(Math.round(state.stats.treasury))} {CURRENCY_SYMBOL}
               </span>
             </div>
           </div>
@@ -81,7 +82,7 @@ export function GameEndScreen({ state, onNewGame }: GameEndScreenProps) {
             </div>
             <div className="icon-tile__body">
               <span className="icon-tile__label">Final Population</span>
-              <span className="icon-tile__value">{Math.round(state.stats.population).toLocaleString()}</span>
+              <span className="icon-tile__value">{formatAmount(Math.round(state.stats.population))}</span>
             </div>
           </div>
           <div className="icon-tile">

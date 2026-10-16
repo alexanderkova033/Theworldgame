@@ -15,6 +15,7 @@ import { getNation } from "../../domain/nations/nationRules";
 import { getParty } from "../../domain/parties/partyRules";
 import { playSeal } from "../audio/sound";
 import { StatIcon } from "./StatIcon";
+import { formatSigned } from "../formatNumber";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
 
@@ -36,10 +37,6 @@ function NationCrest({ color, name }: { color: string; name: string }) {
 
 function washed(color: string): string {
   return `color-mix(in srgb, ${color} 62%, #8f7d5c)`;
-}
-
-function signed(n: number): string {
-  return `${n >= 0 ? "+" : ""}${n}`;
 }
 
 // The bar, with the push being pointed at drawn in: the stretch that would
@@ -115,7 +112,7 @@ function ForeignCard({ state, nationId, gov, strength, dispatch }: { state: Game
               {/* On a wrapper, so the push still shows when it can't be paid for. */}
               <span
                 className="foreign-card__back-wrap"
-                title={`Push ${nation.name} toward the ${party.name}: ${signed(strength)} support, for ${PRESSURE_POLITICAL_POWER_COST} political power`}
+                title={`Push ${nation.name} toward the ${party.name}: ${formatSigned(strength, true)} support, for ${PRESSURE_POLITICAL_POWER_COST} political power`}
                 onMouseEnter={() => setBacking(partyId)}
                 onMouseLeave={() => setBacking(null)}
                 onFocus={() => setBacking(partyId)}
@@ -130,7 +127,7 @@ function ForeignCard({ state, nationId, gov, strength, dispatch }: { state: Game
                     dispatch((s) => pressureGovernment(s, nationId, partyId));
                   }}
                 >
-                  Back <span className={strength >= 0 ? "is-gain" : "is-loss"}>{signed(strength)}</span>
+                  Back <span className={strength >= 0 ? "is-gain" : "is-loss"}>{formatSigned(strength, true)}</span>
                 </button>
               </span>
             </div>
@@ -156,7 +153,7 @@ export function ForeignAffairs({ state, dispatch }: { state: GameState; dispatch
           title={`How far one push moves a neighbour's vote: your support (${Math.round(state.stats.popularity)}) plus stability (${Math.round(state.stats.stability)}) at home. Below zero, meddling backfires. Win them a government and it's friendly: +${FRIENDLY_GOVERNMENT_INCOME_BONUS * 100}% income from trade.`}
         >
           Each push
-          <strong>{signed(strength)}</strong>
+          <strong>{formatSigned(strength, true)}</strong>
           <span className="foreign-affairs__why">
             <StatIcon type="popularity" size={15} />
             {Math.round(state.stats.popularity)}

@@ -3,7 +3,7 @@ import { canRepayLoan, canTakeLoan, getRepayAmount, repayLoan, takeLoan } from "
 import { CURRENCY_SYMBOL, DEBT_DANGER_THRESHOLD, LOAN_BATCH_SIZE, LOAN_INTEREST_RATE_PER_DAY, LOAN_MAX_DEBT } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { isDebtDangerous } from "../../domain/loans/loanRules";
-import { formatCompact } from "../formatNumber";
+import { formatAmount } from "../formatNumber";
 import { playCoins } from "../audio/sound";
 import { LoanIcon } from "./CauseIcon";
 
@@ -26,14 +26,14 @@ export function DebtPanel({ state, dispatch }: DebtPanelProps) {
     <>
       <div
         className={`debt-panel__status ${dangerous ? "is-dangerous" : state.debt > 0 ? "is-active" : ""}`}
-        title={`Debt compounds daily with no fixed term. Past ${formatCompact(DEBT_DANGER_THRESHOLD)} ${CURRENCY_SYMBOL} the interest alone costs stability and support every day.`}
+        title={`Debt compounds daily with no fixed term. Past ${formatAmount(DEBT_DANGER_THRESHOLD)} ${CURRENCY_SYMBOL} the interest alone costs stability and support every day.`}
       >
         <span className="debt-panel__status-icon">
           <LoanIcon size={22} />
         </span>
         <div className="debt-panel__status-body">
           <span className="debt-panel__status-value">
-            {formatCompact(state.debt)} {CURRENCY_SYMBOL} owed
+            {formatAmount(state.debt)} {CURRENCY_SYMBOL} owed
           </span>
           {state.debt > 0 && (
             <span className="debt-panel__status-detail">
@@ -48,7 +48,7 @@ export function DebtPanel({ state, dispatch }: DebtPanelProps) {
           of thresholds to hold in your head. */}
       <div
         className={`debt-panel__gauge ${dangerous ? "is-dangerous" : ""}`}
-        title={`${formatCompact(state.debt)} of a ${formatCompact(LOAN_MAX_DEBT)} ${CURRENCY_SYMBOL} cap; the marker is the ${formatCompact(
+        title={`${formatAmount(state.debt)} of a ${formatAmount(LOAN_MAX_DEBT)} ${CURRENCY_SYMBOL} cap; the marker is the ${formatAmount(
           DEBT_DANGER_THRESHOLD,
         )} ${CURRENCY_SYMBOL} danger line`}
       >
@@ -64,7 +64,7 @@ export function DebtPanel({ state, dispatch }: DebtPanelProps) {
             dispatch(takeLoan);
           }}
         >
-          Take Loan ({LOAN_BATCH_SIZE.toLocaleString()} {CURRENCY_SYMBOL})
+          Take Loan ({formatAmount(LOAN_BATCH_SIZE)} {CURRENCY_SYMBOL})
         </button>
         <button
           className="btn-primary"
@@ -74,12 +74,12 @@ export function DebtPanel({ state, dispatch }: DebtPanelProps) {
             dispatch(repayLoan);
           }}
         >
-          Repay ({repayAmount.toLocaleString()} {CURRENCY_SYMBOL})
+          Repay ({formatAmount(repayAmount)} {CURRENCY_SYMBOL})
         </button>
       </div>
       {!canTakeLoan(state) && (
         <p className="debt-panel__cap-note">
-          At the {formatCompact(LOAN_MAX_DEBT)} {CURRENCY_SYMBOL} borrowing cap.
+          At the {formatAmount(LOAN_MAX_DEBT)} {CURRENCY_SYMBOL} borrowing cap.
         </p>
       )}
     </>

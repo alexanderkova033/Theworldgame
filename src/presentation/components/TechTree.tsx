@@ -22,6 +22,7 @@ import { NodeGlyph } from "./NodeGlyph";
 import { WrenchIcon } from "./RepairsPanel";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import type { Synergy } from "../../domain/synergy/synergyData";
+import { formatRate } from "../formatNumber";
 
 
 // Both trees carry the same status vocabulary; Research simply never
@@ -733,7 +734,7 @@ export function TreeBank({ icon, value, rate, label }: { icon: StatIconType; val
       <StatIcon type={icon} size={22} />
       <span className="law-tree__bank-label">{label}</span>
       <span className="law-tree__bank-value">{Math.floor(value)}</span>
-      <span className="law-tree__bank-rate">+{rate.toFixed(1)} a day</span>
+      <span className="law-tree__bank-rate">{formatRate(rate, true)}</span>
     </div>
   );
 }

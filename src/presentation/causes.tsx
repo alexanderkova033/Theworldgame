@@ -2,7 +2,7 @@
 // by the monthly report breakdown and its toast headline.
 import type { ReactNode } from "react";
 import type { LedgerMetric } from "../domain/ledger/types";
-import { formatSignedChange } from "./formatNumber";
+import { formatRate, formatSigned } from "./formatNumber";
 import { BuildingGlyph, CrackdownIcon, EventIcon, FlameIcon, JobsIcon, LoanIcon, NeighboursIcon, SettlingIcon, TaxIcon, UnrestStageIcon, WagesIcon } from "./components/CauseIcon";
 import { NavIcon } from "./components/NavIcon";
 import { StatIcon } from "./components/StatIcon";
@@ -104,9 +104,6 @@ export const METRIC_ICONS: Record<LedgerMetric, "treasury" | "food" | "popularit
 // where a tenth still matters — a hundredth, in a single day's change.
 export function formatChange(metric: LedgerMetric | "population", value: number, perDay = false): string {
   const points = metric === "support" || metric === "stability";
-  if (points && perDay && Math.abs(value) < 1) {
-    const rounded = Math.round(value * 100) / 100 || 0;
-    return `${rounded > 0 ? "+" : rounded < 0 ? "−" : ""}${Math.abs(rounded)}`;
-  }
-  return formatSignedChange(value, points);
+  if (points && perDay) return formatRate(value, true).replace("/d", "");
+  return formatSigned(value, points);
 }

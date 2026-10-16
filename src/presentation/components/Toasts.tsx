@@ -11,7 +11,7 @@ import type { GameEvent, MonthlyReport } from "../../domain/country/types";
 import { formatMonthYear, getReportedMonth } from "../../domain/country/calendar";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import { getLedgerHeadline } from "../../domain/ledger/ledgerRules";
-import { formatSignedChange } from "../formatNumber";
+import { formatSigned } from "../formatNumber";
 import { getCauseInfo, METRIC_LABELS } from "../causes";
 import { getEventKind } from "../eventKinds";
 import { WrenchIcon } from "./RepairsPanel";
@@ -55,11 +55,11 @@ function toastFromEvent(event: GameEvent): Toast | null {
 function reportHeadline(report: MonthlyReport): string {
   const headline = report.ledger ? getLedgerHeadline(report.ledger) : null;
   if (!headline) {
-    const signed = (n: number) => formatSignedChange(n);
+    const signed = (n: number) => formatSigned(n);
     return `Treasury ${signed(report.totalIncome)} ${CURRENCY_SYMBOL}, population ${signed(report.populationChange)}, stability ${signed(report.stabilityChange)}.`;
   }
   const { metric, total, causes } = headline;
-  const amount = formatSignedChange(total, metric === "support" || metric === "stability");
+  const amount = formatSigned(total, metric === "support" || metric === "stability");
   const why = causes.map((c) => getCauseInfo(metric, c.cause).label.toLowerCase()).join(" and ");
   return `${METRIC_LABELS[metric]} ${amount}${metric === "treasury" ? ` ${CURRENCY_SYMBOL}` : ""}${why ? `: ${why}` : ""}`;
 }

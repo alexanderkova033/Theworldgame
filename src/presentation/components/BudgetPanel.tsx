@@ -17,7 +17,7 @@ import { formatDate } from "../../domain/country/calendar";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getTotalScientists } from "../../domain/workforce/workforceRules";
-import { formatCompact } from "../formatNumber";
+import { formatAmount, formatSigned } from "../formatNumber";
 import { TaxIcon, WagesIcon } from "./CauseIcon";
 import { NavIcon } from "./NavIcon";
 import { StatIcon } from "./StatIcon";
@@ -36,11 +36,6 @@ interface BudgetLine {
 
 function plural(n: number, one: string, many: string): string {
   return `${n} ${n === 1 ? one : many}`;
-}
-
-function money(value: number): string {
-  const rounded = Math.round(value);
-  return `${rounded > 0 ? "+" : rounded < 0 ? "−" : ""}${Math.abs(rounded).toLocaleString()}`;
 }
 
 function Line({ line, focus, onFocus, onOpenPanel }: { line: BudgetLine; focus: LineKey | null; onFocus: (key: LineKey | null) => void; onOpenPanel: OpenPanel }) {
@@ -65,7 +60,7 @@ function Line({ line, focus, onFocus, onOpenPanel }: { line: BudgetLine; focus: 
           )}
         </span>
       </th>
-      <td className={`budget-sheet__value ${line.value > 0 ? "is-gain" : line.value < 0 ? "is-loss" : ""}`}>{money(line.value)}</td>
+      <td className={`budget-sheet__value ${line.value > 0 ? "is-gain" : line.value < 0 ? "is-loss" : ""}`}>{formatSigned(line.value)}</td>
     </tr>
   );
 }
@@ -84,7 +79,7 @@ function Bar({ name, lines, scale, tone, focus, onFocus }: { name: string; lines
               key={line.key}
               className={`budget-sheet__bar-fill is-${tone} ${focus === line.key ? "is-focus" : focus ? "is-dim" : ""}`}
               style={{ width: `${share}%` }}
-              title={`${line.label}: ${money(line.value)} ${CURRENCY_SYMBOL}`}
+              title={`${line.label}: ${formatSigned(line.value)} ${CURRENCY_SYMBOL}`}
               onMouseEnter={() => onFocus(line.key)}
               onMouseLeave={() => onFocus(null)}
             />
@@ -106,14 +101,14 @@ export function BudgetPanel({ state, production, onOpenPanel }: { state: GameSta
       key: "taxes",
       icon: <TaxIcon size={20} />,
       label: "Taxes",
-      detail: `${Math.round(state.taxRate * 100)}% tax on ${formatCompact(state.stats.population)} people`,
+      detail: `${Math.round(state.taxRate * 100)}% tax on ${formatAmount(state.stats.population)} people`,
       value: production.taxIncome,
     },
     {
       key: "industry",
       icon: <StatIcon type="industry" size={20} />,
       label: "Industry",
-      detail: state.stats.industry > 0 ? `${formatCompact(state.stats.industry)} industry at work` : "No factories at work yet",
+      detail: state.stats.industry > 0 ? `${formatAmount(state.stats.industry)} industry at work` : "No factories at work yet",
       value: production.industryIncome,
       hint: "What the factories earn. They run only as well as they're staffed.",
       go: { ...PEOPLE, label: "Workers" },
@@ -158,7 +153,7 @@ export function BudgetPanel({ state, production, onOpenPanel }: { state: GameSta
       >
         <span className="budget-sheet__balance-label">{net >= 0 ? "You gain each day" : "You lose each day"}</span>
         <strong className="budget-sheet__balance-value">
-          {money(net)} <span className="budget-sheet__unit">{CURRENCY_SYMBOL}</span>
+          {formatSigned(net)} <span className="budget-sheet__unit">{CURRENCY_SYMBOL}</span>
         </strong>
         <span className="budget-sheet__bars">
           <Bar name="In" lines={income} scale={scale} tone="gain" focus={focus} onFocus={setFocus} />
@@ -172,7 +167,7 @@ export function BudgetPanel({ state, production, onOpenPanel }: { state: GameSta
             <th colSpan={2} scope="rowgroup">
               Money in
             </th>
-            <td className="budget-sheet__subtotal is-gain">{money(totalIn)}</td>
+            <td className="budget-sheet__subtotal is-gain">{formatSigned(totalIn)}</td>
           </tr>
           {income.map((line) => (
             <Line key={line.key} line={line} focus={focus} onFocus={setFocus} onOpenPanel={onOpenPanel} />
@@ -183,7 +178,7 @@ export function BudgetPanel({ state, production, onOpenPanel }: { state: GameSta
             <th colSpan={2} scope="rowgroup">
               Money out
             </th>
-            <td className="budget-sheet__subtotal is-loss">{money(-totalOut)}</td>
+            <td className="budget-sheet__subtotal is-loss">{formatSigned(-totalOut)}</td>
           </tr>
           {spending.map((line) => (
             <Line key={line.key} line={line} focus={focus} onFocus={setFocus} onOpenPanel={onOpenPanel} />
@@ -194,7 +189,7 @@ export function BudgetPanel({ state, production, onOpenPanel }: { state: GameSta
             <th colSpan={2} scope="row">
               Balance each day
             </th>
-            <td className={net >= 0 ? "is-gain" : "is-loss"}>{money(net)}</td>
+            <td className={net >= 0 ? "is-gain" : "is-loss"}>{formatSigned(net)}</td>
           </tr>
         </tfoot>
       </table>
@@ -205,7 +200,7 @@ export function BudgetPanel({ state, production, onOpenPanel }: { state: GameSta
       >
         <StatIcon type="treasury" size={18} />
         <strong>
-          {Math.floor(state.stats.treasury).toLocaleString()} {CURRENCY_SYMBOL}
+          {formatAmount(Math.floor(state.stats.treasury))} {CURRENCY_SYMBOL}
         </strong>
         {runOut ? (
           <span className="is-loss">
@@ -214,7 +209,7 @@ export function BudgetPanel({ state, production, onOpenPanel }: { state: GameSta
         ) : net > 0 ? (
           <span className="is-gain">growing</span>
         ) : null}
-        {state.debt > 0 && <span className="budget-sheet__debt">debt {Math.ceil(state.debt).toLocaleString()} {CURRENCY_SYMBOL}</span>}
+        {state.debt > 0 && <span className="budget-sheet__debt">debt {formatAmount(Math.ceil(state.debt))} {CURRENCY_SYMBOL}</span>}
       </p>
     </section>
   );

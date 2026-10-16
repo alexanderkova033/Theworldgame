@@ -11,7 +11,7 @@ import { getLabourSituation, type Sector, type SectorJobs } from "../../domain/l
 import { COMMUTE_SHARE, LABOUR_SHARE } from "../../domain/constants";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import type { ProjectType } from "../../domain/construction/types";
-import { formatCompact } from "../formatNumber";
+import { formatAmount, formatRate } from "../formatNumber";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
 import { UNREST_INFO } from "../unrestStages";
 import { BuildingGlyph, FlameIcon, JobsIcon, UnrestStageIcon } from "./CauseIcon";
@@ -131,8 +131,8 @@ function WorkTable({ state, sectors }: { state: GameState; sectors: Record<Secto
                   </span>
                 </th>
                 <td>{buildings.length > 0 ? buildings.join(", ") : "None yet"}</td>
-                <td className="is-num">{formatCompact(jobs.hired)}</td>
-                <td className="is-num">{formatCompact(jobs.jobs)}</td>
+                <td className="is-num">{formatAmount(jobs.hired)}</td>
+                <td className="is-num">{formatAmount(jobs.jobs)}</td>
                 <td>
                   {share === null ? (
                     <span className="people-table__muted">none</span>
@@ -205,15 +205,15 @@ function ProvinceTable({
                   </button>
                 </th>
                 <td className={`is-num ${status.homes === "over" ? "is-bad" : status.homes === "full" ? "is-warn" : ""}`}>
-                  {formatCompact(p.population)} / {formatCompact(p.capacity)}
+                  {formatAmount(p.population)} / {formatAmount(p.capacity)}
                 </td>
                 <td className={`is-num ${food.hired < food.jobs ? "is-warn" : ""}`}>
-                  {food.jobs > 0 ? `${formatCompact(food.hired)} / ${formatCompact(food.jobs)}` : "none"}
+                  {food.jobs > 0 ? `${formatAmount(food.hired)} / ${formatAmount(food.jobs)}` : "none"}
                 </td>
                 <td className={`is-num ${industry.hired < industry.jobs ? "is-warn" : ""}`}>
-                  {industry.jobs > 0 ? `${formatCompact(industry.hired)} / ${formatCompact(industry.jobs)}` : "none"}
+                  {industry.jobs > 0 ? `${formatAmount(industry.hired)} / ${formatAmount(industry.jobs)}` : "none"}
                 </td>
-                <td className={`is-num ${status.jobs === "jobless" ? "is-bad" : ""}`}>{p.unemployed >= 1 ? formatCompact(p.unemployed) : "0"}</td>
+                <td className={`is-num ${status.jobs === "jobless" ? "is-bad" : ""}`}>{p.unemployed >= 1 ? formatAmount(p.unemployed) : "0"}</td>
                 <td>
                   <span className="people-table__mood">
                     <UnrestStageIcon stage={p.unrestStage} size={16} />
@@ -283,8 +283,8 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
           />
         }
         danger={homeless > 0}
-        value={`${formatCompact(population)} people · homes for ${formatCompact(capacity)}`}
-        detail={homeless > 0 ? `${formatCompact(homeless)} without a home` : `${formatCompact(Math.max(0, capacity - population))} free places`}
+        value={`${formatAmount(population)} people · homes for ${formatAmount(capacity)}`}
+        detail={homeless > 0 ? `${formatAmount(homeless)} without a home` : `${formatAmount(Math.max(0, capacity - population))} free places`}
       />
 
       <Meter
@@ -303,14 +303,14 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
           />
         }
         danger={shortWorkers > 0 || labour.unemploymentShare > 0.1}
-        value={`${formatCompact(labour.workers)} workers · ${formatCompact(labour.jobs)} jobs`}
+        value={`${formatAmount(labour.workers)} workers · ${formatAmount(labour.jobs)} jobs`}
         detail={
           unfilled >= 1 && labour.unemployed >= 1
-            ? `${formatCompact(labour.unemployed)} jobless, ${formatCompact(unfilled)} jobs unfilled elsewhere. Build homes near the jobs.`
+            ? `${formatAmount(labour.unemployed)} jobless, ${formatAmount(unfilled)} jobs unfilled elsewhere. Build homes near the jobs.`
             : shortWorkers > 0
-            ? `Short ${formatCompact(shortWorkers)} workers: ${labour.foodStaffing < 1 ? `farms at ${Math.round(labour.foodStaffing * 100)}%` : labour.industryStaffing < 1 ? `factories at ${Math.round(labour.industryStaffing * 100)}%` : `schools at ${Math.round(labour.schoolStaffing * 100)}%`}`
+            ? `Short ${formatAmount(shortWorkers)} workers: ${labour.foodStaffing < 1 ? `farms at ${Math.round(labour.foodStaffing * 100)}%` : labour.industryStaffing < 1 ? `factories at ${Math.round(labour.industryStaffing * 100)}%` : `schools at ${Math.round(labour.schoolStaffing * 100)}%`}`
             : labour.unemployed > 0
-              ? `${formatCompact(labour.unemployed)} jobless`
+              ? `${formatAmount(labour.unemployed)} jobless`
               : "Everyone employed"
         }
       />
@@ -353,7 +353,7 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
               {Math.floor(state.resources.wood)}
             </span>
             <span className="people-meter__fuel-rate">
-              {heating.fuelPerDay.toFixed(1)}/day in winter{heating.isWinter ? "" : ` · in ${heating.daysUntilWinter} days`}
+              {formatRate(-heating.fuelPerDay)} in winter{heating.isWinter ? "" : ` · in ${heating.daysUntilWinter} days`}
             </span>
           </span>
         }

@@ -38,6 +38,7 @@ import { SubTabs, type SubTab } from "./SubTabs";
 import { InspectorHeader, Lockouts, PathInspector, StatusLine, SynergyLine, TreeColumns, type TreeNodeStatus } from "./TechTree";
 import { AREA_LABELS } from "../researchAreas";
 import { ScientistStepper } from "./WorkforcePanel";
+import { formatAmount, formatRate, formatSigned } from "../formatNumber";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
 
@@ -59,7 +60,7 @@ function PathCost({ state, nodes }: { state: GameState; nodes: ResearchNode[] })
       <CostChips>
         <StatChip type="research" amount={Math.round(work)} />
       </CostChips>
-      <span className="note">{rate > 0 ? `about ${Math.ceil(work / rate).toLocaleString()} days at today's rate` : "no progress at today's rate"}</span>
+      <span className="note">{rate > 0 ? `about ${formatAmount(Math.ceil(work / rate))} days at today's rate` : "no progress at today's rate"}</span>
     </div>
   );
 }
@@ -137,7 +138,7 @@ function AreaHeader({ state, category, dispatch, onSelectNode }: { state: GameSt
           className="research-area__rate"
           title={`Base ${rate.base.toFixed(2)} + buildings ${rate.buildings.toFixed(2)} + scientists ${rate.scientists.toFixed(2)}, ×${rate.educationMultiplier.toFixed(2)} from schools`}
         >
-          <StatIcon type="research" size={16} />+{rate.total.toFixed(2)}/d
+          <StatIcon type="research" size={16} />{formatRate(rate.total, true)}
         </span>
         <ScientistStepper state={state} category={category} dispatch={dispatch} />
       </div>
@@ -312,7 +313,7 @@ export function ResearchPanel({ state, alerts, dispatch }: ResearchPanelProps) {
             {scientists}/{getScientistCap(state.educationLevel)}
           </span>
           <span className="law-tree__bank-rate is-cost">
-            −{scientists * SCIENTIST_SALARY} {CURRENCY_SYMBOL} a day
+            {formatSigned(-scientists * SCIENTIST_SALARY)} {CURRENCY_SYMBOL} a day
           </span>
         </span>
         <span

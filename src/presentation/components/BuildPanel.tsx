@@ -7,7 +7,7 @@
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
 import type { GameState } from "../../domain/country/types";
-import { formatCompact } from "../formatNumber";
+import { formatAmount } from "../formatNumber";
 import type { BuildSection, OpenPanel } from "../navigation";
 import { ActionsPanel } from "./ActionsPanel";
 import { NavIcon } from "./NavIcon";
@@ -51,7 +51,7 @@ function sectionTabs(state: GameState, production: DailyProductionSummary, provi
       label: "People",
       icon: <StatIcon type="population" size={22} />,
       alert: peopleTrouble || production.unheatedShare > 0 || production.netFood < 0,
-      badge: formatCompact(state.stats.population),
+      badge: formatAmount(state.stats.population),
       hint: peopleTrouble ? "Some provinces are short of homes or work" : "Homes, jobs, heating and food, province by province",
     },
   ];

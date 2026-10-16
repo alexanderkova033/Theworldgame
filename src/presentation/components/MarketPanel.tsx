@@ -12,7 +12,7 @@ import type { GameState } from "../../domain/country/types";
 import { GOOD_SPECS, MARKET_GOODS, getBatchSize, getMidPrice, getPriceRatio, nationHasPort } from "../../domain/market/marketRules";
 import type { MarketGood } from "../../domain/market/types";
 import { getNation } from "../../domain/nations/nationRules";
-import { formatCompact } from "../formatNumber";
+import { formatAmount } from "../formatNumber";
 import { playCoins } from "../audio/sound";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
@@ -80,16 +80,16 @@ function MarketRow({ state, good, perDay, quantity, dispatch }: RowProps) {
         <GoodIcon good={good} />
         <span className="market-row__name">{LABELS[good]}</span>
       </span>
-      <span className="market-row__stock" title={`You have ${Math.floor(have).toLocaleString()}, changing by ${rounded} a day`}>
-        <strong>{formatCompact(Math.floor(have))}</strong>
+      <span className="market-row__stock" title={`You have ${formatAmount(Math.floor(have))}, changing by ${rounded} a day`}>
+        <strong>{formatAmount(Math.floor(have))}</strong>
         <span className={rounded > 0 ? "is-gain" : rounded < 0 ? "is-loss" : ""}>
           {rounded > 0 ? "+" : ""}
-          {formatCompact(rounded)}/d
+          {formatAmount(rounded)}/d
         </span>
       </span>
       <span
         className="market-row__price"
-        title={`The market holds ${formatCompact(Math.floor(marketStock))}; normal is about ${formatCompact(GOOD_SPECS[good].equilibrium)}. Selling adds to it and lowers the price; buying drains it and raises the price.`}
+        title={`The market holds ${formatAmount(Math.floor(marketStock))}; normal is about ${formatAmount(GOOD_SPECS[good].equilibrium)}. Selling adds to it and lowers the price; buying drains it and raises the price.`}
       >
         {priceLabel(good, getMidPrice(good, marketStock))}
         <Trend state={state} good={good} />
@@ -104,9 +104,9 @@ function MarketRow({ state, good, perDay, quantity, dispatch }: RowProps) {
             dispatch((s) => buyGood(s, good, quantity));
           }}
         >
-          <span className="market-row__button-label">Buy {formatCompact(amount)}</span>
+          <span className="market-row__button-label">Buy {formatAmount(amount)}</span>
           <span className="market-row__button-money">
-            −{Math.round(buyCost).toLocaleString()} {CURRENCY_SYMBOL}
+            −{formatAmount(Math.round(buyCost))} {CURRENCY_SYMBOL}
           </span>
         </button>
         <button
@@ -118,9 +118,9 @@ function MarketRow({ state, good, perDay, quantity, dispatch }: RowProps) {
             dispatch((s) => sellGood(s, good, quantity));
           }}
         >
-          <span className="market-row__button-label">Sell {formatCompact(amount)}</span>
+          <span className="market-row__button-label">Sell {formatAmount(amount)}</span>
           <span className="market-row__button-money">
-            +{Math.round(sellRevenue).toLocaleString()} {CURRENCY_SYMBOL}
+            +{formatAmount(Math.round(sellRevenue))} {CURRENCY_SYMBOL}
           </span>
         </button>
       </span>

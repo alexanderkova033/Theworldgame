@@ -9,21 +9,13 @@ import type { DailyProductionSummary } from "../../application/getDailyProductio
 import { getForecasts } from "../../application/getForecasts";
 import { FORECAST_DAYS } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
-import { formatCompact } from "../formatNumber";
+import { formatAmount, formatRate, formatSigned } from "../formatNumber";
 import { BuildingGlyph } from "./CauseIcon";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
 interface ProductionPanelProps {
   state: GameState;
   production: DailyProductionSummary;
-}
-
-function signed(value: number): string {
-  // `|| 0` normalizes a -0 result (e.g. -Math.round(0)) — otherwise it both
-  // reads as "positive" for the sign prefix and prints its own literal
-  // minus sign, producing a stray "+-0".
-  const rounded = Math.round(value) || 0;
-  return `${rounded >= 0 ? "+" : ""}${formatCompact(rounded)}`;
 }
 
 interface Part {
@@ -52,7 +44,7 @@ export function ProductionPanel({ state, production }: ProductionPanelProps) {
       <div className="production-panel__head">
         <h2>Food</h2>
         <span className={`production-panel__net ${net > 0 ? "is-gain" : net < 0 ? "is-loss" : ""}`} title="Food a day, all told">
-          {signed(net)}/d
+          {formatRate(net)}
         </span>
       </div>
 
@@ -62,7 +54,7 @@ export function ProductionPanel({ state, production }: ProductionPanelProps) {
             key={part.label}
             className={`production-panel__bar-seg ${part.value >= 0 ? "is-gain" : "is-loss"} ${lit(part.label)}`}
             style={{ width: `${(Math.abs(part.value) / gross) * 100}%` }}
-            title={`${part.label}: ${signed(part.value)}/d`}
+            title={`${part.label}: ${formatRate(part.value)}`}
             {...hover(part.label)}
           />
         ))}
@@ -73,14 +65,14 @@ export function ProductionPanel({ state, production }: ProductionPanelProps) {
           <span className={`production-panel__key ${lit(part.label)}`} key={part.label} title={part.label} {...hover(part.label)}>
             <span className={`production-panel__key-dot ${part.value >= 0 ? "is-gain" : "is-loss"}`} />
             {part.icon === "granary" ? <BuildingGlyph type="granary" size={15} /> : <StatIcon type={part.icon} size={15} />}
-            <span className="production-panel__key-value">{signed(part.value)}</span>
+            <span className="production-panel__key-value">{formatSigned(part.value)}</span>
           </span>
         ))}
       </div>
 
       <p className="production-panel__store">
         <StatIcon type="food" size={18} />
-        <strong>{formatCompact(Math.floor(state.stats.food))}</strong>
+        <strong>{formatAmount(Math.floor(state.stats.food))}</strong>
         {net < 0 &&
           (runOut ? (
             <span className="is-loss">lasts {runOut.days} days</span>

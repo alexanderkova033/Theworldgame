@@ -10,7 +10,7 @@ import { getQuickFix, type QuickFix } from "../../application/getQuickFix";
 import { CURRENCY_SYMBOL, QUICK_FIX_CONFIRM_SHARE } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { playConfirm } from "../audio/sound";
-import { formatCompact } from "../formatNumber";
+import { formatAmount } from "../formatNumber";
 import type { AdvisorAlertKind, AdvisorOutlook, ObjectiveKind } from "../../application/getAdvisorOutlook";
 import { BuildingGlyph, FlameIcon, LoanIcon, UnrestStageIcon } from "./CauseIcon";
 import { NavIcon } from "./NavIcon";
@@ -87,7 +87,7 @@ function QuickFixButton({ fix, treasury, onApply }: { fix: QuickFix; treasury: n
     return () => clearTimeout(id);
   }, [armed]);
   const cost = [
-    fix.treasuryCost > 0 ? `${formatCompact(fix.treasuryCost)} ${CURRENCY_SYMBOL}` : null,
+    fix.treasuryCost > 0 ? `${formatAmount(fix.treasuryCost)} ${CURRENCY_SYMBOL}` : null,
     fix.politicalPowerCost > 0 ? `${Math.round(fix.politicalPowerCost)} political power` : null,
   ]
     .filter(Boolean)
@@ -107,10 +107,10 @@ function QuickFixButton({ fix, treasury, onApply }: { fix: QuickFix; treasury: n
         onApply();
       }}
     >
-      {armed ? `Confirm −${formatCompact(fix.treasuryCost)} ${CURRENCY_SYMBOL}?` : fix.label}
+      {armed ? `Confirm −${formatAmount(fix.treasuryCost)} ${CURRENCY_SYMBOL}?` : fix.label}
       {!armed && fix.treasuryCost > 0 && (
         <span className="advisor-fix__cost">
-          {formatCompact(fix.treasuryCost)} {CURRENCY_SYMBOL}
+          {formatAmount(fix.treasuryCost)} {CURRENCY_SYMBOL}
         </span>
       )}
     </button>

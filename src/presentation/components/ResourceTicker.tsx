@@ -16,7 +16,7 @@ import type { Forecasts, RunOut } from "../../application/getForecasts";
 import type { MaterialShortage } from "../../application/getMaterialShortages";
 import { formatDate } from "../../domain/country/calendar";
 import { isDebtDangerous } from "../../domain/loans/loanRules";
-import { formatCompact } from "../formatNumber";
+import { formatAmount, formatExact, formatRate } from "../formatNumber";
 import { RESOURCE_TYPES, type ResourceBundle, type ResourceType } from "../../domain/resources/types";
 import type { UnrestStage } from "../../domain/unrest/types";
 import { UNREST_INFO } from "../unrestStages";
@@ -24,7 +24,7 @@ import { getLedgerTotal } from "../../domain/ledger/ledgerRules";
 import type { Ledger, LedgerMetric } from "../../domain/ledger/types";
 import { formatChange, METRIC_LABELS } from "../causes";
 import { CauseBreakdown } from "./CauseBreakdown";
-import { FlameIcon, HourglassIcon, UnrestStageIcon } from "./CauseIcon";
+import { FlameIcon, HourglassIcon, LoanIcon, UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 
@@ -51,26 +51,11 @@ const RESOURCE_LABELS: Record<ResourceType, string> = {
   fish: "Fish",
 };
 
-function formatExact(value: number): string {
-  return Math.round(value).toLocaleString();
-}
-
-// Small rates (well under 1/day) keep one decimal so they don't round away.
-function roundRate(value: number): number {
-  // `|| 0` normalizes a -0 result, which would otherwise print as "+-0/d".
-  return (Math.abs(value) < 10 ? Math.round(value * 10) / 10 : Math.round(value)) || 0;
-}
-
-function formatDelta(value: number): string {
-  const rounded = roundRate(value);
-  return `${rounded >= 0 ? "+" : ""}${rounded.toLocaleString()}/d`;
-}
-
 // A per-day rate riding alongside a chip's current total — see
 // getDailyProductionSummary.ts.
 function Delta({ value }: { value: number | undefined }) {
-  if (value === undefined || roundRate(value) === 0) return null;
-  return <span className={`resource-ticker__delta ${value >= 0 ? "is-positive" : "is-negative"}`}>{formatDelta(value)}</span>;
+  if (value === undefined || formatRate(value) === "0/d") return null;
+  return <span className={`resource-ticker__delta ${value >= 0 ? "is-positive" : "is-negative"}`}>{formatRate(value)}</span>;
 }
 
 function Alert() {
@@ -270,11 +255,11 @@ function Stores({
             <div
               key={type}
               className={`resource-ticker__chip resource-ticker__store-cell ${short ? "is-danger" : ""}`}
-              title={`${RESOURCE_LABELS[type]}: ${formatExact(resources[type])} in stock (${formatDelta(production.resourceProduction[type])})${short ? ". Building will run out soon" : ""}`}
+              title={`${RESOURCE_LABELS[type]}: ${formatExact(resources[type])} in stock (${formatRate(production.resourceProduction[type])})${short ? ". Building will run out soon" : ""}`}
             >
               <ResourceGlyph type={type} />
               <span className="resource-ticker__store-cell-name">{RESOURCE_LABELS[type]}</span>
-              <span>{formatCompact(resources[type])}</span>
+              <span>{formatAmount(resources[type])}</span>
               <Delta value={production.resourceProduction[type]} />
               {short && <Alert />}
             </div>
@@ -315,7 +300,7 @@ function Stores({
               <div key={type} className={`resource-ticker__store-row ${short ? "is-short" : ""}`}>
                 <ResourceGlyph type={type} />
                 <span className="resource-ticker__store-name">{RESOURCE_LABELS[type]}</span>
-                <span className="resource-ticker__store-amount">{formatExact(resources[type])}</span>
+                <span className="resource-ticker__store-amount">{formatAmount(resources[type])}</span>
                 <Delta value={production.resourceProduction[type]} />
                 {short && <Alert />}
               </div>
@@ -362,12 +347,12 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, resource
         {...why}
         metric="treasury"
         runOut={forecasts.treasury}
-        label={`Treasury: ${formatExact(stats.treasury)} ${CURRENCY_SYMBOL} (${formatDelta(production.netTreasury)}, after wages and building)`}
+        label={`Treasury: ${formatExact(stats.treasury)} ${CURRENCY_SYMBOL} (${formatRate(production.netTreasury)}, after wages and building)`}
         danger={stats.treasury < 0}
       >
         <StatIcon type="treasury" size={20} />
         <span>
-          {formatCompact(stats.treasury)} {CURRENCY_SYMBOL}
+          {formatAmount(stats.treasury)} {CURRENCY_SYMBOL}
         </span>
         <Delta value={production.netTreasury} />
       </WhyChip>
@@ -378,14 +363,14 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, resource
       >
         <StatIcon type="population" size={20} />
         <span>
-          {formatCompact(stats.population)} / {formatCompact(production.housingCapacity)}
+          {formatAmount(stats.population)} / {formatAmount(production.housingCapacity)}
         </span>
         {homesTrouble && <Alert />}
       </Chip>
 
-      <WhyChip {...why} metric="food" runOut={forecasts.food} label={`Food: ${formatExact(stats.food)} (${formatDelta(production.netFood)})`}>
+      <WhyChip {...why} metric="food" runOut={forecasts.food} label={`Food: ${formatExact(stats.food)} (${formatRate(production.netFood)})`}>
         <StatIcon type="food" size={20} />
-        <span>{formatCompact(stats.food)}</span>
+        <span>{formatAmount(stats.food)}</span>
         <Delta value={production.netFood} />
       </WhyChip>
 
@@ -399,7 +384,7 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, resource
         warn={unrestStage === "discontent"}
       >
         <StatIcon type="stability" size={20} />
-        <span>{formatExact(stats.stability)}</span>
+        <span>{formatAmount(stats.stability)}</span>
         <UnrestStageIcon stage={unrestStage} size={18} />
         {unrestStage !== "calm" && <span>{stage.name}</span>}
         {stageUrgent && <Alert />}
@@ -407,8 +392,8 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, resource
 
       <WhyChip {...why} metric="support" label={`Support: ${formatExact(stats.popularity)}%. The next election needs ${electionThreshold}%.`} danger={stats.popularity < electionThreshold}>
         <StatIcon type="popularity" size={20} />
-        <span>{formatExact(stats.popularity)}%</span>
-        {stats.popularity < 50 && <Alert />}
+        <span>{formatAmount(stats.popularity)}%</span>
+        {stats.popularity < electionThreshold && <Alert />}
       </WhyChip>
 
       {debt > 0 && (
@@ -416,8 +401,8 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, resource
           label={`Debt: ${formatExact(debt)} ${CURRENCY_SYMBOL}${isDebtDangerous(debt) ? ". Dangerous: it hurts stability and support" : ""}`}
           danger={isDebtDangerous(debt)}
         >
-          <StatIcon type="treasury" size={20} />
-          <span>{formatCompact(debt)} owed</span>
+          <LoanIcon size={20} />
+          <span>{formatAmount(debt)}</span>
           {isDebtDangerous(debt) && <Alert />}
         </Chip>
       )}
@@ -447,7 +432,7 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, resource
           danger
         >
           <ResourceGlyph type={short.type} />
-          <span>{formatCompact(short.stock)}</span>
+          <span>{formatAmount(short.stock)}</span>
           <Alert />
         </Chip>
       ))}

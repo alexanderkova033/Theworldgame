@@ -21,7 +21,7 @@ import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
 import { calculateDailyProduction, RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
 import { RESOURCE_TYPES, type ResourceType } from "../../domain/resources/types";
-import { formatCompact } from "../formatNumber";
+import { formatAmount } from "../formatNumber";
 import { UNREST_INFO } from "../unrestStages";
 import { BuildingGlyph, HourglassIcon, JobsIcon, UnrestStageIcon } from "./CauseIcon";
 import { NavIcon } from "./NavIcon";
@@ -57,10 +57,10 @@ function getNeed(p: ProvinceOverview): { text: string; urgent: boolean } {
     const why = status.homes === "over" ? "homes" : "work";
     return { text: `${UNREST_INFO[status.stage].name}: too many here have no ${why}.`, urgent: true };
   }
-  if (status.homes === "over") return { text: `Needs homes: ${formatCompact(p.homeless)} without a roof.`, urgent: true };
-  if (status.jobs === "jobless") return { text: `Needs work: ${formatCompact(p.unemployed)} jobless here.`, urgent: true };
+  if (status.homes === "over") return { text: `Needs homes: ${formatAmount(p.homeless)} without a roof.`, urgent: true };
+  if (status.jobs === "jobless") return { text: `Needs work: ${formatAmount(p.unemployed)} jobless here.`, urgent: true };
   if (status.homes === "full") return { text: "Homes nearly full. Room to grow is running out.", urgent: false };
-  if (status.jobs === "short") return { text: `Jobs going unfilled: ${formatCompact(p.openJobs)} open. Homes here would bring workers.`, urgent: false };
+  if (status.jobs === "short") return { text: `Jobs going unfilled: ${formatAmount(p.openJobs)} open. Homes here would bring workers.`, urgent: false };
   return { text: "All well. Nothing pressing here.", urgent: false };
 }
 
@@ -103,7 +103,7 @@ function SuggestionRow({ state, suggestion, provinceId, dispatch }: { state: Gam
         <button
           type="button"
           disabled={!suggestion.can}
-          title={`${Math.round(cost.treasury).toLocaleString()} ${CURRENCY_SYMBOL} and ${cost.resourceAmount} ${cost.resourceType}${suggestion.can ? "" : ": not enough yet"}`}
+          title={`${formatAmount(Math.round(cost.treasury))} ${CURRENCY_SYMBOL} and ${cost.resourceAmount} ${cost.resourceType}${suggestion.can ? "" : ": not enough yet"}`}
           onClick={() => dispatch((s) => repairBuilding(s, suggestion.buildingId))}
         >
           Repair
@@ -113,12 +113,12 @@ function SuggestionRow({ state, suggestion, provinceId, dispatch }: { state: Gam
   }
   const { action, how, plan } = suggestion;
   const name = action.config.label;
-  const price = `${suggestion.cost.toLocaleString()} ${CURRENCY_SYMBOL}, ${action.config.resourceCost} ${action.config.resourceType}`;
+  const price = `${formatAmount(suggestion.cost)} ${CURRENCY_SYMBOL}, ${action.config.resourceCost} ${action.config.resourceType}`;
   const title =
     how === "build"
       ? `Build ${name.toLowerCase()} here: ${price}`
       : how === "buy"
-        ? `Buys ${Math.round(plan!.amount)} ${action.config.resourceType} for ${Math.round(plan!.goodsCost).toLocaleString()} ${CURRENCY_SYMBOL}, then builds: ${price}`
+        ? `Buys ${Math.round(plan!.amount)} ${action.config.resourceType} for ${formatAmount(Math.round(plan!.goodsCost))} ${CURRENCY_SYMBOL}, then builds: ${price}`
         : `${suggestion.blockedBy}. Costs ${price}.`;
   return (
     <li className="province-card__fix">
@@ -198,8 +198,8 @@ export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }
 
       <dl className="province-card__facts">
         <Fact icon={<BuildingGlyph type="housing" size={16} />} label="Homes" alert={status.homes === "over"}>
-          <strong>{formatCompact(province.population)}</strong> in homes for {formatCompact(province.capacity)}
-          {province.homeless >= 1 && <span className="province-card__bad"> · {formatCompact(province.homeless)} homeless</span>}
+          <strong>{formatAmount(province.population)}</strong> in homes for {formatAmount(province.capacity)}
+          {province.homeless >= 1 && <span className="province-card__bad"> · {formatAmount(province.homeless)} homeless</span>}
           <Gauge
             max={province.capacity}
             segments={[{ value: province.population - province.homeless, tone: status.homes === "ok" ? "good" : "warn" }]}
@@ -219,16 +219,16 @@ export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }
         </Fact>
 
         <Fact icon={<JobsIcon size={16} />} label="Jobs" alert={status.jobs === "jobless"}>
-          <strong>{formatCompact(province.jobs - province.openJobs)}</strong> of {formatCompact(province.jobs)} jobs filled
-          {province.unemployed >= 1 && <span className="province-card__bad"> · {formatCompact(province.unemployed)} jobless</span>}
-          {province.commutersOut >= 1 && <> · {formatCompact(province.commutersOut)} work elsewhere</>}
+          <strong>{formatAmount(province.jobs - province.openJobs)}</strong> of {formatAmount(province.jobs)} jobs filled
+          {province.unemployed >= 1 && <span className="province-card__bad"> · {formatAmount(province.unemployed)} jobless</span>}
+          {province.commutersOut >= 1 && <> · {formatAmount(province.commutersOut)} work elsewhere</>}
           {/* Where they work: farms and food first, as jobs are filled. */}
           <span className="province-card__sectors">
             {SECTOR_LABELS.filter(([key]) => province.sectors[key].jobs > 0).map(([key, label]) => {
               const sector = province.sectors[key];
               return (
                 <span key={key} className={sector.hired < sector.jobs ? "province-card__bad" : ""}>
-                  {label} {formatCompact(sector.hired)}/{formatCompact(sector.jobs)}
+                  {label} {formatAmount(sector.hired)}/{formatAmount(sector.jobs)}
                 </span>
               );
             })}

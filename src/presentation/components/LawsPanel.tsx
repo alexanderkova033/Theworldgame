@@ -27,7 +27,7 @@ import { getSynergiesForLaw } from "../../domain/synergy/synergyRules";
 import { playGavel } from "../audio/sound";
 import { pickDefaultNode } from "../pickDefaultNode";
 import { revealTreeDetails } from "../revealTreeDetails";
-import { formatCompact } from "../formatNumber";
+import { formatAmount } from "../formatNumber";
 import { CostChips, DaysChip, ResourceChip, StatChip, TreasuryChip } from "./CostChips";
 import { StatIcon } from "./StatIcon";
 import { HourglassIcon } from "./CauseIcon";
@@ -50,7 +50,7 @@ function PathCost({ nodes }: { nodes: LawNode[] }) {
       <span className="law-inspector__enact-cost-label">The whole way</span>
       <CostChips>
         <StatChip type="politicalPower" amount={sum((n) => n.enactCost.politicalPower)} />
-        <TreasuryChip amount={formatCompact(sum((n) => n.enactCost.treasury))} />
+        <TreasuryChip amount={formatAmount(sum((n) => n.enactCost.treasury))} />
         <DaysChip days={sum(getLawDays)} />
       </CostChips>
     </div>
@@ -84,9 +84,9 @@ const QUOTA_ICONS: Record<QuotaStat, "treasury" | "population" | "food" | "indus
 };
 
 function formatQuotaValue(stat: QuotaStat, value: number): string {
-  if (stat === "treasury") return `${Math.round(value).toLocaleString()} ${CURRENCY_SYMBOL}`;
+  if (stat === "treasury") return `${formatAmount(Math.round(value))} ${CURRENCY_SYMBOL}`;
   if (stat === "stability" || stat === "popularity") return `${Math.round(value)}`;
-  return Math.round(value).toLocaleString();
+  return formatAmount(Math.round(value));
 }
 
 // Industry comes only from working factories, so a short quota is really
@@ -137,7 +137,7 @@ function lawStatusLabel(state: GameState, node: LawNode, status: TreeNodeStatus)
         const n = factoriesShort(state, node.quota.threshold);
         return `Needs ${n} more ${n === 1 ? "factory" : "factories"}`;
       }
-      return `Needs ${QUOTA_LABELS[node.quota.stat].toLowerCase()} ${node.quota.stat === "stability" || node.quota.stat === "popularity" ? Math.round(node.quota.threshold) : formatCompact(node.quota.threshold)}`;
+      return `Needs ${QUOTA_LABELS[node.quota.stat].toLowerCase()} ${node.quota.stat === "stability" || node.quota.stat === "popularity" ? Math.round(node.quota.threshold) : formatAmount(node.quota.threshold)}`;
   }
 }
 
@@ -208,7 +208,7 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
         <span className="law-inspector__enact-cost-label">To put to a vote</span>
         <CostChips>
           <StatChip type="politicalPower" amount={node.enactCost.politicalPower} />
-          <TreasuryChip amount={node.enactCost.treasury.toLocaleString()} />
+          <TreasuryChip amount={formatAmount(node.enactCost.treasury)} />
           {node.enactCost.resourceType && <ResourceChip type={node.enactCost.resourceType} amount={node.enactCost.resourceAmount ?? 0} />}
           <DaysChip days={getLawDays(node)} />
         </CostChips>

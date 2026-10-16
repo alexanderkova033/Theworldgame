@@ -55,6 +55,7 @@ import { SubTabs } from "./SubTabs";
 import { EffectList } from "./TechTree";
 import { BUDGET, BUILDINGS, MARKET, PEOPLE, type Destination, type OpenPanel, type PoliticsSection } from "../navigation";
 import { PoliceForce } from "./WorkforcePanel";
+import { formatAmount, formatRate, formatSigned } from "../formatNumber";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
 
@@ -118,11 +119,6 @@ function CrossIcon() {
 
 // A driver this big fills its half of the bar.
 const DRIVER_SCALE = 15;
-
-function signed(n: number, digits = 0): string {
-  const rounded = Number(n.toFixed(digits));
-  return rounded > 0 ? `+${rounded}` : `${rounded}`;
-}
 
 // A party's colour faded toward sepia, so a bright one doesn't glare.
 function washed(color: string): string {
@@ -266,7 +262,7 @@ function Chamber({
       </text>
       {gain !== null && gain > 0 && (
         <text x={0} y={-40} className="chamber__gain">
-          +{Number(gain.toFixed(1))}
+          {formatSigned(gain, true)}
         </text>
       )}
     </svg>
@@ -328,7 +324,7 @@ function Purse({ state }: { state: GameState }) {
   return (
     <span className="politics-purse">
       <Figure icon="politicalPower" value={Math.floor(state.stats.politicalPower)} name="Political power" />
-      <Figure icon="treasury" value={Math.floor(state.stats.treasury).toLocaleString()} name={`Treasury, ${CURRENCY_SYMBOL}`} />
+      <Figure icon="treasury" value={formatAmount(Math.floor(state.stats.treasury))} name={`Treasury, ${CURRENCY_SYMBOL}`} />
     </span>
   );
 }
@@ -404,10 +400,10 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
               name={`Support drifts toward ${target}%, where the causes below push it`}
               tone={target > popularity ? "gain" : target < popularity ? "loss" : null}
             />
-            <Figure icon="politicalPower" value={`+${getDailyPoliticalPower(state).toFixed(2)}/d`} name="Political power a day: the more popular you are, the more you earn" />
+            <Figure icon="politicalPower" value={formatRate(getDailyPoliticalPower(state), true)} name="Political power a day: the more popular you are, the more you earn" />
             <Figure
               icon="stability"
-              value={`${signed(order, 2)}/d`}
+              value={formatRate(order, true)}
               name={`Stability a day from support: it recovers above ${STABILITY_GOOD_POPULARITY_THRESHOLD}% and falls below ${STABILITY_LOW_POPULARITY_THRESHOLD}%`}
               tone={order > 0 ? "gain" : order < 0 ? "loss" : null}
             />
@@ -561,10 +557,10 @@ function DriverCard({ driver, children }: { driver: PopularityDriver; children?:
     <div className={`politics-driver ${value > 0 ? "is-gain" : value < 0 ? "is-loss" : "is-idle"}`}>
       <DriverIcon driver={driver.key} />
       <span className="politics-driver__label">{driver.label}</span>
-      <strong className="politics-driver__value">{signed(value)}</strong>
+      <strong className="politics-driver__value">{formatSigned(value)}</strong>
       <span className="politics-driver__fix">{children}</span>
       <span className="politics-driver__bar">
-        <SignedBar value={driver.value} scale={DRIVER_SCALE} label={`${driver.label}: ${signed(value)} to where support is heading`} />
+        <SignedBar value={driver.value} scale={DRIVER_SCALE} label={`${driver.label}: ${formatSigned(value)} to where support is heading`} />
       </span>
     </div>
   );

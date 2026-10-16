@@ -1,24 +1,57 @@
-// A compact "215k"/"3.4M" formatter for stats that can run into the
-// thousands (food stockpiles especially — a farm-heavy nation can sit on
-// hundreds of thousands of food, and "214,748" is a lot harder to read at a
-// glance than "215k"). Values under 1,000 print exactly, unrounded to a
-// compact unit, since there's nothing to compact yet.
-export function formatCompact(value: number): string {
-  const sign = value < 0 ? "-" : "";
-  const abs = Math.abs(value);
-  if (abs >= 1_000_000) return `${sign}${trimTrailingZero((abs / 1_000_000).toFixed(1))}M`;
-  if (abs >= 1_000) return `${sign}${trimTrailingZero((abs / 1_000).toFixed(1))}k`;
-  return Math.round(value).toLocaleString();
-}
+// One way to write a number, everywhere a player reads one. tests/numbers
+// fails if the interface formats a number any other way.
+//
+// - An amount (Crowns, food, people, goods): exact, with separators, below
+//   10,000 ("2,000", "9,850"); compact from 10,000 ("12k", "400k", "1.2M").
+// - A change: the same, signed, with a real minus ("+32", "−3,169",
+//   "+1.2k"). Points of support or stability keep a tenth under 10
+//   ("+0.4"), since a fraction of a point matters there.
+// - A rate: a change per day ("+32/d", "−3,169/d"). Small rates keep a
+//   tenth ("+0.6/d"); points per day keep a hundredth under 1 ("+0.05/d").
+// - A tooltip may give the precise figure instead (formatExact), for the
+//   player who asks.
+
+const COMPACT_FROM = 10_000;
 
 function trimTrailingZero(value: string): string {
   return value.endsWith(".0") ? value.slice(0, -2) : value;
 }
 
-// A signed change with a real minus sign: "+320", "−1.2k". `fine` keeps a
-// tenth under 10 — for points of support or stability, where 0.4 matters.
-export function formatSignedChange(value: number, fine = false): string {
-  const rounded = (fine && Math.abs(value) < 10 ? Math.round(value * 10) / 10 : Math.round(value)) || 0;
-  const abs = Math.abs(rounded);
-  return `${rounded > 0 ? "+" : rounded < 0 ? "−" : ""}${fine && abs < 10 ? String(abs) : formatCompact(abs)}`;
+// An unsigned amount: exact below 10,000, compact from there.
+export function formatAmount(value: number): string {
+  const sign = value < 0 ? "−" : "";
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) return `${sign}${trimTrailingZero((abs / 1_000_000).toFixed(1))}M`;
+  if (abs >= COMPACT_FROM) return `${sign}${trimTrailingZero((abs / 1_000).toFixed(1))}k`;
+  return `${Math.round(abs) === 0 ? "" : sign}${Math.round(abs).toLocaleString()}`;
+}
+
+// The precise figure, for a tooltip.
+export function formatExact(value: number): string {
+  return Math.round(value).toLocaleString();
+}
+
+// How finely a small number is kept: whole, a tenth under 10, or (points
+// per day) a hundredth under 1.
+function rounded(value: number, fine: boolean, hundredths = false): number {
+  const abs = Math.abs(value);
+  const step = hundredths && abs < 1 ? 100 : fine && abs < 10 ? 10 : 1;
+  return Math.round(value * step) / step || 0; // `|| 0`: no "−0"
+}
+
+// A signed change. `fine` keeps a tenth under 10, for points.
+export function formatSigned(value: number, fine = false): string {
+  const r = rounded(value, fine);
+  const abs = Math.abs(r);
+  const body = abs < 10 && abs % 1 !== 0 ? String(abs) : formatAmount(abs);
+  return `${r > 0 ? "+" : r < 0 ? "−" : ""}${body}`;
+}
+
+// A change per day. Rates keep a tenth under 10; points per day (support,
+// stability) keep a hundredth under 1.
+export function formatRate(value: number, points = false): string {
+  const r = rounded(value, true, points);
+  const abs = Math.abs(r);
+  const body = abs < 10 && abs % 1 !== 0 ? String(abs) : formatAmount(abs);
+  return `${r > 0 ? "+" : r < 0 ? "−" : ""}${body}/d`;
 }

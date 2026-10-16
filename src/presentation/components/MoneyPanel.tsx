@@ -5,7 +5,7 @@ import type { DailyProductionSummary } from "../../application/getDailyProductio
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { isDebtDangerous } from "../../domain/loans/loanRules";
-import { formatSignedChange } from "../formatNumber";
+import { formatSigned } from "../formatNumber";
 import type { MoneySection, OpenPanel } from "../navigation";
 import { BudgetPanel } from "./BudgetPanel";
 import { DebtPanel } from "./DebtPanel";
@@ -37,8 +37,8 @@ export function MoneyPanel({ state, production, dispatch, onOpenPanel, section, 
             label: "Budget",
             icon: <StatIcon type="treasury" size={22} />,
             alert: production.netTreasury < 0 || isDebtDangerous(state.debt),
-            badge: `${formatSignedChange(production.netTreasury)}/d`,
-            hint: `Net ${formatSignedChange(production.netTreasury)} ${CURRENCY_SYMBOL} a day after wages and building`,
+            badge: `${formatSigned(production.netTreasury)}/d`,
+            hint: `Net ${formatSigned(production.netTreasury)} ${CURRENCY_SYMBOL} a day after wages and building`,
           },
           {
             key: "market",

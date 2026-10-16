@@ -12,6 +12,7 @@ import { getModifiers } from "../../domain/policy/policyRules";
 import { getAcceptedTaxRate } from "../../domain/politics/politicsRules";
 import { Gauge, withPreview } from "./Gauge";
 import { StatIcon } from "./StatIcon";
+import { formatRate, formatSigned } from "../formatNumber";
 
 // Where the "grumbling" stretch of the tax gauge ends — a picture of the
 // scale, not a rule: support falls by the same amount per point throughout.
@@ -21,10 +22,6 @@ interface TaxPanelProps {
   state: GameState;
   production: DailyProductionSummary;
   dispatch: (action: (state: GameState) => GameState) => void;
-}
-
-function signed(n: number): string {
-  return n > 0 ? `+${n}` : `${n}`;
 }
 
 export function TaxPanel({ state, production, dispatch }: TaxPanelProps) {
@@ -98,15 +95,15 @@ export function TaxPanel({ state, production, dispatch }: TaxPanelProps) {
         <span className="tax-panel__effect is-gain" title={`Tax income, ${CURRENCY_SYMBOL} a day at this rate`}>
           <StatIcon type="treasury" size={18} />
           <strong>+{income}/d</strong>
-          {after && <span className="tax-panel__after">→ {signed(after.income)}/d</span>}
+          {after && <span className="tax-panel__after">→ {formatRate(after.income)}</span>}
         </span>
         <span
           className={`tax-panel__effect ${mood < 0 ? "is-loss" : mood > 0 ? "is-gain" : ""}`}
           title={`Support from taxes: people accept ${Math.round(accepted * 100)}%; every point above costs support, every point below earns it`}
         >
           <StatIcon type="popularity" size={18} />
-          <strong>{signed(mood)}</strong>
-          {after && <span className="tax-panel__after">→ {signed(after.mood)}</span>}
+          <strong>{formatSigned(mood, true)}</strong>
+          {after && <span className="tax-panel__after">→ {formatSigned(after.mood, true)}</span>}
         </span>
       </div>
     </section>

@@ -33,6 +33,7 @@ import {
 import { playCoins } from "../audio/sound";
 import { AREA_LABELS } from "../researchAreas";
 import { StatIcon } from "./StatIcon";
+import { formatAmount } from "../formatNumber";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
 
@@ -131,7 +132,7 @@ export function PoliceForce({ state, dispatch }: { state: GameState; dispatch: D
     <div className="police-force">
       <div className="politics-section-head">
         <h3 className="politics-subhead">Police</h3>
-        <Seats used={police} cap={policeCap} label={`Officers employed: one for every ${POPULATION_PER_POLICE.toLocaleString()} people`} />
+        <Seats used={police} cap={policeCap} label={`Officers employed: one for every ${formatAmount(POPULATION_PER_POLICE)} people`} />
       </div>
       <div className={`workforce-panel__row ${police > 0 ? "" : "is-empty"}`}>
         <StatIcon type="police" size={20} />
