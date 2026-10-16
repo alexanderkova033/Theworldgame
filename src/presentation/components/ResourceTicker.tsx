@@ -270,7 +270,7 @@ function Stores({
             <div
               key={type}
               className={`resource-ticker__chip resource-ticker__store-cell ${short ? "is-danger" : ""}`}
-              title={`${RESOURCE_LABELS[type]}: ${formatExact(resources[type])} in stock (${formatDelta(production.resourceProduction[type])} a day)${short ? ". Building will run out soon" : ""}`}
+              title={`${RESOURCE_LABELS[type]}: ${formatExact(resources[type])} in stock (${formatDelta(production.resourceProduction[type])})${short ? ". Building will run out soon" : ""}`}
             >
               <ResourceGlyph type={type} />
               <span className="resource-ticker__store-cell-name">{RESOURCE_LABELS[type]}</span>
@@ -362,7 +362,7 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, resource
         {...why}
         metric="treasury"
         runOut={forecasts.treasury}
-        label={`Treasury: ${formatExact(stats.treasury)} ${CURRENCY_SYMBOL} (${formatDelta(production.netTreasury)} a day, after wages and building)`}
+        label={`Treasury: ${formatExact(stats.treasury)} ${CURRENCY_SYMBOL} (${formatDelta(production.netTreasury)}, after wages and building)`}
         danger={stats.treasury < 0}
       >
         <StatIcon type="treasury" size={20} />

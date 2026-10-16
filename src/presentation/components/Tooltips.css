@@ -1,0 +1,39 @@
+/* The game's one tooltip (Tooltips.tsx): a slip of paper in ink, framed
+   in sepia, above everything, never in the pointer's way. */
+.game-tooltip {
+  position: fixed;
+  z-index: 1000;
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 16px));
+  padding: 0.4rem 0.6rem;
+  background: var(--paper-raised);
+  color: var(--ink);
+  border: 1px solid var(--rule-dark);
+  border-radius: 6px;
+  box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--rule), 0 6px 14px rgba(20, 12, 4, 0.35);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: pre-line;
+  pointer-events: none;
+  transform: translateX(-50%);
+  visibility: hidden;
+  opacity: 0;
+}
+
+.game-tooltip.is-above {
+  transform: translate(-50%, -100%);
+}
+
+.game-tooltip.is-shown {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.1s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-tooltip.is-shown {
+    transition: none;
+  }
+}
