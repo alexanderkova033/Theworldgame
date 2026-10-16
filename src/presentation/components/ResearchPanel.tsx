@@ -337,6 +337,7 @@ export function ResearchPanel({ state, alerts, dispatch }: ResearchPanelProps) {
       <div className="law-tree__body">
         <TreeColumns
           categories={CATEGORIES.filter((c) => c.key === area)}
+          numerals="arabic"
           nodesFor={nodesFor}
           pathsFor={pathsFor}
           getStatus={statusOf}

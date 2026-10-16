@@ -176,7 +176,10 @@ interface Link {
   state: LinkState;
 }
 
-const NUMERALS = ["", "I", "II", "III", "IV", "V", "VI", "VII"];
+// Laws number their rows like a statute book's chapters; research counts
+// its stages plainly, like a workshop's.
+const NUMERALS = { roman: ["", "I", "II", "III", "IV", "V", "VI", "VII"], arabic: ["", "1", "2", "3", "4", "5", "6", "7"] };
+export type Numerals = keyof typeof NUMERALS;
 
 // Grid row for a tier: the root on row 1, the path names on row 2, then
 // tiers 2 to 7 below them.
@@ -208,6 +211,7 @@ function TreeBranch<N extends TreeNode>({
   selectedPathKey,
   onSelect,
   onSelectPath,
+  numerals,
 }: {
   nodes: N[];
   paths: TreePath[];
@@ -220,6 +224,7 @@ function TreeBranch<N extends TreeNode>({
   selectedPathKey: string | null;
   onSelect: (nodeId: string) => void;
   onSelectPath: (pathKey: string) => void;
+  numerals: Numerals;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [links, setLinks] = useState<Link[]>([]);
@@ -307,7 +312,7 @@ function TreeBranch<N extends TreeNode>({
       </svg>
       {TREE_TIERS.map((tier) => (
         <span key={`tier-${tier}`} className="law-tree__tier" style={{ gridRow: gridRowOf(tier) }} aria-hidden="true">
-          {NUMERALS[tier]}
+          {NUMERALS[numerals][tier]}
         </span>
       ))}
       <div className="law-tree__cell law-tree__cell--root" style={{ gridColumn: "2 / -1", gridRow: 1 }}>
@@ -354,6 +359,7 @@ interface TreeColumnsProps<N extends TreeNode> {
   selectedPathKey: string | null;
   onSelect: (nodeId: string) => void;
   onSelectPath: (pathKey: string) => void;
+  numerals?: Numerals; // how the rows are numbered
 }
 
 // The tree proper: one column per category, each split into its paths.
@@ -371,6 +377,7 @@ export function TreeColumns<N extends TreeNode>({
   selectedPathKey,
   onSelect,
   onSelectPath,
+  numerals = "roman",
 }: TreeColumnsProps<N>) {
   return (
     <div className={`law-tree__columns ${categories.length === 1 ? "law-tree__columns--single" : ""}`}>
@@ -393,6 +400,7 @@ export function TreeColumns<N extends TreeNode>({
             selectedPathKey={selectedPathKey}
             onSelect={onSelect}
             onSelectPath={onSelectPath}
+            numerals={numerals}
           />
         </div>
       ))}

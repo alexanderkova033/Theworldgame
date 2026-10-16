@@ -14,9 +14,14 @@
   gap: 1rem;
   margin: 0 0 1.25rem;
   padding: 1.5rem 1.25rem 1.75rem;
-  /* A fresh sheet in a ruled frame, like a plate in a book. */
+  /* A sheet of the statute book: faintly ruled, in a ruled frame. Research
+     draws on squared paper instead (ResearchPanel.css). */
   border-radius: 8px;
-  background: var(--grain) 0 0/90px 90px repeat, var(--laid), var(--paper-raised);
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 31px, rgba(94, 69, 40, 0.13) 31px 32px),
+    var(--grain) 0 0/90px 90px repeat,
+    var(--laid),
+    var(--paper-raised);
   border: 1px solid var(--rule-dark);
   box-shadow: inset 0 0 0 5px var(--paper-raised), inset 0 0 0 6px var(--rule);
 }

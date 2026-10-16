@@ -99,6 +99,15 @@
   --accent-active: var(--prussian);
 }
 
+/* An engineer's squared paper under the tree, where laws have ruled lines. */
+.research-tree .law-tree__columns {
+  background:
+    linear-gradient(rgba(36, 80, 110, 0.11) 1px, transparent 1px) 0 0/24px 24px,
+    linear-gradient(90deg, rgba(36, 80, 110, 0.11) 1px, transparent 1px) 0 0/24px 24px,
+    var(--grain) 0 0/90px 90px repeat,
+    var(--paper-raised);
+}
+
 .research-tree .law-node {
   position: relative;
   overflow: hidden;
@@ -152,4 +161,15 @@
 .research-tree .staff-stepper__button--add:not(:disabled) {
   background: var(--prussian);
   border-color: var(--prussian-dark);
+}
+
+/* The one thing to do here is research, so its seal is blue too. */
+.research-tree button.btn-primary {
+  background: var(--prussian);
+  border-color: var(--prussian-dark);
+}
+
+.research-tree button.btn-primary:hover:not(:disabled) {
+  background: var(--prussian);
+  border-color: var(--gilt);
 }
