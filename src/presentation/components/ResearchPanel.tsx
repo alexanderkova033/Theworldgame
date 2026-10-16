@@ -27,7 +27,7 @@ import {
   getResearchRateBreakdown,
 } from "../../domain/research/researchRules";
 import type { ResearchCategory, ResearchNode } from "../../domain/research/types";
-import { getSynergiesForResearch } from "../../domain/synergy/synergyRules";
+import { getPairHeld, getSynergiesForResearch } from "../../domain/synergy/synergyRules";
 import { getScientistCap, getTotalScientists, RESEARCH_CATEGORIES } from "../../domain/workforce/workforceRules";
 import { playQuill } from "../audio/sound";
 import { pickDefaultNode } from "../pickDefaultNode";
@@ -35,6 +35,7 @@ import { revealTreeDetails } from "../revealTreeDetails";
 import { CostChips, StatChip } from "./CostChips";
 import { StatIcon } from "./StatIcon";
 import { SubTabs, type SubTab } from "./SubTabs";
+import { pairMarks } from "../treeMarks";
 import { InspectorHeader, Lockouts, PathInspector, StatusLine, SynergyLine, TreeColumns, type TreeNodeStatus } from "./TechTree";
 import { AREA_LABELS } from "../researchAreas";
 import { ScientistStepper } from "./WorkforcePanel";
@@ -205,7 +206,7 @@ function ResearchInspector({ node, state, status, onFocus, onStop }: ResearchIns
           key={synergy.id}
           synergy={synergy}
           partnerName={getLawNode(synergy.lawId)?.name ?? "a Law"}
-          isActive={status === "enacted" && state.enactedLawIds.includes(synergy.lawId)}
+          held={getPairHeld(synergy, state.enactedLawIds, state.enactedResearchIds)}
         />
       ))}
 
@@ -349,6 +350,10 @@ export function ResearchPanel({ state, alerts, dispatch }: ResearchPanelProps) {
           )}
           getHint={hintFor}
           getPathHint={(path) => pathHints(path.key)[0]}
+          getMarks={(node) => ({
+            ...pairMarks(state, getSynergiesForResearch(node.id)),
+            breakthrough: state.researchOutcomes[node.id] === "breakthrough",
+          })}
           selectedId={shownPath ? null : (shownNode?.id ?? null)}
           selectedPathKey={shownPath?.key ?? null}
           onSelect={(id) => {

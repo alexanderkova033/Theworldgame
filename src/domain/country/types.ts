@@ -81,6 +81,7 @@ export interface GameEvent {
   severity: EventSeverity;
   topic?: EventTopic; // absent on events from older saves
   about?: EventTopic; // for a pause: the danger that stopped the game
+  tier?: ResearchOutcomeTier; // for a finished research: how it turned out
 }
 
 export interface DailyDelta {

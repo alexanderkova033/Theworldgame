@@ -61,6 +61,7 @@ export function completeResearch(state: GameState, researchId: string): GameStat
         message: "",
         severity: "info",
         topic: "research",
+        tier: outcome.tier,
       },
       ...state.events,
     ],

@@ -173,3 +173,13 @@
   background: var(--prussian);
   border-color: var(--gilt);
 }
+
+/* A breakthrough: the medallion rimmed in gilt, with a halo, the way a
+   rare find stands out on the floor. */
+.research-tree .law-node.is-breakthrough .law-node__icon {
+  border-color: var(--gilt);
+  box-shadow:
+    0 0 0 2px var(--paper-raised),
+    0 0 0 3px var(--gilt),
+    0 0 10px 3px color-mix(in srgb, var(--gilt-bright) 70%, transparent);
+}

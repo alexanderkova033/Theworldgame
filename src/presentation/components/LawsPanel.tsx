@@ -23,7 +23,7 @@ import type { TreePath } from "../../domain/policy/modifiers";
 import { chosenIds, closedBy, getLockouts, isOpenToParty } from "../../domain/policy/treeRules";
 import { getDailyPoliticalPower } from "../../domain/politics/politicsRules";
 import { getResearchNode } from "../../domain/research/researchRules";
-import { getSynergiesForLaw } from "../../domain/synergy/synergyRules";
+import { getPairHeld, getSynergiesForLaw } from "../../domain/synergy/synergyRules";
 import { playGavel } from "../audio/sound";
 import { pickDefaultNode } from "../pickDefaultNode";
 import { revealTreeDetails } from "../revealTreeDetails";
@@ -32,6 +32,7 @@ import { CostChips, DaysChip, ResourceChip, StatChip, TreasuryChip } from "./Cos
 import { StatIcon } from "./StatIcon";
 import { HourglassIcon } from "./CauseIcon";
 import { SubTabs } from "./SubTabs";
+import { pairMarks } from "../treeMarks";
 import { InspectorHeader, Lockouts, PathInspector, StatusLine, SynergyLine, TreeBank, TreeColumns, VoteRow, WorkInProgress, type TreeNodeStatus } from "./TechTree";
 
 interface LawsPanelProps {
@@ -219,7 +220,7 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
           key={synergy.id}
           synergy={synergy}
           partnerName={getResearchNode(synergy.researchId)?.name ?? "a Research node"}
-          isActive={status === "enacted" && state.enactedResearchIds.includes(synergy.researchId)}
+          held={getPairHeld(synergy, state.enactedLawIds, state.enactedResearchIds)}
         />
       ))}
 
@@ -393,6 +394,7 @@ export function LawsPanel({ state, alerts, dispatch }: LawsPanelProps) {
           }
           getHint={hintFor}
           getPathHint={(path) => pathHints(path.key)[0]}
+          getMarks={(node) => pairMarks(state, getSynergiesForLaw(node.id))}
           selectedId={shownPath ? null : (shownNode?.id ?? null)}
           selectedPathKey={shownPath?.key ?? null}
           onSelect={(id) => {

@@ -22,6 +22,7 @@ import { NodeGlyph } from "./NodeGlyph";
 import { WrenchIcon } from "./RepairsPanel";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import type { Synergy } from "../../domain/synergy/synergyData";
+import type { NodeMarks } from "../treeMarks";
 import { formatRate } from "../formatNumber";
 
 
@@ -96,6 +97,7 @@ function NodeBadge({
   progress,
   isSelected,
   hint,
+  marks,
   onSelect,
 }: {
   node: TreeNode;
@@ -104,40 +106,50 @@ function NodeBadge({
   progress: number;
   isSelected: boolean;
   hint?: TreeHint;
+  marks?: NodeMarks;
   onSelect: () => void;
 }) {
   const isLocked = status.startsWith("locked-");
-  const label = [node.name, statusLabel, hint && `helps with ${hint.text}`].filter(Boolean).join(": ");
+  const label = [node.name, statusLabel, marks?.breakthrough && "a breakthrough", hint && `helps with ${hint.text}`, marks?.pair?.title].filter(Boolean).join(": ");
   return (
     <button
       type="button"
       data-node-id={node.id}
-      className={`law-node law-node--${status} ${isSelected ? "is-selected" : ""} ${node.ideology ? "is-party" : ""}`}
+      className={`law-node law-node--${status} ${isSelected ? "is-selected" : ""} ${node.ideology ? "is-party" : ""} ${marks?.breakthrough ? "is-breakthrough" : ""}`}
       onClick={onSelect}
       aria-pressed={isSelected}
       aria-label={label}
     >
-      <span className="law-node__icon" style={{ "--progress": `${Math.round(progress * 100)}%` } as CSSProperties}>
-        <NodeGlyph id={node.id} category={node.category} icon={node.icon} size={34} />
-        {hint && <HintMarker hint={hint} />}
-        {status === "enacted" && (
-          <span className="law-node__badge law-node__badge--enacted">
-            <CheckBadge />
-          </span>
-        )}
-        {status === "in-progress" && (
-          <span className="law-node__badge law-node__badge--in-progress">
-            <HourglassBadge />
-          </span>
-        )}
-        {status === "foreclosed" && (
-          <span className="law-node__badge law-node__badge--foreclosed">
-            <XBadge />
-          </span>
-        )}
-        {isLocked && (
-          <span className="law-node__badge law-node__badge--locked">
-            <LockBadge />
+      {/* The pair mark sits beside the medallion, not in it, so it stays
+          bright while a locked medallion is faded. */}
+      <span className="law-node__seat">
+        <span className="law-node__icon" style={{ "--progress": `${Math.round(progress * 100)}%` } as CSSProperties}>
+          <NodeGlyph id={node.id} category={node.category} icon={node.icon} size={34} />
+          {hint && <HintMarker hint={hint} />}
+          {status === "enacted" && (
+            <span className="law-node__badge law-node__badge--enacted">
+              <CheckBadge />
+            </span>
+          )}
+          {status === "in-progress" && (
+            <span className="law-node__badge law-node__badge--in-progress">
+              <HourglassBadge />
+            </span>
+          )}
+          {status === "foreclosed" && (
+            <span className="law-node__badge law-node__badge--foreclosed">
+              <XBadge />
+            </span>
+          )}
+          {isLocked && (
+            <span className="law-node__badge law-node__badge--locked">
+              <LockBadge />
+            </span>
+          )}
+        </span>
+        {marks?.pair && (
+          <span className={`law-node__pair law-node__pair--${marks.pair.held}`} title={marks.pair.title}>
+            <PairIcon size={13} />
           </span>
         )}
       </span>
@@ -208,6 +220,7 @@ function TreeBranch<N extends TreeNode>({
   getStatusLabel,
   getHint,
   getPathHint,
+  getMarks,
   selectedId,
   selectedPathKey,
   onSelect,
@@ -221,6 +234,7 @@ function TreeBranch<N extends TreeNode>({
   getStatusLabel?: (node: N) => string;
   getHint?: (node: N) => TreeHint | undefined;
   getPathHint?: (path: TreePath) => TreeHint | undefined;
+  getMarks?: (node: N) => NodeMarks | undefined;
   selectedId: string | null;
   selectedPathKey: string | null;
   onSelect: (nodeId: string) => void;
@@ -291,6 +305,7 @@ function TreeBranch<N extends TreeNode>({
       progress={getProgress(node)}
       isSelected={selectedId === node.id}
       hint={getHint?.(node)}
+      marks={getMarks?.(node)}
       onSelect={() => onSelect(node.id)}
     />
   );
@@ -356,6 +371,7 @@ interface TreeColumnsProps<N extends TreeNode> {
   renderColumnExtra?: (categoryKey: string) => ReactNode; // shown under each column's title
   getHint?: (node: N) => TreeHint | undefined; // a problem it would help with, marked on its badge
   getPathHint?: (path: TreePath) => TreeHint | undefined; // the same, for a whole path, on its name
+  getMarks?: (node: N) => NodeMarks | undefined; // a breakthrough, or a pair, drawn on its medallion
   selectedId: string | null;
   selectedPathKey: string | null;
   onSelect: (nodeId: string) => void;
@@ -374,6 +390,7 @@ export function TreeColumns<N extends TreeNode>({
   renderColumnExtra,
   getHint,
   getPathHint,
+  getMarks,
   selectedId,
   selectedPathKey,
   onSelect,
@@ -397,6 +414,7 @@ export function TreeColumns<N extends TreeNode>({
             getStatusLabel={getStatusLabel}
             getHint={getHint}
             getPathHint={getPathHint}
+            getMarks={getMarks}
             selectedId={selectedId}
             selectedPathKey={selectedPathKey}
             onSelect={onSelect}
@@ -656,13 +674,16 @@ function formatSynergyEffect(effects: Synergy["effects"]): string {
 }
 
 // The other half of a Law+Research pair, and what enacting both is worth.
-export function SynergyLine({ synergy, partnerName, isActive }: { synergy: Synergy; partnerName: string; isActive: boolean }) {
+export function SynergyLine({ synergy, partnerName, held }: { synergy: Synergy; partnerName: string; held: number }) {
+  const isActive = held === 2;
   return (
     <p className={`law-inspector__synergy ${isActive ? "is-active" : ""}`}>
       <PairIcon size={14} />
-      {isActive ? "Paired with " : "Pair with "}
-      <strong>{partnerName}</strong>: {formatSynergyEffect(synergy.effects)}
-      {isActive ? " (active)." : "."}
+      <span>
+        {isActive ? "Paired with " : "Pair with "}
+        <strong>{partnerName}</strong>: {formatSynergyEffect(synergy.effects)}.
+      </span>
+      <span className="law-inspector__synergy-held">{isActive ? "Active" : `${held} of 2`}</span>
     </p>
   );
 }

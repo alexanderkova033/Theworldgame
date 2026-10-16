@@ -16,3 +16,9 @@ export function getSynergiesForResearch(researchId: string): Synergy[] {
 export function getActiveSynergies(enactedLawIds: string[], enactedResearchIds: string[]): Synergy[] {
   return SYNERGIES.filter((s) => enactedLawIds.includes(s.lawId) && enactedResearchIds.includes(s.researchId));
 }
+
+// How much of a pair is in force: 0, 1 or 2 halves, like the pieces of a
+// set. Shown on both trees, so the missing half is easy to spot.
+export function getPairHeld(synergy: Synergy, enactedLawIds: string[], enactedResearchIds: string[]): number {
+  return Number(enactedLawIds.includes(synergy.lawId)) + Number(enactedResearchIds.includes(synergy.researchId));
+}

@@ -22,7 +22,7 @@ const MAX_TOASTS = 4;
 
 interface Toast {
   key: string;
-  kind: "report" | "breakdown" | "info" | "warning" | "danger";
+  kind: "report" | "breakdown" | "breakthrough" | "info" | "warning" | "danger";
   title: string;
   message: string;
   action: Destination & { label: string };
@@ -42,6 +42,10 @@ function toastFromEvent(event: GameEvent): Toast | null {
       message: event.message,
       action: action ?? { label: "Repair", ...BUILDINGS },
     };
+  }
+  // A technology that came out better than projected gets its own moment.
+  if (event.tier === "breakthrough") {
+    return { key: event.id, kind: "breakthrough", title: "Breakthrough", message: event.message, action: action ?? { label: "Research", panel: "research" } };
   }
   return {
     key: event.id,
@@ -78,6 +82,13 @@ function toastFromReport(report: MonthlyReport): Toast {
 
 function ToastIcon({ kind }: { kind: Toast["kind"] }) {
   if (kind === "breakdown") return <WrenchIcon size={18} />;
+  if (kind === "breakthrough") {
+    return (
+      <svg viewBox="-10 -10 20 20" width={18} height={18} aria-hidden="true">
+        <path d="M0,-9 L2.2,-2.2 L9,0 L2.2,2.2 L0,9 L-2.2,2.2 L-9,0 L-2.2,-2.2 Z" fill="currentColor" />
+      </svg>
+    );
+  }
   if (kind === "report") {
     return (
       <svg viewBox="-10 -10 20 20" width={18} height={18} aria-hidden="true">

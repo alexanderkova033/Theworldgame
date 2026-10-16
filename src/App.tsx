@@ -17,7 +17,7 @@ import { getHeatingOutlook } from "./application/getHeatingOutlook";
 import { getMaterialShortages } from "./application/getMaterialShortages";
 import { getProvinceOverview, getProvinceStatus, type ProvinceStatus } from "./application/getProvinceOverview";
 import { getTroubledProvinces } from "./application/getTroubledProvinces";
-import { playDanger, playGameOver, playLetter } from "./presentation/audio/sound";
+import { playBreakthrough, playDanger, playGameOver, playLetter } from "./presentation/audio/sound";
 import { AdvisorStrip } from "./presentation/components/AdvisorStrip";
 import { DecisionModal } from "./presentation/components/DecisionModal";
 import { BuildPanel } from "./presentation/components/BuildPanel";
@@ -193,18 +193,24 @@ function App() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [state, pause, resume, setSpeed, showNextProblem]);
 
-  // A danger-severity event just landed in the log — play an alert, but no
-  // more than once every few seconds, since "stability critically low" can
-  // repeat daily while it stays that way (see simulateDay.ts) and would
-  // otherwise turn into an alarm siren at high game speed.
+  // A breakthrough just landed in the log: its own peal. A danger-severity
+  // event: an alert, but no more than once every few seconds, since
+  // "stability critically low" can repeat daily while it stays that way (see
+  // simulateDay.ts) and would otherwise turn into an alarm siren at high
+  // game speed.
   const lastEventIdRef = useRef<string | null>(null);
   const lastDangerSoundAt = useRef(0);
   useEffect(() => {
     if (!state || state.events.length === 0) return;
     const newest = state.events[0];
     if (newest.id === lastEventIdRef.current) return;
+    // Everything new since last time, for a breakthrough among them (they
+    // land mid-day, under whatever came after).
+    const seen = state.events.findIndex((e) => e.id === lastEventIdRef.current);
+    const fresh = seen === -1 ? [newest] : state.events.slice(0, seen);
     lastEventIdRef.current = newest.id;
-    if (newest.severity === "danger") {
+    if (fresh.some((e) => e.tier === "breakthrough")) playBreakthrough();
+    else if (newest.severity === "danger") {
       const now = Date.now();
       if (now - lastDangerSoundAt.current > 4000) {
         playDanger();

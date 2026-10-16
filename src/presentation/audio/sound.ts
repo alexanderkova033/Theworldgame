@@ -365,6 +365,16 @@ export function playLetter(): void {
   });
 }
 
+// A breakthrough: bells climbing a bright arpeggio, held at the top, the
+// sound of something rare turning up.
+export function playBreakthrough(): void {
+  play((e, t) => {
+    [NOTE.C5, NOTE.E5, NOTE.G5, 1046.5].forEach((freq, i) => bell(e, t + i * 0.11, freq, 0.11, 1.8));
+    bell(e, t + 0.5, 1318.5, 0.08, 2.4);
+    [NOTE.C4, NOTE.G4, NOTE.E5].forEach((freq) => pluck(e, t + 0.44, freq, 0.18, 1.8));
+  });
+}
+
 // Bad news: the parish bell tolls, low and twice.
 export function playDanger(): void {
   play((e, t) => {

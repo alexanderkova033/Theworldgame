@@ -1039,3 +1039,53 @@ button.law-tree__lane-head.is-selected {
 .path-inspector__cost {
   margin-top: 0.85rem;
 }
+
+/* --- Pairs and breakthroughs (see NodeMarks in TechTree.tsx) --- */
+
+/* Half of a law+research pair: a chain link at the top right, faint with
+   neither half in force, gilt with one (the other is worth seeking out),
+   green once the pair is whole. */
+.law-node__pair {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+}
+
+.law-node__pair svg {
+  display: block;
+}
+
+.law-node__pair--0 {
+  opacity: 0.6;
+}
+
+.law-node__pair--1 {
+  border: 1.5px solid var(--gilt);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gilt) 30%, transparent);
+}
+
+.law-node__pair--2 {
+  border: 1.5px solid var(--success);
+  background: #d3dcbd;
+}
+
+.law-inspector__synergy-held {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The medallion and its pair mark together. */
+.law-node__seat {
+  position: relative;
+  display: flex;
+}
