@@ -58,6 +58,8 @@ interface MapPanelProps {
   foreignRulers: Record<string, string>; // nationId -> ruling party id, for every nation but the player's
   provinceStatus: Record<string, ProvinceStatus>; // coarse flags for the info bars — stable between flips, so the map isn't redrawn daily
   provinceOverview: ProvinceOverview[]; // today's numbers, for the tooltip only
+  problemCount: number; // provinces that need the player (see getTroubledProvinces)
+  onNextProblem: () => void; // select the next of them and open its card
 }
 
 // Every terrain gets a decorative texture, drawn on top of the province's
@@ -920,6 +922,8 @@ export const MapPanel = memo(function MapPanel({
   foreignRulers,
   provinceStatus,
   provinceOverview,
+  problemCount,
+  onNextProblem,
 }: MapPanelProps) {
   const { provinces } = MAP_GEOMETRY;
 
@@ -1316,6 +1320,17 @@ export const MapPanel = memo(function MapPanel({
               !
             </span>
           )}
+        </button>
+
+        {/* The next province that needs you, worst first: its card opens. */}
+        <button
+          type="button"
+          className={`map-panel__next-problem ${problemCount > 0 ? "has-problems" : ""}`}
+          onClick={onNextProblem}
+          disabled={problemCount === 0}
+          title={problemCount > 0 ? `Go to the next province that needs you, worst first (key: N)` : "No province needs you right now"}
+        >
+          {problemCount > 0 ? <>Next problem <span className="map-panel__next-problem-count">{problemCount}</span></> : "All well"}
         </button>
 
         {/* Map modes: a segmented switch, with the active mode's key. */}

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { takeLoan } from "../src/application/actions/loanActions";
 import { getProvinceOverview } from "../src/application/getProvinceOverview";
 import { getProvinceSuggestions, MAX_SUGGESTIONS } from "../src/application/getProvinceSuggestions";
+import { getTroubledProvinces } from "../src/application/getTroubledProvinces";
 import { startNewGame } from "../src/application/startNewGame";
 
 const state = takeLoan(startNewGame("astravia", "astravia-harvest-union"));
@@ -36,5 +37,21 @@ describe("province suggestions", () => {
     const [first] = getProvinceSuggestions(broke, { ...calm, homeless: calm.population * 0.2 });
     expect(first.kind === "build" && first.how).toBe("blocked");
     expect(first.kind === "build" && first.blockedBy).toMatch(/more Cr to start/);
+  });
+});
+
+describe("provinces that need you", () => {
+  const all = getProvinceOverview(state).map((o) => ({ ...o, homeless: 0, unemployed: 0, unrestStage: "calm" as const }));
+  const [a, b, c] = all;
+
+  it("lists nobody when all is well", () => {
+    expect(getTroubledProvinces(state, all)).toEqual([]);
+  });
+
+  it("puts riots before the homeless, and the homeless before the jobless", () => {
+    const troubled = all.map((o) =>
+      o.id === a.id ? { ...o, unemployed: o.workers * 0.5 } : o.id === b.id ? { ...o, homeless: o.population * 0.2 } : o.id === c.id ? { ...o, unrestStage: "riots" as const } : o,
+    );
+    expect(getTroubledProvinces(state, troubled)).toEqual([c.id, b.id, a.id]);
   });
 });

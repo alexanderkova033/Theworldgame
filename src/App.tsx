@@ -16,6 +16,7 @@ import { getForecasts } from "./application/getForecasts";
 import { getHeatingOutlook } from "./application/getHeatingOutlook";
 import { getMaterialShortages } from "./application/getMaterialShortages";
 import { getProvinceOverview, getProvinceStatus, type ProvinceStatus } from "./application/getProvinceOverview";
+import { getTroubledProvinces } from "./application/getTroubledProvinces";
 import { playDanger, playGameOver, playLetter } from "./presentation/audio/sound";
 import { AdvisorStrip } from "./presentation/components/AdvisorStrip";
 import { DecisionModal } from "./presentation/components/DecisionModal";
@@ -138,17 +139,42 @@ function App() {
     [provinceStatusKey],
   );
 
+  // The provinces that need you, worst first. Kept in refs so the "Next
+  // problem" callback stays the same function and the memoized map isn't
+  // redrawn every day for it.
+  const troubledIds = useMemo(() => (state ? getTroubledProvinces(state, provinceOverview) : []), [state, provinceOverview]);
+  const troubledRef = useRef(troubledIds);
+  const selectedRef = useRef(selectedProvinceId);
+  useEffect(() => {
+    troubledRef.current = troubledIds;
+    selectedRef.current = selectedProvinceId;
+  }, [troubledIds, selectedProvinceId]);
+  const showNextProblem = useCallback(() => {
+    const ids = troubledRef.current;
+    if (ids.length === 0) return;
+    const at = ids.indexOf(selectedRef.current ?? "");
+    selectProvinceOnMap(ids[(at + 1) % ids.length]);
+  }, [selectProvinceOnMap]);
+
   const handleSelectIsland = useCallback((islandId: string) => {
     setSelectedIslandId(islandId);
     setOpenModal("ventures");
   }, []);
 
-  // Keyboard shortcuts: Space toggles pause, 1/2/3/5 set speed. Scoped to
+  // Keyboard shortcuts: Space toggles pause, 1/2/3/5 set speed, N goes to the next province that needs you. Scoped to
   // "nothing else has focus" so they never double-fire alongside a focused
   // button's own Space/Enter handling.
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (!state || state.isGameOver || e.target !== document.body) return;
+      if (!state || state.isGameOver) return;
+      // N means nothing to a focused button, so it works anywhere but a
+      // text box (renaming a save slot, say).
+      const typing = e.target instanceof HTMLElement && (e.target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName));
+      if ((e.key === "n" || e.key === "N") && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        showNextProblem();
+        return;
+      }
+      if (e.target !== document.body) return;
       if (e.code === "Space") {
         e.preventDefault();
         if (state.isPaused) resume();
@@ -159,7 +185,7 @@ function App() {
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [state, pause, resume, setSpeed]);
+  }, [state, pause, resume, setSpeed, showNextProblem]);
 
   // A danger-severity event just landed in the log — play an alert, but no
   // more than once every few seconds, since "stability critically low" can
@@ -310,6 +336,8 @@ function App() {
             foreignRulers={foreignRulers}
             provinceStatus={provinceStatus}
             provinceOverview={provinceOverview}
+            problemCount={troubledIds.length}
+            onNextProblem={showNextProblem}
           />
           {isProvinceCardOpen &&
             (() => {
