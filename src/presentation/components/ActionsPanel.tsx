@@ -7,7 +7,7 @@ import "./ActionsPanel.css";
 import { getModifiers } from "../../domain/policy/policyRules";
 import type { ReactNode } from "react";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
-import { buildCannery, buildEducation, buildFactory, buildFarm, buildGranary, buildHousing, buildRoad, countBuildingsInProvince } from "../../application/actions";
+import { buildCannery, buildEducation, buildFactory, buildFarm, buildGranary, buildHousing, buildRoad, buyAndBuild, countBuildingsInProvince, planBuyAndBuild } from "../../application/actions";
 import { getBuildCost, type BuildAction } from "../../application/actions/createBuildAction";
 import {
   CANNERY_BUILD_DAYS,
@@ -263,7 +263,7 @@ function blockedReason(item: BuildItem, cost: number, state: GameState, province
   const moneyShort = upfront(cost) - state.stats.treasury;
   if (moneyShort > 0) return `Need ${Math.ceil(moneyShort).toLocaleString()} more ${CURRENCY_SYMBOL} to start.`;
   const resourceShort = upfront(item.resourceCost) - state.resources[item.resourceType];
-  if (resourceShort > 0) return `Need ${Math.ceil(resourceShort)} more ${item.resourceType} to start. Buy it on the market.`;
+  if (resourceShort > 0) return `Need ${Math.ceil(resourceShort)} more ${item.resourceType} to start, and the money to buy it.`;
   return null;
 }
 
@@ -339,7 +339,11 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
               const resourcePartial = !resourceShort && stock < item.resourceCost;
               const unlockName = item.unlockedBy ? getResearchNode(item.unlockedBy)?.name : undefined;
               const brokenHere = state.placedBuildings.filter((b) => b.type === item.type && b.provinceId === selectedProvinceId && !isWorking(b)).length;
-              const reason = blockedReason(item, cost, state, provinceName, count, max, unlockName, isLocked);
+              // Short only of material that money can cover: buy it and build in one click.
+              const plan = !isLocked && !canBuild ? planBuyAndBuild(state, item.action, selectedProvinceId) : null;
+              const reason = plan
+                ? `Need ${Math.ceil(upfront(item.resourceCost) - state.resources[item.resourceType])} more ${item.resourceType}. Buy & build gets ${Math.round(plan.amount)} for ${Math.round(plan.goodsCost).toLocaleString()} ${CURRENCY_SYMBOL}.`
+                : blockedReason(item, cost, state, provinceName, count, max, unlockName, isLocked);
               const workers = item.type in jobsPer ? jobsPer[item.type as JobBuilding] : 0;
 
               return (
@@ -401,10 +405,12 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
                     )}
 
                     {reason && (
-                      <span className="build-row__reason">
-                        <span className="build-row__reason-mark" aria-hidden="true">
-                          !
-                        </span>
+                      <span className={`build-row__reason ${plan ? "is-solvable" : ""}`}>
+                        {!plan && (
+                          <span className="build-row__reason-mark" aria-hidden="true">
+                            !
+                          </span>
+                        )}
                         {reason}
                       </span>
                     )}
@@ -425,14 +431,15 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
                     <button
                       type="button"
                       className="btn-primary build-row__button"
-                      disabled={!canBuild}
-                      aria-label={canBuild ? `Build ${item.name} in ${provinceName}` : `${item.name}: ${reason}`}
+                      disabled={!canBuild && !plan}
+                      aria-label={canBuild ? `Build ${item.name} in ${provinceName}` : plan ? `Buy ${item.resourceType} and build ${item.name} in ${provinceName}` : `${item.name}: ${reason}`}
+                      title={plan ? `Buys ${Math.round(plan.amount)} ${item.resourceType} for ${Math.round(plan.goodsCost).toLocaleString()} ${CURRENCY_SYMBOL}, then orders the ${item.name.toLowerCase()}` : undefined}
                       onClick={() => {
                         playBuild();
-                        dispatch((s) => item.action(s, selectedProvinceId));
+                        dispatch((s) => (item.action.canBuild(s, selectedProvinceId) ? item.action(s, selectedProvinceId) : buyAndBuild(s, item.action, selectedProvinceId)));
                       }}
                     >
-                      {isLocked ? "Locked" : "Build"}
+                      {isLocked ? "Locked" : plan ? "Buy & build" : "Build"}
                     </button>
                   </span>
                 </li>

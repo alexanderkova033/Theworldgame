@@ -254,6 +254,11 @@ button.actions-panel__province.is-selected:hover:not(:disabled) {
   color: var(--ink-muted);
 }
 
+/* Short of material, but Buy & build can fix it: a note, not a warning. */
+.build-row__reason.is-solvable {
+  color: var(--ink-muted);
+}
+
 .build-row__reason-mark {
   display: inline-flex;
   align-items: center;

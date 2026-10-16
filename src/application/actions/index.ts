@@ -6,6 +6,7 @@ export { buildGranary } from "./buildGranary";
 export { buildCannery } from "./buildCannery";
 export { buildHousing } from "./buildHousing";
 export { countBuildingsInProvince } from "./createBuildAction";
+export { buyAndBuild, planBuyAndBuild, type BuyAndBuildPlan } from "./buyAndBuild";
 export { buyGood, canBuyGood, canSellGood, getMarketBuyCost, getMarketSellRevenue, sellGood } from "./marketActions";
 export { canTakeLoan, canRepayLoan, getRepayAmount, repayLoan, takeLoan } from "./loanActions";
 export { canSendExpedition, sendExpedition } from "./sendExpedition";
