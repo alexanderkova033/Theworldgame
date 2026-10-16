@@ -108,3 +108,39 @@ export function formatChange(metric: LedgerMetric | "population", value: number,
   if (points && perDay) return formatRate(value, true).replace("/d", "");
   return formatSigned(value, points);
 }
+
+// After a loss, one thing to do differently, picked by the cause that did
+// the most damage (see domain/ledger/defeatRules.ts).
+const DEFEAT_TIPS: Record<"support" | "stability", Record<string, string>> = {
+  support: {
+    taxes: "Taxes ran above what people accept. Ease them before an election, and let industry carry the treasury.",
+    food: "People went hungry. Keep a month of food in store, more before winter.",
+    homes: "People had nowhere to live. Build homes ahead of the population, not behind it.",
+    heat: "Homes went cold. Stock wood and ore for heating before winter comes.",
+    jobs: "People had no work. Build workplaces as the population grows.",
+    order: "Unrest dragged support down with it. Mend stability first and support follows.",
+    policy: "Your laws and research cost you voters. Check what each one does to support before taking it.",
+    expectations: "Voters expected more. Keep every other cause in the green to outpace them.",
+    settling: "Support drifted with nothing holding it up. Give voters reasons: food, homes, work and fair taxes.",
+    debt: "Debt past the danger line cost you voters. Borrow less, or pay it back sooner.",
+    rival: "The rival's campaign won voters over. Court the groups they target, and rally before an election.",
+    foreign: "Neighbours campaigned against you. Mind who you press abroad.",
+    oneOffs: "Your own decisions cost support. Weigh each one's effect on voters first.",
+  },
+  stability: {
+    food: "Hunger broke order. Keep a month of food in store, more before winter.",
+    support: "Low support wore order down. Win voters back and order follows.",
+    debt: "Debt past the danger line wore order down. Borrow less, or pay it back sooner.",
+    homes: "Homeless people turned on the government. Build homes ahead of the population.",
+    cold: "Cold homes turned people against you. Stock wood and ore for heating before winter.",
+    policy: "Your laws and research cost order. Check what each one does to stability before taking it.",
+    provinces: "Provinces rioted on their own. Go to the worst one as soon as it starts.",
+    crackdown: "Crackdowns bought calm and cost more later. Use them sparingly.",
+    oneOffs: "Your own decisions cost order. Weigh each one's effect on stability first.",
+    events: "Bad luck hit hard. Keep money and food in reserve for it.",
+  },
+};
+
+export function getDefeatTip(metric: "support" | "stability", cause: string | undefined): string {
+  return (cause && DEFEAT_TIPS[metric][cause]) || "Watch the top bar: its numbers say what is moving, and why.";
+}

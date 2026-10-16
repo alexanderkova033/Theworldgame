@@ -5,6 +5,8 @@ import { CURRENCY_SYMBOL, ELECTIONS_TO_WIN_GAME } from "../../domain/constants";
 import type { GameOutcome, GameState } from "../../domain/country/types";
 import { getNation } from "../../domain/nations/nationRules";
 import { getParty } from "../../domain/parties/partyRules";
+import { explainDefeat } from "../../domain/ledger/defeatRules";
+import { DefeatStory } from "./DefeatStory";
 import { StatIcon } from "./StatIcon";
 import { formatAmount } from "../formatNumber";
 
@@ -47,6 +49,7 @@ export function GameEndScreen({ state, onNewGame, retry, onRetry }: GameEndScree
   const party = getParty(state.partyId);
   const outcome = state.outcome ?? "collapsed";
   const copy = OUTCOME_COPY[outcome];
+  const story = explainDefeat(state);
 
   return (
     <div className={`game-end-screen ${copy.className}`}>
@@ -60,6 +63,8 @@ export function GameEndScreen({ state, onNewGame, retry, onRetry }: GameEndScree
         </span>
 
         <p className="game-end-screen__reason">{state.gameOverReason}</p>
+
+        {story && <DefeatStory story={story} />}
 
         <div className="game-end-screen__stats">
           <div className="icon-tile">
