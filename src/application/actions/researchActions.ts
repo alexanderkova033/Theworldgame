@@ -2,7 +2,7 @@ import { generateId } from "../../domain/country/id";
 import type { GameState } from "../../domain/country/types";
 import { describePolicyImpact } from "../describePolicyImpact";
 import { applyFactionEffects, getFactionWeights } from "../../domain/parties/factionRules";
-import { canFocusResearch, getResearchNode, rollResearchOutcome, scaleOneTimeEffects } from "../../domain/research/researchRules";
+import { canFocusResearch, getOnlyNextStep, getResearchNode, rollResearchOutcome, scaleOneTimeEffects } from "../../domain/research/researchRules";
 import type { ResearchCategory } from "../../domain/research/types";
 
 export { canFocusResearch };
@@ -63,9 +63,13 @@ export function completeResearch(state: GameState, researchId: string): GameStat
   };
   // What it changed, measured now that it's done (and scaled by the roll).
   const impact = describePolicyImpact(state, next, node.effects);
+  // With only one way on, the area carries on by itself; a real choice
+  // (three paths, or a fork) waits for the player.
+  const following = getOnlyNextStep(next, researchId);
+  if (following) next.researchFocus = { ...next.researchFocus, [node.category]: following.id };
   next.events[0] = {
     ...next.events[0],
-    message: `${node.name} is complete, ${outcome.flavor}: ${impact}. Pick the next direction for ${node.category} research.`,
+    message: `${node.name} is complete, ${outcome.flavor}: ${impact}. ${following ? `Work moves on to ${following.name}.` : `Pick the next direction for ${node.category} research.`}`,
   };
   return next;
 }

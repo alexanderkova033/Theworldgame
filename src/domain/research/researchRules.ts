@@ -120,6 +120,14 @@ export function getResearchNodeStatus(state: GameState, node: ResearchNode): Res
   return "available";
 }
 
+// The step that follows a finished one, when there is no choice to make:
+// exactly one step it leads to is open now. After a branch's root (three
+// paths) or at a fork (two ways), there's a choice, so this is undefined.
+export function getOnlyNextStep(state: GameState, finishedId: string): ResearchNode | undefined {
+  const next = RESEARCH_NODES.filter((n) => n.requires?.includes(finishedId) && getResearchNodeStatus(state, n) === "available");
+  return next.length === 1 ? next[0] : undefined;
+}
+
 // Choosing a direction is free — switching away from a half-done node keeps
 // its progress (GameState.researchProgress) for if you come back to it.
 export function canFocusResearch(state: GameState, id: string): boolean {

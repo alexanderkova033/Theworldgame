@@ -317,7 +317,7 @@ export function ResearchPanel({ state, alerts, dispatch }: ResearchPanelProps) {
         </span>
         <span
           className="law-tree__help"
-          title="Pick a direction for each area and it moves forward every day, faster with scientists and schools. Each area splits into three paths: the first step on one closes the other two for good."
+          title="Pick a direction for each area and it moves forward every day, faster with scientists and schools. Each area splits into three paths: the first step on one closes the other two for good. When a step finishes and only one way leads on, work carries on by itself."
         >
           How it works
         </span>
