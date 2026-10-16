@@ -1,9 +1,10 @@
 // How hard a game is, chosen before it starts. Difficulty changes the
 // pressure on the player and nothing hidden: every change is listed on the
 // start screen in plain words (`changes`). The levels are measured by the
-// scripted players in tests/balance.test.ts, so each means something:
-// on Easy even a sloppy player wins, on Normal a careful one does, on Hard
-// only just, and on Ruthless not always.
+// scripted players in tests/balance.test.ts, so each means something. Out
+// of 9 five-year games, a sloppy player (late, never ahead of trouble) and
+// a careful one win: Easy 8 and 9, Normal 5 and 9, Hard 1 and 8, Ruthless
+// 0 and 4. Not every country can be saved on Ruthless, but some can.
 
 export type Difficulty = "easy" | "normal" | "hard" | "ruthless";
 
@@ -31,7 +32,7 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     name: "Easy",
     title: "Steward",
     summary: "Room to learn. Mistakes cost less, and you can go back more often.",
-    changes: ["Start with 2,000 Cr", "Elections need 50%, 52%, 54%", "Voters are easier to please: support settles 3 points higher", "15% more political power", "The rival campaigns less, and softer", "Bad years take half as much", "Buildings break down half as often", "5 retries from a checkpoint"],
+    changes: ["Start with 2,000 Cr", "Elections need 50%, 52%, 54%", "Voters are easy to please: support settles 3 points above neutral", "15% more political power", "The rival campaigns less, and softer", "Bad years take half as much", "Buildings break down half as often", "5 retries from a checkpoint"],
     electionThresholds: [50, 52, 54],
     expectations: 3,
     politicalPowerMultiplier: 1.15,
@@ -47,9 +48,9 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     name: "Normal",
     title: "Minister",
     summary: "The game as designed. A careful player wins.",
-    changes: ["Elections need 50%, 54%, 58%", "3 retries from a checkpoint"],
+    changes: ["Elections need 50%, 54%, 58%", "Voters expect more: support settles 3 points below neutral", "3 retries from a checkpoint"],
     electionThresholds: [50, 54, 58],
-    expectations: 0,
+    expectations: -3,
     politicalPowerMultiplier: 1,
     startingTreasury: 0,
     startingFoodShare: 1,
@@ -63,9 +64,9 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     name: "Hard",
     title: "Chancellor",
     summary: "A careful player only just wins. Every season counts.",
-    changes: ["Elections need 52%, 56%, 60%", "Voters expect more: support settles 4 points lower", "15% less political power", "The rival campaigns more, and harder", "Bad years take half as much again", "Buildings break down 1.5 times as often", "1 retry from a checkpoint"],
+    changes: ["Elections need 52%, 56%, 60%", "Voters expect a lot: support settles 6 points below neutral", "15% less political power", "The rival campaigns more, and harder", "Bad years take half as much again", "Buildings break down 1.5 times as often", "1 retry from a checkpoint"],
     electionThresholds: [52, 56, 60],
-    expectations: -4,
+    expectations: -6,
     politicalPowerMultiplier: 0.85,
     startingTreasury: 0,
     startingFoodShare: 1,
@@ -79,9 +80,9 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     name: "Ruthless",
     title: "Iron Chancellor",
     summary: "Not every country can be saved. Win here and it means something.",
-    changes: ["Half the usual food stores", "Elections need 54%, 58%, 62%", "Voters expect much more: support settles 6 points lower", "30% less political power", "The rival campaigns often, and hard", "Bad years take twice as much", "Buildings break down twice as often", "No retries"],
+    changes: ["Half the usual food stores", "Elections need 54%, 58%, 62%", "Voters expect even more: support settles 8 points below neutral", "30% less political power", "The rival campaigns often, and hard", "Bad years take twice as much", "Buildings break down twice as often", "No retries"],
     electionThresholds: [54, 58, 62],
-    expectations: -6,
+    expectations: -8,
     politicalPowerMultiplier: 0.7,
     startingTreasury: 0,
     startingFoodShare: 0.5,

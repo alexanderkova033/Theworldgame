@@ -5,6 +5,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { completeLaw } from "../src/application/actions/enactLaw";
 import { startNewGame } from "../src/application/startNewGame";
+import type { Difficulty } from "../src/domain/difficulty/difficultyData";
 import { getElectionThreshold } from "../src/domain/parties/electionRules";
 import { LAW_PATHS } from "../src/domain/laws/lawData";
 import { RESEARCH_PATHS } from "../src/domain/research/researchData";
@@ -95,5 +96,42 @@ describe("a law coming into force", () => {
     const start = startNewGame("veldoria", "veldoria-ironworkers-guild");
     const after = completeLaw(start, "labor-company-towns");
     expect(after.events[0].message).toMatch(/^Company Towns comes into force: \+[\d,]+ room for people/);
+  });
+});
+
+// The difficulty levels, measured: 9 five-year games each (3 seeds, every
+// nation), by a sloppy player (late, never ahead of trouble) and a careful
+// one. Each level should mean what its name says.
+describe("difficulty", () => {
+  const wins = (difficulty: Difficulty, skill: "sloppy" | "careful") => {
+    let won = 0;
+    for (const seed of [20261015, 7, 99]) {
+      for (const [nation, party] of NATIONS) {
+        seedRandom(seed);
+        if (playCarefully(nation, party, { days: 5 * 365, difficulty, skill }).outcome === "victory") won++;
+      }
+    }
+    return won;
+  };
+
+  it("Easy lets even a sloppy player win most games", () => {
+    expect(wins("easy", "sloppy")).toBeGreaterThanOrEqual(7);
+  });
+
+  it("Normal isn't a walkover for a sloppy player", () => {
+    expect(wins("normal", "sloppy")).toBeLessThanOrEqual(6);
+  });
+
+  it("Hard: a careful player wins most games, but not all", () => {
+    const careful = wins("hard", "careful");
+    expect(careful).toBeGreaterThanOrEqual(6);
+    expect(careful).toBeLessThan(9);
+    expect(wins("hard", "sloppy")).toBeLessThanOrEqual(3);
+  });
+
+  it("Ruthless: not every country can be saved, but some can", () => {
+    const careful = wins("ruthless", "careful");
+    expect(careful).toBeGreaterThanOrEqual(2);
+    expect(careful).toBeLessThanOrEqual(6);
   });
 });
