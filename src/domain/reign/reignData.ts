@@ -8,13 +8,15 @@ export type GameMode = "terms" | "long-reign";
 
 export const MODES: GameMode[] = ["terms", "long-reign"];
 
-export const MODE_SETTINGS: Record<GameMode, { name: string; summary: string }> = {
+export const MODE_SETTINGS: Record<GameMode, { name: string; tagline: string; summary: string }> = {
   terms: {
     name: "Three Terms",
+    tagline: "Win three elections in a row.",
     summary: "Win three elections in a row to win the game.",
   },
   "long-reign": {
     name: "Long Reign",
+    tagline: "Hold power as long as you can.",
     summary: "No finish line and no retries. Each election you win, you take on a burden of office. How long can your party hold on?",
   },
 };

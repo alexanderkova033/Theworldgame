@@ -7,6 +7,8 @@ import { describeEffects } from "../../domain/policy/modifiers";
 import { IDEOLOGY_CARES } from "../../domain/parties/rivalRules";
 import { starPoints } from "./iconShapes";
 import { MapWatermark } from "./StartScreen";
+import { formatReign } from "../formatNumber";
+import { getBestReign } from "../hooks/records";
 import { MODES, MODE_SETTINGS, type GameMode } from "../../domain/reign/reignData";
 
 interface PartySelectScreenProps {
@@ -16,13 +18,18 @@ interface PartySelectScreenProps {
   onSelectParty: (partyId: string, difficulty: Difficulty, mode: GameMode) => void;
 }
 
-// The second half of starting a game: which of the nation's two parties the
-// player actually leads. This is the choice the whole rest of the game
-// measures you against — win elections as this party, or get voted out.
+// The second half of starting a game: how it ends, how hard it is, and
+// which of the nation's two parties the player leads. The first two sit on
+// a leather board, as tiles and rank badges; the parties stand below as
+// cards in their own colours.
 export function PartySelectScreen({ nation, parties, onBack, onSelectParty }: PartySelectScreenProps) {
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
   const level = DIFFICULTY_SETTINGS[difficulty];
   const [mode, setMode] = useState<GameMode>("terms");
+  const best = mode === "long-reign" ? getBestReign(difficulty) : null;
+  // A Long Reign has no retries, so that line doesn't apply to it.
+  const changes = level.changes.filter((change) => mode !== "long-reign" || !/retr/i.test(change));
+
   return (
     <div className="start-screen party-select-screen">
       <MapWatermark />
@@ -34,94 +41,154 @@ export function PartySelectScreen({ nation, parties, onBack, onSelectParty }: Pa
         <p className="start-screen__eyebrow" style={{ color: nation.color }}>
           {nation.name}
         </p>
-        <h1 className="start-screen__title">Lead a Party</h1>
-        <p className="start-screen__subtitle">
-          Every law, tax and venture from here on is measured by one thing: whether the people still back you. The
-          two parties govern differently, so pick the one whose strengths you want.
-        </p>
+        <h1 className="start-screen__title">Take Office</h1>
+        <p className="start-screen__subtitle">How your rule ends, how hard the road, and which party you lead.</p>
 
-        {/* How the game ends: three terms, or as long as you can hold on. */}
-        <div className="difficulty-picker">
-          <div className="difficulty-picker__levels" role="radiogroup" aria-label="Mode">
-            {MODES.map((key) => (
-              <button
-                key={key}
-                type="button"
-                role="radio"
-                aria-checked={mode === key}
-                className={`difficulty-picker__level ${mode === key ? "is-active" : ""}`}
-                onClick={() => setMode(key)}
-              >
-                {MODE_SETTINGS[key].name}
-              </button>
-            ))}
-          </div>
-          <p className="difficulty-picker__summary">{MODE_SETTINGS[mode].summary}</p>
-        </div>
+        <div className="terms-board">
+          <section className="terms-board__half" aria-labelledby="terms-mode">
+            <h2 className="terms-board__label" id="terms-mode">
+              How it ends
+            </h2>
+            <div className="terms-board__modes" role="radiogroup" aria-labelledby="terms-mode">
+              {MODES.map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="radio"
+                  aria-checked={mode === key}
+                  className={`mode-tile ${mode === key ? "is-active" : ""}`}
+                  onClick={() => setMode(key)}
+                  title={MODE_SETTINGS[key].summary}
+                >
+                  <ModeEmblem mode={key} />
+                  <span className="mode-tile__name">{MODE_SETTINGS[key].name}</span>
+                  <span className="mode-tile__summary">{MODE_SETTINGS[key].tagline}</span>
+                </button>
+              ))}
+            </div>
+            {/* What to expect: the usual length of a campaign, or the reign to beat. */}
+            <p className="terms-board__record">
+              {mode === "terms"
+                ? "A careful game lasts about four and a half years."
+                : best
+                  ? `Your longest on ${level.name}: ${formatReign(best.months)}`
+                  : `No reign on ${level.name} yet`}
+            </p>
+          </section>
 
-        {/* How hard: every change from Normal, listed in plain words. */}
-        <div className="difficulty-picker">
-          <div className="difficulty-picker__levels" role="radiogroup" aria-label="Difficulty">
-            {DIFFICULTIES.map((key) => (
-              <button
-                key={key}
-                type="button"
-                role="radio"
-                aria-checked={difficulty === key}
-                className={`difficulty-picker__level ${difficulty === key ? "is-active" : ""}`}
-                onClick={() => setDifficulty(key)}
-              >
-                {DIFFICULTY_SETTINGS[key].name}
-              </button>
-            ))}
-          </div>
-          <p className="difficulty-picker__summary">{level.summary}</p>
-          <ul className="difficulty-picker__changes">
-            {level.changes.map((change) => (
-              <li key={change}>{change}</li>
-            ))}
-          </ul>
+          <section className="terms-board__half" aria-labelledby="terms-level">
+            <h2 className="terms-board__label" id="terms-level">
+              How hard
+            </h2>
+            <div className="terms-board__ranks" role="radiogroup" aria-labelledby="terms-level">
+              {DIFFICULTIES.map((key, i) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="radio"
+                  aria-checked={difficulty === key}
+                  className={`rank-badge rank-badge--${key} ${difficulty === key ? "is-active" : ""}`}
+                  onClick={() => setDifficulty(key)}
+                  title={DIFFICULTY_SETTINGS[key].summary}
+                >
+                  <RankInsignia chevrons={i + 1} />
+                  <span className="rank-badge__name">{DIFFICULTY_SETTINGS[key].name}</span>
+                  <span className="rank-badge__title">{DIFFICULTY_SETTINGS[key].title}</span>
+                </button>
+              ))}
+            </div>
+            <p className="terms-board__summary">{level.summary}</p>
+            <ul className="terms-board__changes">
+              {changes.map((change) => (
+                <li key={change}>{change}</li>
+              ))}
+            </ul>
+          </section>
         </div>
 
         <div className="party-select-screen__grid">
-          {parties.map((party) => (
-            <button
-              key={party.id}
-              className="party-card"
-              style={{ "--party-color": party.color } as CSSProperties}
-              onClick={() => onSelectParty(party.id, difficulty, mode)}
-            >
-              <span className="party-card__crest">
-                <PartyCrestEmblem ideology={party.ideology} />
-              </span>
-              <span className="party-card__name">{party.name}</span>
-              <span className="party-card__ideology">{party.ideology}</span>
-              <span className="party-card__description">{party.description}</span>
-              <span className="party-card__platform">{party.platform}</span>
-              {/* What governing as this party changes: a button holds
-                  only inline content, so the lists are spans. */}
-              <span className="party-card__creed">
-                <span className="party-card__creed-label">In power</span>
-                {describeEffects(party.creed).gains.map((line) => (
-                  <span key={line.key} className="party-card__perk is-gain">
-                    + {line.text}
+          {parties.map((party) => {
+            const creed = describeEffects(party.creed);
+            return (
+              <button
+                key={party.id}
+                className="party-card"
+                style={{ "--party-color": party.color } as CSSProperties}
+                onClick={() => onSelectParty(party.id, difficulty, mode)}
+                title={party.description}
+              >
+                <span className="party-card__banner" aria-hidden="true">
+                  <span className="party-card__crest">
+                    <PartyCrestEmblem ideology={party.ideology} />
                   </span>
-                ))}
-                {describeEffects(party.creed).costs.map((line) => (
-                  <span key={line.key} className="party-card__perk is-loss">
-                    − {line.text}
-                  </span>
-                ))}
-              </span>
-              <span className="party-card__cares">
-                Backs laws for {IDEOLOGY_CARES[party.ideology].for}
-              </span>
-              <span className="party-card__cta">Lead the {party.name}</span>
-            </button>
-          ))}
+                </span>
+                <span className="party-card__name">{party.name}</span>
+                <span className="party-card__ideology">{party.ideology}</span>
+                <span className="party-card__platform">{party.platform}</span>
+                {/* What governing as this party changes: a button holds
+                    only inline content, so the lists are spans. */}
+                <span className="party-card__creed">
+                  {creed.gains.map((line) => (
+                    <span key={line.key} className="party-card__perk is-gain">
+                      <span className="party-card__mark" aria-label="Gain">▲</span>
+                      {line.text}
+                    </span>
+                  ))}
+                  {creed.costs.map((line) => (
+                    <span key={line.key} className="party-card__perk is-loss">
+                      <span className="party-card__mark" aria-label="Cost">▼</span>
+                      {line.text}
+                    </span>
+                  ))}
+                </span>
+                <span className="party-card__cares">Backs laws for {IDEOLOGY_CARES[party.ideology].for}</span>
+                <span className="party-card__cta">Lead the {party.name}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
+  );
+}
+
+// How a game ends, drawn: three stars for three elections won, an hourglass
+// for a reign that runs until it runs out.
+function ModeEmblem({ mode }: { mode: GameMode }) {
+  return (
+    <svg className="mode-tile__emblem" viewBox="-20 -14 40 28" width={64} height={45} aria-hidden="true">
+      {mode === "terms" ? (
+        <g fill="var(--gilt-bright)" stroke="#93731f" strokeWidth={0.8} strokeLinejoin="round">
+          <polygon points={starPoints(-12, 3, 6.5, 2.8)} />
+          <polygon points={starPoints(0, -4, 8, 3.4)} />
+          <polygon points={starPoints(12, 3, 6.5, 2.8)} />
+        </g>
+      ) : (
+        <g strokeLinejoin="round">
+          <rect x={-9} y={-12} width={18} height={2.6} rx={1} fill="var(--gilt-bright)" stroke="#93731f" strokeWidth={0.6} />
+          <rect x={-9} y={9.4} width={18} height={2.6} rx={1} fill="var(--gilt-bright)" stroke="#93731f" strokeWidth={0.6} />
+          <path d="M-6.5,-9.4 L6.5,-9.4 L0.8,0 L6.5,9.4 L-6.5,9.4 L-0.8,0 Z" fill="rgba(244, 234, 208, 0.18)" stroke="var(--gilt-bright)" strokeWidth={1} />
+          <path d="M-3.8,-6.2 L3.8,-6.2 L0.5,-1.2 L-0.5,-1.2 Z" fill="var(--gilt-bright)" />
+          <path d="M0,0.5 L0,6 M-4.6,8.9 Q0,5.6 4.6,8.9 Z" fill="var(--gilt-bright)" stroke="var(--gilt-bright)" strokeWidth={0.8} />
+          <path d="M-15,6 C-17,0 -16,-6 -12,-10 M15,6 C17,0 16,-6 12,-10" fill="none" stroke="#9fbf86" strokeWidth={1.4} strokeLinecap="round" />
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// A difficulty as a rank: a shield with one chevron per step up.
+function RankInsignia({ chevrons }: { chevrons: number }) {
+  return (
+    <svg className="rank-badge__shield" viewBox="-10 -11 20 22" width={42} height={46} aria-hidden="true">
+      <path d="M-8,-9 H8 V0.5 C8,6 0,10 0,10 C0,10 -8,6 -8,0.5 Z" fill="var(--rank-color)" stroke="var(--gilt-bright)" strokeWidth={1.1} />
+      <g fill="none" stroke="#f4ead0" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+        {Array.from({ length: chevrons }, (_, i) => {
+          const y = 4 - i * 3.6 + (chevrons - 1) * 1.8;
+          return <path key={i} d={`M-4.5,${y} L0,${y - 3} L4.5,${y}`} />;
+        })}
+      </g>
+    </svg>
   );
 }
 

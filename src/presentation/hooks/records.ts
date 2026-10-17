@@ -24,6 +24,11 @@ function loadRecords(): Records {
   }
 }
 
+// The longest reign so far on a difficulty, if there is one.
+export function getBestReign(difficulty: Difficulty): ReignRecord | null {
+  return loadRecords()[difficulty] ?? null;
+}
+
 // Puts an ended reign up against the best on its difficulty: what the best
 // was before, and whether this one beat it (it's saved if so).
 export function submitReign(state: GameState): { previous: ReignRecord | null; isNew: boolean } {

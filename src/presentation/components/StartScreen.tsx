@@ -154,7 +154,7 @@ export function StartScreen({
           <h1 className="start-screen__title">The World Game</h1>
           <p className="start-screen__subtitle">
             The continent enters a new century. Choose a save slot to continue an old chronicle, or start a new one.
-            each slot is independent, so starting fresh never costs you an old game by accident.
+            Each slot is independent, so starting fresh never costs you an old game by accident.
           </p>
 
           <div className="save-slot-grid">
