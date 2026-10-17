@@ -23,26 +23,35 @@ The early MVP (a day-by-day clock, one nation, farms, factories and roads, month
 - [x] Three named save slots, an advisor strip for "what needs you now", and a ledger that explains why each number moved.
 - [x] Scripted balance tests: a careful player survives and wins, an idle one loses, and no single path wrecks a country.
 
-Removed on purpose: the army and recruitment. It had no reachable UI and was dead weight in the state and the map. It comes back only with real depth (see "Long-term").
+Removed on purpose: the army and recruitment. It had no reachable UI and was dead weight in the state and the map. It comes back only with real depth, as the last step of the road below.
 
-## Next: depth in what's already there
+## The road ahead
 
-- [ ] A sink or a use for political power when a player only researches (see TODO.md).
-- [ ] Rebellions: let riots grow into an active uprising in one province, not just a stage.
+The game is about both governing a country and power across the map. Each step leaves a better game on its own and sets up the next; the military comes last, once there is something real to fight over.
+
+1. **Rough edges in what is there.**
+   - [ ] A use for political power when a player only researches (see TODO.md).
+   - [ ] Objectives marked on the map, not only in their slip.
+2. **Rebellions.** Riots in one province grow into an uprising to put down or win back. Conflict without an army, and the first step from police towards soldiers.
+   - [ ] An uprising as its own state in a province, with its own way out.
+3. **Settle the islands.** A venture claims an island as a real province instead of a one-time reward.
+   - [ ] Ships and a port to reach it, food and goods shipped in, its own people and buildings.
+4. **Neighbours with economies of their own.**
+   - [ ] Simulate the two neighbouring nations' economies, not just their elections.
+   - [ ] Direct trade between nations once they have stockpiles.
+   - [ ] Treaties, alliances and rivalries.
+5. **A military with real depth.**
+   - [ ] Garrisons and soldiers growing out of police and uprisings.
+   - [ ] Borders and contested islands worth fighting over; wars and fronts.
+
+Alongside the road, whenever they fit:
+
 - [ ] Event chains, and events scoped to one province or terrain.
 - [ ] Later production chains: steel or similar goods made from ore and coal.
-- [ ] Settings: difficulty and starting country size.
-
-## Later: beyond one country
-
-- [ ] Simulate the two neighbouring nations' economies, not just their elections.
-- [ ] Direct trade between nations once they have stockpiles of their own.
-- [ ] Treaties, alliances and rivalries.
-- [ ] Turn the islands into real territory to settle, instead of one-time rewards.
+- [ ] A setting for starting country size.
 
 ## Long-term dream version
 
-- [ ] Wars and fronts, if a military layer with real depth ever makes sense.
 - [ ] AI countries with distinct personalities.
 - [ ] Historical and custom scenarios (different starting years, maps, or setups).
 - [ ] Coalitions, factional infighting and ideology shifts.
@@ -50,4 +59,4 @@ Removed on purpose: the army and recruitment. It had no reachable UI and was dea
 
 ## Explicitly out of scope for now
 
-A backend or server, multiplayer, real-world map data, and military mechanics. These are revisited only once the core loop is solid and fun on its own.
+A backend or server, multiplayer, and real-world map data. These are revisited only once the core loop is solid and fun on its own.
