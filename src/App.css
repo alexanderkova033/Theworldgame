@@ -63,4 +63,5 @@
    tabs jump) every time a shorter section opens. */
 .window-panel {
   min-height: min(44rem, calc(100vh - var(--top-bar-height) - 8rem));
+  min-height: min(44rem, calc(100dvh - var(--top-bar-height) - 8rem));
 }

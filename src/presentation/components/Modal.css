@@ -23,6 +23,8 @@
   width: 100%;
   max-width: 42rem;
   max-height: calc(100vh - var(--top-bar-height) - 2.5rem);
+  /* The height Safari actually shows, with its toolbar in view. */
+  max-height: calc(100dvh - var(--top-bar-height) - 2.5rem);
   border: 1px solid var(--bar-edge);
   border-radius: 8px;
   outline: 1px solid var(--gilt);

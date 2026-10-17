@@ -487,3 +487,19 @@ input,
 label {
   touch-action: manipulation;
 }
+
+/* A press and hold shows an explanation (Tooltips.tsx), so it mustn't also
+   start selecting words or open Safari's callout menu. */
+@media (hover: none) and (pointer: coarse) {
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  input,
+  textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}

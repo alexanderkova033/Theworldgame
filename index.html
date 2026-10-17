@@ -4,6 +4,31 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // A tablet shows the game as a desktop does, a little smaller: the
+      // page is laid out as if the screen were wider, then drawn to fit.
+      // The scale follows the screen's long side, so it stays the same when
+      // the tablet turns; a 13" iPad is near desktop size and barely
+      // shrinks. Desktop browsers ignore the viewport tag, so this changes
+      // nothing there.
+      (function () {
+        if (!(navigator.maxTouchPoints > 1) || !matchMedia("(pointer: coarse)").matches) return;
+        var longSide = Math.max(screen.width, screen.height);
+        var scale = Math.min(1, Math.max(0.8, longSide / 1400));
+        scale = Math.round(scale * 100) / 100;
+        document
+          .querySelector('meta[name="viewport"]')
+          .setAttribute(
+            "content",
+            "width=device-width, initial-scale=" + scale + ", minimum-scale=" + scale + ", maximum-scale=" + scale + ", user-scalable=no",
+          );
+        // Safari ignores user-scalable and would zoom the whole page on a
+        // pinch, taking the bar and windows with it. Only the map zooms.
+        ["gesturestart", "gesturechange", "gestureend"].forEach(function (type) {
+          document.addEventListener(type, function (e) { e.preventDefault(); }, { passive: false });
+        });
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

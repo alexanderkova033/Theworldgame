@@ -1062,6 +1062,21 @@ export const MapPanel = memo(function MapPanel({
     };
   }, [fitView, previewView, commitView]);
 
+  // Safari on an iPad doesn't honour touch-action on the shapes inside an
+  // SVG: it takes a finger dragged over the chart for a scroll or a zoom of
+  // the page, and cancels the drag a few pixels in. Refusing the moves
+  // themselves keeps every gesture on the map for the map. The touch's
+  // start is left alone, so a tap still selects a province.
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    function holdTouch(e: TouchEvent) {
+      if (e.cancelable && e.target instanceof Element && svgRef.current?.contains(e.target)) e.preventDefault();
+    }
+    stage.addEventListener("touchmove", holdTouch, { passive: false });
+    return () => stage.removeEventListener("touchmove", holdTouch);
+  }, []);
+
   // Touch: every finger on the map by its pointer id, and the pinch under
   // way (two fingers: zoom by how far apart they are, pan by where their
   // midpoint goes). A mouse or a single finger drags as before.
@@ -1173,8 +1188,15 @@ export const MapPanel = memo(function MapPanel({
   }
 
   function handlePointerUp(e: React.PointerEvent<SVGSVGElement>) {
-    // A leave after the finger has already lifted changes nothing.
-    if (!pointers.current.delete(e.pointerId) && e.type === "pointerleave") return;
+    if (e.type === "pointerleave") {
+      // A finger never "leaves" mid-drag; Safari reports a leave whenever
+      // the shape under it changes, which would drop the drag. Only lifting
+      // it (or a cancel) ends a touch.
+      if (e.pointerType !== "mouse") return;
+      // A leave after the button has already come up changes nothing.
+      if (!pointers.current.has(e.pointerId)) return;
+    }
+    pointers.current.delete(e.pointerId);
     if (svgRef.current?.hasPointerCapture(e.pointerId)) {
       svgRef.current.releasePointerCapture(e.pointerId);
     }
