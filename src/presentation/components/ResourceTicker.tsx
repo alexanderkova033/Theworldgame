@@ -289,7 +289,7 @@ function Stores({
         title="Wood, ore, coal, grain and fish in stock"
       >
         <CrateIcon />
-        <span>Stores</span>
+        <span className="resource-ticker__stores-label">Stores</span>
         <span aria-hidden="true">{open ? "▴" : "▾"}</span>
       </button>
       {open && (

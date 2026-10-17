@@ -295,7 +295,7 @@ export function TopBar({
           <div className="top-bar__clock-controls">
             <button className={`top-bar__pause-button ${isPaused ? "btn-primary" : ""}`} onClick={isPaused ? onResume : onPause} title="Space">
               {isPaused ? <PlayIcon /> : <PauseIcon />}
-              {isPaused ? "Resume" : "Pause"}
+              <span className="top-bar__pause-label">{isPaused ? "Resume" : "Pause"}</span>
             </button>
 
             <div className="top-bar__speeds" role="group" aria-label="Speed">
