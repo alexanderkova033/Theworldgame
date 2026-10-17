@@ -394,7 +394,7 @@ function App() {
                 <ProvinceCard state={state} dispatch={dispatch} province={province} onOpenPanel={openPanel} onClose={closeProvinceCard} />
               ) : null;
             })()}
-          <Objectives state={state} />
+          <Objectives state={state} onOpenPanel={openPanel} />
         </div>
       </main>
 

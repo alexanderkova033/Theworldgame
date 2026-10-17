@@ -20,13 +20,12 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 
 ## Known rough edges
 
-- **Political power for researchers.** The daily rate was cut by a quarter, so a player following a law path now ends three years with 50 to 600. A player who only researches still banks 600 to 900, because research never spends it.
+- **Political power for researchers.** A player following a law path ends three years with 50 to 600. One who only researches banks 94 to 886 (about 465 on average, measured 2026-10-17), because research never spends it; the scripted player follows one tree only, so a real player would spend it on laws or rallies. Spending it to speed research would mostly empty the tree sooner: a single research path is finished inside those three years.
 - **Income multipliers are still modest in Crowns.** Taxes and industry now pay a third more and market sales pay less, so daily income is most of a careful player's money (net about 24 Cr a day). Astravia still earns about 19k from selling grain over three years, next to 26k from income.
 - **Old saves.** A law being drafted under the old tree layout still finishes even if it now sits on another path. Research directions that became unreachable are cleared on load.
 - **Hints on the trees** only mark nodes that can be chosen right now; a path's name is marked if anything on it would help.
 - **Small screens.** Below 1050px the tree details drop under the tree (picking a node scrolls to them); below about 700px the tree scrolls sideways.
 - **Chapters are the same for every nation.** Nation-specific chapters (Veldoria meeting the streets first, say) would suit their stories better, but would need their own balance pass.
-- **Objectives are only in the slip on the map.** Pointing at the province or tab an objective needs (a marker on the map) is not done.
 - **Long Reign burdens are drawn at random.** The scripted player takes the first one offered, so the tests measure an average reign, not a player choosing well.
 - **TECHNICAL_DESIGN.md** may still describe the early MVP in places. README and GAME_DESIGN were brought up to date on 2026-10-16.
 

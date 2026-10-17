@@ -64,7 +64,7 @@ Systems arrive as they matter, and not before. A game opens with only building, 
 | Envoys Arrive | pressure abroad, once a neighbour campaigns | 15 |
 | A Captain's Offer | ventures to the islands | 20 |
 
-Open chapters and their objectives sit in a slip at the top right of the map. Letters about a later system (a border incident, a general strike) wait for its chapter, and the advisor only suggests what is open.
+Open chapters and their objectives sit in a slip at the top right of the map; an objective still to do opens the window where it is done. Letters about a later system (a border incident, a general strike) wait for its chapter, and the advisor only suggests what is open.
 
 ## Main stats
 

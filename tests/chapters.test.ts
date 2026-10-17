@@ -24,6 +24,7 @@ import { LAW_NODES } from "../src/domain/laws/lawData";
 import { getNation } from "../src/domain/nations/nationRules";
 import { RESEARCH_NODES } from "../src/domain/research/researchData";
 import { hydrateGameState } from "../src/presentation/hooks/gameSave";
+import { OBJECTIVE_DESTINATIONS, reachable } from "../src/presentation/navigation";
 import { NATIONS, playCarefully } from "./support/carefulPlayer";
 import { seedRandom } from "./support/seededRandom";
 
@@ -103,5 +104,16 @@ describe("chapters", () => {
     const loaded = hydrateGameState(JSON.parse(JSON.stringify(old)));
     expect(isFeatureOpen(loaded, "market")).toBe(true);
     expect(loaded.chapters.unread).toEqual([]);
+  });
+
+  // Each objective in the slip opens where it is done, and that place is
+  // open as soon as the chapter is: a link never lands somewhere else.
+  it("point every objective at a window its chapter has opened", () => {
+    for (const chapter of CHAPTERS) {
+      const destinations = OBJECTIVE_DESTINATIONS[chapter.id];
+      expect(destinations, chapter.id).toHaveLength(chapter.objectives.length);
+      const opened = { ...start, chapters: { ...start.chapters, opened: [...new Set(["first-winter" as const, chapter.id])] } };
+      for (const to of destinations) if (to) expect(reachable(opened, to), chapter.id).toEqual(to);
+    }
   });
 });

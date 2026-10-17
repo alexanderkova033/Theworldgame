@@ -9,7 +9,7 @@
 //   Politics  support (the chamber, what moves it, rallies) · voters (groups, courting, parties) · unrest (police, crackdowns) · neighbours
 //   Laws, Research, Reports, and Ventures (opened from an island on the map)
 import type { AdvisorAlert, AdvisorAlertKind } from "../application/getAdvisorOutlook";
-import { chapterFor, isFeatureOpen, type Feature } from "../domain/chapters/chapterData";
+import { chapterFor, isFeatureOpen, type ChapterId, type Feature } from "../domain/chapters/chapterData";
 import type { GameState } from "../domain/country/types";
 
 export type PanelKey = "build" | "money" | "politics" | "laws" | "research" | "reports" | "ventures";
@@ -81,6 +81,45 @@ const ALERTS: Record<AdvisorAlertKind, Destination> = {
   election: SUPPORT,
   stalled: BUILDINGS,
   research: { panel: "research" },
+};
+
+const WINDOW_NAMES: Record<PanelKey, string> = {
+  build: "Build",
+  money: "Money",
+  politics: "Politics",
+  laws: "Laws",
+  research: "Research",
+  reports: "Reports",
+  ventures: "Ventures",
+};
+
+const SECTION_NAMES: Record<Section, string> = {
+  buildings: "Buildings",
+  people: "People",
+  budget: "Budget",
+  market: "Market",
+  support: "Support",
+  voters: "Voters",
+  unrest: "Unrest",
+  neighbours: "Neighbours",
+};
+
+// A destination as the player sees it: the window, and the tab inside it.
+export function destinationName({ panel, section }: Destination): string {
+  return section ? `${WINDOW_NAMES[panel]} › ${SECTION_NAMES[section]}` : WINDOW_NAMES[panel];
+}
+
+// Where each chapter's objectives are done, in the order the chapter
+// lists them. null: there is nowhere to go, it comes with time.
+export const OBJECTIVE_DESTINATIONS: Record<ChapterId, Array<Destination | null>> = {
+  "first-winter": [BUILDINGS, BUILDINGS, null],
+  exchange: [MARKET],
+  assembly: [{ panel: "laws" }],
+  society: [{ panel: "research" }, BUILDINGS],
+  streets: [UNREST],
+  voters: [{ panel: "politics", section: "voters" }],
+  envoys: [{ panel: "politics", section: "neighbours" }],
+  captain: [{ panel: "ventures" }],
 };
 
 export function alertDestination(alert: AdvisorAlert, state: GameState): Destination {

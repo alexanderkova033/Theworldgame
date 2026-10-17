@@ -31,7 +31,7 @@ The game is about both governing a country and power across the map. Each step l
 
 1. **Rough edges in what is there.**
    - [ ] A use for political power when a player only researches (see TODO.md).
-   - [ ] Objectives marked on the map, not only in their slip.
+   - [x] Objectives that lead somewhere: each one still to do opens the window where it is done.
 2. **Rebellions.** Riots in one province grow into an uprising to put down or win back. Conflict without an army, and the first step from police towards soldiers.
    - [ ] An uprising as its own state in a province, with its own way out.
 3. **Settle the islands.** A venture claims an island as a real province instead of a one-time reward.

@@ -60,6 +60,53 @@
   background: var(--paper);
 }
 
+/* An objective still to do: the whole line opens the window where it's
+   done, marked by an oxblood arrow, and still reads as a line of the slip. */
+.objectives button.objectives__go {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-height: 0;
+  padding: 0.1rem 0;
+  border: none;
+  border-radius: 3px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  box-shadow: none;
+}
+
+.objectives__text {
+  flex: 1;
+}
+
+.objectives__arrow {
+  font-weight: 700;
+  color: var(--oxblood);
+}
+
+@media (hover: hover) {
+  .objectives button.objectives__go:hover:not(:disabled) {
+    background: none;
+    border-color: transparent;
+  }
+
+  .objectives button.objectives__go:hover .objectives__text {
+    text-decoration: underline;
+    text-decoration-color: var(--oxblood);
+    text-underline-offset: 2px;
+  }
+}
+
+/* Touch: room for a fingertip (see index.css). */
+@media (pointer: coarse) {
+  .objectives button.objectives__go {
+    min-height: 2.25rem;
+  }
+}
+
 /* A Long Reign's burdens: names that wrap, explained on hover. */
 .objectives ul.objectives__burdens {
   flex-direction: row;
