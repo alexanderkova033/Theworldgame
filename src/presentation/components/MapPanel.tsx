@@ -1062,7 +1062,62 @@ export const MapPanel = memo(function MapPanel({
     };
   }, [fitView, previewView, commitView]);
 
+  // Touch: every finger on the map by its pointer id, and the pinch under
+  // way (two fingers: zoom by how far apart they are, pan by where their
+  // midpoint goes). A mouse or a single finger drags as before.
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const pinch = useRef<{ base: ViewBox; distance: number; mid: { x: number; y: number } } | null>(null);
+  const lastPointerType = useRef<string>("mouse");
+
+  function twoFingers() {
+    const [a, b] = [...pointers.current.values()];
+    return { distance: Math.hypot(b.x - a.x, b.y - a.y) || 1, mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } };
+  }
+
+  function startPinch(e: React.PointerEvent<SVGSVGElement>) {
+    const { distance, mid } = twoFingers();
+    pinch.current = { base: pendingView.current ?? viewRef.current, distance, mid };
+    // A pinch is never a tap on whatever is under the fingers.
+    suppressNextClick.current = true;
+    dragOrigin.current = null;
+    dragStart.current = null;
+    for (const id of pointers.current.keys()) {
+      if (!svgRef.current?.hasPointerCapture(id)) {
+        try {
+          svgRef.current?.setPointerCapture(id);
+        } catch {
+          // The pointer is already gone.
+        }
+      }
+    }
+    setIsPanning(true);
+    e.preventDefault();
+  }
+
+  function movePinch() {
+    const start = pinch.current;
+    if (!start) return;
+    const fit = fitView(start.base);
+    if (!fit) return;
+    const { distance, mid } = twoFingers();
+    // The world point under the fingers' first midpoint follows the midpoint.
+    const zoomFactor = start.distance / distance;
+    const width = start.base.width * zoomFactor;
+    const height = width * (BASE_VIEW.height / BASE_VIEW.width);
+    const scale = fit.scale / zoomFactor;
+    const wx = start.base.x + (start.mid.x - fit.left - fit.offX) / fit.scale;
+    const wy = start.base.y + (start.mid.y - fit.top - fit.offY) / fit.scale;
+    previewView(clampViewBox({ x: wx - (mid.x - fit.left - fit.offX) / scale, y: wy - (mid.y - fit.top - fit.offY) / scale, width, height }));
+  }
+
   function handlePointerDown(e: React.PointerEvent<SVGSVGElement>) {
+    lastPointerType.current = e.pointerType;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.current.size === 2) {
+      startPinch(e);
+      return;
+    }
+    if (pointers.current.size > 2) return;
     dragOrigin.current = { x: e.clientX, y: e.clientY };
     dragStart.current = { x: e.clientX, y: e.clientY };
     // A drag that ends over a non-clickable spot (ocean, another island, an
@@ -1084,6 +1139,12 @@ export const MapPanel = memo(function MapPanel({
   }
 
   function handlePointerMove(e: React.PointerEvent<SVGSVGElement>) {
+    lastPointerType.current = e.pointerType;
+    if (pointers.current.has(e.pointerId)) pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch.current) {
+      movePinch();
+      return;
+    }
     if (!dragStart.current) return;
     const dxPixels = e.clientX - dragStart.current.x;
     const dyPixels = e.clientY - dragStart.current.y;
@@ -1093,7 +1154,11 @@ export const MapPanel = memo(function MapPanel({
       const totalDy = e.clientY - dragOrigin.current.y;
       if (Math.hypot(totalDx, totalDy) > DRAG_CLICK_THRESHOLD) {
         if (!suppressNextClick.current) {
-          svgRef.current?.setPointerCapture(e.pointerId);
+          try {
+            svgRef.current?.setPointerCapture(e.pointerId);
+          } catch {
+            // The pointer is already gone (iOS cancels touches mid-gesture).
+          }
         }
         suppressNextClick.current = true;
         setIsPanning(true);
@@ -1108,14 +1173,36 @@ export const MapPanel = memo(function MapPanel({
   }
 
   function handlePointerUp(e: React.PointerEvent<SVGSVGElement>) {
+    // A leave after the finger has already lifted changes nothing.
+    if (!pointers.current.delete(e.pointerId) && e.type === "pointerleave") return;
     if (svgRef.current?.hasPointerCapture(e.pointerId)) {
       svgRef.current.releasePointerCapture(e.pointerId);
     }
+    if (pinch.current) {
+      if (pointers.current.size >= 2) return;
+      // One finger left after a pinch: it carries on as a drag from where
+      // it is, without a jump.
+      pinch.current = null;
+      const [rest] = [...pointers.current.values()];
+      if (rest) {
+        dragStart.current = { ...rest };
+        dragOrigin.current = null;
+        return;
+      }
+    }
+    if (pointers.current.size > 0) return;
     dragOrigin.current = null;
     dragStart.current = null;
     commitView();
     setIsPanning(false);
   }
+
+  // Touch has no hover: a tap's pretend mouse-over would leave a province's
+  // card stuck on the map. A mouse or trackpad still shows it.
+  const hoverProvince = useCallback((next: React.SetStateAction<string | null>) => {
+    if (lastPointerType.current === "touch") return;
+    setHoveredProvinceId(next);
+  }, []);
 
   const handleProvinceClick = useCallback(
     (provinceId: string) => {
@@ -1178,6 +1265,7 @@ export const MapPanel = memo(function MapPanel({
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
           onPointerLeave={handlePointerUp}
         >
           <MapLayers
@@ -1197,7 +1285,7 @@ export const MapPanel = memo(function MapPanel({
             onProvinceKeySelect={onSelectProvince}
             onIslandClick={handleIslandClick}
             venturesOpen={venturesOpen}
-            onHoverProvince={setHoveredProvinceId}
+            onHoverProvince={hoverProvince}
           />
         </svg>
 

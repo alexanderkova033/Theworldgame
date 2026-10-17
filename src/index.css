@@ -472,3 +472,18 @@ button {
     scroll-behavior: auto !important;
   }
 }
+
+/* Touch screens (iPad): no double-tap zoom on buttons, and no rubber-band
+   bounce of the whole page; the map has its own pinch and drag. */
+html,
+body {
+  overscroll-behavior: none;
+}
+
+button,
+a,
+[role="tab"],
+input,
+label {
+  touch-action: manipulation;
+}
