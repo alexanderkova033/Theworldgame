@@ -1,47 +1,66 @@
 .people-panel {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 1rem;
 }
 
-.people-panel h2 {
-  margin-bottom: 0;
+/* The four needs: matching cards, two to a row, one on a narrow window. */
+.people-needs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+@media (max-width: 760px) {
+  .people-needs {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .people-meter {
   display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.7rem 0.85rem 0.75rem;
+  background: var(--paper);
+  border: 1px solid var(--rule-dark);
+  border-top: 4px solid var(--success);
+  border-radius: 6px;
+}
+
+.people-meter.is-danger {
+  border-top-color: var(--danger);
+}
+
+.people-meter__foot {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.6rem;
+  min-height: 1.9rem;
 }
 
 .people-meter__icon svg {
   display: block;
 }
 
-.people-meter__main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
 .people-meter__head {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.45rem;
 }
 
 .people-meter__label {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
   font-weight: 700;
 }
 
 .people-meter__value {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
+  margin-left: auto;
+  font-size: 0.92rem;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .people-meter__alert {
@@ -245,10 +264,8 @@ button.people-province.is-selected {
 .people-table thead th {
   padding: 0 0.5rem 0.35rem;
   border-bottom: 1px solid var(--rule-dark);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   text-align: left;
   color: var(--ink-muted);
   white-space: nowrap;
@@ -383,4 +400,9 @@ button.people-table__build {
   font-family: var(--font-body);
   font-size: 0.8125rem;
   font-weight: 700;
+}
+
+/* A province name stays on one line. */
+.people-table--provinces tbody th {
+  white-space: nowrap;
 }

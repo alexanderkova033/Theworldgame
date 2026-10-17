@@ -136,7 +136,6 @@ export function MarketPanel({ state, production, dispatch }: MarketPanelProps) {
     <div className="market">
       <section className="panel market__board">
         <div className="market__head">
-          <h2>Market</h2>
           <div className="market__quantity" role="group" aria-label="How much per trade">
             <span>Amount</span>
             {QUANTITIES.map((q) => (

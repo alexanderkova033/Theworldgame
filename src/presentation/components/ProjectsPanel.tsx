@@ -50,7 +50,7 @@ export function ProjectsPanel({ state }: ProjectsPanelProps) {
           <svg viewBox="-12 -16 24 24" aria-hidden="true">
             <BuildingIcon type="road" x={0} y={0} size={7} />
           </svg>
-          <p>No active projects.</p>
+          <p>Nothing being built.</p>
         </div>
       )}
       <ul className="projects-panel__list">

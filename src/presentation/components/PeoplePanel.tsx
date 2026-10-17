@@ -1,23 +1,29 @@
-// The three things people need from you, as three meters: a roof, a job,
-// and heat in winter, each with its numbers said in words. Then where the
-// workers actually work — farms and food first, then schools, then
-// factories — and every province as a row of a table with named columns.
+// The four things people need from you, as four matching cards: a roof, a
+// job, heat in winter and food, each a meter with its numbers said in
+// words. Then where the workers actually work (farms and food first, then
+// schools, then factories), and every province as a row of a table.
 import "./PeoplePanel.css";
 import type { ReactNode } from "react";
 import { getHeatingOutlook } from "../../application/getHeatingOutlook";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import type { GameState } from "../../domain/country/types";
 import { getLabourSituation, type Sector, type SectorJobs } from "../../domain/labour/labourRules";
-import { COMMUTE_SHARE, LABOUR_SHARE } from "../../domain/constants";
+import { ADVISOR_FOOD_CRITICAL_DAYS, ADVISOR_FOOD_WARN_DAYS, COMMUTE_SHARE, LABOUR_SHARE } from "../../domain/constants";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import type { ProjectType } from "../../domain/construction/types";
-import { formatAmount, formatRate } from "../formatNumber";
+import { formatAmount, formatRate, formatSigned } from "../formatNumber";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
 import { UNREST_INFO } from "../unrestStages";
 import { BuildingGlyph, FlameIcon, JobsIcon, UnrestStageIcon } from "./CauseIcon";
 import { Gauge } from "./Gauge";
 import { ResourceIcon } from "./ResourceIcon";
 import type { OpenPanel } from "../navigation";
+import { getForecasts } from "../../application/getForecasts";
+import { isFeatureOpen } from "../../domain/chapters/chapterData";
+import { StatIcon } from "./StatIcon";
+
+// The food meter's full length: a season's eating in store.
+const FOOD_STORE_SCALE_DAYS = 90;
 
 function Meter({
   icon,
@@ -38,19 +44,21 @@ function Meter({
 }) {
   return (
     <div className={`people-meter ${danger ? "is-danger" : ""}`}>
-      <span className="people-meter__icon">{icon}</span>
-      <div className="people-meter__main">
-        <div className="people-meter__head">
-          <span className="people-meter__label">{label}</span>
-          <strong className="people-meter__value">
-            {danger && <span className="people-meter__alert">!</span>}
-            {value}
-          </strong>
-        </div>
-        {gauge}
-        <span className="people-meter__detail">{detail}</span>
+      <div className="people-meter__head">
+        <span className="people-meter__icon">{icon}</span>
+        <span className="people-meter__label">{label}</span>
+        {danger && (
+          <span className="people-meter__alert" aria-label="Needs attention">
+            !
+          </span>
+        )}
+        <strong className="people-meter__value">{value}</strong>
       </div>
-      {action}
+      {gauge}
+      <div className="people-meter__foot">
+        <span className="people-meter__detail">{detail}</span>
+        {action}
+      </div>
     </div>
   );
 }
@@ -111,7 +119,7 @@ function WorkTable({ state, sectors }: { state: GameState; sectors: Record<Secto
           </tr>
         </thead>
         <tbody>
-          {SECTOR_ROWS.map((row) => {
+          {SECTOR_ROWS.filter((row) => row.key === "food" || sectors[row.key].jobs > 0).map((row) => {
             const jobs = sectors[row.key];
             const share = percent(jobs);
             const buildings = row.types
@@ -208,12 +216,12 @@ function ProvinceTable({
                   {formatAmount(p.population)} / {formatAmount(p.capacity)}
                 </td>
                 <td className={`is-num ${food.hired < food.jobs ? "is-warn" : ""}`}>
-                  {food.jobs > 0 ? `${formatAmount(food.hired)} / ${formatAmount(food.jobs)}` : "none"}
+                  {food.jobs > 0 ? `${formatAmount(food.hired)} / ${formatAmount(food.jobs)}` : <span className="people-table__muted">none</span>}
                 </td>
                 <td className={`is-num ${industry.hired < industry.jobs ? "is-warn" : ""}`}>
-                  {industry.jobs > 0 ? `${formatAmount(industry.hired)} / ${formatAmount(industry.jobs)}` : "none"}
+                  {industry.jobs > 0 ? `${formatAmount(industry.hired)} / ${formatAmount(industry.jobs)}` : <span className="people-table__muted">none</span>}
                 </td>
-                <td className={`is-num ${status.jobs === "jobless" ? "is-bad" : ""}`}>{p.unemployed >= 1 ? formatAmount(p.unemployed) : "0"}</td>
+                <td className={`is-num ${status.jobs === "jobless" ? "is-bad" : ""}`}>{p.unemployed >= 1 ? formatAmount(p.unemployed) : <span className="people-table__muted">0</span>}</td>
                 <td>
                   <span className="people-table__mood">
                     <UnrestStageIcon stage={p.unrestStage} size={16} />
@@ -265,11 +273,19 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
 
   const heating = getHeatingOutlook(state);
   const fuelShort = heating.fuel < heating.fuelNeeded;
+  // Buying only once the market is open (see domain/chapters).
+  const market = isFeatureOpen(state, "market");
+
+  // Food: what comes in and goes out a day, and how long the store lasts.
+  const netFood = Math.round(production.netFood) || 0;
+  const eaten = production.foodConsumed;
+  const storeDays = eaten > 0 ? state.stats.food / eaten : Infinity;
+  const runOut = netFood < 0 ? getForecasts(state, production).food : null;
+  const foodShort = runOut !== null && runOut.days < ADVISOR_FOOD_WARN_DAYS;
 
   return (
     <section className="panel people-panel">
-      <h2>People</h2>
-
+      <div className="people-needs">
       <Meter
         icon={<BuildingGlyph type="housing" size={22} />}
         label="Homes"
@@ -283,7 +299,7 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
           />
         }
         danger={homeless > 0}
-        value={`${formatAmount(population)} people · homes for ${formatAmount(capacity)}`}
+        value={`${formatAmount(population)} people · ${formatAmount(capacity)} places`}
         detail={homeless > 0 ? `${formatAmount(homeless)} without a home` : `${formatAmount(Math.max(0, capacity - population))} free places`}
       />
 
@@ -317,7 +333,7 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
 
       <Meter
         icon={<FlameIcon />}
-        label={heating.isWinter ? "Heating" : "Coal for winter"}
+        label="Heating"
         gauge={
           <Gauge
             max={Math.max(1, heating.fuelNeeded)}
@@ -358,13 +374,60 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
           </span>
         }
         action={
-          fuelShort ? (
+          fuelShort && market ? (
             <button type="button" className="btn-primary people-meter__action" onClick={() => onOpenPanel("money", "market")}>
               Buy coal
             </button>
           ) : undefined
         }
       />
+
+      <Meter
+        icon={<StatIcon type="food" size={22} />}
+        label="Food"
+        gauge={
+          <Gauge
+            max={FOOD_STORE_SCALE_DAYS}
+            segments={[
+              {
+                value: Math.min(storeDays, FOOD_STORE_SCALE_DAYS),
+                tone: netFood >= 0 || storeDays >= ADVISOR_FOOD_WARN_DAYS ? "good" : storeDays >= ADVISOR_FOOD_CRITICAL_DAYS ? "warn" : "bad",
+              },
+            ]}
+            size="lg"
+            label={`${formatAmount(Math.floor(state.stats.food))} food in store, ${Number.isFinite(storeDays) ? `${Math.floor(storeDays)} days of eating` : "nobody to feed"}`}
+          />
+        }
+        danger={foodShort}
+        value={`${formatAmount(Math.floor(state.stats.food))} in store · ${formatRate(netFood)}`}
+        detail={
+          <span className="people-meter__fuel">
+            <span title="Grown on the farms each day">
+              <BuildingGlyph type="farm" size={14} />
+              {formatSigned(production.farmFood)}
+            </span>
+            {production.processedFood !== 0 && (
+              <span title="Made by granaries and canneries each day">
+                <BuildingGlyph type="granary" size={14} />
+                {formatSigned(production.processedFood)}
+              </span>
+            )}
+            <span title="Eaten each day">
+              <StatIcon type="population" size={14} />
+              {formatSigned(-eaten)}
+            </span>
+            {runOut && <span className="people-meter__fuel-rate">lasts {runOut.days} days</span>}
+          </span>
+        }
+        action={
+          foodShort && market ? (
+            <button type="button" className="btn-primary people-meter__action" onClick={() => onOpenPanel("money", "market")}>
+              Buy food
+            </button>
+          ) : undefined
+        }
+      />
+      </div>
 
       <WorkTable state={state} sectors={labour.sectors} />
 

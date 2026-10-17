@@ -279,10 +279,6 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
 
   return (
     <section className="panel actions-panel">
-      <div className="actions-panel__header">
-        <h2>Build</h2>
-      </div>
-
       {/* Where to build: every province of yours, with its most pressing
           need, so the right one is easy to pick. */}
       <div className="actions-panel__where">
