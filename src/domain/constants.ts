@@ -295,6 +295,11 @@ export const ELECTION_INTERVAL_MONTHS = 18; // a general election is held every 
 export const ELECTIONS_TO_WIN_GAME = 3; // election wins needed for outright victory (a single loss ends the game, so these are inherently consecutive)
 export const ELECTION_WIN_STABILITY_BONUS = 5; // a mandate bump to stability on winning
 
+// The Long Reign (see domain/reign): no finish line, so the pressure has to keep growing.
+export const LONG_REIGN_THRESHOLD_STEP = 2; // support points added to the line for each election past the difficulty's last
+export const LONG_REIGN_BURDENS_OFFERED = 2; // burdens of office offered after each election won; the player takes one
+export const LONG_REIGN_FORCED_FROM_WIN = 3; // from this election won on, a second burden is drawn by chance as well
+
 // --- Scouting expeditions (unclaimed islands) ---
 export const EXPEDITION_COST = 800;
 export const EXPEDITION_DAYS = 40;

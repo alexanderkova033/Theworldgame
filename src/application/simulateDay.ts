@@ -180,11 +180,14 @@ export function simulateDay(state: GameState): GameState {
   return advanceChapters({
     ...working,
     date,
-    isPaused: isGameOver || pendingDecisionId ? true : working.isPaused,
+    // A choice of burdens stops the clock until one is taken.
+    isPaused: isGameOver || pendingDecisionId || election.burdenOffer ? true : working.isPaused,
     isGameOver,
     outcome,
     gameOverReason,
     electionsWon: election.electionsWon,
+    burdens: election.burdens,
+    burdenOffer: election.burdenOffer,
     pendingDecisionId,
     stats: finalStats,
     unrestStage: order.unrestStage,

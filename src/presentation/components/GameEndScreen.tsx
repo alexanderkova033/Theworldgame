@@ -8,7 +8,10 @@ import { getParty } from "../../domain/parties/partyRules";
 import { explainDefeat } from "../../domain/ledger/defeatRules";
 import { DefeatStory } from "./DefeatStory";
 import { StatIcon } from "./StatIcon";
-import { formatAmount } from "../formatNumber";
+import { formatAmount, formatReign } from "../formatNumber";
+import { getDifficulty } from "../../domain/difficulty/difficultyData";
+import { getReignMonths, isLongReign } from "../../domain/reign/reignRules";
+import type { ReignRecord } from "../hooks/records";
 
 export interface Retry {
   chapterTitle: string; // the chapter the checkpoint was taken at
@@ -16,11 +19,18 @@ export interface Retry {
   total: number; // what the difficulty allows in a game
 }
 
+// A Long Reign's length against the best before it on the same difficulty.
+export interface ReignResult {
+  previous: ReignRecord | null;
+  isNew: boolean;
+}
+
 interface GameEndScreenProps {
   state: GameState;
   onNewGame: () => void;
   retry: Retry | null; // null when there's no checkpoint to go back to
   onRetry: () => void;
+  reign: ReignResult | null; // a Long Reign only
 }
 
 const OUTCOME_COPY: Record<GameOutcome, { eyebrow: (nation: string) => string; title: string; className: string }> = {
@@ -44,7 +54,7 @@ const OUTCOME_COPY: Record<GameOutcome, { eyebrow: (nation: string) => string; t
 // Shown once GameState.isGameOver flips true (see simulateDay.ts): a
 // stability collapse, a lost general election, or — the actual win
 // condition — enough election wins in a row to cement outright rule.
-export function GameEndScreen({ state, onNewGame, retry, onRetry }: GameEndScreenProps) {
+export function GameEndScreen({ state, onNewGame, retry, onRetry, reign }: GameEndScreenProps) {
   const nation = getNation(state.nationId);
   const party = getParty(state.partyId);
   const outcome = state.outcome ?? "collapsed";
@@ -74,7 +84,7 @@ export function GameEndScreen({ state, onNewGame, retry, onRetry }: GameEndScree
             <div className="icon-tile__body">
               <span className="icon-tile__label">Elections Won</span>
               <span className="icon-tile__value">
-                {state.electionsWon} / {ELECTIONS_TO_WIN_GAME}
+                {isLongReign(state) ? state.electionsWon : `${state.electionsWon} / ${ELECTIONS_TO_WIN_GAME}`}
               </span>
             </div>
           </div>
@@ -103,15 +113,24 @@ export function GameEndScreen({ state, onNewGame, retry, onRetry }: GameEndScree
               <StatIcon type="stability" />
             </div>
             <div className="icon-tile__body">
-              <span className="icon-tile__label">Reign Lasted Until</span>
-              <span className="icon-tile__value">{formatDate(state.date)}</span>
+              <span className="icon-tile__label">{isLongReign(state) ? "Reign Lasted" : "Reign Lasted Until"}</span>
+              <span className="icon-tile__value">{isLongReign(state) ? formatReign(getReignMonths(state.date)) : formatDate(state.date)}</span>
             </div>
           </div>
         </div>
 
+        {/* A Long Reign has no retries: only the record. */}
+        {reign && (
+          <p className={`game-end-screen__record ${reign.isNew ? "is-new" : ""}`}>
+            {reign.isNew
+              ? `Your longest reign yet on ${getDifficulty(state.difficulty).name}.`
+              : `Your longest reign on ${getDifficulty(state.difficulty).name}: ${formatReign(reign.previous!.months)}, as ${getNation(reign.previous!.nationId).name}.`}
+          </p>
+        )}
+
         {/* Going back costs everything since that chapter began, and the
             difficulty decides how often it's allowed. */}
-        {outcome !== "victory" && retry && (
+        {outcome !== "victory" && !isLongReign(state) && retry && (
           <div className="game-end-screen__retry">
             {retry.left > 0 ? (
               <>

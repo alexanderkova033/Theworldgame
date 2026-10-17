@@ -19,6 +19,7 @@ import { simulateDay } from "../../src/application/simulateDay";
 import { startNewGame } from "../../src/application/startNewGame";
 import type { GameState } from "../../src/domain/country/types";
 import type { Difficulty } from "../../src/domain/difficulty/difficultyData";
+import type { GameMode } from "../../src/domain/reign/reignData";
 import { getDecision } from "../../src/domain/decisions/decisionRules";
 import { LAW_NODES } from "../../src/domain/laws/lawData";
 import { canEnactLaw, getLawNode } from "../../src/domain/laws/lawsRules";
@@ -27,6 +28,7 @@ import { getElectionThreshold } from "../../src/domain/parties/electionRules";
 import { RESEARCH_NODES } from "../../src/domain/research/researchData";
 import { getResearchNodeStatus } from "../../src/domain/research/researchRules";
 import type { ResearchCategory } from "../../src/domain/research/types";
+import { takeBurden } from "../../src/application/actions/burdenActions";
 
 export const NATIONS: Array<[nation: string, party: string]> = [
   ["astravia", "astravia-harvest-union"],
@@ -79,15 +81,17 @@ export interface PlayOptions {
   // start, builds homes only once people are already homeless and buys food
   // only when it's nearly gone. Difficulty levels are measured against both.
   skill?: "careful" | "sloppy";
+  mode?: GameMode; // Three Terms by default; a Long Reign plays on past the third election
 }
 
-export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty, skill = "careful" }: PlayOptions): GameState {
+export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty, skill = "careful", mode }: PlayOptions): GameState {
   const sloppy = skill === "sloppy";
-  let s = takeLoan(startNewGame(nation, party, difficulty));
+  let s = takeLoan(startNewGame(nation, party, difficulty, mode));
   if (!sloppy) s = setTaxRate(s, 0.12);
   const route = follow ? pathRoute(follow.tree, follow.pathKey) : [];
   const area = follow?.tree === "research" ? (RESEARCH_NODES.find((n) => n.id === route[1])!.category as ResearchCategory) : null;
   for (let day = 0; day < days && !s.isGameOver; day++) {
+    if (s.burdenOffer) s = takeBurden(s, s.burdenOffer[0]);
     const production = getDailyProductionSummary(s);
     const nextLaw = follow?.tree === "law" ? getLawNode(route.find((id) => !s.enactedLawIds.includes(id)) ?? "") : undefined;
     const keep = (good: Good) => (good === nextLaw?.enactCost.resourceType ? (nextLaw.enactCost.resourceAmount ?? 0) : 0);

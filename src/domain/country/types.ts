@@ -14,6 +14,7 @@ import type { ResourceBundle } from "../resources/types";
 import type { UnrestStage } from "../unrest/types";
 import type { Workforce } from "../workforce/types";
 import type { ChapterProgress } from "../chapters/chapterData";
+import type { BurdenId, GameMode } from "../reign/reignData";
 
 export interface GameDate {
   year: number;
@@ -154,4 +155,7 @@ export interface GameState {
   decisionHistory: DecisionHistoryEntry[];
   chapters: ChapterProgress; // which systems are open yet, and the briefings (see domain/chapters)
   retriesUsed: number; // times this game went back to a checkpoint after a loss (see domain/difficulty)
+  mode: GameMode; // Three Terms or the Long Reign, chosen at the start (see domain/reign)
+  burdens: BurdenId[]; // what a Long Reign has piled up, one or two per election won
+  burdenOffer: BurdenId[] | null; // after a Long Reign election win: the burdens to choose one from; the game waits
 }

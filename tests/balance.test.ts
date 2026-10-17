@@ -101,8 +101,9 @@ describe("a law coming into force", () => {
 
 // The difficulty levels, measured: 9 five-year games each (3 seeds, every
 // nation), by a sloppy player (late, never ahead of trouble) and a careful
-// one. Each level should mean what its name says.
-describe("difficulty", () => {
+// one. Each level should mean what its name says. Up to 18 games a test,
+// so they get longer than the default to finish.
+describe("difficulty", { timeout: 30000 }, () => {
   const wins = (difficulty: Difficulty, skill: "sloppy" | "careful") => {
     let won = 0;
     for (const seed of [20261015, 7, 99]) {

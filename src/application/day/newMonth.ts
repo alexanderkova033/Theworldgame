@@ -13,6 +13,7 @@ import { getDifficulty } from "../../domain/difficulty/difficultyData";
 import { applyRandomEventEffect, pickRandomEvent, scaleEventLosses } from "../../domain/randomEvents/randomEventRules";
 import { pickRivalCampaignMove } from "../rivalCampaignMove";
 import { book, bookChange, log, type Day } from "./dayContext";
+import { getBurdenRivalSwing } from "../../domain/reign/reignRules";
 
 // The turn of the season, announced on its first day: winter especially,
 // since it's when farms stop pulling their weight.
@@ -54,7 +55,8 @@ export function turnOfTheMonth(
   if (!today.isGameOver && isFirstDayOfMonth(date) && Math.random() < RIVAL_CAMPAIGN_CHANCE_PER_MONTH * difficulty.rivalChance) {
     const move = pickRivalCampaignMove(working);
     // Harder rivals hit harder; a grudging word of credit stays as it is.
-    const swing = move.popularityDelta < 0 ? move.popularityDelta * difficulty.rivalSwing : move.popularityDelta;
+    // A Long Reign's rival machine hits harder still (domain/reign).
+    const swing = move.popularityDelta < 0 ? move.popularityDelta * difficulty.rivalSwing * getBurdenRivalSwing(working.burdens) : move.popularityDelta;
     const applied = applyFactionEffects(factionApproval, today.factionWeights, move.effects ?? {}, swing);
     factionApproval = applied.factionApproval;
     book(day, "late", "support", { rival: applied.popularity - stats.popularity });

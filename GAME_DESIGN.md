@@ -12,7 +12,7 @@ The intended feel is closer to a management game (a city-builder, or *Democracy*
 
 An invented continent in a period that *feels* like the years just before 1914: steam and rail, early factories, schools spreading, and tension in the background. Nothing is tied to a real country or history, so the map, nations and events can be designed freely.
 
-Before play you choose a difficulty, then one of three nations (**Astravia**, **Caldenreich** or **Veldoria**) and then one of its parties to lead. Both choices are permanent for that game. The other two nations are on the map with their own governments, which you can lean on but not run.
+Before play you choose a mode and a difficulty, then one of three nations (**Astravia**, **Caldenreich** or **Veldoria**) and then one of its parties to lead. Both choices are permanent for that game. The other two nations are on the map with their own governments, which you can lean on but not run.
 
 The currency is the **Crown** (`Cr`).
 
@@ -24,6 +24,17 @@ The currency is the **Crown** (`Cr`).
 - **Stability at zero** is a collapse: order breaks down and the government falls.
 - **After a loss** the end screen says how it happened: the number that failed over its last four months against the line it had to hold, the three causes that pulled it down most, and one thing to do differently.
 - **Checkpoints.** The game is saved each time a chapter opens. After a loss you may go back to the start of that chapter, as often as the difficulty allows.
+
+## The Long Reign
+
+The second mode has no finish line. The game goes on until the party loses an election or the government collapses, and the measure is how long it lasted. It is built to end:
+
+- **The line keeps rising.** Past the difficulty's third line, each election asks 2 more points of support (on Normal: 58%, 60%, 62%...).
+- **Burdens of office.** Each election won, a letter offers two burdens and you must take one. From the third win on, a second is drawn by chance. Burdens are permanent and stack: Weary Voters (support drifts lower), The Rival's Machine, Lean Years, Ageing Works, Harder Winters, Growing Appetites, Short Tempers, A Stubborn Assembly, Dear Markets, Dear Builders, Bitter Hardship, Crowded Cities and Hollow Rallies (rallies and courting lift less). The burdens carried are listed in the slip on the map.
+- **One life.** No checkpoints and no retries.
+- **A record.** The longest reign on each difficulty is kept, and the end screen sets each reign against it.
+
+Chapters still open as usual. The scripted players in `tests/reign.test.ts` keep it honest: a careful player on Normal outlasts Three Terms and is voted out after about 12 years, sooner on Hard.
 
 ## Difficulty
 

@@ -19,9 +19,15 @@ import { crackDownProvinces } from "../../domain/provinces/provinceOrder";
 import { applyCrackdown } from "../../domain/unrest/unrestRules";
 import { ONE_OFF, recordAction } from "./recordAction";
 import { isFeatureOpen, recordDeed } from "../../domain/chapters/chapterData";
+import { getBurdenRallyFactor } from "../../domain/reign/reignRules";
 
 function logged(state: GameState, message: string, severity: GameEvent["severity"] = "info"): GameEvent[] {
   return [{ id: generateId("event"), date: state.date, message, severity, topic: "politics" }, ...state.events];
+}
+
+// "+3", or "+2.1" once hollow rallies have worn it down.
+function formatSupportLift(lift: number): string {
+  return `+${Number.isInteger(lift) ? lift : lift.toFixed(1)}`;
 }
 
 export function canHoldRally(state: GameState): boolean {
@@ -30,7 +36,9 @@ export function canHoldRally(state: GameState): boolean {
 
 export function holdRally(state: GameState): GameState {
   if (!canHoldRally(state)) return state;
-  const { factionApproval, popularity } = applyUniformDelta(state.factionApproval, getFactionWeights(state.nationId), RALLY_SUPPORT);
+  // A Long Reign's hollow rallies lift less (see domain/reign).
+  const lift = RALLY_SUPPORT * getBurdenRallyFactor(state.burdens);
+  const { factionApproval, popularity } = applyUniformDelta(state.factionApproval, getFactionWeights(state.nationId), lift);
   return recordAction(state, {
     ...state,
     factionApproval,
@@ -40,7 +48,7 @@ export function holdRally(state: GameState): GameState {
       politicalPower: state.stats.politicalPower - RALLY_POLITICAL_POWER_COST,
       treasury: state.stats.treasury - RALLY_TREASURY_COST,
     },
-    events: logged(state, `You hold a rally across the country: support +${RALLY_SUPPORT} with every group.`),
+    events: logged(state, `You hold a rally across the country: support ${formatSupportLift(lift)} with every group.`),
   }, ONE_OFF);
 }
 
@@ -50,7 +58,8 @@ export function canCourtGroup(state: GameState): boolean {
 
 export function courtGroup(state: GameState, ideology: Ideology): GameState {
   if (!canCourtGroup(state)) return state;
-  const factionApproval = { ...state.factionApproval, [ideology]: Math.min(100, state.factionApproval[ideology] + COURT_SUPPORT) };
+  const lift = COURT_SUPPORT * getBurdenRallyFactor(state.burdens);
+  const factionApproval = { ...state.factionApproval, [ideology]: Math.min(100, state.factionApproval[ideology] + lift) };
   return recordDeed(recordAction(state, {
     ...state,
     factionApproval,
@@ -60,7 +69,7 @@ export function courtGroup(state: GameState, ideology: Ideology): GameState {
       politicalPower: state.stats.politicalPower - COURT_POLITICAL_POWER_COST,
       treasury: state.stats.treasury - COURT_TREASURY_COST,
     },
-    events: logged(state, `You court the ${ideology} vote with favours and promises: their support +${COURT_SUPPORT}.`),
+    events: logged(state, `You court the ${ideology} vote with favours and promises: their support ${formatSupportLift(lift)}.`),
   }, ONE_OFF), "courted");
 }
 

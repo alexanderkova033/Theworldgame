@@ -46,6 +46,10 @@ import { ChapterBriefing } from "./presentation/components/ChapterBriefing";
 import { Objectives } from "./presentation/components/Objectives";
 import { getChapter } from "./domain/chapters/chapterData";
 import { getDifficulty } from "./domain/difficulty/difficultyData";
+import { takeBurden } from "./application/actions/burdenActions";
+import { BurdenLetter } from "./presentation/components/BurdenLetter";
+import type { ReignResult } from "./presentation/components/GameEndScreen";
+import { submitReign } from "./presentation/hooks/records";
 
 const SPEED_KEYS: Record<string, GameSpeed> = { "1": 1, "2": 2, "3": 3, "5": 5 };
 
@@ -219,6 +223,20 @@ function App() {
     }
   }, [state]);
 
+  // A Long Reign that just ended goes up against the record, once (a ref,
+  // so a second run of the effect can't count it again).
+  const [reignResult, setReignResult] = useState<ReignResult | null>(null);
+  const submittedReign = useRef(false);
+  useEffect(() => {
+    if (!state?.isGameOver) {
+      submittedReign.current = false;
+      return;
+    }
+    if (state.mode !== "long-reign" || submittedReign.current) return;
+    submittedReign.current = true;
+    setReignResult(submitReign(state));
+  }, [state]);
+
   // The reign just ended — a distinct sting, once.
   const wasGameOver = useRef(false);
   useEffect(() => {
@@ -270,8 +288,8 @@ function App() {
         nation={pendingNation}
         parties={getPartiesForNation(pendingNationId)}
         onBack={() => setPendingNationId(null)}
-        onSelectParty={(partyId, difficulty) => {
-          startGame(pendingNationId, partyId, pendingSlotId ?? 0, difficulty);
+        onSelectParty={(partyId, difficulty, mode) => {
+          startGame(pendingNationId, partyId, pendingSlotId ?? 0, difficulty, mode);
           setSelectedProvinceId(pendingNation.capitalProvinceId);
         }}
       />
@@ -286,6 +304,7 @@ function App() {
         state={state}
         retry={checkpoint ? { chapterTitle: getChapter(checkpoint.chapters.opened[checkpoint.chapters.opened.length - 1]).title, left: allowed - state.retriesUsed, total: allowed } : null}
         onRetry={retryFromCheckpoint}
+        reign={reignResult}
         onNewGame={() => {
           resetGame();
           setPendingNationId(null);
@@ -456,7 +475,17 @@ function App() {
           if (id !== "first-winter") resume();
         }}
       />
+      {/* A new term's burden is chosen before any other letter is read. */}
       {state.chapters.unread.length === 0 && (
+        <BurdenLetter
+          state={state}
+          onTake={(id) => {
+            dispatch((s) => takeBurden(s, id));
+            resume();
+          }}
+        />
+      )}
+      {state.chapters.unread.length === 0 && !state.burdenOffer && (
       <DecisionModal
         state={state}
         onResolve={(decisionId, optionId) => {

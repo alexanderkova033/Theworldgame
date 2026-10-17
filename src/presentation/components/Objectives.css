@@ -59,3 +59,25 @@
   color: var(--success);
   background: var(--paper);
 }
+
+/* A Long Reign's burdens: names that wrap, explained on hover. */
+.objectives ul.objectives__burdens {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.4rem;
+}
+
+.objectives__burdens li {
+  padding: 0.05rem 0.45rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--paper);
+  font-size: 0.8rem;
+  color: var(--danger);
+  cursor: help;
+}
+
+.objectives__count {
+  margin-left: 0.2rem;
+  font-weight: 700;
+}

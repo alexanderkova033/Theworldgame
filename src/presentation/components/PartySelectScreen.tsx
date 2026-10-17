@@ -7,12 +7,13 @@ import { describeEffects } from "../../domain/policy/modifiers";
 import { IDEOLOGY_CARES } from "../../domain/parties/rivalRules";
 import { starPoints } from "./iconShapes";
 import { MapWatermark } from "./StartScreen";
+import { MODES, MODE_SETTINGS, type GameMode } from "../../domain/reign/reignData";
 
 interface PartySelectScreenProps {
   nation: Nation;
   parties: Party[];
   onBack: () => void;
-  onSelectParty: (partyId: string, difficulty: Difficulty) => void;
+  onSelectParty: (partyId: string, difficulty: Difficulty, mode: GameMode) => void;
 }
 
 // The second half of starting a game: which of the nation's two parties the
@@ -21,6 +22,7 @@ interface PartySelectScreenProps {
 export function PartySelectScreen({ nation, parties, onBack, onSelectParty }: PartySelectScreenProps) {
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
   const level = DIFFICULTY_SETTINGS[difficulty];
+  const [mode, setMode] = useState<GameMode>("terms");
   return (
     <div className="start-screen party-select-screen">
       <MapWatermark />
@@ -37,6 +39,25 @@ export function PartySelectScreen({ nation, parties, onBack, onSelectParty }: Pa
           Every law, tax and venture from here on is measured by one thing: whether the people still back you. The
           two parties govern differently, so pick the one whose strengths you want.
         </p>
+
+        {/* How the game ends: three terms, or as long as you can hold on. */}
+        <div className="difficulty-picker">
+          <div className="difficulty-picker__levels" role="radiogroup" aria-label="Mode">
+            {MODES.map((key) => (
+              <button
+                key={key}
+                type="button"
+                role="radio"
+                aria-checked={mode === key}
+                className={`difficulty-picker__level ${mode === key ? "is-active" : ""}`}
+                onClick={() => setMode(key)}
+              >
+                {MODE_SETTINGS[key].name}
+              </button>
+            ))}
+          </div>
+          <p className="difficulty-picker__summary">{MODE_SETTINGS[mode].summary}</p>
+        </div>
 
         {/* How hard: every change from Normal, listed in plain words. */}
         <div className="difficulty-picker">
@@ -68,7 +89,7 @@ export function PartySelectScreen({ nation, parties, onBack, onSelectParty }: Pa
               key={party.id}
               className="party-card"
               style={{ "--party-color": party.color } as CSSProperties}
-              onClick={() => onSelectParty(party.id, difficulty)}
+              onClick={() => onSelectParty(party.id, difficulty, mode)}
             >
               <span className="party-card__crest">
                 <PartyCrestEmblem ideology={party.ideology} />

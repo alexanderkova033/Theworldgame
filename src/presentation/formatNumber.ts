@@ -55,3 +55,11 @@ export function formatRate(value: number, points = false): string {
   const body = abs < 10 && abs % 1 !== 0 ? String(abs) : formatAmount(abs);
   return `${r > 0 ? "+" : r < 0 ? "−" : ""}${body}/d`;
 }
+
+// A reign's length: "12 years, 3 months", "1 year", "5 months".
+export function formatReign(months: number): string {
+  const years = Math.floor(months / 12);
+  const rest = months % 12;
+  const parts = [years > 0 && `${years} ${years === 1 ? "year" : "years"}`, (rest > 0 || years === 0) && `${rest} ${rest === 1 ? "month" : "months"}`].filter(Boolean);
+  return parts.join(", ");
+}

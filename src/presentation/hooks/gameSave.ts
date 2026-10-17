@@ -118,6 +118,9 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     // Games saved before chapters existed keep every system open.
     chapters: raw.chapters ?? allChaptersOpen(),
     retriesUsed: raw.retriesUsed ?? 0,
+    mode: raw.mode ?? "terms",
+    burdens: raw.burdens ?? [],
+    burdenOffer: raw.burdenOffer ?? null,
   };
   // Saves from before provinces had people: everyone lives where the homes are.
   if (!raw.provinces) {

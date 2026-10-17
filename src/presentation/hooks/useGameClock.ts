@@ -12,6 +12,7 @@ import { startNewGame } from "../../application/startNewGame";
 import type { GameSpeed, GameState } from "../../domain/country/types";
 import type { Difficulty } from "../../domain/difficulty/difficultyData";
 import { clearCheckpoint, clearSlot, getSlotPreviews, loadCheckpoint, loadSlot, persistCheckpoint, persistSlot, renameSlot as renameSlotStorage, type SaveSlotPreview } from "./gameSave";
+import type { GameMode } from "../../domain/reign/reignData";
 
 export type { SavedGamePreview, SaveSlotPreview } from "./gameSave";
 
@@ -69,16 +70,18 @@ export function useGameClock() {
   // A checkpoint each time a chapter opens: the game as that chapter began.
   const checkpointChapters = useRef(0);
   useEffect(() => {
-    if (!state || activeSlotId === null || state.isGameOver) return;
+    // A Long Reign has one life: nothing to go back to.
+    if (!state || activeSlotId === null || state.isGameOver || state.mode === "long-reign") return;
     if (state.chapters.opened.length <= checkpointChapters.current) return;
     checkpointChapters.current = state.chapters.opened.length;
     persistCheckpoint(activeSlotId, state);
   }, [state, activeSlotId]);
 
-  const startGame = useCallback((nationId: string, partyId: string, slotId: number, difficulty: Difficulty = "normal") => {
+  const startGame = useCallback((nationId: string, partyId: string, slotId: number, difficulty: Difficulty = "normal", mode: GameMode = "terms") => {
     checkpointChapters.current = 0;
     setActiveSlotId(slotId);
-    setState(startNewGame(nationId, partyId, difficulty));
+    clearCheckpoint(slotId);
+    setState(startNewGame(nationId, partyId, difficulty, mode));
   }, []);
 
   const continueGame = useCallback((slotId: number) => {
@@ -129,7 +132,8 @@ export function useGameClock() {
   }, [activeSlotId, state]);
 
   const pause = useCallback(() => setState((s) => (s ? { ...s, isPaused: true } : s)), []);
-  const resume = useCallback(() => setState((s) => (s ? { ...s, isPaused: false } : s)), []);
+  // Not while a burden of office waits to be chosen (see BurdenLetter).
+  const resume = useCallback(() => setState((s) => (s && !s.burdenOffer ? { ...s, isPaused: false } : s)), []);
   const setSpeed = useCallback((speed: GameSpeed) => setState((s) => (s ? { ...s, speed } : s)), []);
 
   // Lets components trigger a player action (e.g. buildFarm) without knowing

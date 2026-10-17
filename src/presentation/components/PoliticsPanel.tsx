@@ -24,6 +24,7 @@ import {
   CRACKDOWN_SUPPORT,
   CURRENCY_SYMBOL,
   ELECTIONS_TO_WIN_GAME,
+  LONG_REIGN_THRESHOLD_STEP,
   RALLY_POLITICAL_POWER_COST,
   RALLY_SUPPORT,
   RALLY_TREASURY_COST,
@@ -56,6 +57,7 @@ import { EffectList } from "./TechTree";
 import { BUDGET, BUILDINGS, lockedReason, MARKET, PEOPLE, type Destination, type OpenPanel, type PoliticsSection } from "../navigation";
 import { PoliceForce } from "./WorkforcePanel";
 import { formatAmount, formatRate, formatSigned } from "../formatNumber";
+import { isLongReign } from "../../domain/reign/reignRules";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
 
@@ -412,6 +414,15 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
             />
           </div>
         </div>
+        {isLongReign(state) ? (
+          <div
+            className="politics-hero__side"
+            title={`Long Reign: no finish line. Lose one election and the reign ends. The line rises ${LONG_REIGN_THRESHOLD_STEP} points with every election from the third: the next needs ${getElectionThreshold(state)}%.`}
+          >
+            <span className="politics-hero__big">{state.electionsWon}</span>
+            <span className="politics-hero__unit">{state.electionsWon === 1 ? "win" : "wins"}</span>
+          </div>
+        ) : (
         <div className="politics-hero__side" title={`Win ${ELECTIONS_TO_WIN_GAME} elections in a row for outright victory. Lose one and the game ends. Each asks for more support: ${getDifficulty(state.difficulty).electionThresholds.join("%, then ")}%.`}>
           <span className="politics-hero__pips">
             {Array.from({ length: ELECTIONS_TO_WIN_GAME }, (_, i) => (
@@ -423,6 +434,7 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
           </span>
           <span className="politics-hero__unit">wins</span>
         </div>
+        )}
       </div>
 
       {/* 2. The two parties, under their side of the chamber. */}

@@ -115,3 +115,17 @@
   font-size: 0.9rem;
   font-style: italic;
 }
+
+/* A Long Reign against the best before it. */
+.game-end-screen__record {
+  margin: 0 0 0.9rem;
+  font-style: italic;
+}
+
+.game-end-screen__record.is-new {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-style: normal;
+  color: var(--accent);
+}

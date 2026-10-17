@@ -18,6 +18,7 @@ import type { PlacedBuilding } from "../domain/provinces/types";
 import { emptyLedger } from "../domain/ledger/ledgerRules";
 import { emptyWorkforce } from "../domain/workforce/workforceRules";
 import { newChapterProgress } from "../domain/chapters/chapterData";
+import type { GameMode } from "../domain/reign/reignData";
 
 // The reign opens on New Year's Day, in the dead of winter (see getSeason):
 // farms barely yield, so the very first thing the player sees is food
@@ -61,8 +62,8 @@ function buildStartingBuildings(nationId: string, farmCount: number): PlacedBuil
   return buildings;
 }
 
-export function startNewGame(nationId: string, partyId: string, difficulty: Difficulty = "normal"): GameState {
-  const state = createInitialState(nationId, partyId, difficulty);
+export function startNewGame(nationId: string, partyId: string, difficulty: Difficulty = "normal", mode: GameMode = "terms"): GameState {
+  const state = { ...createInitialState(nationId, partyId, difficulty), mode };
   // Everyone starts out living where the homes are.
   return {
     ...state,
@@ -150,5 +151,8 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     decisionHistory: [],
     chapters: newChapterProgress(),
     retriesUsed: 0,
+    mode: "terms",
+    burdens: [],
+    burdenOffer: null,
   };
 }

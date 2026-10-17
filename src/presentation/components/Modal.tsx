@@ -3,7 +3,7 @@ import { useEffect, useId, useRef } from "react";
 
 interface ModalProps {
   title: string;
-  onClose: () => void;
+  onClose?: () => void; // absent: a letter that must be answered, with no way to close it
   children: React.ReactNode;
   wide?: boolean;
   // A small glyph shown beside the title — normally the same NavIcon
@@ -28,7 +28,7 @@ export function Modal({ title, onClose, children, wide = false, icon, window: wi
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onClose?.();
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -62,11 +62,13 @@ export function Modal({ title, onClose, children, wide = false, icon, window: wi
         <header className="modal__header surface-leather">
           {icon && <span className="modal__header-icon">{icon}</span>}
           <h2 id={titleId}>{title}</h2>
-          <button className="modal__close" onClick={onClose} aria-label="Close" title="Close (Esc)">
-            <svg width={14} height={14} viewBox="-7 -7 14 14" aria-hidden="true">
-              <path d="M-5,-5 L5,5 M5,-5 L-5,5" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" />
-            </svg>
-          </button>
+          {onClose && (
+            <button className="modal__close" onClick={onClose} aria-label="Close" title="Close (Esc)">
+              <svg width={14} height={14} viewBox="-7 -7 14 14" aria-hidden="true">
+                <path d="M-5,-5 L5,5 M5,-5 L-5,5" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" />
+              </svg>
+            </button>
+          )}
         </header>
         <div className="modal__body">{children}</div>
       </div>

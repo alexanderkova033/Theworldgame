@@ -8,7 +8,7 @@ You govern one of three fictional nations on an invented continent, in a period 
 
 ## What the game is
 
-- **Choose a difficulty, a nation and a party.** Easy, Normal, Hard or Ruthless; then Astravia, Caldenreich or Veldoria; then one of its parties. All three are permanent for the game.
+- **Choose a mode, a difficulty, a nation and a party.** Three Terms (win three elections) or the Long Reign (no finish line: hold on as long as you can); Easy, Normal, Hard or Ruthless; then Astravia, Caldenreich or Veldoria; then one of its parties. All are permanent for the game.
 - **Learn it as it opens.** The game starts with building, taxes and loans only. The market, laws, research, voters, the streets, neighbours and ventures each arrive in their own chapter, with a short briefing and objectives.
 - **Build across your provinces.** Farms, factories, roads, housing, granaries, canneries and schools, each capped per province. Every province has its own people, homes and jobs, and people move toward free homes and work.
 - **Trade for what your land lacks.** Terrain produces wood, ore, grain or fish; coal heats homes in winter. A supply-and-demand market sells the rest.
@@ -63,8 +63,8 @@ src/
     politics/ parties/  Popularity, political power, factions, elections, the rival.
     laws/ research/ policy/ synergy/
                         The two trees, the rules they share, and links between them.
-    chapters/ difficulty/
-                        Which systems are open yet, and what each level changes.
+    chapters/ difficulty/ reign/
+                        Which systems are open yet, what each level changes, and the Long Reign's burdens.
     decisions/ randomEvents/ unrest/ diplomacy/ expeditions/ loans/ workforce/ nations/ ledger/
     constants.ts        Every tunable number.
 

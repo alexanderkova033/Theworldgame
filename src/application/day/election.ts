@@ -9,17 +9,23 @@ import type { CountryStats, GameDate, GameOutcome, GameState } from "../../domai
 import { getElectionThreshold } from "../../domain/parties/electionRules";
 import { getParty } from "../../domain/parties/partyRules";
 import { book, log, type Day } from "./dayContext";
+import type { BurdenId } from "../../domain/reign/reignData";
+import { burdensForWin, describeBurden, getBurden, isLongReign } from "../../domain/reign/reignRules";
 
 export interface Election {
   stats: CountryStats;
   electionsWon: number;
+  burdens: BurdenId[];
+  burdenOffer: BurdenId[] | null;
   ended?: { outcome: GameOutcome; reason: string };
 }
 
 export function holdElection(day: Day, working: GameState, date: GameDate, today: { isGameOver: boolean; supportAtDawn: number; stats: CountryStats }): Election {
   let stats = today.stats;
   let electionsWon = working.electionsWon;
-  if (today.isGameOver || !isEveryNMonths(date, ELECTION_INTERVAL_MONTHS)) return { stats, electionsWon };
+  let burdens = working.burdens;
+  const burdenOffer = working.burdenOffer;
+  if (today.isGameOver || !isEveryNMonths(date, ELECTION_INTERVAL_MONTHS)) return { stats, electionsWon, burdens, burdenOffer };
 
   const party = getParty(working.partyId);
   // The vote counts support as election day dawns: the rival's and the
@@ -33,6 +39,8 @@ export function holdElection(day: Day, working: GameState, date: GameDate, today
     return {
       stats,
       electionsWon,
+      burdens,
+      burdenOffer,
       ended: {
         outcome: "voted-out",
         reason: `${party.name} lost the general election with ${Math.round(popularity)}% support, short of the ${threshold}% it needed. The opposition takes power.`,
@@ -44,15 +52,33 @@ export function holdElection(day: Day, working: GameState, date: GameDate, today
   const mandate = Math.min(100, stats.stability + ELECTION_WIN_STABILITY_BONUS);
   book(day, "late", "stability", { election: mandate - stats.stability });
   stats = { ...stats, stability: mandate };
+  const nextThreshold = getElectionThreshold({ ...working, electionsWon });
+  if (isLongReign(working)) {
+    // No finish line: another term, and more to carry through it.
+    log(day, {
+      date,
+      message: `${party.name} wins the general election with ${Math.round(popularity)}% support: term ${electionsWon + 1} begins. The next one needs ${nextThreshold}%.`,
+      severity: "info",
+      topic: "elections",
+    });
+    // One burden is the player's to choose (see BurdenLetter); later on,
+    // chance adds another.
+    const { offer, forced } = burdensForWin(burdens, electionsWon);
+    for (const id of forced) {
+      const burden = getBurden(id);
+      log(day, { date, message: `A burden of office falls on you: ${burden.name}. ${describeBurden(burden).join(", ")}.`, severity: "warning", topic: "elections" });
+    }
+    return { stats, electionsWon, burdens: [...burdens, ...forced], burdenOffer: offer };
+  }
   if (electionsWon >= ELECTIONS_TO_WIN_GAME) {
     log(day, { date, message: `${party.name} wins the general election outright: ${electionsWon} elections running. Victory!`, severity: "info", topic: "elections" });
-    return { stats, electionsWon, ended: { outcome: "victory", reason: `${party.name} has won the people's trust for good, a mandate no rival can challenge.` } };
+    return { stats, electionsWon, burdens, burdenOffer, ended: { outcome: "victory", reason: `${party.name} has won the people's trust for good, a mandate no rival can challenge.` } };
   }
   log(day, {
     date,
-    message: `${party.name} wins the general election with ${Math.round(popularity)}% support (${electionsWon}/${ELECTIONS_TO_WIN_GAME} for outright victory). The next one needs ${getElectionThreshold({ electionsWon, difficulty: working.difficulty })}%.`,
+    message: `${party.name} wins the general election with ${Math.round(popularity)}% support (${electionsWon}/${ELECTIONS_TO_WIN_GAME} for outright victory). The next one needs ${nextThreshold}%.`,
     severity: "info",
     topic: "elections",
   });
-  return { stats, electionsWon };
+  return { stats, electionsWon, burdens, burdenOffer };
 }

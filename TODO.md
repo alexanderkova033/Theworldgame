@@ -14,6 +14,7 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
   - `chapters.test.ts`: every locked system is out of reach in the rules, each chapter opens by its month with a briefing, and old saves load with everything open.
   - `checkpoints.test.ts`: checkpoints outlive a finished game but not a deleted slot, and retries shrink as the level rises.
   - `defeat.test.ts`: the defeat story ends where the game ended and names real causes.
+  - `reign.test.ts`: the Long Reign's rising line and burdens; a careful player outlasts Three Terms but is always voted out within twenty years, sooner on Hard.
 - Balance changes: run the tests, and look at the numbers they report if a path starts to fail. The scripted player lives in `tests/support/carefulPlayer.ts`.
 - UI changes: check the screen in a browser, at a normal window and at about 1000px wide.
 
@@ -26,6 +27,7 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **Small screens.** Below 1050px the tree details drop under the tree (picking a node scrolls to them); below about 700px the tree scrolls sideways.
 - **Chapters are the same for every nation.** Nation-specific chapters (Veldoria meeting the streets first, say) would suit their stories better, but would need their own balance pass.
 - **Objectives are only in the slip on the map.** Pointing at the province or tab an objective needs (a marker on the map) is not done.
+- **Long Reign burdens are drawn at random.** The scripted player takes the first one offered, so the tests measure an average reign, not a player choosing well.
 - **TECHNICAL_DESIGN.md** may still describe the early MVP in places. README and GAME_DESIGN were brought up to date on 2026-10-16.
 
 ## Process reminders
