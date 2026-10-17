@@ -249,11 +249,13 @@
   transition: transform 0.12s ease;
 }
 
-.law-node:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border: none;
-  box-shadow: none;
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .law-node:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border: none;
+    box-shadow: none;
+    transform: translateY(-2px);
+  }
 }
 
 .law-node.is-selected {
@@ -854,10 +856,16 @@
 }
 
 /* The picked node: framed in the accent, so the pane beside is plainly its. */
-.law-node.is-selected,
-.law-node.is-selected:hover {
+.law-node.is-selected {
   background: var(--paper);
   box-shadow: inset 0 0 0 2px var(--tree-accent);
+}
+
+@media (hover: hover) {
+  .law-node.is-selected:hover {
+    background: var(--paper);
+    box-shadow: inset 0 0 0 2px var(--tree-accent);
+  }
 }
 
 .law-node__status {
@@ -916,10 +924,12 @@ button.law-tree__lane-head {
   box-shadow: none;
 }
 
-button.law-tree__lane-head:hover {
-  border-color: var(--tree-accent);
-  background: var(--paper);
-  transform: none;
+@media (hover: hover) {
+  button.law-tree__lane-head:hover {
+    border-color: var(--tree-accent);
+    background: var(--paper);
+    transform: none;
+  }
 }
 
 button.law-tree__lane-head.is-selected {
@@ -1001,9 +1011,11 @@ button.law-tree__lane-head.is-selected {
   color: var(--ink);
 }
 
-.path-step:hover {
-  border-color: var(--tree-accent);
-  transform: none;
+@media (hover: hover) {
+  .path-step:hover {
+    border-color: var(--tree-accent);
+    transform: none;
+  }
 }
 
 .path-inspector__then {
@@ -1088,4 +1100,20 @@ button.law-tree__lane-head.is-selected {
 .law-node__seat {
   position: relative;
   display: flex;
+}
+
+/* Touch: room for a fingertip (see index.css). */
+@media (pointer: coarse) {
+  button.law-tree__lane-head,
+  .path-step {
+    min-height: 2.5rem;
+  }
+
+  /* The page is drawn smaller on a tablet (index.html), so the smallest
+     labels step up to stay readable; these pills never wrap, so a
+     smaller step. */
+  .law-node__status,
+  .law-node__party {
+    font-size: 0.78rem;
+  }
 }

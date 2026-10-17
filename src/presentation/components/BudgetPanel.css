@@ -250,3 +250,17 @@
   color: var(--danger);
   font-weight: 700;
 }
+
+/* Touch: the inline links keep their size in the line, and take a
+   fingertip's reach around it, so the rows don't grow (see index.css). */
+@media (pointer: coarse) {
+  .budget-sheet__go {
+    position: relative;
+  }
+
+  .budget-sheet__go::after {
+    content: "";
+    position: absolute;
+    inset: -0.6rem -0.3rem;
+  }
+}

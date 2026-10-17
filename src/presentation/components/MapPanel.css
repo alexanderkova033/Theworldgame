@@ -183,22 +183,31 @@
   cursor: pointer;
 }
 
-.map-panel__province.is-owned:hover {
-  fill-opacity: 0.55;
-  stroke: var(--oxblood);
-  stroke-width: 2.4;
-  stroke-dasharray: none;
+@media (hover: hover) {
+  .map-panel__province.is-owned:hover {
+    fill-opacity: 0.55;
+    stroke: var(--oxblood);
+    stroke-width: 2.4;
+    stroke-dasharray: none;
+  }
 }
 
 .map-panel__province.is-foreign {
   fill-opacity: 0.3;
 }
 
-.map-panel__province.is-selected,
-.map-panel__province.is-selected:hover {
+.map-panel__province.is-selected {
   stroke: var(--oxblood);
   stroke-width: 3.6;
   stroke-dasharray: none;
+}
+
+@media (hover: hover) {
+  .map-panel__province.is-selected:hover {
+    stroke: var(--oxblood);
+    stroke-width: 3.6;
+    stroke-dasharray: none;
+  }
 }
 
 .map-panel__unclaimed-land {
@@ -212,9 +221,11 @@
   cursor: pointer;
 }
 
-.map-panel__unclaimed-land--clickable:hover {
-  fill: #dac59b;
-  stroke: var(--oxblood);
+@media (hover: hover) {
+  .map-panel__unclaimed-land--clickable:hover {
+    fill: #dac59b;
+    stroke: var(--oxblood);
+  }
 }
 
 .map-panel__unclaimed-land.is-selected {
@@ -635,4 +646,20 @@
   justify-content: center;
   width: 18px;
   font-weight: 800;
+}
+
+/* Touch: room for a fingertip (see index.css). */
+@media (pointer: coarse) {
+  .map-panel__zoom-controls button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .map-panel__zoom-controls button[aria-label="Reset view"] {
+    min-height: 2.5rem;
+  }
+
+  .map-panel__mode-switch button {
+    min-height: 2.5rem;
+  }
 }

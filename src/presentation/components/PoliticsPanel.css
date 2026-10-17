@@ -284,8 +284,10 @@
   border-top: 1px solid rgba(122, 92, 52, 0.35);
 }
 
-.politics-group:hover {
-  background: var(--paper-raised);
+@media (hover: hover) {
+  .politics-group:hover {
+    background: var(--paper-raised);
+  }
 }
 
 .politics-group__name {

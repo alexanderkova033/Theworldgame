@@ -68,3 +68,11 @@
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
 }
+
+/* Touch: room for a fingertip (see index.css). */
+@media (pointer: coarse) {
+  .tax-panel__control button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}

@@ -53,8 +53,10 @@ button.province-card__close {
   line-height: 1;
 }
 
-button.province-card__close:hover:not(:disabled) {
-  background: #5e1717;
+@media (hover: hover) {
+  button.province-card__close:hover:not(:disabled) {
+    background: #5e1717;
+  }
 }
 
 /* What the province needs most, set as its headline. */
@@ -197,4 +199,12 @@ button.province-card__more {
   margin-top: 0.15rem;
   font-size: 0.8125rem;
   color: var(--ink-muted);
+}
+
+/* Touch: room for a fingertip (see index.css). */
+@media (pointer: coarse) {
+  button.province-card__close {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
 }

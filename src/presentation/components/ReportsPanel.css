@@ -185,8 +185,10 @@
   cursor: pointer;
 }
 
-.report-history tbody tr:hover {
-  background: rgba(122, 92, 52, 0.1);
+@media (hover: hover) {
+  .report-history tbody tr:hover {
+    background: rgba(122, 92, 52, 0.1);
+  }
 }
 
 .report-history tbody tr.is-selected {
@@ -230,9 +232,11 @@ button.report-history__month {
   color: var(--ink);
 }
 
-button.report-history__month:hover:not(:disabled) {
-  background: none;
-  text-decoration: underline;
+@media (hover: hover) {
+  button.report-history__month:hover:not(:disabled) {
+    background: none;
+    text-decoration: underline;
+  }
 }
 
 button.report-history__month:active:not(:disabled) {
@@ -242,4 +246,13 @@ button.report-history__month:active:not(:disabled) {
 
 .report-history tr.is-selected button.report-history__month {
   color: var(--oxblood);
+}
+
+/* Touch: the page is drawn smaller on a tablet (index.html), so the
+   smallest labels step up to stay readable. */
+@media (pointer: coarse) {
+  .report-tile__unit,
+  .report-history thead th {
+    font-size: 0.8125rem;
+  }
 }

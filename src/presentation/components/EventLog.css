@@ -132,3 +132,11 @@ button.event-log__run-toggle {
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
+
+/* Touch: the page is drawn smaller on a tablet (index.html), so the
+   smallest labels step up to stay readable. */
+@media (pointer: coarse) {
+  .event-log__date {
+    font-size: 0.8125rem;
+  }
+}

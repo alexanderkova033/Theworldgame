@@ -141,3 +141,11 @@ button.advisor-fix.is-armed {
   border-color: var(--gilt-bright);
   color: #f4ead0;
 }
+
+/* Touch: room for a fingertip (see index.css). */
+@media (pointer: coarse) {
+  .advisor-chip,
+  button.advisor-fix {
+    min-height: 2.5rem;
+  }
+}

@@ -172,9 +172,11 @@ button.people-province {
   text-shadow: none;
 }
 
-button.people-province:hover:not(:disabled) {
-  background: var(--inset);
-  box-shadow: none;
+@media (hover: hover) {
+  button.people-province:hover:not(:disabled) {
+    background: var(--inset);
+    box-shadow: none;
+  }
 }
 
 button.people-province.is-selected {
@@ -349,8 +351,10 @@ button.people-province.is-selected {
   cursor: pointer;
 }
 
-.people-table--provinces tbody tr:hover {
-  background: rgba(122, 92, 52, 0.1);
+@media (hover: hover) {
+  .people-table--provinces tbody tr:hover {
+    background: rgba(122, 92, 52, 0.1);
+  }
 }
 
 .people-table--provinces tbody tr.is-selected {
@@ -373,9 +377,11 @@ button.people-table__pick {
   text-align: left;
 }
 
-button.people-table__pick:hover:not(:disabled) {
-  background: none;
-  text-decoration: underline;
+@media (hover: hover) {
+  button.people-table__pick:hover:not(:disabled) {
+    background: none;
+    text-decoration: underline;
+  }
 }
 
 button.people-table__pick:active:not(:disabled) {

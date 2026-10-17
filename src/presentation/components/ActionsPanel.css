@@ -51,12 +51,20 @@ button.actions-panel__province {
 }
 
 /* The chosen province: set in green morocco, like every other selection. */
-button.actions-panel__province.is-selected,
-button.actions-panel__province.is-selected:hover:not(:disabled) {
+button.actions-panel__province.is-selected {
   background: var(--leather);
   border-color: var(--leather-dark);
   color: #f4ead0;
   box-shadow: inset 0 0 0 1px rgba(226, 194, 122, 0.5);
+}
+
+@media (hover: hover) {
+  button.actions-panel__province.is-selected:hover:not(:disabled) {
+    background: var(--leather);
+    border-color: var(--leather-dark);
+    color: #f4ead0;
+    box-shadow: inset 0 0 0 1px rgba(226, 194, 122, 0.5);
+  }
 }
 
 .actions-panel__province.is-selected .actions-panel__province-flag {
@@ -297,4 +305,17 @@ button.build-row__button {
 .build-tile__season {
   color: var(--info);
   margin-left: 0.1rem;
+}
+
+/* Touch: room for a fingertip (see index.css). */
+@media (pointer: coarse) {
+  button.build-row__button {
+    min-height: 2.5rem;
+  }
+
+  /* The page is drawn smaller on a tablet (index.html), so the smallest
+     labels step up to stay readable. */
+  .actions-panel__province-flag {
+    font-size: 0.8125rem;
+  }
 }

@@ -125,10 +125,16 @@
 /* No transform on press: the global button:active nudge used to move the
    button out from under the pointer mid-click (and lose the click). */
 .modal__close,
-.modal__close:hover:not(:disabled),
 .modal__close:active:not(:disabled) {
   transform: none;
   transition: none;
+}
+
+@media (hover: hover) {
+  .modal__close:hover:not(:disabled) {
+    transform: none;
+    transition: none;
+  }
 }
 
 .modal__header .modal__close {
@@ -145,10 +151,12 @@
   color: var(--text);
 }
 
-.modal__header .modal__close:hover:not(:disabled) {
-  border-color: var(--gilt-bright);
-  background: #5e1717;
-  color: #f8ebc6;
+@media (hover: hover) {
+  .modal__header .modal__close:hover:not(:disabled) {
+    border-color: var(--gilt-bright);
+    background: #5e1717;
+    color: #f8ebc6;
+  }
 }
 
 .modal__close svg {
@@ -160,4 +168,12 @@
   min-height: 0;
   overflow-y: auto;
   padding: 1.1rem 1.25rem 1.25rem;
+}
+
+/* Touch: room for a fingertip (see index.css). */
+@media (pointer: coarse) {
+  .modal__header .modal__close {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
 }

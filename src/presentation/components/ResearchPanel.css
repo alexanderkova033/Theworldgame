@@ -117,8 +117,10 @@
   border-radius: 4px;
 }
 
-.research-tree .law-node:hover {
-  border: 1px solid var(--tree-accent);
+@media (hover: hover) {
+  .research-tree .law-node:hover {
+    border: 1px solid var(--tree-accent);
+  }
 }
 
 .research-tree .law-node__icon,
@@ -169,9 +171,11 @@
   border-color: var(--prussian-dark);
 }
 
-.research-tree button.btn-primary:hover:not(:disabled) {
-  background: var(--prussian);
-  border-color: var(--gilt);
+@media (hover: hover) {
+  .research-tree button.btn-primary:hover:not(:disabled) {
+    background: var(--prussian);
+    border-color: var(--gilt);
+  }
 }
 
 /* A breakthrough: the medallion rimmed in gilt, with a halo, the way a

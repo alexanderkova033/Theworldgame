@@ -109,9 +109,14 @@
   cursor: pointer;
 }
 
-.resource-ticker button.resource-ticker__chip:hover:not(:disabled),
 .resource-ticker button.resource-ticker__chip.is-open {
   background: rgba(226, 194, 122, 0.1);
+}
+
+@media (hover: hover) {
+  .resource-ticker button.resource-ticker__chip:hover:not(:disabled) {
+    background: rgba(226, 194, 122, 0.1);
+  }
 }
 
 .resource-ticker button.resource-ticker__chip.is-open {
@@ -297,8 +302,10 @@
   color: var(--text-muted);
 }
 
-.resource-ticker button.resource-ticker__pin-toggle:hover:not(:disabled) {
-  color: var(--gilt-bright);
+@media (hover: hover) {
+  .resource-ticker button.resource-ticker__pin-toggle:hover:not(:disabled) {
+    color: var(--gilt-bright);
+  }
 }
 
 .resource-ticker__store-foot {
