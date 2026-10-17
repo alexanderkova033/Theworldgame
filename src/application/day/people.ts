@@ -2,6 +2,7 @@
 // each one's homes, then move toward free homes and open jobs. Each
 // province's own order follows the nation's, minus its own homeless and
 // jobless.
+import { isFeatureOpen } from "../../domain/chapters/chapterData";
 import type { CountryStats, GameState } from "../../domain/country/types";
 import { getHomelessTotal } from "../../domain/housing/housingRules";
 import type { LabourSituation } from "../../domain/labour/labourRules";
@@ -60,7 +61,7 @@ export function movePeople(
         date,
         message:
           change.to === "riots"
-            ? `Riots in ${name}! Too many there have no home or no work. Build there, or crack down: it drags the whole country down.`
+            ? `Riots in ${name}! Too many there have no home or no work. Build there${isFeatureOpen(working, "unrest") ? ", or crack down" : ""}: it drags the whole country down.`
             : `Strikes in ${name}. Too many there have no home or no work.`,
         severity: change.to === "riots" ? "danger" : "warning",
         topic: "provinceUnrest",

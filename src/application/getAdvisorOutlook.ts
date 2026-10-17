@@ -79,6 +79,9 @@ function compact(value: number): string {
 
 function getAlerts(state: GameState, production: DailyProductionSummary, heating: HeatingOutlook, forecasts: Forecasts): AdvisorAlert[] {
   const alerts: AdvisorAlert[] = [];
+  // Advice names only what the player can do yet (see domain/chapters).
+  const market = isFeatureOpen(state, "market");
+  const streets = isFeatureOpen(state, "unrest");
 
   // Unrest: strikes and riots are a step from collapse.
   if (state.unrestStage !== "calm") {
@@ -86,7 +89,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       kind: "unrest",
       stage: state.unrestStage,
       text: `Unrest: ${UNREST_NAMES[state.unrestStage]}`,
-      detail: `Stability ${Math.round(state.stats.stability)}. A crackdown pulls the country back a stage; police soften strikes and riots.`,
+      detail: `Stability ${Math.round(state.stats.stability)}. ${streets ? "A crackdown pulls the country back a stage; police soften strikes and riots." : "Feed, house, employ and warm the people to bring it back."}`,
       critical: state.unrestStage !== "discontent",
     });
   }
@@ -102,7 +105,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       kind: "provinceUnrest",
       stage: worst.unrestStage,
       text: `${UNREST_NAMES[worst.unrestStage]}: ${getProvinceName(id)}${others}`,
-      detail: `${getProvinceName(id)} is ${worst.unrestStage === "riots" ? "rioting, wrecking its buildings and dragging national stability down" : "on strike"}. Too many there have no home or no work: build homes or jobs there, or crack down.`,
+      detail: `${getProvinceName(id)} is ${worst.unrestStage === "riots" ? "rioting, wrecking its buildings and dragging national stability down" : "on strike"}. Too many there have no home or no work: build homes or jobs there${streets ? ", or crack down" : ""}.`,
       critical: worst.unrestStage === "riots",
     });
   }
@@ -113,7 +116,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     alerts.push({
       kind: "coal",
       text: `Coal: ${dayCount(days)}`,
-      detail: `Coal and firewood last ${days} more days, with ${heating.winterDaysLeft} days of winter left. Buy coal.`,
+      detail: `Coal and firewood last ${days} more days, with ${heating.winterDaysLeft} days of winter left. ${market ? "Buy coal." : "Keep the wood for burning, not building."}`,
       critical: days < ADVISOR_COAL_CRITICAL_DAYS,
     });
   } else if (!heating.isWinter && heating.daysUntilWinter <= ADVISOR_WINTER_PREP_DAYS && heating.fuel < heating.fuelNeeded) {
@@ -132,7 +135,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     alerts.push({
       kind: "food",
       text: `Food: ${dayCount(days)}`,
-      detail: `If nothing changes, the food runs out around ${formatDate(date)}. Build farms, or buy food.`,
+      detail: `If nothing changes, the food runs out around ${formatDate(date)}. Build farms${market ? ", or buy food" : ""}.`,
       critical,
     });
   }

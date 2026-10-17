@@ -11,6 +11,13 @@ import { canFocusResearch } from "../src/application/actions/researchActions";
 import { canSendExpedition } from "../src/application/actions/sendExpedition";
 import { canHirePolice, canHireScientist } from "../src/application/actions/workforceActions";
 import { advanceChapters, monthNumber } from "../src/application/chapters";
+import { getAdvisorOutlook } from "../src/application/getAdvisorOutlook";
+import { getDailyProductionSummary } from "../src/application/getDailyProductionSummary";
+import { getForecasts } from "../src/application/getForecasts";
+import { getHeatingOutlook } from "../src/application/getHeatingOutlook";
+import { allChaptersOpen } from "../src/domain/chapters/chapterData";
+import { DECISIONS } from "../src/domain/decisions/decisionData";
+import { pickDecision } from "../src/domain/decisions/decisionRules";
 import { startNewGame } from "../src/application/startNewGame";
 import { CHAPTERS, isFeatureOpen, type Feature } from "../src/domain/chapters/chapterData";
 import { LAW_NODES } from "../src/domain/laws/lawData";
@@ -67,6 +74,28 @@ describe("chapters", () => {
     expect(opened.isPaused).toBe(true);
     const traded = buyGood(opened, "wood");
     expect(advanceChapters(traded).chapters.done).toContain("exchange");
+  });
+
+  it("hold back letters about systems not yet open", () => {
+    const troubled = { ...start, stats: { ...start.stats, stability: 5 } };
+    const picked = new Set(Array.from({ length: 400 }, () => pickDecision(troubled).id));
+    const waiting = DECISIONS.filter((d) => d.needs).map((d) => d.id);
+    expect(waiting.length).toBeGreaterThan(0);
+    for (const id of waiting) expect(picked.has(id), id).toBe(false);
+    const open = { ...troubled, chapters: allChaptersOpen() };
+    const later = new Set(Array.from({ length: 400 }, () => pickDecision(open).id));
+    expect(waiting.some((id) => later.has(id))).toBe(true);
+  });
+
+  it("never advise what the player can't do yet", () => {
+    // Hungry, cold, rioting: every alert that could name the market or a crackdown.
+    const dire = { ...start, unrestStage: "riots" as const, stats: { ...start.stats, food: 0, stability: 10 }, resources: { ...start.resources, coal: 0, wood: 1 } };
+    const advice = (s: typeof dire) => {
+      const production = getDailyProductionSummary(s);
+      return getAdvisorOutlook(s, production, getHeatingOutlook(s), getForecasts(s, production)).alerts.map((a) => a.detail ?? "").join(" ");
+    };
+    expect(advice(dire)).not.toMatch(/buy|crack/i);
+    expect(advice({ ...dire, chapters: allChaptersOpen() })).toMatch(/buy/i);
   });
 
   it("leave saves from before chapters with everything open", () => {

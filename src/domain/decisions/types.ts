@@ -1,3 +1,4 @@
+import type { Feature } from "../chapters/chapterData";
 import type { GameDate, GameState } from "../country/types";
 
 // Political decisions: unlike laws (deliberate, tree-gated) or random world
@@ -29,6 +30,9 @@ export interface DecisionDefinition {
   // and are picked well ahead of the generic ones when they can (see
   // pickDecision). Decisions without one can fire any time.
   condition?: (state: GameState) => boolean;
+  // A letter about a system that arrives in a later chapter (see
+  // domain/chapters) waits until that chapter has opened.
+  needs?: Feature;
 }
 
 export interface DecisionHistoryEntry {

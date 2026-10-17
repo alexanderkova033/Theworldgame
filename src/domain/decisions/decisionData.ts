@@ -93,6 +93,7 @@ export const DECISIONS: DecisionDefinition[] = [
     title: "Border Incident",
     prompt: "A skirmish at the border rattles nerves.",
     icon: "stability",
+    needs: "neighbours",
     options: [
       { id: "diplomacy", label: "Send diplomats", effects: { stabilityDelta: 4, treasuryDelta: -300 } },
       { id: "hardline", label: "Take a hard line", effects: { popularityDelta: 6, stabilityDelta: -4 } },
@@ -253,6 +254,7 @@ export const DECISIONS: DecisionDefinition[] = [
     title: "General Strike",
     prompt: "Unions threaten to shut every works in the country over jobs and hours.",
     icon: "industry",
+    needs: "unrest",
     condition: workersRestless,
     options: [
       { id: "concede", label: "Meet their demands", effects: { treasuryDelta: -700, popularityDelta: 5 } },
@@ -286,6 +288,7 @@ export const DECISIONS: DecisionDefinition[] = [
     title: "Unrest in the Streets",
     prompt: "Angry crowds fill the squares of the capital.",
     icon: "stability",
+    needs: "unrest",
     condition: (state) => state.stats.stability < DECISION_UNREST_STABILITY,
     options: [
       { id: "reform", label: "Promise reforms", effects: { treasuryDelta: -600, popularityDelta: 4, stabilityDelta: 3 } },
