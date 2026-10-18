@@ -36,6 +36,13 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **A lost province can't be won back yet.** Retaking it belongs to the military (roadmap step 5).
 - **Scripted players never lose a province.** Even the sloppy one sends militia within two months, long before a month at full strength. The tests cover breaking away directly (tests/breakaway.test.ts), not through a played game.
 
+## Islands: notes for the next phase
+
+- **Settlers land with homes but no work.** A new colony's workers are all jobless, so it slides toward strikes until something is built there. Phase B should give it a start (its trait's workplace, or settlers bringing tools), and decide whether that is a gift or a cost.
+- **What a colony is worth isn't measured yet.** Scripted players don't settle, so balance is unchanged. Phase B adds the costs of the sea (supply fee, harbours) and should teach the careful player to settle, then measure whether one pays its way within about two years.
+- **Taxes and output come for free once settled.** The only running cost of a colony today is what you build there. The supply fee in phase B is the lever.
+- **Settled islands use the province systems unchanged** (homes, jobs, unrest, uprisings, breaking away), except commuting and migration, which stop at the shore. Phase D only needs to tune them (distance), not build them.
+
 ## Process reminders
 
 - Domain rules live in `src/domain/<concept>/`, cross-domain use cases in `src/application/`, and React only in `src/presentation/`.

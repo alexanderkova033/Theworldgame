@@ -356,6 +356,13 @@ export const LONG_REIGN_FORCED_FROM_WIN = 3; // from this election won on, a sec
 export const EXPEDITION_COST = 800;
 export const EXPEDITION_DAYS = 40;
 
+// --- Settling the islands (see domain/islands) ---
+export const SETTLE_COST = 1500; // Crowns to found a settlement on a scouted island...
+export const SETTLE_WOOD = 20; // ...and wood for the settlers' first homes
+export const SETTLE_DAYS = 60; // the voyage out and the first season ashore
+export const SETTLE_PEOPLE = 300; // settlers, taken from the mainland when they land
+export const SETTLE_HOMES = 1; // homes standing when they arrive
+
 // --- Loans (see domain/loans/loanRules.ts) ---
 export const LOAN_BATCH_SIZE = 2000; // treasury received (and added to debt) per "Take Loan" click
 export const LOAN_REPAY_BATCH_SIZE = 1000; // debt paid down per "Repay" click, capped by treasury and remaining debt

@@ -384,6 +384,7 @@ function App() {
           <MapPanel
             nation={nation}
             lostProvinceIds={state.lostProvinceIds}
+            settledIslandIds={state.settledIslandIds}
             placedBuildings={state.placedBuildings}
             selectedProvinceId={currentProvinceId}
             onSelectProvince={selectProvinceOnMap}

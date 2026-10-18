@@ -80,7 +80,7 @@ Open chapters and their objectives sit in a slip at the top right of the map; an
 
 ## Map and provinces
 
-Sixteen provinces on one continent, each nation holding four to six, plus three unclaimed islands offshore. Every province has its own people, homes and jobs. Each day some of the homeless and jobless move to provinces with free homes and open work; unrest puts people off a province.
+Sixteen provinces on one continent, each nation holding four to six, plus six islands offshore that can be settled (see Islands). Every province has its own people, homes and jobs. Each day some of the homeless and jobless move to provinces with free homes and open work; unrest puts people off a province.
 
 You build in whichever of your provinces is selected. Each building type is capped per province, so growth means spreading out:
 
@@ -103,6 +103,10 @@ Each province's terrain produces a raw resource daily: forest gives **wood**, hi
 The market holds a stock of every good, and prices follow how scarce it is. Buying pays a markup over the mid price (less with a coastal port); selling gets a little over half of it. Daily taxes and industry are meant to be your living; the market fills gaps.
 
 You can also take loans in batches. Interest compounds daily, and heavy debt costs stability and support.
+
+## Islands
+
+Six islands lie off the continent: Kestrel Isles, Solmere, Vashtel Cay, Grey Holm, Marrowind and Saltreach. Each has a terrain and a trait that makes it worth the voyage (rich fishing, an ore seam, a sheltered anchorage...), and three have people of their own. A venture scouts an island and brings back a one-time find. A scouted, empty island can then be settled: 1,500 Cr and 20 wood, and two months later 300 settlers land, taken from your most crowded province, with their first homes built. From then on the island is one of your provinces, built on, taxed and governed like any other, and drawn in your colour. The sea still lies between: islanders don't commute to the mainland and nobody drifts across. There is no limit on how many you settle.
 
 ## Politics
 

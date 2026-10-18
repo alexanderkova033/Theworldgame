@@ -16,6 +16,7 @@ import type { GameState } from "../country/types";
 import { isWorking } from "../maintenance/maintenanceRules";
 import { getModifiers } from "../policy/policyRules";
 import { getOwnedProvinceIds } from "../provinces/provinceRules";
+import { isIsland } from "../islands/islandRules";
 
 export type JobBuilding = keyof typeof JOBS_PER_BUILDING;
 
@@ -109,15 +110,17 @@ export function getLabourSituation(state: GameState): LabourSituation {
     idle[id] = left;
   }
 
-  // Then commuters: a share of everyone left idle fills open jobs anywhere,
-  // in the same order, spread over the provinces with openings.
-  const totalIdle = provinceIds.reduce((sum, id) => sum + idle[id], 0);
+  // Then commuters: a share of everyone left idle fills open jobs anywhere
+  // on the mainland, in the same order, spread over the provinces with
+  // openings. Nobody commutes across the sea, to or from an island.
+  const mainland = provinceIds.filter((id) => !isIsland(id));
+  const totalIdle = mainland.reduce((sum, id) => sum + idle[id], 0);
   let pool = totalIdle * COMMUTE_SHARE;
   for (const sector of SECTORS) {
-    const open = provinceIds.reduce((sum, id) => sum + (jobs[id][sector] - hired[id][sector]), 0);
+    const open = mainland.reduce((sum, id) => sum + (jobs[id][sector] - hired[id][sector]), 0);
     const take = Math.min(pool, open);
     if (take <= 0) continue;
-    for (const id of provinceIds) hired[id][sector] += (take * (jobs[id][sector] - hired[id][sector])) / open;
+    for (const id of mainland) hired[id][sector] += (take * (jobs[id][sector] - hired[id][sector])) / open;
     pool -= take;
   }
   const commuters = totalIdle * COMMUTE_SHARE - pool;
@@ -126,7 +129,7 @@ export function getLabourSituation(state: GameState): LabourSituation {
   const staffed = { farms: 0, granaries: 0, canneries: 0, schools: 0, factories: 0 };
   const totals = { workers: 0, unemployed: 0, jobs: { food: 0, school: 0, industry: 0 }, hired: { food: 0, school: 0, industry: 0 } };
   for (const id of provinceIds) {
-    const commutersOut = totalIdle > 0 ? (commuters * idle[id]) / totalIdle : 0;
+    const commutersOut = totalIdle > 0 && !isIsland(id) ? (commuters * idle[id]) / totalIdle : 0;
     const p: ProvinceLabour = {
       workers: workers[id],
       jobs: jobs[id].food + jobs[id].school + jobs[id].industry,

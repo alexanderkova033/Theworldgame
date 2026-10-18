@@ -6,6 +6,7 @@
 // doesn't change.
 import { LABOUR_SHARE, MIGRATION_SHARE_PER_DAY, MIGRATION_UNREST_PULL } from "../constants";
 import type { ProvinceLabour } from "../labour/labourRules";
+import { isIsland } from "../islands/islandRules";
 import type { ProvinceState } from "./types";
 
 // One flow: movers leave their origins, and are spread over destinations by
@@ -35,7 +36,8 @@ export function planMigration(
   capacityByProvince: Record<string, number>,
   labour: Record<string, ProvinceLabour>,
 ): Record<string, number> {
-  const ids = Object.keys(provinces);
+  // By land only: an island's people stay put, and nobody walks to one.
+  const ids = Object.keys(provinces).filter((id) => !isIsland(id));
   const room: Record<string, number> = {};
   const homeless: Record<string, number> = {};
   const jobless: Record<string, number> = {};

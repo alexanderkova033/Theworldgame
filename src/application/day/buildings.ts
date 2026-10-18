@@ -14,6 +14,7 @@ import { getPoliceBreakdownReduction } from "../../domain/workforce/workforceRul
 import { ONE_OFF } from "../actions/recordAction";
 import { advancePolicies } from "../advancePolicies";
 import { applyExpeditionCompletion } from "../applyExpeditionCompletion";
+import { applySettlementArrival } from "../applySettlementArrival";
 import { applyProjectCompletion } from "../applyProjectCompletion";
 import { book, bookChange, log, type Day } from "./dayContext";
 
@@ -87,6 +88,19 @@ export function advanceBuildings(day: Day): GameState {
     const islandName = getIslandExpeditionData(expedition.islandId)?.islandName ?? "The venture";
     const flavor = getIslandExpeditionData(expedition.islandId)?.reward.flavor ?? "";
     log(day, { date: state.date, message: `Venture to ${islandName} complete. ${flavor}`, severity: "info", topic: "venture" });
+  }
+
+  // 1b'. Settler ships sail on; one that lands makes its island a province.
+  const sailing = working.settlements.map((s) => ({ ...s, daysRemaining: s.daysRemaining - 1 }));
+  working = { ...working, settlements: sailing.filter((s) => s.daysRemaining > 0) };
+  for (const landed of sailing.filter((s) => s.daysRemaining <= 0)) {
+    working = applySettlementArrival(working, landed.islandId);
+    log(day, {
+      date: state.date,
+      message: `Settlers land on ${getProvinceName(landed.islandId)}, and build their first homes. It is one of your provinces now.`,
+      severity: "info",
+      topic: "venture",
+    });
   }
 
   // 1c. A law being drafted and a research step in the lab each move one day

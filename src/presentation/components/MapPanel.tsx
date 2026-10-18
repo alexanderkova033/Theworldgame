@@ -62,6 +62,7 @@ interface MapPanelProps {
   problemCount: number; // provinces that need the player (see getTroubledProvinces)
   onNextProblem: () => void; // select the next of them and open its card
   lostProvinceIds: string[]; // broke away after an uprising: drawn as free land (see domain/uprising)
+  settledIslandIds: string[]; // islands settled: drawn and picked like your provinces (see domain/islands)
 }
 
 // Every terrain gets a decorative texture, drawn on top of the province's
@@ -330,6 +331,7 @@ interface MapLayersProps {
   venturesOpen: boolean;
   onHoverProvince: Dispatch<SetStateAction<string | null>>;
   lostProvinceIds: string[];
+  settledIslandIds: string[];
 }
 
 // A homes or jobs flag in a province's info bar: amber when it's tight,
@@ -462,10 +464,15 @@ const MapLayers = memo(function MapLayers({
   venturesOpen,
   onHoverProvince,
   lostProvinceIds,
+  settledIslandIds,
 }: MapLayersProps) {
   const { coastPath, provinces, islands } = MAP_GEOMETRY;
-  // Yours: your nation's, unless it broke away and is free.
-  const owns = (provinceId: string) => nation.provinceIds.includes(provinceId) && !lostProvinceIds.includes(provinceId);
+  // Yours: your nation's provinces and the islands you settled, unless
+  // one broke away and is free.
+  const owns = (provinceId: string) =>
+    (nation.provinceIds.includes(provinceId) || settledIslandIds.includes(provinceId)) && !lostProvinceIds.includes(provinceId);
+  // Everywhere a province of yours can be: the mainland and held islands.
+  const places = [...provinces, ...islands.filter((island) => owns(island.id))];
   const capital = provinces.find((p) => p.id === nation.capitalProvinceId);
 
   return (
@@ -569,6 +576,31 @@ const MapLayers = memo(function MapLayers({
     {/* Other landmasses: unowned, but chartable via ventures. */}
     <g>
       {islands.map((land) => {
+        if (owns(land.id)) {
+          const isSelected = land.id === selectedProvinceId;
+          return (
+            <path
+              key={land.id}
+              d={land.path}
+              className={["map-panel__province", "is-owned", isSelected ? "is-selected" : ""].join(" ")}
+              onClick={() => onProvinceClick(land.id)}
+              tabIndex={0}
+              role="button"
+              aria-label={`${land.name}${isSelected ? ", selected" : ""}`}
+              aria-pressed={isSelected}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onProvinceKeySelect(land.id);
+                }
+              }}
+              onMouseEnter={() => onHoverProvince(land.id)}
+              onMouseLeave={() => onHoverProvince((prev) => (prev === land.id ? null : prev))}
+            >
+              <title>{land.name} (yours)</title>
+            </path>
+          );
+        }
         const isScouted = scoutedIslandIds.includes(land.id);
         const isExpeditionActive = expeditionIslandIds.includes(land.id);
         const isSelected = land.id === selectedIslandId;
@@ -592,15 +624,22 @@ const MapLayers = memo(function MapLayers({
       })}
       {/* A hint of vegetation so unclaimed islands read as actual
           islands, not flat brown blobs. */}
-      {islands.map((land) => (
-        <path key={`${land.id}-terrain`} d={land.path} fill="url(#terrain-forest)" opacity={0.25} pointerEvents="none" />
-      ))}
+      {islands.map((land) =>
+        owns(land.id) ? (
+          <path key={`${land.id}-terrain`} d={land.path} fill={TERRAIN_PATTERN[land.terrain]} opacity={0.5} pointerEvents="none" />
+        ) : (
+          <path key={`${land.id}-terrain`} d={land.path} fill="url(#terrain-forest)" opacity={0.25} pointerEvents="none" />
+        ),
+      )}
     </g>
-    {islands.map((land) => (
-      <text key={`${land.id}-label`} x={land.labelX} y={land.labelY} className="map-panel__label is-foreign" pointerEvents="none">
-        {land.name}
-      </text>
-    ))}
+    {/* A held island is labelled with your provinces, below. */}
+    {islands
+      .filter((land) => !owns(land.id))
+      .map((land) => (
+        <text key={`${land.id}-label`} x={land.labelX} y={land.labelY} className="map-panel__label is-foreign" pointerEvents="none">
+          {land.name}
+        </text>
+      ))}
 
     <g>
       <path d={coastPath} className="map-panel__coast" />
@@ -688,7 +727,7 @@ const MapLayers = memo(function MapLayers({
           so this only redraws when a province tips from one step to the
           next. No filters, just fills. */}
       {mapMode !== "political" &&
-        provinces.map((province) => {
+        places.map((province) => {
           const status = provinceStatus[province.id];
           // Other nations fade back, so their colours can't be read as a step.
           if (!status) return <path key={`${province.id}-mode`} d={province.path} fill="#c9b083" opacity={0.75} pointerEvents="none" />;
@@ -806,7 +845,7 @@ const MapLayers = memo(function MapLayers({
       </g>
     )}
 
-    {provinces.map((province) => {
+    {places.map((province) => {
       const isCapital = province.id === nation.capitalProvinceId;
       // The continent packs a lot of small provinces close together —
       // at the fully-zoomed-out default view, every name label at full
@@ -839,7 +878,7 @@ const MapLayers = memo(function MapLayers({
         instead of drowning among every province's buildings. Zoom in, or
         point at or pick a province, and it adds what the province
         produces and what's built there (one icon + a count per type). */}
-    {provinces.map((province) => {
+    {places.map((province) => {
       if (!owns(province.id)) return null;
 
       const buildings = buildingsByProvince.get(province.id) ?? [];
@@ -943,6 +982,7 @@ export const MapPanel = memo(function MapPanel({
   problemCount,
   onNextProblem,
   lostProvinceIds,
+  settledIslandIds,
 }: MapPanelProps) {
   const { provinces } = MAP_GEOMETRY;
 
@@ -1324,6 +1364,7 @@ export const MapPanel = memo(function MapPanel({
             venturesOpen={venturesOpen}
             onHoverProvince={hoverProvince}
             lostProvinceIds={lostProvinceIds}
+            settledIslandIds={settledIslandIds}
           />
         </svg>
 
@@ -1346,7 +1387,7 @@ export const MapPanel = memo(function MapPanel({
         {hoveredProvinceId &&
           !isPanning &&
           (() => {
-            const province = provinces.find((p) => p.id === hoveredProvinceId);
+            const province = provinces.find((p) => p.id === hoveredProvinceId) ?? MAP_GEOMETRY.islands.find((i) => i.id === hoveredProvinceId);
             if (!province) return null;
             const buildings = buildingsByProvince.get(province.id) ?? [];
             const roads = roadCountByProvince.get(province.id) ?? 0;

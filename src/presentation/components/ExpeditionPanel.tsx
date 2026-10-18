@@ -1,6 +1,9 @@
 import "./ExpeditionPanel.css";
-import { canSendExpedition, sendExpedition } from "../../application/actions";
-import { CURRENCY_SYMBOL, EXPEDITION_COST, EXPEDITION_DAYS } from "../../domain/constants";
+import { canFoundSettlement, canSendExpedition, foundSettlement, sendExpedition } from "../../application/actions";
+import { CURRENCY_SYMBOL, EXPEDITION_COST, EXPEDITION_DAYS, SETTLE_COST, SETTLE_DAYS, SETTLE_WOOD } from "../../domain/constants";
+import { getIslandData } from "../../domain/islands/islandData";
+import { whyNotSettle } from "../../domain/islands/islandRules";
+import { formatAmount } from "../formatNumber";
 import type { GameState } from "../../domain/country/types";
 import { getIslandExpeditionData } from "../../domain/expeditions/expeditionData";
 import { expeditionProgress } from "../../domain/expeditions/expeditionRules";
@@ -34,11 +37,67 @@ function UnchartedIslandIcon() {
 }
 
 // Once a venture has actually resolved, swap the generic island icon for
-// whatever it found — the reward line already spells this out in text.
+// whatever it found — the reward line already spells this out in text. A
+// resource is drawn into a frame of its own; a stat icon is its own svg.
 function RewardIcon({ reward }: { reward: ExpeditionReward }) {
-  if (reward.resourceType) return <ResourceIcon type={reward.resourceType} size={8} />;
-  if (reward.stabilityDelta !== undefined) return <StatIcon type="stability" size={34} />;
-  return <StatIcon type="treasury" size={34} />;
+  if (reward.resourceType) {
+    return (
+      <svg viewBox="-10 -10 20 20">
+        <ResourceIcon type={reward.resourceType} size={8} />
+      </svg>
+    );
+  }
+  return <StatIcon type={reward.stabilityDelta !== undefined ? "stability" : "treasury"} size={34} />;
+}
+
+// A scouted island: what makes it worth settling, who lives there, and the
+// next step: found a settlement, the ship on its way, or settled.
+function SettleSection({ state, islandId, dispatch }: { state: GameState; islandId: string; dispatch: ExpeditionPanelProps["dispatch"] }) {
+  const island = getIslandData(islandId);
+  const sailing = state.settlements.find((s) => s.islandId === islandId);
+  const why = whyNotSettle(state, islandId);
+  const short =
+    state.stats.treasury < SETTLE_COST
+      ? `Needs ${formatAmount(SETTLE_COST)} ${CURRENCY_SYMBOL}`
+      : state.resources.wood < SETTLE_WOOD
+        ? `Needs ${SETTLE_WOOD} wood`
+        : undefined;
+  return (
+    <div className="expedition-panel__settle">
+      {island && <p className="expedition-panel__trait">{island.traitText}</p>}
+      {island?.locals && (
+        <p className="expedition-panel__locals">
+          People live here: {island.locals.name}, about {formatAmount(island.locals.people)}.
+        </p>
+      )}
+      {state.settledIslandIds.includes(islandId) && !state.lostProvinceIds.includes(islandId) && (
+        <p className="expedition-panel__hint">Settled: one of your provinces.</p>
+      )}
+      {state.lostProvinceIds.includes(islandId) && <p className="expedition-panel__hint">Broke away, and is free.</p>}
+      {sailing && (
+        <>
+          <p className="expedition-panel__hint">Settlers on their way, {Math.ceil(sailing.daysRemaining)}d left</p>
+          <div className="progress-bar">
+            <div className="progress-bar__fill" style={{ width: `${Math.round((1 - sailing.daysRemaining / sailing.totalDays) * 100)}%` }} />
+          </div>
+        </>
+      )}
+      {!why && (
+        <button
+          className="btn-primary"
+          disabled={!canFoundSettlement(state, islandId)}
+          title={short ?? `Settlers sail with the makings of their first homes, and land in about ${SETTLE_DAYS} days. They come from your most crowded province.`}
+          onClick={() => {
+            playShipBell();
+            dispatch((s) => foundSettlement(s, islandId));
+          }}
+        >
+          Found a Settlement ({formatAmount(SETTLE_COST)} {CURRENCY_SYMBOL} + {SETTLE_WOOD} wood)
+        </button>
+      )}
+      {why && island?.locals && !state.settledIslandIds.includes(islandId) && <p className="expedition-panel__hint">{why}</p>}
+    </div>
+  );
 }
 
 // Lists every unclaimed island at once — opened deliberately (an island on
@@ -47,7 +106,7 @@ function RewardIcon({ reward }: { reward: ExpeditionReward }) {
 export function ExpeditionPanel({ state, selectedIslandId, dispatch }: ExpeditionPanelProps) {
   return (
     <div className="expedition-panel">
-      <p className="panel-hint">One-time rewards from unclaimed islands.</p>
+      <p className="panel-hint">A venture scouts an island and brings back what it finds. Then an empty island can be settled and held like a province.</p>
 
       {MAP_GEOMETRY.islands.map((island) => {
         const data = getIslandExpeditionData(island.id);
@@ -59,9 +118,7 @@ export function ExpeditionPanel({ state, selectedIslandId, dispatch }: Expeditio
           <div className={["expedition-panel__island-card", isFocused ? "is-focused" : ""].join(" ")} key={island.id}>
             <div className="expedition-panel__icon" aria-hidden="true">
               {isScouted && data ? (
-                <svg viewBox="-10 -10 20 20">
-                  <RewardIcon reward={data.reward} />
-                </svg>
+                <RewardIcon reward={data.reward} />
               ) : (
                 <UnchartedIslandIcon />
               )}
@@ -70,6 +127,7 @@ export function ExpeditionPanel({ state, selectedIslandId, dispatch }: Expeditio
               <h3 className="expedition-panel__island">{island.name}</h3>
 
               {isScouted && data && <p className="expedition-panel__result">{data.reward.flavor}</p>}
+              {isScouted && <SettleSection state={state} islandId={island.id} dispatch={dispatch} />}
 
               {!isScouted && inProgress && (
                 <>

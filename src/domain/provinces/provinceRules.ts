@@ -2,9 +2,10 @@ import { getNation } from "../nations/nationRules";
 import { MAP_GEOMETRY } from "./provinceData";
 import type { Island, Province } from "./types";
 
-// The provinces the country holds: its nation's, less any that broke away.
-export function getOwnedProvinceIds(state: { nationId: string; lostProvinceIds: string[] }): string[] {
-  return getNation(state.nationId).provinceIds.filter((id) => !state.lostProvinceIds.includes(id));
+// The provinces the country holds: its nation's and the islands it has
+// settled, less any that broke away.
+export function getOwnedProvinceIds(state: { nationId: string; lostProvinceIds: string[]; settledIslandIds: string[] }): string[] {
+  return [...getNation(state.nationId).provinceIds, ...state.settledIslandIds].filter((id) => !state.lostProvinceIds.includes(id));
 }
 
 // A place that can be held: a mainland province, or an island once it is

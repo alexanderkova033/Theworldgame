@@ -66,3 +66,22 @@
 .expedition-panel__island-card .progress-bar {
   margin-bottom: 0.2rem;
 }
+
+/* A scouted island's settling: its trait, its people, and the next step. */
+.expedition-panel__settle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+}
+
+.expedition-panel__trait,
+.expedition-panel__locals {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.expedition-panel__trait {
+  font-weight: 600;
+}
