@@ -21,7 +21,7 @@ import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
 import { calculateDailyProduction, RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
 import { RESOURCE_TYPES, type ResourceType } from "../../domain/resources/types";
-import { formatAmount } from "../formatNumber";
+import { formatAmount, formatRate } from "../formatNumber";
 import { UNREST_INFO } from "../unrestStages";
 import { BuildingGlyph, HourglassIcon, JobsIcon, UnrestStageIcon } from "./CauseIcon";
 import { NavIcon } from "./NavIcon";
@@ -187,8 +187,24 @@ export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }
         </button>
       </header>
 
-      <p className={`province-card__need ${need.urgent ? "is-urgent" : ""}`}>{need.text}</p>
-      {suggestions.length > 0 && (
+      {province.uprising ? (
+        // Risen: what that means, how it is going, and where to end it.
+        <div className="province-card__uprising">
+          <p className="province-card__need is-urgent">
+            <StatIcon type="uprising" size={18} /> Risen against the government
+          </p>
+          <p className="province-card__uprising-text">
+            Rebels hold its farms and works, and it pays no taxes. Rebel strength <strong>{Math.round(province.uprising.strength)}</strong> (
+            {formatRate(province.uprising.change.total, true)}).
+          </p>
+          <button type="button" className="province-card__go" onClick={() => onOpenPanel("politics", "unrest")}>
+            <StatIcon type="militia" size={18} /> Militia and uprisings ›
+          </button>
+        </div>
+      ) : (
+        <p className={`province-card__need ${need.urgent ? "is-urgent" : ""}`}>{need.text}</p>
+      )}
+      {!province.uprising && suggestions.length > 0 && (
         <ul className="province-card__fixes" aria-label={`What ${province.name} needs`}>
           {suggestions.map((suggestion) => (
             <SuggestionRow key={suggestion.key} state={state} suggestion={suggestion} provinceId={province.id} dispatch={dispatch} />
@@ -249,7 +265,13 @@ export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }
           label="Mood"
           alert={province.unrestStage === "strikes" || province.unrestStage === "riots"}
         >
-          <strong>{unrest.name}</strong> · local stability {Math.round(province.stability)}
+          <strong>{province.uprising ? "Risen" : unrest.name}</strong> · local stability {Math.round(province.stability)}
+          {!province.uprising && province.riotDays > 0 && (
+            <span className="province-card__bad">
+              {" "}
+              · rises in {province.riotDaysToRise - province.riotDays} {province.riotDaysToRise - province.riotDays === 1 ? "day" : "days"}
+            </span>
+          )}
         </Fact>
 
         <Fact icon={terrain ? <ResourceGlyph type={RESOURCE_BY_TERRAIN[terrain]} /> : null} label="Yields">
@@ -263,12 +285,14 @@ export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }
             ? "Nothing yet"
             : builtTypes.map((type, i) => {
                 const ofType = buildings.filter((b) => b.type === type);
-                const broken = ofType.filter((b) => !isWorking(b)).length;
+                const seized = ofType.filter((b) => b.condition === "seized").length;
+                const broken = ofType.filter((b) => !isWorking(b)).length - seized;
                 return (
                   <span key={type}>
                     {i > 0 && " · "}
                     {plural(ofType.length, type)}
                     {broken > 0 && <span className="province-card__bad"> ({broken} broken)</span>}
+                    {seized > 0 && <span className="province-card__bad"> (held by rebels)</span>}
                   </span>
                 );
               })}

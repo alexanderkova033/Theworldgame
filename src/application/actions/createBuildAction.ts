@@ -75,7 +75,9 @@ export function createBuildAction(config: BuildActionConfig): BuildAction {
       (!config.requiresResearch || isBuildingUnlocked(state.enactedResearchIds, config.type)) &&
       canAfford(state.stats, upfrontCost(getBuildCost(state, config.cost))) &&
       canAffordResource(state.resources, config.resourceType, upfrontCost(config.resourceCost)) &&
-      countBuildingsInProvince(state, config.type, provinceId) < config.maxPerProvince
+      countBuildingsInProvince(state, config.type, provinceId) < config.maxPerProvince &&
+      // Nothing is built where rebels hold the ground (see domain/uprising).
+      !state.provinces[provinceId]?.uprising
     );
   }
 

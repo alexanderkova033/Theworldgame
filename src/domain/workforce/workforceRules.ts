@@ -3,6 +3,7 @@
 // scientists, and there's only so much policing a population needs.
 import {
   BASE_SCIENTIST_CAP,
+  MILITIA_SALARY,
   POLICE_BREAKDOWN_REDUCTION,
   POLICE_BREAKDOWN_REDUCTION_CAP,
   POLICE_SALARY,
@@ -18,7 +19,7 @@ import type { Workforce } from "./types";
 export const RESEARCH_CATEGORIES: ResearchCategory[] = ["industry", "agriculture", "administration", "housing"];
 
 export function emptyWorkforce(): Workforce {
-  return { scientists: { industry: 0, agriculture: 0, administration: 0, housing: 0 }, police: 0 };
+  return { scientists: { industry: 0, agriculture: 0, administration: 0, housing: 0 }, police: 0, militia: 0 };
 }
 
 export function getTotalScientists(workforce: Workforce): number {
@@ -37,7 +38,7 @@ export function getPoliceCap(population: number): number {
 
 // wageMultiplier: laws and the party's creed (see domain/policy).
 export function getDailySalaries(workforce: Workforce, wageMultiplier = 1): number {
-  return (getTotalScientists(workforce) * SCIENTIST_SALARY + workforce.police * POLICE_SALARY) * wageMultiplier;
+  return (getTotalScientists(workforce) * SCIENTIST_SALARY + workforce.police * POLICE_SALARY + workforce.militia * MILITIA_SALARY) * wageMultiplier;
 }
 
 export function getPoliceStabilityBonus(police: number): number {
@@ -48,14 +49,17 @@ export function getPoliceBreakdownReduction(police: number): number {
   return Math.min(POLICE_BREAKDOWN_REDUCTION_CAP, police * POLICE_BREAKDOWN_REDUCTION);
 }
 
-// Unpaid staff walk out: police first (cheapest to lose), then scientists
-// from whichever area has the most, until what's left is affordable.
+// Unpaid staff walk out: police first (cheapest to lose), then militia
+// companies, then scientists from whichever area has the most, until what's
+// left is affordable.
 export function layOffUntilAffordable(workforce: Workforce, budget: number, wageMultiplier = 1): { workforce: Workforce; laidOff: number } {
-  let next: Workforce = { scientists: { ...workforce.scientists }, police: workforce.police };
+  let next: Workforce = { scientists: { ...workforce.scientists }, police: workforce.police, militia: workforce.militia };
   let laidOff = 0;
   while (getDailySalaries(next, wageMultiplier) > Math.max(0, budget)) {
     if (next.police > 0) {
       next = { ...next, police: next.police - 1 };
+    } else if (next.militia > 0) {
+      next = { ...next, militia: next.militia - 1 };
     } else {
       const largest = RESEARCH_CATEGORIES.reduce((a, b) => (next.scientists[b] > next.scientists[a] ? b : a));
       if (next.scientists[largest] === 0) break;

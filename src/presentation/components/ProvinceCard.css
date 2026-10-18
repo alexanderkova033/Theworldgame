@@ -208,3 +208,27 @@ button.province-card__more {
     height: 2.75rem;
   }
 }
+
+/* Risen: the need line becomes the uprising, with how it is going and a
+   way to where it is ended (Politics, Unrest). */
+.province-card__uprising .province-card__need {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.province-card__uprising-text {
+  margin: 0 0 0.45rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.province-card button.province-card__go {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  margin-bottom: 0.6rem;
+  justify-content: center;
+}

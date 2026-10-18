@@ -399,7 +399,7 @@ function ModeSwatch({ level }: { level: ModeLevel }) {
   );
 }
 
-type FlagKey = "homesFull" | "homesOver" | "jobsShort" | "jobsJobless" | "discontent" | "strikes" | "riots";
+type FlagKey = "homesFull" | "homesOver" | "jobsShort" | "jobsJobless" | "discontent" | "strikes" | "riots" | "risen";
 
 // The legend's key to the province flags — drawn with the very glyphs the
 // info bars use.
@@ -416,16 +416,23 @@ const FLAG_LEGEND: Array<{ key: FlagKey; label: string; hint: string; glyph: Rea
     hint: "A province rioting on its own wrecks its buildings and drags national stability down",
     glyph: <UnrestStageIcon stage="riots" size={22} />,
   },
+  {
+    key: "risen",
+    label: "Risen",
+    hint: "Risen against the government: rebels hold its farms and works, and it pays no taxes. Send in the militia from Politics, Unrest.",
+    glyph: <StatIcon type="uprising" size={22} />,
+  },
 ];
 
 function countFlags(status: Record<string, ProvinceStatus>): Record<FlagKey, number> {
-  const counts: Record<FlagKey, number> = { homesFull: 0, homesOver: 0, jobsShort: 0, jobsJobless: 0, discontent: 0, strikes: 0, riots: 0 };
+  const counts: Record<FlagKey, number> = { homesFull: 0, homesOver: 0, jobsShort: 0, jobsJobless: 0, discontent: 0, strikes: 0, riots: 0, risen: 0 };
   for (const s of Object.values(status)) {
     if (s.homes === "over") counts.homesOver++;
     if (s.homes === "full") counts.homesFull++;
     if (s.jobs === "jobless") counts.jobsJobless++;
     if (s.jobs === "short") counts.jobsShort++;
-    if (s.stage !== "calm") counts[s.stage]++;
+    if (s.risen) counts.risen++;
+    else if (s.stage !== "calm") counts[s.stage]++;
   }
   return counts;
 }
@@ -835,7 +842,8 @@ const MapLayers = memo(function MapLayers({
         counts.set(building.type, (counts.get(building.type) ?? 0) + 1);
       }
       const buildingTypes = [...counts.keys()];
-      const brokenCount = buildings.filter((b) => !isWorking(b)).length;
+      // Held by rebels is not broken: the banner says why they stand idle.
+      const brokenCount = buildings.filter((b) => !isWorking(b) && b.condition !== "seized").length;
       // Only what's wrong gets a flag: tight or overflowing homes, short
       // or idle hands, unrest. A quiet province shows none.
       const status = provinceStatus[province.id];
@@ -894,7 +902,7 @@ const MapLayers = memo(function MapLayers({
             if (flag === "stage") {
               return (
                 <g key={flag} transform={`translate(${cx - 7} ${itemCenterY - 7})`}>
-                  <UnrestStageIcon stage={status.stage} size={14} />
+                  {status.risen ? <StatIcon type="uprising" size={14} /> : <UnrestStageIcon stage={status.stage} size={14} />}
                 </g>
               );
             }

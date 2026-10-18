@@ -10,6 +10,7 @@ import {
   PROVINCE_JOBLESS_UNREST,
   PROVINCE_RIOT_STABILITY_DRAG,
   PROVINCE_STABILITY_DRIFT,
+  UPRISING_STABILITY_DRAG_MULTIPLIER,
 } from "../constants";
 import type { ProvinceLabour } from "../labour/labourRules";
 import type { UnrestStage } from "../unrest/types";
@@ -37,6 +38,11 @@ export function updateProvinceOrder(
   const changes: ProvinceStageChange[] = [];
   const next: Record<string, ProvinceState> = {};
   for (const [id, p] of Object.entries(provinces)) {
+    // A risen province is lawless until its uprising ends (domain/uprising).
+    if (p.uprising) {
+      next[id] = p;
+      continue;
+    }
     const homelessShare = p.population > 0 ? Math.max(0, p.population - (capacityByProvince[id] ?? 0)) / p.population : 0;
     const l = labour[id];
     const unemploymentShare = l && l.workers > 0 ? l.unemployed / l.workers : 0;
@@ -77,11 +83,14 @@ export function pickRiotZone(
 }
 
 // Weighted by how many people live there: an emptied province's riots
-// barely register nationally.
+// barely register nationally. One that has risen weighs more again.
 export function getProvinceRiotDrag(provinces: Record<string, ProvinceState>, nationalStage: UnrestStage): number {
   const total = Object.values(provinces).reduce((sum, p) => sum + p.population, 0);
   if (total <= 0) return 0;
-  const rioting = getProvincesRiotingAlone(provinces, nationalStage).reduce((sum, id) => sum + provinces[id].population, 0);
+  const rioting = getProvincesRiotingAlone(provinces, nationalStage).reduce(
+    (sum, id) => sum + provinces[id].population * (provinces[id].uprising ? UPRISING_STABILITY_DRAG_MULTIPLIER : 1),
+    0,
+  );
   return (rioting / total) * PROVINCE_RIOT_STABILITY_DRAG;
 }
 

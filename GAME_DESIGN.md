@@ -125,6 +125,8 @@ Some laws and research come in **pairs**: with both in force, each does more. A 
 
 Falling stability brings stages before collapse: discontent slows industry, strikes stop factories, riots wreck buildings. Police soften strikes and riots, and a crackdown pulls the country back a stage.
 
+**Uprisings.** A province that riots on its own for too long (30 days on Normal, 60 on Easy) rises against the government. Its farms, factories, roads, schools and food works are seized, it pays no taxes, and it drags national stability down twice as hard as a rioting province. Its homes stay with its people, so many drift away to find work. Rebel strength (0 to 100) says how hard it is to end: it grows by itself and with people sleeping rough there, fades while the country is calm (stability 45 or more), and is held down by police. **Militia** companies (200 Cr, then 2 Cr a day, up to 4) are sent in from Politics, Unrest; each order costs 15 political power and 2 support with every group, and each company wears 1.2 strength a day off. At zero the uprising is over and the buildings come back. One put down by force leaves the province aggrieved for half a year: it rises again after a third of the usual rioting, and stronger.
+
 ## Time
 
 - One **day** is one tick. Pause, or run at 1x, 2x, 3x or 5x.

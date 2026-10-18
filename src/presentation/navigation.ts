@@ -68,6 +68,7 @@ export const SUPPORT: Destination = { panel: "politics", section: "support" };
 export const UNREST: Destination = { panel: "politics", section: "unrest" };
 
 const ALERTS: Record<AdvisorAlertKind, Destination> = {
+  uprising: UNREST,
   unrest: UNREST,
   provinceUnrest: PEOPLE,
   coal: MARKET,

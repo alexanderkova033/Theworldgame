@@ -10,6 +10,8 @@ import { getBatchSize } from "../domain/market/marketRules";
 import { buyGood, canBuyGood } from "./actions/marketActions";
 import { canRepayLoan, getRepayAmount, repayLoan } from "./actions/loanActions";
 import { canCrackDown, crackDown } from "./actions/politicalActions";
+import { canRaiseMilitia, canSendMilitia, raiseMilitia, sendMilitia } from "./actions/militiaActions";
+import { getFreeMilitia } from "../domain/uprising/uprisingRules";
 import { canRepairBuilding, repairBuilding } from "./actions/repairBuilding";
 import type { AdvisorAlert } from "./getAdvisorOutlook";
 import type { HeatingOutlook } from "./getHeatingOutlook";
@@ -38,6 +40,16 @@ function affordableBatches(state: GameState, good: "coal" | "food", wanted: numb
   return 0;
 }
 
+// Into the strongest uprising, raising a company first if none is at home.
+function sendCompany(state: GameState): GameState {
+  const target = Object.entries(state.provinces)
+    .filter(([, p]) => p.uprising)
+    .sort(([, a], [, b]) => b.uprising!.strength - a.uprising!.strength)[0]?.[0];
+  if (!target) return state;
+  const ready = getFreeMilitia(state.workforce, state.provinces) > 0 ? state : canRaiseMilitia(state) ? raiseMilitia(state) : state;
+  return canSendMilitia(ready, target) ? sendMilitia(ready, target) : state;
+}
+
 export function getQuickFix(state: GameState, alert: AdvisorAlert, heating: HeatingOutlook): QuickFix | null {
   switch (alert.kind) {
     case "coal": {
@@ -62,6 +74,8 @@ export function getQuickFix(state: GameState, alert: AdvisorAlert, heating: Heat
       const done = repairAll(state).placedBuildings.filter((b) => b.condition === "repairing").length - state.placedBuildings.filter((b) => b.condition === "repairing").length;
       return measured(state, done === 1 ? "Repair it" : `Repair ${done}`, repairAll);
     }
+    case "uprising":
+      return measured(state, "Send a company", sendCompany);
     case "unrest":
     case "provinceUnrest":
       return canCrackDown(state) ? measured(state, "Crack down", crackDown) : null;

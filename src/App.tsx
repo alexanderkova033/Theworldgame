@@ -137,13 +137,13 @@ function App() {
   // from it, through a string key so they only change identity when a
   // province actually tips (keeps the memoized map from redrawing daily).
   const provinceOverview = useMemo(() => (state ? getProvinceOverview(state) : []), [state]);
-  const provinceStatusKey = provinceOverview.map((o) => { const s = getProvinceStatus(o); return `${o.id}:${s.homes}:${s.jobs}:${s.stage}`; }).join(",");
+  const provinceStatusKey = provinceOverview.map((o) => { const s = getProvinceStatus(o); return `${o.id}:${s.homes}:${s.jobs}:${s.stage}:${s.risen}`; }).join(",");
   const provinceStatus = useMemo(
     () =>
       Object.fromEntries(
         (provinceStatusKey ? provinceStatusKey.split(",") : []).map((entry) => {
-          const [id, homes, jobs, stage] = entry.split(":");
-          return [id, { homes, jobs, stage } as ProvinceStatus];
+          const [id, homes, jobs, stage, risen] = entry.split(":");
+          return [id, { homes, jobs, stage, risen: risen === "true" } as ProvinceStatus];
         }),
       ),
     [provinceStatusKey],

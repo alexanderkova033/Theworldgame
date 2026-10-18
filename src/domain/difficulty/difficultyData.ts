@@ -3,8 +3,10 @@
 // start screen in plain words (`changes`). The levels are measured by the
 // scripted players in tests/balance.test.ts, so each means something. Out
 // of 9 five-year games, a sloppy player (late, never ahead of trouble) and
-// a careful one win: Easy 8 and 9, Normal 5 and 9, Hard 1 and 8, Ruthless
-// 0 and 4. Not every country can be saved on Ruthless, but some can.
+// a careful one win: Easy 9 and 9, Normal 2 and 9, Hard 0 and 8, Ruthless
+// 0 and 2 (measured 2026-10-18). Not every country can be saved on
+// Ruthless, but some can. A careful player never sees a province rise; a
+// sloppy one does in about half its games, more on the harder levels.
 
 export type Difficulty = "easy" | "normal" | "hard" | "ruthless";
 
@@ -24,6 +26,7 @@ export interface DifficultySettings {
   rivalChance: number; // how often the rival campaigns, against Normal
   badEventScale: number; // how much a bad world event takes, against Normal
   breakdownMultiplier: number; // how often buildings break down, against Normal
+  uprisingRiotDays: number; // days a province riots on its own before it rises (see domain/uprising)
   retries: number; // times a lost game can go back to its last checkpoint
 }
 
@@ -32,7 +35,7 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     name: "Easy",
     title: "Steward",
     summary: "Room to learn. Mistakes cost less, and you can go back more often.",
-    changes: ["Start with 2,000 Cr", "Elections need 50%, 52%, 54%", "Voters are easy to please: support settles 3 points above neutral", "15% more political power", "The rival campaigns less, and softer", "Bad years take half as much", "Buildings break down half as often", "5 retries from a checkpoint"],
+    changes: ["Start with 2,000 Cr", "Elections need 50%, 52%, 54%", "Voters are easy to please: support settles 3 points above neutral", "15% more political power", "The rival campaigns less, and softer", "Bad years take half as much", "Buildings break down half as often", "A province rises only after two months of rioting on its own", "5 retries from a checkpoint"],
     electionThresholds: [50, 52, 54],
     expectations: 3,
     politicalPowerMultiplier: 1.15,
@@ -42,6 +45,7 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     rivalChance: 0.7,
     badEventScale: 0.5,
     breakdownMultiplier: 0.5,
+    uprisingRiotDays: 60,
     retries: 5,
   },
   normal: {
@@ -58,13 +62,14 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     rivalChance: 1,
     badEventScale: 1,
     breakdownMultiplier: 1,
+    uprisingRiotDays: 30,
     retries: 3,
   },
   hard: {
     name: "Hard",
     title: "Chancellor",
     summary: "A careful player only just wins. Every season counts.",
-    changes: ["Elections need 52%, 56%, 60%", "Voters expect a lot: support settles 6 points below neutral", "15% less political power", "The rival campaigns more, and harder", "Bad years take half as much again", "Buildings break down 1.5 times as often", "1 retry from a checkpoint"],
+    changes: ["Elections need 52%, 56%, 60%", "Voters expect a lot: support settles 6 points below neutral", "15% less political power", "The rival campaigns more, and harder", "Bad years take half as much again", "Buildings break down 1.5 times as often", "A province rises after 25 days of rioting on its own", "1 retry from a checkpoint"],
     electionThresholds: [52, 56, 60],
     expectations: -6,
     politicalPowerMultiplier: 0.85,
@@ -74,13 +79,14 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     rivalChance: 1.25,
     badEventScale: 1.5,
     breakdownMultiplier: 1.5,
+    uprisingRiotDays: 25,
     retries: 1,
   },
   ruthless: {
     name: "Ruthless",
     title: "Iron Chancellor",
     summary: "Not every country can be saved. Win here and it means something.",
-    changes: ["Half the usual food stores", "Elections need 54%, 58%, 62%", "Voters expect even more: support settles 8 points below neutral", "30% less political power", "The rival campaigns often, and hard", "Bad years take twice as much", "Buildings break down twice as often", "No retries"],
+    changes: ["Half the usual food stores", "Elections need 54%, 58%, 62%", "Voters expect even more: support settles 8 points below neutral", "30% less political power", "The rival campaigns often, and hard", "Bad years take twice as much", "Buildings break down twice as often", "A province rises after 20 days of rioting on its own", "No retries"],
     electionThresholds: [54, 58, 62],
     expectations: -8,
     politicalPowerMultiplier: 0.7,
@@ -90,6 +96,7 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     rivalChance: 1.5,
     badEventScale: 2,
     breakdownMultiplier: 2,
+    uprisingRiotDays: 20,
     retries: 0,
   },
 };

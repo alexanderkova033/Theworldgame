@@ -15,6 +15,8 @@ import { getNation } from "../domain/nations/nationRules";
 import { planMigration } from "../domain/provinces/provinceMigration";
 import { getProvinceName } from "../domain/provinces/provinceRules";
 import type { UnrestStage } from "../domain/unrest/types";
+import { getRebelStrengthChange, getRiotDaysToRise, type RebelStrengthChange } from "../domain/uprising/uprisingRules";
+import { getDifficulty } from "../domain/difficulty/difficultyData";
 
 export interface ProvinceOverview {
   id: string;
@@ -32,6 +34,9 @@ export interface ProvinceOverview {
   unrestStage: UnrestStage;
   migration: number; // net people moving in (+) or out (−) per day
   sectors: Record<Sector, SectorJobs>; // jobs here by kind — farms and food first, then schools, then factories
+  riotDays: number; // days in a row it has rioted...
+  riotDaysToRise: number; // ...and how many it takes to rise (see domain/uprising)
+  uprising: { strength: number; change: RebelStrengthChange; militia: number } | null; // risen, with rebel strength and its daily change
 }
 
 // What the map flags, coarse on purpose: it only changes when a province
@@ -40,6 +45,7 @@ export interface ProvinceStatus {
   homes: "ok" | "full" | "over";
   jobs: "ok" | "short" | "jobless";
   stage: UnrestStage;
+  risen: boolean;
 }
 
 export function getProvinceOverview(state: GameState): ProvinceOverview[] {
@@ -67,6 +73,15 @@ export function getProvinceOverview(state: GameState): ProvinceOverview[] {
       unrestStage: p?.unrestStage ?? "calm",
       migration: migration[id] ?? 0,
       sectors: l?.sectors ?? { food: { jobs: 0, hired: 0 }, school: { jobs: 0, hired: 0 }, industry: { jobs: 0, hired: 0 } },
+      riotDays: p?.riotDays ?? 0,
+      riotDaysToRise: p ? getRiotDaysToRise(p, state.date, getDifficulty(state.difficulty).uprisingRiotDays) : 0,
+      uprising: p?.uprising
+        ? {
+            strength: p.uprising.strength,
+            change: getRebelStrengthChange(p.uprising, population > 0 ? Math.max(0, population - (capacity[id] ?? 0)) / population : 0, state.stats.stability, state.workforce.police),
+            militia: p.uprising.militia,
+          }
+        : null,
     };
   });
 }
@@ -84,5 +99,5 @@ export function getProvinceStatus(o: ProvinceOverview): ProvinceStatus {
       : o.jobs > 0 && o.openJobs / o.jobs >= PROVINCE_FLAG_SHORT_SHARE
         ? "short"
         : "ok";
-  return { homes, jobs, stage: o.unrestStage };
+  return { homes, jobs, stage: o.unrestStage, risen: o.uprising !== null };
 }

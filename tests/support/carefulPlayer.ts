@@ -10,6 +10,9 @@ import { buyGood, canBuyGood, canSellGood, sellGood } from "../../src/applicatio
 import { canCourtGroup, canCrackDown, canHoldRally, courtGroup, crackDown, holdRally } from "../../src/application/actions/politicalActions";
 import { getFactionWeights } from "../../src/domain/parties/factionRules";
 import { repairBuilding } from "../../src/application/actions/repairBuilding";
+import { canRaiseMilitia, canSendMilitia, raiseMilitia, sendMilitia } from "../../src/application/actions/militiaActions";
+import { dayNumber } from "../../src/domain/country/calendar";
+import { getFreeMilitia } from "../../src/domain/uprising/uprisingRules";
 import { focusResearch } from "../../src/application/actions/researchActions";
 import { resolveDecision } from "../../src/application/actions/resolveDecision";
 import { setTaxRate } from "../../src/application/actions/setTaxRate";
@@ -118,6 +121,13 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
       if (s.factionApproval[biggest] < 70) s = courtGroup(s, biggest);
     }
     if (!sloppy && (s.unrestStage === "strikes" || s.unrestStage === "riots") && canCrackDown(s)) s = crackDown(s);
+    // A province that has risen: raise companies and send them in. A sloppy
+    // player only gets round to it after two months of losing it.
+    for (const [id, province] of Object.entries(s.provinces)) {
+      if (!province.uprising || (sloppy && dayNumber(s.date) - dayNumber(province.uprising.since) < 60)) continue;
+      while (province.uprising.militia + getFreeMilitia(s.workforce, s.provinces) < 2 && canRaiseMilitia(s)) s = raiseMilitia(s);
+      while ((s.provinces[id].uprising?.militia ?? 2) < 2 && canSendMilitia(s, id)) s = sendMilitia(s, id);
+    }
     if (s.pendingDecisionId) {
       const decision = getDecision(s.pendingDecisionId)!;
       const best = [...decision.options].sort((a, b) => (b.effects.popularityDelta ?? 0) - (a.effects.popularityDelta ?? 0))[0];

@@ -12,6 +12,7 @@
 //   5 order       stability, unrest, collapse
 //   6 support     support drifts toward its target
 //   7 people      births, deaths, migration, province unrest
+//   7b uprisings  provinces rising, rebel strength, uprisings ending
 //   - the day is recorded and the calendar turns (here)
 //   8 newMonth    world events, the rival, the neighbours, the season
 //   9 election    a general election, every so often
@@ -38,6 +39,7 @@ import { payTheBills } from "./day/money";
 import { turnOfTheMonth } from "./day/newMonth";
 import { keepOrder } from "./day/order";
 import { movePeople } from "./day/people";
+import { tendUprisings } from "./day/uprisings";
 import { moveSupport } from "./day/support";
 import { generateMonthlyReport } from "./generateMonthlyReport";
 import { advanceChapters } from "./chapters";
@@ -103,6 +105,8 @@ export function simulateDay(state: GameState): GameState {
     homelessShare,
   });
   working = { ...working, provinces: people.provinces };
+  const uprisings = tendUprisings(day, working, { stability: order.stability, unrestStage: order.unrestStage, capacityByProvince, workforce: takings.workforce });
+  working = { ...working, provinces: uprisings.provinces, placedBuildings: uprisings.placedBuildings };
 
   const updatedStats: CountryStats = {
     treasury: takings.treasury,

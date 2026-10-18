@@ -34,7 +34,9 @@ The game is about both governing a country and power across the map. Each step l
    - [x] Objectives that lead somewhere: each one still to do opens the window where it is done.
    - [x] Research paths reopen: a year after an area finishes a path, it may take up another.
 2. **Rebellions.** Riots in one province grow into an uprising to put down or win back. Conflict without an army, and the first step from police towards soldiers.
-   - [ ] An uprising as its own state in a province, with its own way out.
+   - [x] An uprising as its own state in a province: seized workplaces, no taxes, rebel strength, and a militia to put it down.
+   - [ ] Demands and concessions: workers rioting for a pay rise and the like, even in a decent province, and an uprising ended by giving it what it asks.
+   - [ ] Spreading, and a province that breaks away if left too long.
 3. **Settle the islands.** A venture claims an island as a real province instead of a one-time reward.
    - [ ] Ships and a port to reach it, food and goods shipped in, its own people and buildings.
 4. **Neighbours with economies of their own.**

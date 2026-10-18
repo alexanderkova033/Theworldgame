@@ -21,6 +21,12 @@ function shares(ids: string[], weights: Record<string, number>): Record<string, 
 
 // A new game (or a save from before provinces had people): everyone lives
 // where the homes are, and every province starts as orderly as the nation.
+// A province as it starts out, or as it joins a country: calm as the nation
+// is, never rioted, never risen.
+export function newProvinceState(population: number, stability: number): ProvinceState {
+  return { population, stability, unrestStage: getStageForStability(stability), riotDays: 0, uprising: null, aggrievedUntil: null };
+}
+
 export function createProvinceStates(
   provinceIds: string[],
   population: number,
@@ -29,7 +35,7 @@ export function createProvinceStates(
 ): Record<string, ProvinceState> {
   const share = shares(provinceIds, capacityByProvince);
   return Object.fromEntries(
-    provinceIds.map((id) => [id, { population: population * share[id], stability, unrestStage: getStageForStability(stability) }]),
+    provinceIds.map((id) => [id, newProvinceState(population * share[id], stability)]),
   );
 }
 
@@ -47,7 +53,7 @@ export function reconcileProvinces(
   const missing = provinceIds.filter((id) => !(id in next));
   if (missing.length > 0) {
     next = { ...next };
-    for (const id of missing) next[id] = { population: 0, stability: nationalStability, unrestStage: getStageForStability(nationalStability) };
+    for (const id of missing) next[id] = newProvinceState(0, nationalStability);
   }
   const total = getProvincePopulationTotal(next);
   const gap = nationalPopulation - total;

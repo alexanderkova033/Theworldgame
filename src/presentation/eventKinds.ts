@@ -29,6 +29,7 @@ const KINDS: Record<Exclude<EventTopic, "paused">, Omit<EventKind, "kind">> = {
   money: { plural: "money warnings", foldable: true, action: SEE_BUDGET },
   unrest: { plural: "unrest changes", foldable: false, action: { label: "Unrest", ...UNREST } },
   provinceUnrest: { plural: "province unrest", foldable: false, action: SEE_PEOPLE },
+  uprising: { plural: "uprisings", foldable: false, action: { label: "Unrest", ...UNREST } },
   politics: { plural: "political actions", foldable: true, action: POLITICS },
   elections: { plural: "campaign moves", foldable: true, action: POLITICS },
   laws: { plural: "law votes", foldable: false, action: { label: "Laws", panel: "laws" } },

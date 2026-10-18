@@ -13,7 +13,9 @@ export type StatIconType =
   | "research"
   | "popularity"
   | "politicalPower"
-  | "police";
+  | "police"
+  | "militia"
+  | "uprising";
 
 interface StatIconProps {
   type: StatIconType;
@@ -135,6 +137,26 @@ function renderShape(type: StatIconType) {
           <rect x={-8.5} y={4.4} width={17} height={2.8} rx={1.3} fill="#1d2b4a" stroke="#0e1628" strokeWidth={0.5} />
           <circle cx={0} cy={-8.9} r={1.2} fill="#c9ccd1" />
           <polygon points={starPoints(0, -0.6, 3.3, 1.4)} fill="#e6c56a" stroke="#93731f" strokeWidth={0.3} />
+        </g>
+      );
+    case "militia":
+      // A militia company's shako: scarlet, a brass plate, a white plume.
+      return (
+        <g>
+          <path d="M-5,5.4 L-6,-5 L6,-5 L5,5.4 Z" fill="#8e2323" stroke="#4a1010" strokeWidth={0.6} />
+          <rect x={-6.4} y={-6.8} width={12.8} height={2.2} rx={0.6} fill="#2b1d12" />
+          <rect x={-7.6} y={4.6} width={15.2} height={2.6} rx={1.2} fill="#2b1d12" stroke="#120a05" strokeWidth={0.5} />
+          <path d="M0,-6.6 C-1.8,-8.4 -1.3,-10.4 0.2,-10.9 C1.5,-10.1 1.7,-8.3 0,-6.6 Z" fill="#f4ead0" stroke="#9c8a66" strokeWidth={0.4} />
+          <path d="M0,-3.2 L2.3,-0.4 L0,2.4 L-2.3,-0.4 Z" fill="#e6c56a" stroke="#93731f" strokeWidth={0.4} />
+        </g>
+      );
+    case "uprising":
+      // A rebel banner: a ragged red flag on a rough pole.
+      return (
+        <g>
+          <line x1={-5} y1={-8.6} x2={-5} y2={8.6} stroke="#3b2a1a" strokeWidth={1.4} strokeLinecap="round" />
+          <path d="M-4.4,-7.8 L7.2,-7.8 L4.6,-4.4 L7.2,-1 L-4.4,-1 Z" fill="#b3261e" stroke="#5e1410" strokeWidth={0.6} />
+          <circle cx={-5} cy={-8.8} r={1} fill="#c9a24a" />
         </g>
       );
     default:

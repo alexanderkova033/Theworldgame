@@ -273,6 +273,31 @@ export const RIOT_DAMAGE_CHANCE_PER_DAY = 0.12; // riots: chance a mob wrecks a 
 export const CRACKDOWN_STABILITY_PER_POLICE = 0.5;
 export const CRACKDOWN_POLICE_BONUS_CAP = 4;
 
+// --- Uprisings and the militia (see domain/uprising) ---
+// A province that riots long enough rises: it seizes its workplaces, pays
+// no taxes, and weighs on the whole country until it is ended. Rebel
+// strength (0 to 100) says how hard that is: grievances feed it, a calm
+// country starves it, and militia companies sent in wear it down.
+// How many days of rioting on its own it takes to rise is set by the
+// difficulty (DifficultySettings.uprisingRiotDays; 30 on Normal)...
+export const UPRISING_AGGRIEVED_RIOT_SHARE = 1 / 3; // ...and a third of that while it remembers being put down
+export const UPRISING_GRIEVANCE_DAYS = 180; // how long a province put down by force remembers it
+export const UPRISING_START_STRENGTH = 40;
+export const UPRISING_AGGRIEVED_START_BONUS = 20; // rising again soon after being put down: stronger from the start
+export const UPRISING_GROWTH_PER_DAY = 0.15; // strength a day, while nothing else is happening
+export const UPRISING_HOMELESS_GROWTH = 2; // extra strength a day, times the province's homeless share
+export const UPRISING_CALM_STABILITY = 45; // national stability at or above this...
+export const UPRISING_CALM_FADE = 0.4; // ...starves an uprising of this much strength a day
+export const UPRISING_POLICE_DAMPING = 0.02; // strength a day held down by each police officer...
+export const UPRISING_POLICE_DAMPING_CAP = 0.2; // ...capped
+export const UPRISING_STABILITY_DRAG_MULTIPLIER = 2; // a risen province drags national stability this many times a rioting one
+export const MILITIA_HIRE_COST = 200;
+export const MILITIA_SALARY = 2; // Crowns per company per day
+export const MILITIA_CAP = 4; // companies the country can keep
+export const MILITIA_SUPPRESSION_PER_DAY = 1.2; // rebel strength each company sent in wears down, per day
+export const MILITIA_SEND_POLITICAL_POWER = 15; // sending a company in is an order, with a price...
+export const MILITIA_SEND_SUPPORT = -2; // ...and every group likes it less
+
 // --- Random world events ---
 export const RANDOM_EVENT_INTERVAL_MONTHS = 6; // a random event fires every N in-game months
 

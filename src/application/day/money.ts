@@ -3,6 +3,7 @@
 import type { GameState } from "../../domain/country/types";
 import { getDiplomacyIncomeMultiplier } from "../../domain/diplomacy/diplomacyRules";
 import { getDailyIncomeParts } from "../../domain/economy/economyRules";
+import { getTaxedPopulation } from "../../domain/uprising/uprisingRules";
 import { getDailySalaries, layOffUntilAffordable } from "../../domain/workforce/workforceRules";
 import { book, log, type Day } from "./dayContext";
 
@@ -16,8 +17,9 @@ export function payTheBills(day: Day, working: GameState): Takings {
   // Project instalments were already paid in step 1, so this is the only
   // other thing moving the treasury on a tick. Each neighbour ruled by the
   // party you backed adds a little.
+  // A risen province pays nothing.
   const { taxIncome, industryIncome } = getDailyIncomeParts(
-    working.stats,
+    { ...working.stats, population: getTaxedPopulation(working.provinces, working.stats.population) },
     working.taxRate,
     day.efficiency * day.mods.incomeMultiplier * getDiplomacyIncomeMultiplier(working.foreignPolitics),
   );

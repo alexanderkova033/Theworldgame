@@ -61,6 +61,7 @@ export type EventTopic =
   | "money"
   | "unrest"
   | "provinceUnrest"
+  | "uprising" // a province rising, being put down, or burning out (see domain/uprising)
   | "politics"
   | "elections"
   | "laws"

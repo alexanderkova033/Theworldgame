@@ -4,15 +4,23 @@
 import "./WorkforcePanel.css";
 import type { ReactNode } from "react";
 import {
+  canDisbandMilitia,
   canHirePolice,
   canHireScientist,
+  canRaiseMilitia,
+  disbandMilitia,
   dismissPolice,
   dismissScientist,
   hirePolice,
   hireScientist,
+  raiseMilitia,
 } from "../../application/actions";
 import {
   CURRENCY_SYMBOL,
+  MILITIA_CAP,
+  MILITIA_HIRE_COST,
+  MILITIA_SALARY,
+  MILITIA_SUPPRESSION_PER_DAY,
   POLICE_HIRE_COST,
   POLICE_SALARY,
   POLICE_STABILITY_PER_OFFICER,
@@ -23,6 +31,7 @@ import {
 } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import type { ResearchCategory } from "../../domain/research/types";
+import { getFreeMilitia } from "../../domain/uprising/uprisingRules";
 import {
   getPoliceBreakdownReduction,
   getPoliceCap,
@@ -154,6 +163,45 @@ export function PoliceForce({ state, dispatch }: { state: GameState; dispatch: D
           removeHint="Let an officer go"
           onAdd={() => dispatch(hirePolice)}
           onRemove={() => dispatch(dismissPolice)}
+        />
+      </div>
+    </div>
+  );
+}
+
+// The militia, also on the Unrest page: companies kept ready to send into a
+// province that has risen (see domain/uprising). A company sent in comes
+// home by itself once that uprising is over.
+export function MilitiaForce({ state, dispatch }: { state: GameState; dispatch: Dispatch }) {
+  const militia = state.workforce.militia;
+  const atHome = getFreeMilitia(state.workforce, state.provinces);
+
+  return (
+    <div className="police-force">
+      <div className="politics-section-head">
+        <h3 className="politics-subhead">Militia</h3>
+        <Seats used={militia} cap={MILITIA_CAP} label="Companies raised" />
+      </div>
+      <div className={`workforce-panel__row ${militia > 0 ? "" : "is-empty"}`}>
+        <StatIcon type="militia" size={20} />
+        <span className="workforce-panel__label">Companies</span>
+        <HireTerms hire={MILITIA_HIRE_COST} wage={MILITIA_SALARY}>
+          <span title="Rebel strength each company sent into a risen province wears down, every day">
+            <StatIcon type="uprising" size={15} />−{MILITIA_SUPPRESSION_PER_DAY}/d each
+          </span>
+          {militia > 0 && <span title="Companies not sent anywhere, ready to go">{atHome} at home</span>}
+        </HireTerms>
+        <StaffStepper
+          count={militia}
+          canAdd={canRaiseMilitia(state)}
+          addHint={
+            militia >= MILITIA_CAP
+              ? `The country keeps at most ${MILITIA_CAP} companies`
+              : `Raise a company: ${MILITIA_HIRE_COST} ${CURRENCY_SYMBOL}, then ${MILITIA_SALARY} ${CURRENCY_SYMBOL}/day, to send into a province that has risen`
+          }
+          removeHint={canDisbandMilitia(state) ? "Stand a company down" : "Every company is out: call one back first"}
+          onAdd={() => dispatch(raiseMilitia)}
+          onRemove={() => dispatch(disbandMilitia)}
         />
       </div>
     </div>

@@ -4,6 +4,7 @@
 // this is a read-only projection of "if a day happened right now," not a
 // second copy of the simulation rules.
 import { BASE_TAX_INCOME_PER_POP, INCOME_PER_INDUSTRY } from "../domain/constants";
+import { getTaxedPopulation } from "../domain/uprising/uprisingRules";
 import { getSeason, type Season } from "../domain/country/calendar";
 import type { GameState } from "../domain/country/types";
 import { getDiplomacyIncomeMultiplier } from "../domain/diplomacy/diplomacyRules";
@@ -53,7 +54,7 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const mods = getModifiers(state);
   const incomeMultiplier = efficiencyMultiplier * mods.incomeMultiplier * getDiplomacyIncomeMultiplier(state.foreignPolitics);
 
-  const taxIncome = state.stats.population * BASE_TAX_INCOME_PER_POP * state.taxRate * incomeMultiplier;
+  const taxIncome = getTaxedPopulation(state.provinces, state.stats.population) * BASE_TAX_INCOME_PER_POP * state.taxRate * incomeMultiplier;
   const industryIncome = state.stats.industry * INCOME_PER_INDUSTRY * incomeMultiplier;
   const salaries = getDailySalaries(state.workforce, mods.wageMultiplier);
   const buildingInstalments = state.projects.reduce((sum, project) => sum + project.treasuryCostPerDay, 0);

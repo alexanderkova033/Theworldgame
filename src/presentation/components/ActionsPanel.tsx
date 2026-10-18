@@ -334,7 +334,9 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
               const brokenHere = state.placedBuildings.filter((b) => b.type === item.type && b.provinceId === selectedProvinceId && !isWorking(b)).length;
               // Short only of material that money can cover: buy it and build in one click.
               const plan = !isLocked && !canBuild ? planBuyAndBuild(state, item.action, selectedProvinceId) : null;
-              const reason = plan
+              const reason = state.provinces[selectedProvinceId]?.uprising
+                ? `Rebels hold ${provinceName}. Nothing can be built there until the uprising ends.`
+                : plan
                 ? `Need ${Math.ceil(upfront(item.resourceCost) - state.resources[item.resourceType])} more ${item.resourceType}. Buy & build gets ${Math.round(plan.amount)} for ${formatAmount(Math.round(plan.goodsCost))} ${CURRENCY_SYMBOL}.`
                 : blockedReason(item, cost, state, provinceName, count, max, unlockName, isLocked, shutUntil);
               const workers = item.type in jobsPer ? jobsPer[item.type as JobBuilding] : 0;

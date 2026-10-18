@@ -70,7 +70,7 @@ export const CHAPTERS: ChapterData[] = [
     title: "Trouble in the Streets",
     opens: ["unrest"],
     briefing:
-      "Order is slipping. Crowds gather and talk turns angry. You may now raise a police force, which steadies the country, and order crackdowns, which calm it at a cost in support.",
+      "Order is slipping. Crowds gather and talk turns angry. You may now raise a police force, which steadies the country, and order crackdowns, which calm it at a cost in support. A province left to riot on its own may rise against you; militia companies can be raised to put it down.",
     objectives: ["Hire a police officer"],
     until: "Opens at the first sign of unrest",
     by: 14,

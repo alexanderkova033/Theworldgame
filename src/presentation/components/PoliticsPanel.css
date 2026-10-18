@@ -681,3 +681,81 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* --- Uprisings (Unrest page): each risen province as a card ruled in
+   oxblood, its rebel strength as a bar, the militia sent in as a stepper;
+   provinces close to rising as a dashed line beneath. */
+.uprisings {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.uprisings__row {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--oxblood);
+  border-radius: 6px;
+}
+
+.uprisings__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.uprisings__name {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+
+.uprisings__strength {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--danger);
+  cursor: help;
+}
+
+.uprisings__trend {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: help;
+}
+
+.uprisings__trend.is-falling {
+  color: var(--success);
+}
+
+.uprisings__trend.is-growing {
+  color: var(--danger);
+}
+
+.uprisings__militia {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.uprisings__militia > span:nth-child(2) {
+  flex: 1;
+}
+
+.uprisings__brewing {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px dashed var(--rule-dark);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}

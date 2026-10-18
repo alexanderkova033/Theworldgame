@@ -3,7 +3,9 @@
 // while money, food and resources stay national. Every completed project remembers
 // which province it was built in, so the map can show where things are.
 import type { ProjectType } from "../construction/types";
+import type { GameDate } from "../country/types";
 import type { UnrestStage } from "../unrest/types";
+import type { Uprising } from "../uprising/types";
 
 // Cosmetic only — drives which decorative texture the map draws over a
 // province. Has no effect on the simulation.
@@ -45,6 +47,9 @@ export interface ProvinceState {
   population: number;
   stability: number; // 0-100, local order — drifts toward the national figure, minus local troubles
   unrestStage: UnrestStage; // same stages as the nation's (see domain/unrest), reached on local stability
+  riotDays: number; // days in a row it has rioted; enough of them and it rises (see domain/uprising)
+  uprising: Uprising | null; // risen against the government, or null
+  aggrievedUntil: GameDate | null; // put down by force: until this day it rises again sooner
 }
 
 // A completed building, remembered so the map can show where it is.
@@ -54,6 +59,6 @@ export interface PlacedBuilding {
   id: string;
   provinceId: string;
   type: ProjectType;
-  condition?: "broken" | "repairing";
+  condition?: "broken" | "repairing" | "seized"; // seized: held by a province that has risen (see domain/uprising)
   repairDaysRemaining?: number;
 }

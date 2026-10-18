@@ -23,6 +23,8 @@ import { getLabourSituation } from "../domain/labour/labourRules";
 import { isDebtDangerous } from "../domain/loans/loanRules";
 import { getElectionThreshold, monthsUntilNextElection } from "../domain/parties/electionRules";
 import { isLocalTrouble } from "../domain/provinces/provinceOrder";
+import { getDifficulty } from "../domain/difficulty/difficultyData";
+import { getRiotDaysToRise } from "../domain/uprising/uprisingRules";
 import { getProvinceName } from "../domain/provinces/provinceRules";
 import { getResearchNodeStatus } from "../domain/research/researchRules";
 import { RESEARCH_NODES } from "../domain/research/researchData";
@@ -33,6 +35,7 @@ import type { Forecasts } from "./getForecasts";
 import type { HeatingOutlook } from "./getHeatingOutlook";
 
 export type AdvisorAlertKind =
+  | "uprising"
   | "unrest"
   | "provinceUnrest"
   | "coal"
@@ -61,7 +64,7 @@ export interface AdvisorOutlook {
 
 // Most urgent first when equally critical — the order the problems are
 // checked in below.
-const ALERT_ORDER: AdvisorAlertKind[] = ["unrest", "provinceUnrest", "coal", "food", "money", "farmWorkers", "factoryWorkers", "homeless", "broken", "debt", "election", "stalled", "research"];
+const ALERT_ORDER: AdvisorAlertKind[] = ["uprising", "unrest", "provinceUnrest", "coal", "food", "money", "farmWorkers", "factoryWorkers", "homeless", "broken", "debt", "election", "stalled", "research"];
 
 const UNREST_NAMES: Record<GameState["unrestStage"], string> = { calm: "Calm", discontent: "Discontent", strikes: "Strikes", riots: "Riots" };
 
@@ -83,6 +86,21 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
   const market = isFeatureOpen(state, "market");
   const streets = isFeatureOpen(state, "unrest");
 
+  // A province risen against the government: the most urgent thing there is.
+  const risen = Object.entries(state.provinces)
+    .filter(([, p]) => p.uprising)
+    .sort(([, a], [, b]) => b.uprising!.strength - a.uprising!.strength);
+  if (risen.length > 0) {
+    const [id, strongest] = risen[0];
+    const others = risen.length > 1 ? ` +${risen.length - 1}` : "";
+    alerts.push({
+      kind: "uprising",
+      text: `Risen: ${getProvinceName(id)}${others}`,
+      detail: `${getProvinceName(id)} has risen against the government (rebel strength ${Math.round(strongest.uprising!.strength)}): rebels hold its farms and works, and it pays no taxes. ${streets ? "Send in the militia, or calm the country and it burns out." : "Calm the country and it burns out."}`,
+      critical: true,
+    });
+  }
+
   // Unrest: strikes and riots are a step from collapse.
   if (state.unrestStage !== "calm") {
     alerts.push({
@@ -96,16 +114,19 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
 
   // A province striking or rioting worse than the rest of the country.
   const troubled = Object.entries(state.provinces)
-    .filter(([, p]) => isLocalTrouble(p.unrestStage, state.unrestStage))
+    .filter(([, p]) => !p.uprising && isLocalTrouble(p.unrestStage, state.unrestStage))
     .sort(([, a], [, b]) => a.stability - b.stability);
   if (troubled.length > 0) {
     const [id, worst] = troubled[0];
     const others = troubled.length > 1 ? ` +${troubled.length - 1}` : "";
+    // A province rioting on its own is counting down to rising.
+    const toRise = getRiotDaysToRise(worst, state.date, getDifficulty(state.difficulty).uprisingRiotDays) - worst.riotDays;
+    const rising = worst.unrestStage === "riots" && worst.riotDays > 0 ? ` It rises against the government in ${toRise} ${toRise === 1 ? "day" : "days"}.` : "";
     alerts.push({
       kind: "provinceUnrest",
       stage: worst.unrestStage,
       text: `${UNREST_NAMES[worst.unrestStage]}: ${getProvinceName(id)}${others}`,
-      detail: `${getProvinceName(id)} is ${worst.unrestStage === "riots" ? "rioting, wrecking its buildings and dragging national stability down" : "on strike"}. Too many there have no home or no work: build homes or jobs there${streets ? ", or crack down" : ""}.`,
+      detail: `${getProvinceName(id)} is ${worst.unrestStage === "riots" ? "rioting, wrecking its buildings and dragging national stability down" : "on strike"}. Too many there have no home or no work: build homes or jobs there${streets ? ", or crack down" : ""}.${rising}`,
       critical: worst.unrestStage === "riots",
     });
   }

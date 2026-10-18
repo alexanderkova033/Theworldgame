@@ -13,7 +13,9 @@
 // Opened from the nation's label at the left of the top bar.
 import "./PoliticsPanel.css";
 import { useState, type CSSProperties, type ReactNode } from "react";
-import { canCourtGroup, canCrackDown, canHoldRally, courtGroup, crackDown, holdRally } from "../../application/actions";
+import { canCourtGroup, canCrackDown, canHoldRally, canRecallMilitia, canSendMilitia, courtGroup, crackDown, holdRally, recallMilitia, sendMilitia } from "../../application/actions";
+import { getProvinceOverview, type ProvinceOverview } from "../../application/getProvinceOverview";
+import { getFreeMilitia } from "../../domain/uprising/uprisingRules";
 import { getPopularityOutlook } from "../../application/getPopularityOutlook";
 import { IDEOLOGY_CARES } from "../../domain/parties/rivalRules";
 import {
@@ -25,6 +27,8 @@ import {
   CURRENCY_SYMBOL,
   ELECTIONS_TO_WIN_GAME,
   LONG_REIGN_THRESHOLD_STEP,
+  MILITIA_SEND_POLITICAL_POWER,
+  MILITIA_SEND_SUPPORT,
   RALLY_POLITICAL_POWER_COST,
   RALLY_SUPPORT,
   RALLY_TREASURY_COST,
@@ -34,6 +38,7 @@ import {
   STABILITY_RECOVERY_RATE,
   UNREST_DISCONTENT_BELOW,
   UNREST_RIOTS_BELOW,
+  UPRISING_CALM_STABILITY,
   UNREST_STRIKES_BELOW,
 } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
@@ -55,7 +60,7 @@ import { StatIcon, type StatIconType } from "./StatIcon";
 import { SubTabs } from "./SubTabs";
 import { EffectList } from "./TechTree";
 import { BUDGET, BUILDINGS, lockedReason, MARKET, PEOPLE, type Destination, type OpenPanel, type PoliticsSection } from "../navigation";
-import { PoliceForce } from "./WorkforcePanel";
+import { MilitiaForce, PoliceForce } from "./WorkforcePanel";
 import { formatAmount, formatRate, formatSigned } from "../formatNumber";
 import { isLongReign } from "../../domain/reign/reignRules";
 
@@ -685,6 +690,8 @@ function UnrestView({ state, dispatch }: { state: GameState; dispatch: Dispatch 
         </p>
       )}
 
+      <Uprisings state={state} dispatch={dispatch} />
+
       <div className="politics-section-head">
         <h3 className="politics-subhead">Restore order</h3>
         <Purse state={state} />
@@ -709,7 +716,106 @@ function UnrestView({ state, dispatch }: { state: GameState; dispatch: Dispatch 
       </div>
 
       <PoliceForce state={state} dispatch={dispatch} />
+      <MilitiaForce state={state} dispatch={dispatch} />
     </>
+  );
+}
+
+// --- Uprisings: provinces risen against you, and those about to ------------
+// Each risen province with its rebel strength, what is moving it and how
+// fast, and the militia companies sent in. Below them, any province rioting
+// on its own, with how long before it rises. See domain/uprising.
+function Uprisings({ state, dispatch }: { state: GameState; dispatch: Dispatch }) {
+  const overview = getProvinceOverview(state);
+  const risen = overview.filter((o) => o.uprising);
+  const brewing = overview.filter((o) => !o.uprising && o.riotDays > 0);
+  if (risen.length === 0 && brewing.length === 0) return null;
+  return (
+    <>
+      <div className="politics-section-head">
+        <h3 className="politics-subhead">Uprisings</h3>
+      </div>
+      <ul className="uprisings">
+        {risen.map((o) => (
+          <UprisingRow key={o.id} state={state} dispatch={dispatch} province={o} />
+        ))}
+        {brewing.map((o) => (
+          <li key={o.id} className="uprisings__brewing">
+            <StatIcon type="uprising" size={18} />
+            <span>
+              <strong>{o.name}</strong> has rioted on its own for {o.riotDays} of {o.riotDaysToRise} days. Give it homes and work, or it rises.
+            </span>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+function UprisingRow({ state, dispatch, province }: { state: GameState; dispatch: Dispatch; province: ProvinceOverview }) {
+  const uprising = province.uprising!;
+  const { change } = uprising;
+  const strength = Math.round(uprising.strength);
+  const parts = [
+    `Feeds on itself and on people sleeping rough there: ${formatRate(change.growth, true)}`,
+    change.calm < 0 ? `A calm country starves it: ${formatRate(change.calm, true)}` : `The country is too unsettled to starve it (stability under ${UPRISING_CALM_STABILITY})`,
+    change.police < 0 && `Police hold it down: ${formatRate(change.police, true)}`,
+    change.militia < 0 && `Militia wear it down: ${formatRate(change.militia, true)}`,
+  ].filter(Boolean);
+  const trend =
+    change.total < 0
+      ? `${formatRate(change.total, true)}: over in about ${Math.ceil(uprising.strength / -change.total)} days`
+      : `${formatRate(change.total, true)}: growing`;
+  const sendHint = canSendMilitia(state, province.id)
+    ? `Send a company in: ${MILITIA_SEND_POLITICAL_POWER} political power, and support ${MILITIA_SEND_SUPPORT} with everyone`
+    : getFreeMilitia(state.workforce, state.provinces) === 0
+      ? "No company at home: raise one below"
+      : `Sending a company in takes ${MILITIA_SEND_POLITICAL_POWER} political power`;
+
+  return (
+    <li className="uprisings__row">
+      <div className="uprisings__head">
+        <StatIcon type="uprising" size={22} />
+        <strong className="uprisings__name">{province.name}</strong>
+        <span className="uprisings__strength" title="Rebel strength, 0 to 100. At 0 the uprising is over.">
+          Rebel strength {strength}
+        </span>
+      </div>
+      <Gauge max={100} size="sm" segments={[{ value: uprising.strength, tone: "bad" }]} label={`Rebel strength ${strength} of 100`} />
+      <p className={`uprisings__trend ${change.total < 0 ? "is-falling" : "is-growing"}`} title={parts.join("\n")}>
+        {trend}
+      </p>
+      <div className="uprisings__militia">
+        <StatIcon type="militia" size={18} />
+        <span>Companies sent in</span>
+        <span className="staff-stepper">
+          <button
+            type="button"
+            className="staff-stepper__button"
+            disabled={!canRecallMilitia(state, province.id)}
+            onClick={() => dispatch((s) => recallMilitia(s, province.id))}
+            title="Call a company home"
+            aria-label="Call a company home"
+          >
+            −
+          </button>
+          <span className="staff-stepper__count">{uprising.militia}</span>
+          <button
+            type="button"
+            className="staff-stepper__button staff-stepper__button--add"
+            disabled={!canSendMilitia(state, province.id)}
+            onClick={() => {
+              playDrum();
+              dispatch((s) => sendMilitia(s, province.id));
+            }}
+            title={sendHint}
+            aria-label={sendHint}
+          >
+            +
+          </button>
+        </span>
+      </div>
+    </li>
   );
 }
 
@@ -743,7 +849,7 @@ export function PoliticsPanel({ state, dispatch, onOpenPanel, section, onSection
             label: "Unrest",
             locked: lockedReason(state, "politics", "unrest") ?? undefined,
             icon: <UnrestStageIcon stage={state.unrestStage} size={22} />,
-            alert: state.unrestStage === "strikes" || state.unrestStage === "riots",
+            alert: state.unrestStage === "strikes" || state.unrestStage === "riots" || Object.values(state.provinces).some((p) => p.uprising),
             badge: stage.name,
             hint: `${stage.name}: ${stage.effect}`,
           },

@@ -35,6 +35,8 @@ function newDangers(before: GameState, after: GameState): Array<{ kind: string; 
   const riotingBefore = getProvincesRiotingAlone(before.provinces, before.unrestStage);
   const newlyRioting = getProvincesRiotingAlone(after.provinces, after.unrestStage).filter((id) => !riotingBefore.includes(id));
   if (newlyRioting.length > 0) dangers.push({ kind: "provinceRiots", reason: `${getProvinceName(newlyRioting[0])} is rioting`, topic: "provinceUnrest" });
+  const newlyRisen = Object.keys(after.provinces).filter((id) => after.provinces[id].uprising && !before.provinces[id]?.uprising);
+  if (newlyRisen.length > 0) dangers.push({ kind: "uprising", reason: `${getProvinceName(newlyRisen[0])} has risen against the government`, topic: "uprising" });
   if (isCold(after) && !isCold(before)) dangers.push({ kind: "cold", reason: "the homes have run out of coal and wood", topic: "cold" });
   if (after.stats.food <= 0 && before.stats.food > 0) dangers.push({ kind: "hunger", reason: "the food has run out", topic: "hunger" });
   if (isDebtDangerous(after.debt) && !isDebtDangerous(before.debt)) dangers.push({ kind: "debt", reason: "debt is past the danger line", topic: "money" });

@@ -31,7 +31,8 @@ describe("a careful player", () => {
 
   // Political power is meant to run short for a player who makes laws, so
   // each law is a choice. (One who passes none can still bank it; see TODO.md.)
-  it("runs short of political power while following a law path", () => {
+  // Twelve three-year games, so it gets longer than the default to finish.
+  it("runs short of political power while following a law path", { timeout: 20000 }, () => {
     const left = LAW_PATHS.map((path) => {
       seedRandom(20261015);
       const [nation, party] = NATIONS[path.key.length % NATIONS.length];

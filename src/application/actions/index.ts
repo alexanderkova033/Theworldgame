@@ -18,3 +18,4 @@ export { canPressureGovernment, pressureGovernment } from "./pressureGovernment"
 export { resolveDecision, dismissDecision } from "./resolveDecision";
 export { setTaxRate } from "./setTaxRate";
 export { canCourtGroup, canCrackDown, canHoldRally, courtGroup, crackDown, holdRally } from "./politicalActions";
+export { canDisbandMilitia, canRaiseMilitia, canRecallMilitia, canSendMilitia, disbandMilitia, raiseMilitia, recallMilitia, sendMilitia } from "./militiaActions";

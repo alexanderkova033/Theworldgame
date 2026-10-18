@@ -102,7 +102,7 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     researchPathsFinished:
       raw.researchPathsFinished ??
       Object.fromEntries(finishedResearchPaths(raw.enactedResearchIds ?? []).map((key) => [key, raw.date ?? { year: 1, month: 1, day: 1 }])),
-    workforce: raw.workforce ? { ...raw.workforce, scientists: { ...emptyWorkforce().scientists, ...raw.workforce.scientists } } : emptyWorkforce(),
+    workforce: raw.workforce ? { ...emptyWorkforce(), ...raw.workforce, scientists: { ...emptyWorkforce().scientists, ...raw.workforce.scientists } } : emptyWorkforce(),
     foreignPolitics: raw.foreignPolitics ?? createForeignPolitics(raw.nationId!),
     market: hydrateMarket(raw),
     // Pre-coalition saves have no per-faction breakdown — start every faction
@@ -119,7 +119,10 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     pendingDecisionId: raw.pendingDecisionId ?? null,
     dangerPauses: raw.dangerPauses ?? [],
     decisionHistory: raw.decisionHistory ?? [],
-    provinces: raw.provinces ?? {},
+    // Saves from before uprisings: no province has rioted for long, or risen.
+    provinces: Object.fromEntries(
+      Object.entries(raw.provinces ?? {}).map(([id, p]) => [id, { ...p, riotDays: p.riotDays ?? 0, uprising: p.uprising ?? null, aggrievedUntil: p.aggrievedUntil ?? null }]),
+    ),
     // Games saved before chapters existed keep every system open.
     chapters: raw.chapters ?? allChaptersOpen(),
     retriesUsed: raw.retriesUsed ?? 0,
