@@ -14,7 +14,7 @@ import { getRepairCost } from "../../domain/maintenance/maintenanceRules";
 import { getModifiers } from "../../domain/policy/policyRules";
 import { playBuild } from "../audio/sound";
 import type { ProjectType } from "../../domain/construction/types";
-import { getSeason } from "../../domain/country/calendar";
+import { formatDate, getSeason } from "../../domain/country/calendar";
 import type { GameState } from "../../domain/country/types";
 import type { Sector } from "../../domain/labour/labourRules";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
@@ -54,6 +54,10 @@ function plural(count: number, type: ProjectType): string {
 function getNeed(p: ProvinceOverview): { text: string; urgent: boolean } {
   const status = getProvinceStatus(p);
   if (status.stage === "riots" || status.stage === "strikes") {
+    // A refused pay rise, not want, unless want is there too.
+    if (p.disputeUntil && status.homes !== "over" && status.jobs !== "jobless") {
+      return { text: `${UNREST_INFO[status.stage].name}: its workers are in dispute over pay.`, urgent: true };
+    }
     const why = status.homes === "over" ? "homes" : "work";
     return { text: `${UNREST_INFO[status.stage].name}: too many here have no ${why}.`, urgent: true };
   }
@@ -273,6 +277,18 @@ export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }
             </span>
           )}
         </Fact>
+
+        {(province.payRiseUntil || province.disputeUntil || province.taxReliefUntil) && (
+          <Fact icon={<StatIcon type="treasury" size={16} />} label="Terms" alert={province.disputeUntil !== null}>
+            {[
+              province.payRiseUntil && `Pay rise until ${formatDate(province.payRiseUntil)}`,
+              province.disputeUntil && `In dispute over pay until ${formatDate(province.disputeUntil)}`,
+              province.taxReliefUntil && `No taxes until ${formatDate(province.taxReliefUntil)}`,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </Fact>
+        )}
 
         <Fact icon={terrain ? <ResourceGlyph type={RESOURCE_BY_TERRAIN[terrain]} /> : null} label="Yields">
           {yieldTypes.length > 0

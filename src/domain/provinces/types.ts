@@ -50,6 +50,9 @@ export interface ProvinceState {
   riotDays: number; // days in a row it has rioted; enough of them and it rises (see domain/uprising)
   uprising: Uprising | null; // risen against the government, or null
   aggrievedUntil: GameDate | null; // put down by force: until this day it rises again sooner
+  disputeUntil: GameDate | null; // a refused demand: until this day its mood sits well below the nation's
+  payRiseUntil: GameDate | null; // a pay rise granted: until this day the country pays its workers more
+  taxReliefUntil: GameDate | null; // rebels' terms met: until this day it pays no taxes
 }
 
 // A completed building, remembered so the map can show where it is.

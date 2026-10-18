@@ -24,7 +24,17 @@ function shares(ids: string[], weights: Record<string, number>): Record<string, 
 // A province as it starts out, or as it joins a country: calm as the nation
 // is, never rioted, never risen.
 export function newProvinceState(population: number, stability: number): ProvinceState {
-  return { population, stability, unrestStage: getStageForStability(stability), riotDays: 0, uprising: null, aggrievedUntil: null };
+  return {
+    population,
+    stability,
+    unrestStage: getStageForStability(stability),
+    riotDays: 0,
+    uprising: null,
+    aggrievedUntil: null,
+    disputeUntil: null,
+    payRiseUntil: null,
+    taxReliefUntil: null,
+  };
 }
 
 export function createProvinceStates(

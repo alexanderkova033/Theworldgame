@@ -12,7 +12,9 @@ import {
   PROVINCE_STABILITY_DRIFT,
   UPRISING_STABILITY_DRAG_MULTIPLIER,
 } from "../constants";
+import type { GameDate } from "../country/types";
 import type { ProvinceLabour } from "../labour/labourRules";
+import { getDisputeUnrest } from "../uprising/demandRules";
 import type { UnrestStage } from "../unrest/types";
 import { applyCrackdown, isWorseStage, updateUnrestStage } from "../unrest/unrestRules";
 import type { ProvinceState } from "./types";
@@ -34,6 +36,7 @@ export function updateProvinceOrder(
   nationalStability: number,
   capacityByProvince: Record<string, number>,
   labour: Record<string, ProvinceLabour>,
+  today: GameDate,
 ): { provinces: Record<string, ProvinceState>; changes: ProvinceStageChange[] } {
   const changes: ProvinceStageChange[] = [];
   const next: Record<string, ProvinceState> = {};
@@ -46,7 +49,8 @@ export function updateProvinceOrder(
     const homelessShare = p.population > 0 ? Math.max(0, p.population - (capacityByProvince[id] ?? 0)) / p.population : 0;
     const l = labour[id];
     const unemploymentShare = l && l.workers > 0 ? l.unemployed / l.workers : 0;
-    const target = getProvinceStabilityTarget(nationalStability, homelessShare, unemploymentShare);
+    // A refused demand keeps it well below the nation for a while (domain/uprising).
+    const target = Math.max(0, getProvinceStabilityTarget(nationalStability, homelessShare, unemploymentShare) - getDisputeUnrest(p, today));
     const stability = p.stability + (target - p.stability) * PROVINCE_STABILITY_DRIFT;
     const unrestStage = updateUnrestStage(p.unrestStage, stability);
     if (unrestStage !== p.unrestStage) changes.push({ provinceId: id, from: p.unrestStage, to: unrestStage });

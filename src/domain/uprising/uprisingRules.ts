@@ -12,6 +12,9 @@
 // for half a year: it rises again sooner, and stronger.
 import {
   MILITIA_SUPPRESSION_PER_DAY,
+  UNREST_EASE_MARGIN,
+  UNREST_RIOTS_BELOW,
+  UPRISING_GRIEVANCE_DAYS,
   UPRISING_AGGRIEVED_START_BONUS,
   UPRISING_CALM_FADE,
   UPRISING_CALM_STABILITY,
@@ -22,7 +25,7 @@ import {
   UPRISING_AGGRIEVED_RIOT_SHARE,
   UPRISING_START_STRENGTH,
 } from "../constants";
-import { dayNumber } from "../country/calendar";
+import { addDays, dayNumber } from "../country/calendar";
 import type { GameDate } from "../country/types";
 import type { PlacedBuilding, ProvinceState } from "../provinces/types";
 import type { Workforce } from "../workforce/types";
@@ -44,7 +47,7 @@ export function shouldRise(province: ProvinceState, today: GameDate, riotDays: n
 
 export function startUprising(province: ProvinceState, today: GameDate): Uprising {
   const strength = UPRISING_START_STRENGTH + (isAggrieved(province, today) ? UPRISING_AGGRIEVED_START_BONUS : 0);
-  return { since: today, strength, militia: 0 };
+  return { since: today, strength, militia: 0, lastTerms: null };
 }
 
 export interface RebelStrengthChange {
@@ -82,10 +85,27 @@ export function returnBuildings(placed: PlacedBuilding[], provinceId: string): P
   return placed.map((b) => (b.provinceId === provinceId && b.condition === "seized" ? { ...b, condition: undefined } : b));
 }
 
-// People who pay taxes: everyone but those in a risen province.
-export function getTaxedPopulation(provinces: Record<string, ProvinceState>, nationalPopulation: number): number {
-  const risen = Object.values(provinces).reduce((sum, p) => sum + (p.uprising ? p.population : 0), 0);
-  return Math.max(0, nationalPopulation - risen);
+// An uprising over: the province is back, on strike rather than rioting.
+// Put down by force, it remembers; ended any other way, it doesn't.
+export function endUprising(province: ProvinceState, today: GameDate, byForce: boolean): ProvinceState {
+  return {
+    ...province,
+    uprising: null,
+    riotDays: 0,
+    stability: UNREST_RIOTS_BELOW + UNREST_EASE_MARGIN,
+    unrestStage: "strikes",
+    aggrievedUntil: byForce ? addDays(today, UPRISING_GRIEVANCE_DAYS) : province.aggrievedUntil,
+  };
+}
+
+// People who pay taxes: everyone but those in a risen province, or one
+// whose rebels were given a year without taxes.
+export function getTaxedPopulation(provinces: Record<string, ProvinceState>, nationalPopulation: number, today: GameDate): number {
+  const untaxed = Object.values(provinces).reduce(
+    (sum, p) => sum + (p.uprising || (p.taxReliefUntil !== null && dayNumber(today) < dayNumber(p.taxReliefUntil)) ? p.population : 0),
+    0,
+  );
+  return Math.max(0, nationalPopulation - untaxed);
 }
 
 // Companies not already sent into a province.

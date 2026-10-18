@@ -129,6 +129,7 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     researchFocus: { industry: null, agriculture: null, administration: null, housing: null },
     researchProgress: {},
     researchPathsFinished: {},
+    pendingDemand: null,
     workforce: emptyWorkforce(),
     foreignPolitics: createForeignPolitics(nationId),
     market: createMarket(getSeason(STARTING_DATE)),

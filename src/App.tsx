@@ -9,7 +9,7 @@ import { NATIONS } from "./domain/nations/nationData";
 import type { GameSpeed } from "./domain/country/types";
 import { getElectionThreshold } from "./domain/parties/electionRules";
 import { getPartiesForNation, getParty } from "./domain/parties/partyRules";
-import { dismissDecision, resolveDecision } from "./application/actions";
+import { answerDemand, dismissDecision, resolveDecision } from "./application/actions";
 import { getAdvisorOutlook } from "./application/getAdvisorOutlook";
 import { getDailyProductionSummary } from "./application/getDailyProductionSummary";
 import { getForecasts } from "./application/getForecasts";
@@ -20,6 +20,7 @@ import { getTroubledProvinces } from "./application/getTroubledProvinces";
 import { playBreakthrough, playDanger, playGameOver, playLetter } from "./presentation/audio/sound";
 import { AdvisorStrip } from "./presentation/components/AdvisorStrip";
 import { DecisionModal } from "./presentation/components/DecisionModal";
+import { DemandLetter } from "./presentation/components/DemandLetter";
 import { BuildPanel } from "./presentation/components/BuildPanel";
 import { EventLog } from "./presentation/components/EventLog";
 import { ExpeditionPanel } from "./presentation/components/ExpeditionPanel";
@@ -262,6 +263,14 @@ function App() {
     setOpenModal(null);
   }, [state?.pendingDecisionId]);
 
+  // A province's letter, the same way (see DemandLetter).
+  const demandKey = state?.pendingDemand ? `${state.pendingDemand.kind}:${state.pendingDemand.provinceId}` : null;
+  useEffect(() => {
+    if (!demandKey) return;
+    playLetter();
+    setOpenModal(null);
+  }, [demandKey]);
+
   // No game yet: pick a save slot, then a nation, then a party, then the
   // game itself starts. Nation/party are permanent — there is no
   // "change nation/party" control anywhere in the game UI below.
@@ -497,6 +506,16 @@ function App() {
           resume();
         }}
       />
+      )}
+      {/* A province's letter waits behind any decision; it must be answered. */}
+      {state.chapters.unread.length === 0 && !state.burdenOffer && !state.pendingDecisionId && (
+        <DemandLetter
+          state={state}
+          onAnswer={(choice) => {
+            dispatch((s) => answerDemand(s, choice));
+            resume();
+          }}
+        />
       )}
     </div>
   );

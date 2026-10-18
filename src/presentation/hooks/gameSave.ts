@@ -117,11 +117,23 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     pendingLedger: raw.pendingLedger ?? emptyLedger(),
     lastDayLedger: raw.lastDayLedger ?? emptyLedger(),
     pendingDecisionId: raw.pendingDecisionId ?? null,
+    pendingDemand: raw.pendingDemand ?? null,
     dangerPauses: raw.dangerPauses ?? [],
     decisionHistory: raw.decisionHistory ?? [],
     // Saves from before uprisings: no province has rioted for long, or risen.
     provinces: Object.fromEntries(
-      Object.entries(raw.provinces ?? {}).map(([id, p]) => [id, { ...p, riotDays: p.riotDays ?? 0, uprising: p.uprising ?? null, aggrievedUntil: p.aggrievedUntil ?? null }]),
+      Object.entries(raw.provinces ?? {}).map(([id, p]) => [
+        id,
+        {
+          ...p,
+          riotDays: p.riotDays ?? 0,
+          uprising: p.uprising ? { ...p.uprising, lastTerms: p.uprising.lastTerms ?? null } : null,
+          aggrievedUntil: p.aggrievedUntil ?? null,
+          disputeUntil: p.disputeUntil ?? null,
+          payRiseUntil: p.payRiseUntil ?? null,
+          taxReliefUntil: p.taxReliefUntil ?? null,
+        },
+      ]),
     ),
     // Games saved before chapters existed keep every system open.
     chapters: raw.chapters ?? allChaptersOpen(),

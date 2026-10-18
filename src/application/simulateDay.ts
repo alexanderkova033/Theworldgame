@@ -106,7 +106,7 @@ export function simulateDay(state: GameState): GameState {
   });
   working = { ...working, provinces: people.provinces };
   const uprisings = tendUprisings(day, working, { stability: order.stability, unrestStage: order.unrestStage, capacityByProvince, workforce: takings.workforce });
-  working = { ...working, provinces: uprisings.provinces, placedBuildings: uprisings.placedBuildings };
+  working = { ...working, provinces: uprisings.provinces, placedBuildings: uprisings.placedBuildings, pendingDemand: uprisings.pendingDemand };
 
   const updatedStats: CountryStats = {
     treasury: takings.treasury,
@@ -185,7 +185,7 @@ export function simulateDay(state: GameState): GameState {
     ...working,
     date,
     // A choice of burdens stops the clock until one is taken.
-    isPaused: isGameOver || pendingDecisionId || election.burdenOffer ? true : working.isPaused,
+    isPaused: isGameOver || pendingDecisionId || working.pendingDemand || election.burdenOffer ? true : working.isPaused,
     isGameOver,
     outcome,
     gameOverReason,

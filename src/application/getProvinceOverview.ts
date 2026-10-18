@@ -8,7 +8,8 @@ import {
   PROVINCE_FLAG_JOBLESS_SHARE,
   PROVINCE_FLAG_SHORT_SHARE,
 } from "../domain/constants";
-import type { GameState } from "../domain/country/types";
+import type { GameDate, GameState } from "../domain/country/types";
+import { isInForce } from "../domain/uprising/demandRules";
 import { getHousingCapacityByProvince } from "../domain/housing/housingRules";
 import { getLabourSituation, type Sector, type SectorJobs } from "../domain/labour/labourRules";
 import { getNation } from "../domain/nations/nationRules";
@@ -37,6 +38,11 @@ export interface ProvinceOverview {
   riotDays: number; // days in a row it has rioted...
   riotDaysToRise: number; // ...and how many it takes to rise (see domain/uprising)
   uprising: { strength: number; change: RebelStrengthChange; militia: number } | null; // risen, with rebel strength and its daily change
+  // Answers to its letters still in force, each with the day it runs out
+  // (see domain/uprising/demandRules.ts); null when not in force.
+  payRiseUntil: GameDate | null;
+  disputeUntil: GameDate | null;
+  taxReliefUntil: GameDate | null;
 }
 
 // What the map flags, coarse on purpose: it only changes when a province
@@ -82,6 +88,9 @@ export function getProvinceOverview(state: GameState): ProvinceOverview[] {
             militia: p.uprising.militia,
           }
         : null,
+      payRiseUntil: p && isInForce(p.payRiseUntil, state.date) ? p.payRiseUntil : null,
+      disputeUntil: p && isInForce(p.disputeUntil, state.date) ? p.disputeUntil : null,
+      taxReliefUntil: p && isInForce(p.taxReliefUntil, state.date) ? p.taxReliefUntil : null,
     };
   });
 }

@@ -2,13 +2,15 @@
 // one gains or loses rebel strength, and one worn down to nothing is over.
 // See domain/uprising for the rules.
 import { isFeatureOpen } from "../../domain/chapters/chapterData";
-import { UNREST_EASE_MARGIN, UNREST_RIOTS_BELOW, UPRISING_GRIEVANCE_DAYS } from "../../domain/constants";
-import { addDays } from "../../domain/country/calendar";
+import { DEMAND_CHANCE_PER_MONTH, UNREST_RIOTS_BELOW } from "../../domain/constants";
+import { isFirstDayOfMonth } from "../../domain/country/calendar";
+import { pickPayRiseProvince, rebelsSendTerms } from "../../domain/uprising/demandRules";
+import type { Demand } from "../../domain/uprising/types";
 import { getDifficulty } from "../../domain/difficulty/difficultyData";
 import type { GameState } from "../../domain/country/types";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import type { PlacedBuilding, ProvinceState } from "../../domain/provinces/types";
-import { getRebelStrengthChange, recallUnpaidMilitia, returnBuildings, seizeBuildings, shouldRise, startUprising } from "../../domain/uprising/uprisingRules";
+import { endUprising, getRebelStrengthChange, recallUnpaidMilitia, returnBuildings, seizeBuildings, shouldRise, startUprising } from "../../domain/uprising/uprisingRules";
 import type { UnrestStage } from "../../domain/unrest/types";
 import type { Workforce } from "../../domain/workforce/types";
 import { log, type Day } from "./dayContext";
@@ -16,6 +18,7 @@ import { log, type Day } from "./dayContext";
 export interface Uprisings {
   provinces: GameState["provinces"];
   placedBuildings: PlacedBuilding[];
+  pendingDemand: Demand | null;
 }
 
 export function tendUprisings(
@@ -28,6 +31,8 @@ export function tendUprisings(
   const provinces: Record<string, ProvinceState> = {};
   const militiaOpen = isFeatureOpen(working, "unrest");
   const riotDaysToRise = getDifficulty(working.difficulty).uprisingRiotDays;
+
+  let pendingDemand = working.pendingDemand;
 
   for (const [id, before] of Object.entries(recallUnpaidMilitia(today.workforce, working.provinces))) {
     // Only rioting on its own counts: when the whole country riots, that is
@@ -53,14 +58,7 @@ export function tendUprisings(
         // Over. Put down by force, it remembers; burnt out, it doesn't.
         const byForce = p.uprising.militia > 0;
         placedBuildings = returnBuildings(placedBuildings, id);
-        p = {
-          ...p,
-          uprising: null,
-          riotDays: 0,
-          stability: UNREST_RIOTS_BELOW + UNREST_EASE_MARGIN,
-          unrestStage: "strikes",
-          aggrievedUntil: byForce ? addDays(date, UPRISING_GRIEVANCE_DAYS) : p.aggrievedUntil,
-        };
+        p = endUprising(p, date, byForce);
         log(day, {
           date,
           message: byForce
@@ -71,6 +69,11 @@ export function tendUprisings(
         });
       } else {
         p = { ...p, uprising: { ...p.uprising, strength } };
+        // Two weeks in, and two months after each refusal, the rebels write.
+        if (!pendingDemand && rebelsSendTerms(p.uprising!, date)) {
+          pendingDemand = { kind: "rebelTerms", provinceId: id };
+          p = { ...p, uprising: { ...p.uprising!, lastTerms: date } };
+        }
       }
     }
 
@@ -78,5 +81,11 @@ export function tendUprisings(
     if (p.uprising) p = { ...p, unrestStage: "riots", stability: Math.min(p.stability, UNREST_RIOTS_BELOW) };
     provinces[id] = p;
   }
-  return { provinces, placedBuildings };
+  // Now and then, workers somewhere ask for a pay rise, once the streets
+  // chapter has opened (it is about unrest, and its answers).
+  if (!pendingDemand && !working.pendingDecisionId && militiaOpen && isFirstDayOfMonth(date) && Math.random() < DEMAND_CHANCE_PER_MONTH) {
+    const asker = pickPayRiseProvince(provinces, placedBuildings, date);
+    if (asker) pendingDemand = { kind: "payRise", provinceId: asker };
+  }
+  return { provinces, placedBuildings, pendingDemand };
 }

@@ -4,6 +4,7 @@ import type { GameState } from "../../domain/country/types";
 import { getDiplomacyIncomeMultiplier } from "../../domain/diplomacy/diplomacyRules";
 import { getDailyIncomeParts } from "../../domain/economy/economyRules";
 import { getTaxedPopulation } from "../../domain/uprising/uprisingRules";
+import { getPayRiseBill } from "../../domain/uprising/demandRules";
 import { getDailySalaries, layOffUntilAffordable } from "../../domain/workforce/workforceRules";
 import { book, log, type Day } from "./dayContext";
 
@@ -19,7 +20,7 @@ export function payTheBills(day: Day, working: GameState): Takings {
   // party you backed adds a little.
   // A risen province pays nothing.
   const { taxIncome, industryIncome } = getDailyIncomeParts(
-    { ...working.stats, population: getTaxedPopulation(working.provinces, working.stats.population) },
+    { ...working.stats, population: getTaxedPopulation(working.provinces, working.stats.population, working.date) },
     working.taxRate,
     day.efficiency * day.mods.incomeMultiplier * getDiplomacyIncomeMultiplier(working.foreignPolitics),
   );
@@ -28,7 +29,7 @@ export function payTheBills(day: Day, working: GameState): Takings {
   if (laidOff > 0) {
     log(day, { date: day.start.date, message: `The treasury can't cover wages, and ${laidOff} unpaid staff walk off the job.`, severity: "warning", topic: "money" });
   }
-  const salaries = getDailySalaries(workforce, day.mods.wageMultiplier);
+  const salaries = getDailySalaries(workforce, day.mods.wageMultiplier) + getPayRiseBill(working.provinces, working.date);
   const income = grossIncome - salaries;
   book(day, "ledger", "treasury", { taxes: taxIncome, industry: industryIncome, salaries: -salaries });
   return { workforce, income, treasury: working.stats.treasury + income };

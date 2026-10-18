@@ -298,6 +298,26 @@ export const MILITIA_SUPPRESSION_PER_DAY = 1.2; // rebel strength each company s
 export const MILITIA_SEND_POLITICAL_POWER = 15; // sending a company in is an order, with a price...
 export const MILITIA_SEND_SUPPORT = -2; // ...and every group likes it less
 
+// --- Demands (see domain/uprising/demandRules.ts) ---
+// Unrest isn't only want. Now and then the workers of a province with
+// factories ask for a pay rise, however well it is doing; refused, they
+// down tools, and in a shaky country that can go as far as an uprising.
+// Rebels send their terms too: meeting them ends an uprising in peace.
+export const DEMAND_CHANCE_PER_MONTH = 0.15; // on the first of each month, once the streets chapter is open
+export const DEMAND_MIN_STABILITY = 30; // only a province this orderly asks (a worse one is already in trouble)
+export const DEMAND_PAY_RISE_PER_DAY = 3; // Crowns a day the country pays a province's workers on top...
+export const DEMAND_PAY_RISE_DAYS = 360; // ...for a year
+export const DEMAND_GRANT_STABILITY = 10; // local order gained by granting it
+export const DEMAND_REFUSE_STABILITY = -20; // local order lost the day it is refused...
+export const DEMAND_DISPUTE_UNREST = 35; // ...and how far below the nation's its mood sits while in dispute...
+export const DEMAND_DISPUTE_DAYS = 120; // ...for four months
+export const REBEL_TERMS_AFTER_DAYS = 14; // rebels send terms this long after rising...
+export const REBEL_TERMS_AGAIN_DAYS = 60; // ...and again this long after the last were refused
+export const REBEL_TERMS_REFUSED_STRENGTH = 10; // refusing them steels the uprising
+export const AMNESTY_POLITICAL_POWER = 30;
+export const AMNESTY_SUPPORT = -3; // every group: pardoning rebels costs goodwill
+export const TAX_RELIEF_DAYS = 360; // a year without taxes from the province
+
 // --- Random world events ---
 export const RANDOM_EVENT_INTERVAL_MONTHS = 6; // a random event fires every N in-game months
 

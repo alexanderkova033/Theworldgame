@@ -11,6 +11,7 @@ import { canCourtGroup, canCrackDown, canHoldRally, courtGroup, crackDown, holdR
 import { getFactionWeights } from "../../src/domain/parties/factionRules";
 import { repairBuilding } from "../../src/application/actions/repairBuilding";
 import { canRaiseMilitia, canSendMilitia, raiseMilitia, sendMilitia } from "../../src/application/actions/militiaActions";
+import { answerDemand, canAnswerDemand } from "../../src/application/actions/demandActions";
 import { dayNumber } from "../../src/domain/country/calendar";
 import { getFreeMilitia } from "../../src/domain/uprising/uprisingRules";
 import { focusResearch } from "../../src/application/actions/researchActions";
@@ -121,6 +122,16 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
       if (s.factionApproval[biggest] < 70) s = courtGroup(s, biggest);
     }
     if (!sloppy && (s.unrestStage === "strikes" || s.unrestStage === "riots") && canCrackDown(s)) s = crackDown(s);
+    // A letter from a province. A careful player grants a pay rise it can
+    // afford and ends an uprising on terms; a sloppy one refuses the pay
+    // rise, and takes the cheapest way out of an uprising.
+    if (s.pendingDemand) {
+      const answer =
+        s.pendingDemand.kind === "payRise"
+          ? !sloppy && s.stats.treasury > 1500 ? "grant" : "refuse"
+          : !sloppy && canAnswerDemand(s, "amnesty") ? "amnesty" : "taxRelief";
+      s = answerDemand(s, answer);
+    }
     // A province that has risen: raise companies and send them in. A sloppy
     // player only gets round to it after two months of losing it.
     for (const [id, province] of Object.entries(s.provinces)) {

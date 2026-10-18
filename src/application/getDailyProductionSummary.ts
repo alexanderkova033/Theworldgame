@@ -5,6 +5,7 @@
 // second copy of the simulation rules.
 import { BASE_TAX_INCOME_PER_POP, INCOME_PER_INDUSTRY } from "../domain/constants";
 import { getTaxedPopulation } from "../domain/uprising/uprisingRules";
+import { getPayRiseBill } from "../domain/uprising/demandRules";
 import { getSeason, type Season } from "../domain/country/calendar";
 import type { GameState } from "../domain/country/types";
 import { getDiplomacyIncomeMultiplier } from "../domain/diplomacy/diplomacyRules";
@@ -26,7 +27,7 @@ import { getDailySalaries } from "../domain/workforce/workforceRules";
 export interface DailyProductionSummary {
   taxIncome: number;
   industryIncome: number;
-  salaries: number; // paid out daily to scientists and police
+  salaries: number; // paid out daily to scientists, police and militia, and pay rises granted
   totalIncome: number; // net of salaries
   buildingInstalments: number; // the daily share of every project still being paid off (see createBuildAction)
   netTreasury: number; // what the treasury actually moves by in a day: income, less wages, less instalments
@@ -54,9 +55,9 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const mods = getModifiers(state);
   const incomeMultiplier = efficiencyMultiplier * mods.incomeMultiplier * getDiplomacyIncomeMultiplier(state.foreignPolitics);
 
-  const taxIncome = getTaxedPopulation(state.provinces, state.stats.population) * BASE_TAX_INCOME_PER_POP * state.taxRate * incomeMultiplier;
+  const taxIncome = getTaxedPopulation(state.provinces, state.stats.population, state.date) * BASE_TAX_INCOME_PER_POP * state.taxRate * incomeMultiplier;
   const industryIncome = state.stats.industry * INCOME_PER_INDUSTRY * incomeMultiplier;
-  const salaries = getDailySalaries(state.workforce, mods.wageMultiplier);
+  const salaries = getDailySalaries(state.workforce, mods.wageMultiplier) + getPayRiseBill(state.provinces, state.date);
   const buildingInstalments = state.projects.reduce((sum, project) => sum + project.treasuryCostPerDay, 0);
 
   const { foodProduced: processedFood } = produceProcessedFood(staffed.granaries, staffed.canneries, state.resources);

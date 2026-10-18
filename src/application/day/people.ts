@@ -12,6 +12,7 @@ import { isLocalTrouble, updateProvinceOrder } from "../../domain/provinces/prov
 import { getProvincePopulationTotal } from "../../domain/provinces/provincePopulation";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { isWorseStage } from "../../domain/unrest/unrestRules";
+import { isInForce } from "../../domain/uprising/demandRules";
 import type { UnrestStage } from "../../domain/unrest/types";
 import { log, type Day } from "./dayContext";
 
@@ -53,16 +54,18 @@ export function movePeople(
   const population = getProvincePopulationTotal(migrated);
 
   // A province striking or rioting worse than the rest is announced.
-  const order = updateProvinceOrder(migrated, today.stability, today.capacityByProvince, today.labour.provinces);
+  const order = updateProvinceOrder(migrated, today.stability, today.capacityByProvince, today.labour.provinces, date);
   for (const change of order.changes) {
     const name = getProvinceName(change.provinceId);
     if (isLocalTrouble(change.to, today.unrestStage) && isWorseStage(change.to, change.from)) {
+      const disputed = isInForce(working.provinces[change.provinceId]?.disputeUntil ?? null, date);
+      const why = disputed ? "Its workers are in dispute over pay." : "Too many there have no home or no work.";
       log(day, {
         date,
         message:
           change.to === "riots"
-            ? `Riots in ${name}! Too many there have no home or no work. Build there${isFeatureOpen(working, "unrest") ? ", or crack down" : ""}: it drags the whole country down.`
-            : `Strikes in ${name}. Too many there have no home or no work.`,
+            ? `Riots in ${name}! ${why} ${disputed ? "Calm the country" : "Build there"}${isFeatureOpen(working, "unrest") ? ", or crack down" : ""}: it drags the whole country down.`
+            : `Strikes in ${name}. ${why}`,
         severity: change.to === "riots" ? "danger" : "warning",
         topic: "provinceUnrest",
       });

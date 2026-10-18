@@ -133,7 +133,8 @@ export function useGameClock() {
 
   const pause = useCallback(() => setState((s) => (s ? { ...s, isPaused: true } : s)), []);
   // Not while a burden of office waits to be chosen (see BurdenLetter).
-  const resume = useCallback(() => setState((s) => (s && !s.burdenOffer ? { ...s, isPaused: false } : s)), []);
+  // A burden to choose or a province's letter to answer holds the clock.
+  const resume = useCallback(() => setState((s) => (s && !s.burdenOffer && !s.pendingDemand ? { ...s, isPaused: false } : s)), []);
   const setSpeed = useCallback((speed: GameSpeed) => setState((s) => (s ? { ...s, speed } : s)), []);
 
   // Lets components trigger a player action (e.g. buildFarm) without knowing
