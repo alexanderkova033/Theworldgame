@@ -6,7 +6,7 @@ import type { GameState, PolicyInProgress } from "../domain/country/types";
 import { getResearchCost, getResearchNode, getResearchRates } from "../domain/research/researchRules";
 import { RESEARCH_CATEGORIES } from "../domain/workforce/workforceRules";
 import { completeLaw } from "./actions/enactLaw";
-import { completeResearch } from "./actions/researchActions";
+import { announceReopenedPaths, completeResearch } from "./actions/researchActions";
 
 function tick(work: PolicyInProgress): PolicyInProgress {
   return { ...work, daysRemaining: work.daysRemaining - 1 };
@@ -31,5 +31,5 @@ export function advancePolicies(state: GameState): GameState {
     if (progress >= getResearchCost(node)) next = completeResearch(next, node.id);
   }
 
-  return next;
+  return announceReopenedPaths(next);
 }

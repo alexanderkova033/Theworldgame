@@ -155,6 +155,9 @@ export const MAX_EDUCATION_PER_PROVINCE = 2;
 // scientists, some schools) reaches a capstone in its first one to three
 // years: 467 points from root to capstone.
 export const RESEARCH_COST_BY_TIER: Record<1 | 2 | 3 | 4 | 5 | 6 | 7, number> = { 1: 12, 2: 25, 3: 40, 4: 60, 5: 80, 6: 110, 7: 140 };
+// Taking a path closes the area's other two, but only until it's done: a
+// year after a path's capstone, the area may take up one it passed over.
+export const RESEARCH_PATH_REOPEN_DAYS = DAYS_PER_MONTH * MONTHS_PER_YEAR;
 export const RESEARCH_BASE_RATE_PER_AREA = 0.15; // per day, per area, with nothing invested
 export const RESEARCH_PER_FACTORY = 0.06; // industry — workshops tinkering on the line
 export const RESEARCH_PER_ROAD = 0.03; // industry

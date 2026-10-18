@@ -13,7 +13,7 @@ import { createMarket } from "../../domain/market/marketRules";
 import { buildStartingHomes, getHousingCapacityByProvince } from "../../domain/housing/housingRules";
 import { getNation } from "../../domain/nations/nationRules";
 import { createProvinceStates } from "../../domain/provinces/provincePopulation";
-import { getResearchNode, getResearchNodeStatus } from "../../domain/research/researchRules";
+import { finishedResearchPaths, getResearchNode, getResearchNodeStatus } from "../../domain/research/researchRules";
 import type { ResearchCategory } from "../../domain/research/types";
 import { emptyLedger } from "../../domain/ledger/ledgerRules";
 import { emptyResourceBundle } from "../../domain/resources/resourceRules";
@@ -97,6 +97,11 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     activeLaw: raw.activeLaw ?? null,
     researchFocus: { ...legacyResearchFocus(raw), ...raw.researchFocus },
     researchProgress: raw.researchProgress ?? {},
+    // Saves from before paths reopened: a path already finished counts from
+    // today, so its area may take up another a year after loading.
+    researchPathsFinished:
+      raw.researchPathsFinished ??
+      Object.fromEntries(finishedResearchPaths(raw.enactedResearchIds ?? []).map((key) => [key, raw.date ?? { year: 1, month: 1, day: 1 }])),
     workforce: raw.workforce ? { ...raw.workforce, scientists: { ...emptyWorkforce().scientists, ...raw.workforce.scientists } } : emptyWorkforce(),
     foreignPolitics: raw.foreignPolitics ?? createForeignPolitics(raw.nationId!),
     market: hydrateMarket(raw),

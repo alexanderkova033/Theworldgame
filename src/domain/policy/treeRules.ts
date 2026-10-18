@@ -6,6 +6,11 @@
 //   - every node that leads to it is itself closed off: its path is gone.
 // Ids are unique across both trees (each starts with its branch), so one
 // set of chosen ids covers everything.
+//
+// Research paths reopen: once a path is finished and a year has passed (see
+// researchRules.ts), its nodes stop closing the branch's other paths. The
+// caller passes those paths as `reopened`; laws pass none, so a law path
+// stays closed for good.
 import { LAW_NODES } from "../laws/lawData";
 import type { Ideology } from "../parties/types";
 import { RESEARCH_NODES } from "../research/researchData";
@@ -44,23 +49,38 @@ export function getParents(node: LinkedNode): string[] {
   return ALL_NODES.filter((n) => n.category === node.category && n.tier === node.tier - 1).map((n) => n.id);
 }
 
+const NONE: ReadonlySet<string> = new Set();
+
 // What closed this node off, if anything: the chosen node that took its
 // place, or (for a lost path) the first parent that was closed.
-export function closedBy(id: string, chosen: ReadonlySet<string>): { by: string; reason: "sibling" | "excluded" | "path" } | null {
+export function closedBy(
+  id: string,
+  chosen: ReadonlySet<string>,
+  reopened: ReadonlySet<string> = NONE,
+): { by: string; reason: "sibling" | "excluded" | "path" } | null {
   if (chosen.has(id)) return null;
   const node = BY_ID.get(id);
   if (!node) return null;
-  const sibling = ALL_NODES.find((n) => n.category === node.category && n.tier === node.tier && n.id !== id && chosen.has(n.id));
+  // A fork inside one path always stays a fork; another path closes this
+  // one only until it has reopened.
+  const sibling = ALL_NODES.find(
+    (n) =>
+      n.category === node.category &&
+      n.tier === node.tier &&
+      n.id !== id &&
+      chosen.has(n.id) &&
+      !(n.path && n.path !== node.path && reopened.has(n.path)),
+  );
   if (sibling) return { by: sibling.id, reason: "sibling" };
   const excluder = [...(EXCLUSIONS.get(id) ?? [])].find((other) => chosen.has(other));
   if (excluder) return { by: excluder, reason: "excluded" };
   const parents = getParents(node);
-  if (parents.length > 0 && parents.every((p) => isClosedOff(p, chosen))) return { by: parents[0], reason: "path" };
+  if (parents.length > 0 && parents.every((p) => isClosedOff(p, chosen, reopened))) return { by: parents[0], reason: "path" };
   return null;
 }
 
-export function isClosedOff(id: string, chosen: ReadonlySet<string>): boolean {
-  return closedBy(id, chosen) !== null;
+export function isClosedOff(id: string, chosen: ReadonlySet<string>, reopened: ReadonlySet<string> = NONE): boolean {
+  return closedBy(id, chosen, reopened) !== null;
 }
 
 export function hasParentDone(node: LinkedNode, chosen: ReadonlySet<string>): boolean {
@@ -70,9 +90,9 @@ export function hasParentDone(node: LinkedNode, chosen: ReadonlySet<string>): bo
 
 // Everything that choosing this node would close off for good, in both
 // trees: what's open (or merely locked) now and wouldn't be afterwards.
-export function getLockouts(id: string, chosen: ReadonlySet<string>): LinkedNode[] {
+export function getLockouts(id: string, chosen: ReadonlySet<string>, reopened: ReadonlySet<string> = NONE): LinkedNode[] {
   const after = new Set(chosen).add(id);
-  return ALL_NODES.filter((n) => n.id !== id && !chosen.has(n.id) && !isClosedOff(n.id, chosen) && isClosedOff(n.id, after));
+  return ALL_NODES.filter((n) => n.id !== id && !chosen.has(n.id) && !isClosedOff(n.id, chosen, reopened) && isClosedOff(n.id, after, reopened));
 }
 
 // A node tied to one ideology is only open to a party of that ideology.

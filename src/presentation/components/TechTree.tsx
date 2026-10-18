@@ -587,10 +587,14 @@ export function PathInspector<N extends TreeNode>({
       </div>
 
       {state === "taken" && <StatusLine status="enacted">You're on this path.</StatusLine>}
-      {state === "closed" && <StatusLine status="foreclosed">Closed off: you took another path.</StatusLine>}
+      {state === "closed" && (
+        <StatusLine status="foreclosed">
+          {noun === "step" ? "Closed for now: you took another path. A year after that one is finished, this one can be taken up." : "Closed off: you took another path."}
+        </StatusLine>
+      )}
       {state === "open" && (
         <StatusLine status="locked">
-          Its first {noun} closes the other two paths for good.
+          {noun === "step" ? "Its first step closes the other two paths until this one is finished, and for a year after." : `Its first ${noun} closes the other two paths for good.`}
         </StatusLine>
       )}
 
@@ -644,14 +648,14 @@ export function PathInspector<N extends TreeNode>({
 
 // What choosing this would close off for good, in this tree and the other.
 // The whole point of a fork, so it's spelled out before the choice.
-export function Lockouts({ names }: { names: Array<{ name: string; elsewhere?: string }> }) {
+export function Lockouts({ names, label = "Closes off for good" }: { names: Array<{ name: string; elsewhere?: string }>; label?: string }) {
   if (names.length === 0) return null;
   const shown = names.slice(0, 6);
   return (
     <div className="law-inspector__lockouts">
       <span className="law-inspector__lockouts-label">
         <XBadge />
-        Closes off for good
+        {label}
       </span>
       <ul>
         {shown.map((n) => (

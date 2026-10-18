@@ -18,6 +18,16 @@ export function advanceDay(date: GameDate): GameDate {
   return { year, month, day };
 }
 
+// Days since the game began: for counting days between two dates.
+export function dayNumber(date: GameDate): number {
+  return ((date.year - 1) * MONTHS_PER_YEAR + (date.month - 1)) * DAYS_PER_MONTH + date.day;
+}
+
+export function addDays(date: GameDate, days: number): GameDate {
+  const n = dayNumber(date) - 1 + days;
+  return { year: Math.floor(n / (MONTHS_PER_YEAR * DAYS_PER_MONTH)) + 1, month: (Math.floor(n / DAYS_PER_MONTH) % MONTHS_PER_YEAR) + 1, day: (n % DAYS_PER_MONTH) + 1 };
+}
+
 export function isFirstDayOfMonth(date: GameDate): boolean {
   return date.day === 1;
 }

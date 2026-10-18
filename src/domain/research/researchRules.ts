@@ -15,9 +15,11 @@ import {
   RESEARCH_PER_ROAD,
   RESEARCH_PER_SCHOOL,
   RESEARCH_PER_SCIENTIST,
+  RESEARCH_PATH_REOPEN_DAYS,
 } from "../constants";
+import { addDays, dayNumber } from "../country/calendar";
 import type { ProjectType } from "../construction/types";
-import type { GameState } from "../country/types";
+import type { GameDate, GameState } from "../country/types";
 import { getWorkingCounts } from "../maintenance/maintenanceRules";
 import { getParty } from "../parties/partyRules";
 import { getModifiers } from "../policy/policyRules";
@@ -106,13 +108,34 @@ export type ResearchNodeStatus =
   | "locked-cross" // a required node in the Law tree isn't enacted yet
   | "available"; // can be chosen as its area's direction
 
+// A path is finished with its capstone, the one step in its last row.
+export function isPathCapstone(node: ResearchNode): boolean {
+  return node.tier === 7 && node.path !== undefined;
+}
+
+export function finishedResearchPaths(enactedResearchIds: string[]): string[] {
+  return enactedResearchIds.map(getResearchNode).flatMap((node) => (node && isPathCapstone(node) ? [node.path!] : []));
+}
+
+// The day a finished path stops closing its area's other paths.
+export function getPathReopenDate(state: GameState, pathKey: string): GameDate | null {
+  const finished = state.researchPathsFinished[pathKey];
+  return finished ? addDays(finished, RESEARCH_PATH_REOPEN_DAYS) : null;
+}
+
+// Paths finished a year ago or more: their area may take up another.
+export function getReopenedResearchPaths(state: GameState): Set<string> {
+  const today = dayNumber(state.date);
+  return new Set(Object.keys(state.researchPathsFinished).filter((key) => today >= dayNumber(getPathReopenDate(state, key)!)));
+}
+
 export function getResearchNodeStatus(state: GameState, node: ResearchNode): ResearchNodeStatus {
   if (state.enactedResearchIds.includes(node.id)) return "enacted";
   if (state.researchFocus[node.category] === node.id) return "in-progress";
 
   if (!isOpenToParty(node, getParty(state.partyId).ideology)) return "locked-party";
   const chosen = chosenIds(state);
-  if (isClosedOff(node.id, chosen)) return "foreclosed";
+  if (isClosedOff(node.id, chosen, getReopenedResearchPaths(state))) return "foreclosed";
   if (!hasParentDone(node, chosen)) return "locked-prerequisite";
 
   if (node.crossRequirement && !state.enactedLawIds.includes(node.crossRequirement.nodeId)) return "locked-cross";

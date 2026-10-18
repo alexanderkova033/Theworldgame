@@ -114,7 +114,7 @@ You can also take loans in batches. Interest compounds daily, and heavy debt cos
 
 ## Laws and research
 
-Both are trees with four branches. Each branch has one shared root and then three paths; choosing a path closes the other two for good.
+Both are trees with four branches. Each branch has one shared root and then three paths; choosing a path closes the other two. For laws that is for good. In research it lasts until the path is finished: a year after its last step, the area may take up one of the paths it passed over, and over a long reign it can take all three.
 
 Some laws and research come in **pairs**: with both in force, each does more. A chain-link mark on a node shows how much of its pair is in force (faint with neither, gilt with one, green with both), so the missing half is easy to find from either tree.
 

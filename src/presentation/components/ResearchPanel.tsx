@@ -17,7 +17,10 @@ import { getParty } from "../../domain/parties/partyRules";
 import type { TreePath } from "../../domain/policy/modifiers";
 import { chosenIds, closedBy, getLockouts, isOpenToParty } from "../../domain/policy/treeRules";
 import { RESEARCH_NODES, RESEARCH_PATHS } from "../../domain/research/researchData";
+import { formatDate } from "../../domain/country/calendar";
 import {
+  getPathReopenDate,
+  getReopenedResearchPaths,
   getResearchCost,
   getResearchDaysLeft,
   getResearchNode,
@@ -110,12 +113,21 @@ function nameOf(id: string): { name: string; elsewhere?: string } {
 
 // Why a technology is closed off, naming what closed it.
 function closedReason(state: GameState, node: ResearchNode): string {
-  const why = closedBy(node.id, chosenIds(state));
+  const reopened = getReopenedResearchPaths(state);
+  const why = closedBy(node.id, chosenIds(state), reopened);
   if (!why) return "Closed off.";
-  // A technology in a lane you didn't take: the path is the real reason.
-  const taken = RESEARCH_NODES.find((n) => n.category === node.category && n.tier === 2 && state.enactedResearchIds.includes(n.id));
+  // A technology in a lane you didn't take: the path you're on is the real
+  // reason, and it only holds until that path is done and a year has passed.
+  const taken = RESEARCH_NODES.find(
+    (n) => n.category === node.category && n.tier === 2 && n.path !== node.path && !reopened.has(n.path!) && state.enactedResearchIds.includes(n.id),
+  );
   const takenPath = taken && RESEARCH_PATHS.find((p) => p.key === taken.path);
-  if (takenPath && node.path && taken.path !== node.path) return `Closed off: you took the ${takenPath.name} path.`;
+  if (takenPath && node.path) {
+    const reopens = getPathReopenDate(state, takenPath.key);
+    return reopens
+      ? `Closed for now: the ${takenPath.name} path is finished, and another can be taken up from ${formatDate(reopens)}.`
+      : `Closed for now: you took the ${takenPath.name} path. A year after it is finished, another can be taken up.`;
+  }
   const by = nameOf(why.by);
   if (why.reason === "sibling") return `Closed off: ${by.name} was developed instead.`;
   if (why.reason === "excluded") return `Closed off by ${by.name}${by.elsewhere ? ` (${by.elsewhere})` : ""}.`;
@@ -175,11 +187,17 @@ function ResearchInspector({ node, state, status, onFocus, onStop }: ResearchIns
   const isSwitch = status === "available" && currentFocus !== null && currentFocus !== node.id;
   const parents = (node.requires ?? []).map((id) => getResearchNode(id)?.name ?? id);
   const open = status !== "enacted" && status !== "foreclosed";
+  // Another path of this area closes only until this one is done; a fork
+  // or an exclusion closes for good.
   const lockouts = open
-    ? getLockouts(node.id, chosenIds(state))
-        .filter((n) => isOpenToParty(n, getParty(state.partyId).ideology))
-        .map((n) => nameOf(n.id))
+    ? getLockouts(node.id, chosenIds(state), getReopenedResearchPaths(state)).filter((n) => isOpenToParty(n, getParty(state.partyId).ideology))
     : [];
+  const isForNow = (n: { id: string }) => {
+    const other = getResearchNode(n.id);
+    return other !== undefined && other.category === node.category && other.path !== undefined && other.path !== node.path;
+  };
+  const closesForNow = lockouts.filter(isForNow).map((n) => nameOf(n.id));
+  const closesForGood = lockouts.filter((n) => !isForNow(n)).map((n) => nameOf(n.id));
 
   return (
     <div className="law-inspector">
@@ -210,7 +228,8 @@ function ResearchInspector({ node, state, status, onFocus, onStop }: ResearchIns
         />
       ))}
 
-      {open && <Lockouts names={lockouts} />}
+      {open && <Lockouts names={closesForNow} label="Closes off for now" />}
+      {open && <Lockouts names={closesForGood} />}
 
       {status === "enacted" && (
         <StatusLine status="enacted">Done: {getResearchOutcomeFlavor(state.researchOutcomes[node.id]) ?? "as projected"}.</StatusLine>
@@ -319,7 +338,7 @@ export function ResearchPanel({ state, alerts, dispatch }: ResearchPanelProps) {
         </span>
         <span
           className="law-tree__help"
-          title="Pick a direction for each area and it moves forward every day, faster with scientists and schools. Each area splits into three paths: the first step on one closes the other two for good. When a step finishes and only one way leads on, work carries on by itself."
+          title="Pick a direction for each area and it moves forward every day, faster with scientists and schools. Each area splits into three paths: the first step on one closes the other two until it is finished. A year after a path is finished, the area can take up one it passed over. When a step finishes and only one way leads on, work carries on by itself."
         >
           How it works
         </span>
