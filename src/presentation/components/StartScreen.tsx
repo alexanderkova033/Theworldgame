@@ -143,7 +143,7 @@ export function StartScreen({
   onDeleteSlot,
   onSelectNation,
 }: StartScreenProps) {
-  const { width, height, coastPath, provinces, otherLandmasses } = MAP_GEOMETRY;
+  const { width, height, coastPath, provinces, islands } = MAP_GEOMETRY;
 
   if (pendingSlotId === null) {
     return (
@@ -191,7 +191,7 @@ export function StartScreen({
         </p>
 
         <svg viewBox={`0 0 ${width} ${height}`} className="start-screen__map" aria-hidden="true">
-          {otherLandmasses.map((land) => (
+          {islands.map((land) => (
             <path key={land.id} d={land.path} className="start-screen__unclaimed-land" />
           ))}
           <path d={coastPath} className="start-screen__coast" />
@@ -238,10 +238,10 @@ export function StartScreen({
 // content — the actual world the player is about to inherit, instead of a
 // plain gradient void. Faint enough to never compete with the cards on top.
 export function MapWatermark() {
-  const { width, height, coastPath, otherLandmasses } = MAP_GEOMETRY;
+  const { width, height, coastPath, islands } = MAP_GEOMETRY;
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="start-screen__watermark" aria-hidden="true">
-      {otherLandmasses.map((land) => (
+      {islands.map((land) => (
         <path key={land.id} d={land.path} />
       ))}
       <path d={coastPath} />

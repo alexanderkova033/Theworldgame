@@ -49,7 +49,7 @@ export function ExpeditionPanel({ state, selectedIslandId, dispatch }: Expeditio
     <div className="expedition-panel">
       <p className="panel-hint">One-time rewards from unclaimed islands.</p>
 
-      {MAP_GEOMETRY.otherLandmasses.map((island) => {
+      {MAP_GEOMETRY.islands.map((island) => {
         const data = getIslandExpeditionData(island.id);
         const inProgress = state.expeditions.find((e) => e.islandId === island.id);
         const isScouted = state.scoutedIslandIds.includes(island.id);

@@ -37,8 +37,13 @@ The game is about both governing a country and power across the map. Each step l
    - [x] An uprising as its own state in a province: seized workplaces, no taxes, rebel strength, and a militia to put it down.
    - [x] Demands and concessions: workers asking for a pay rise even in a decent province, a dispute if refused, and rebels' terms that end an uprising in peace.
    - [x] Spreading to the provinces next door, and a province that breaks away if left at full strength for a month.
-3. **Settle the islands.** A venture claims an island as a real province instead of a one-time reward.
-   - [ ] Ships and a port to reach it, food and goods shipped in, its own people and buildings.
+3. **Settle the islands.** A scouted island can be settled and held like a province. Six islands, some peopled and some empty, no cap on settlements. Built in this order, each phase leaving a note in TODO.md for the next:
+   - [x] Groundwork: six islands, each with a terrain, a trait, and locals or nobody; provinces and islands read as one kind of place.
+   - [ ] A. Settling an empty island: scout, found a settlement, and it becomes a province.
+   - [ ] B. The sea: harbours, a supply fee, settler ships, and each island's trait.
+   - [ ] C. Islands with people: settling one is a choice about its locals.
+   - [ ] D. Colony politics: distance unrest; colonies can rise and break away like provinces.
+   - [ ] E. The race: a neighbour can claim an unsettled island first (the bridge into step 4).
 4. **Neighbours with economies of their own.**
    - [ ] Simulate the two neighbouring nations' economies, not just their elections.
    - [ ] Direct trade between nations once they have stockpiles.

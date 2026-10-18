@@ -20,15 +20,16 @@ export interface Province {
   terrain: Terrain;
 }
 
-// A purely decorative landmass — not divided into provinces, not ownable by
-// any nation. Exists so the world map doesn't feel like it's just one
-// continent; a natural place to grow into (new nations, colonization) later.
-export interface DecorativeLandmass {
+// An island off the continent. Scenery until a venture scouts it; then it
+// can be settled and held like a province (see domain/islands), producing
+// from its terrain as a province does.
+export interface Island {
   id: string;
   name: string;
   path: string;
   labelX: number;
   labelY: number;
+  terrain: Terrain;
 }
 
 export interface MapGeometry {
@@ -36,7 +37,7 @@ export interface MapGeometry {
   height: number;
   coastPath: string; // outline of the main continent
   provinces: Province[];
-  otherLandmasses: DecorativeLandmass[];
+  islands: Island[];
 }
 
 // A province as a place people live: its own population, and how orderly

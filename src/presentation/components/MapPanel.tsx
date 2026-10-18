@@ -463,7 +463,7 @@ const MapLayers = memo(function MapLayers({
   onHoverProvince,
   lostProvinceIds,
 }: MapLayersProps) {
-  const { coastPath, provinces, otherLandmasses } = MAP_GEOMETRY;
+  const { coastPath, provinces, islands } = MAP_GEOMETRY;
   // Yours: your nation's, unless it broke away and is free.
   const owns = (provinceId: string) => nation.provinceIds.includes(provinceId) && !lostProvinceIds.includes(provinceId);
   const capital = provinces.find((p) => p.id === nation.capitalProvinceId);
@@ -553,11 +553,11 @@ const MapLayers = memo(function MapLayers({
         before the land, so only the water side shows. */}
     <g pointerEvents="none">
       <Waterlines d={coastPath} />
-      {otherLandmasses.map((land) => (
+      {islands.map((land) => (
         <Waterlines key={`${land.id}-waterlines`} d={land.path} />
       ))}
       <path d={coastPath} className="map-panel__shallows" />
-      {otherLandmasses.map((land) => (
+      {islands.map((land) => (
         <path key={`${land.id}-shallows`} d={land.path} className="map-panel__shallows" />
       ))}
     </g>
@@ -568,7 +568,7 @@ const MapLayers = memo(function MapLayers({
 
     {/* Other landmasses: unowned, but chartable via ventures. */}
     <g>
-      {otherLandmasses.map((land) => {
+      {islands.map((land) => {
         const isScouted = scoutedIslandIds.includes(land.id);
         const isExpeditionActive = expeditionIslandIds.includes(land.id);
         const isSelected = land.id === selectedIslandId;
@@ -592,11 +592,11 @@ const MapLayers = memo(function MapLayers({
       })}
       {/* A hint of vegetation so unclaimed islands read as actual
           islands, not flat brown blobs. */}
-      {otherLandmasses.map((land) => (
+      {islands.map((land) => (
         <path key={`${land.id}-terrain`} d={land.path} fill="url(#terrain-forest)" opacity={0.25} pointerEvents="none" />
       ))}
     </g>
-    {otherLandmasses.map((land) => (
+    {islands.map((land) => (
       <text key={`${land.id}-label`} x={land.labelX} y={land.labelY} className="map-panel__label is-foreign" pointerEvents="none">
         {land.name}
       </text>

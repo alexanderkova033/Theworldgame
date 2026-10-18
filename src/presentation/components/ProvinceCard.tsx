@@ -18,7 +18,7 @@ import { formatDate, getSeason } from "../../domain/country/calendar";
 import type { GameState } from "../../domain/country/types";
 import type { Sector } from "../../domain/labour/labourRules";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
-import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
+import { getPlace } from "../../domain/provinces/provinceRules";
 import { calculateDailyProduction, RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
 import { RESOURCE_TYPES, type ResourceType } from "../../domain/resources/types";
 import { formatAmount, formatRate } from "../formatNumber";
@@ -162,7 +162,7 @@ export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }
   const status = getProvinceStatus(province);
   const need = getNeed(province);
   const suggestions = getProvinceSuggestions(state, province);
-  const terrain = MAP_GEOMETRY.provinces.find((p) => p.id === province.id)?.terrain;
+  const terrain = getPlace(province.id)?.terrain;
   const yields = terrain ? calculateDailyProduction([terrain], getSeason(state.date)) : null;
   const yieldTypes = yields ? RESOURCE_TYPES.filter((type) => yields[type] > 0) : [];
 

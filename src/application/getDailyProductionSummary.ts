@@ -15,14 +15,13 @@ import { getLabourSituation } from "../domain/labour/labourRules";
 import { getWorkingCounts } from "../domain/maintenance/maintenanceRules";
 import { getModifiers } from "../domain/policy/policyRules";
 import { calculateDailyPoliticalPower } from "../domain/politics/politicsRules";
-import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
 import { getResearchRates } from "../domain/research/researchRules";
 import type { ResearchCategory } from "../domain/research/types";
 import { calculateDailyProduction } from "../domain/resources/resourceRules";
 import type { ResourceBundle } from "../domain/resources/types";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
 import { getDailySalaries } from "../domain/workforce/workforceRules";
-import { getOwnedProvinceIds } from "../domain/provinces/provinceRules";
+import { getOwnedProvinceIds, getPlace } from "../domain/provinces/provinceRules";
 
 export interface DailyProductionSummary {
   taxIncome: number;
@@ -66,7 +65,7 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const foodConsumed = consumeFood(state.stats, mods);
 
   const ownedTerrains = getOwnedProvinceIds(state).map(
-    (provinceId) => MAP_GEOMETRY.provinces.find((p) => p.id === provinceId)!.terrain,
+    (provinceId) => getPlace(provinceId)!.terrain,
   );
   const rawProduction = calculateDailyProduction(ownedTerrains, season);
   // Today's net, after winter heating is burned (coal first, then wood).
