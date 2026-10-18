@@ -5,9 +5,9 @@
 // reconcileProvinces, so those rules never need to know about provinces.
 import type { GameState } from "../country/types";
 import { getHousingCapacityByProvince } from "../housing/housingRules";
-import { getNation } from "../nations/nationRules";
 import { getStageForStability } from "../unrest/unrestRules";
 import type { ProvinceState } from "./types";
+import { getOwnedProvinceIds } from "./provinceRules";
 
 export function getProvincePopulationTotal(provinces: Record<string, ProvinceState>): number {
   return Object.values(provinces).reduce((sum, p) => sum + p.population, 0);
@@ -78,7 +78,7 @@ export function reconcileProvinces(
 export function syncProvinces(state: GameState): GameState {
   const provinces = reconcileProvinces(
     state.provinces,
-    getNation(state.nationId).provinceIds,
+    getOwnedProvinceIds(state),
     state.stats.population,
     getHousingCapacityByProvince(state),
     state.stats.stability,

@@ -24,7 +24,7 @@ import { isDebtDangerous } from "../domain/loans/loanRules";
 import { getElectionThreshold, monthsUntilNextElection } from "../domain/parties/electionRules";
 import { isLocalTrouble } from "../domain/provinces/provinceOrder";
 import { getDifficulty } from "../domain/difficulty/difficultyData";
-import { getRiotDaysToRise } from "../domain/uprising/uprisingRules";
+import { getBreakawayDaysLeft, getRiotDaysToRise } from "../domain/uprising/uprisingRules";
 import { getProvinceName } from "../domain/provinces/provinceRules";
 import { getResearchNodeStatus } from "../domain/research/researchRules";
 import { RESEARCH_NODES } from "../domain/research/researchData";
@@ -93,10 +93,11 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
   if (risen.length > 0) {
     const [id, strongest] = risen[0];
     const others = risen.length > 1 ? ` +${risen.length - 1}` : "";
+    const breaking = getBreakawayDaysLeft(strongest.uprising!, state.date);
     alerts.push({
       kind: "uprising",
       text: `Risen: ${getProvinceName(id)}${others}`,
-      detail: `${getProvinceName(id)} has risen against the government (rebel strength ${Math.round(strongest.uprising!.strength)}): rebels hold its farms and works, and it pays no taxes. ${streets ? "Send in the militia, or calm the country and it burns out." : "Calm the country and it burns out."}`,
+      detail: `${getProvinceName(id)} has risen against the government (rebel strength ${Math.round(strongest.uprising!.strength)}): rebels hold its farms and works, and it pays no taxes.${breaking !== null ? ` At full strength, it breaks away for good in ${breaking} days.` : ""} ${streets ? "Send in the militia, or calm the country and it burns out." : "Calm the country and it burns out."}`,
       critical: true,
     });
   }

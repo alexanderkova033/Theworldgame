@@ -14,8 +14,8 @@ import { COMMUTE_SHARE, JOBS_PER_BUILDING, LABOUR_SHARE } from "../constants";
 import type { ProjectType } from "../construction/types";
 import type { GameState } from "../country/types";
 import { isWorking } from "../maintenance/maintenanceRules";
-import { getNation } from "../nations/nationRules";
 import { getModifiers } from "../policy/policyRules";
+import { getOwnedProvinceIds } from "../provinces/provinceRules";
 
 export type JobBuilding = keyof typeof JOBS_PER_BUILDING;
 
@@ -78,7 +78,7 @@ function staffing(hired: number, jobs: number): number {
 }
 
 export function getLabourSituation(state: GameState): LabourSituation {
-  const provinceIds = getNation(state.nationId).provinceIds;
+  const provinceIds = getOwnedProvinceIds(state);
   const jobsPer = getJobsPerBuilding(state);
 
   // Working buildings and jobs, per province.

@@ -58,6 +58,9 @@ function getNeed(p: ProvinceOverview): { text: string; urgent: boolean } {
     if (p.disputeUntil && status.homes !== "over" && status.jobs !== "jobless") {
       return { text: `${UNREST_INFO[status.stage].name}: its workers are in dispute over pay.`, urgent: true };
     }
+    if (p.stirred && status.homes !== "over" && status.jobs !== "jobless") {
+      return { text: `${UNREST_INFO[status.stage].name}: the uprising next door has stirred it up.`, urgent: true };
+    }
     const why = status.homes === "over" ? "homes" : "work";
     return { text: `${UNREST_INFO[status.stage].name}: too many here have no ${why}.`, urgent: true };
   }
@@ -200,6 +203,12 @@ export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }
           <p className="province-card__uprising-text">
             Rebels hold its farms and works, and it pays no taxes. Rebel strength <strong>{Math.round(province.uprising.strength)}</strong> (
             {formatRate(province.uprising.change.total, true)}).
+            {province.uprising.breaksAwayIn !== null && (
+              <strong className="province-card__bad">
+                {" "}
+                At full strength, it breaks away for good in {province.uprising.breaksAwayIn} {province.uprising.breaksAwayIn === 1 ? "day" : "days"}.
+              </strong>
+            )}
           </p>
           <button type="button" className="province-card__go" onClick={() => onOpenPanel("politics", "unrest")}>
             <StatIcon type="militia" size={18} /> Militia and uprisings ›

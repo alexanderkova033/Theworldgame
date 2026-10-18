@@ -61,6 +61,7 @@ interface MapPanelProps {
   provinceOverview: ProvinceOverview[]; // today's numbers, for the tooltip only
   problemCount: number; // provinces that need the player (see getTroubledProvinces)
   onNextProblem: () => void; // select the next of them and open its card
+  lostProvinceIds: string[]; // broke away after an uprising: drawn as free land (see domain/uprising)
 }
 
 // Every terrain gets a decorative texture, drawn on top of the province's
@@ -328,6 +329,7 @@ interface MapLayersProps {
   onIslandClick: (islandId: string) => void;
   venturesOpen: boolean;
   onHoverProvince: Dispatch<SetStateAction<string | null>>;
+  lostProvinceIds: string[];
 }
 
 // A homes or jobs flag in a province's info bar: amber when it's tight,
@@ -459,8 +461,11 @@ const MapLayers = memo(function MapLayers({
   onIslandClick,
   venturesOpen,
   onHoverProvince,
+  lostProvinceIds,
 }: MapLayersProps) {
   const { coastPath, provinces, otherLandmasses } = MAP_GEOMETRY;
+  // Yours: your nation's, unless it broke away and is free.
+  const owns = (provinceId: string) => nation.provinceIds.includes(provinceId) && !lostProvinceIds.includes(provinceId);
   const capital = provinces.find((p) => p.id === nation.capitalProvinceId);
 
   return (
@@ -601,8 +606,9 @@ const MapLayers = memo(function MapLayers({
       <path d={coastPath} className="map-panel__coast" />
 
       {provinces.map((province) => {
-        const isOwned = nation.provinceIds.includes(province.id);
-        const owner = isOwned ? nation : getNationForProvince(province.id);
+        const isOwned = owns(province.id);
+        const isFree = lostProvinceIds.includes(province.id);
+        const owner = isOwned ? nation : isFree ? undefined : getNationForProvince(province.id);
         const isSelected = isOwned && province.id === selectedProvinceId;
         return (
           <path
@@ -634,7 +640,7 @@ const MapLayers = memo(function MapLayers({
           >
             <title>
               {province.name}
-              {isOwned ? " (yours)" : owner ? ` (${owner.name})` : " (unclaimed)"}
+              {isOwned ? " (yours)" : isFree ? " (broke away: free)" : owner ? ` (${owner.name})` : " (unclaimed)"}
             </title>
           </path>
         );
@@ -646,7 +652,7 @@ const MapLayers = memo(function MapLayers({
           other, instead of only differing by which pattern is
           stamped on the same flat political fill. */}
       {provinces.map((province) => {
-        const isOwned = nation.provinceIds.includes(province.id);
+        const isOwned = owns(province.id);
         return (
           <path
             key={`${province.id}-tint`}
@@ -664,7 +670,7 @@ const MapLayers = memo(function MapLayers({
           Owned provinces get them a little clearer, foreign ones
           quieter still. */}
       {provinces.map((province) => {
-        const isOwned = nation.provinceIds.includes(province.id);
+        const isOwned = owns(province.id);
         return (
           <path
             key={`${province.id}-terrain`}
@@ -817,7 +823,7 @@ const MapLayers = memo(function MapLayers({
           <text
             x={province.labelX}
             y={province.labelY}
-            className={`map-panel__label ${nation.provinceIds.includes(province.id) ? "" : "is-foreign"}`}
+            className={`map-panel__label ${owns(province.id) ? "" : "is-foreign"}`}
             pointerEvents="none"
           >
             {province.name}
@@ -834,7 +840,7 @@ const MapLayers = memo(function MapLayers({
         point at or pick a province, and it adds what the province
         produces and what's built there (one icon + a count per type). */}
     {provinces.map((province) => {
-      if (!nation.provinceIds.includes(province.id)) return null;
+      if (!owns(province.id)) return null;
 
       const buildings = buildingsByProvince.get(province.id) ?? [];
       const counts = new Map<ProjectType, number>();
@@ -936,6 +942,7 @@ export const MapPanel = memo(function MapPanel({
   provinceOverview,
   problemCount,
   onNextProblem,
+  lostProvinceIds,
 }: MapPanelProps) {
   const { provinces } = MAP_GEOMETRY;
 
@@ -1316,6 +1323,7 @@ export const MapPanel = memo(function MapPanel({
             onIslandClick={handleIslandClick}
             venturesOpen={venturesOpen}
             onHoverProvince={hoverProvince}
+            lostProvinceIds={lostProvinceIds}
           />
         </svg>
 

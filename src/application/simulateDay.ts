@@ -26,7 +26,6 @@ import { getHousingCapacityByProvince, getNationalHomelessShare } from "../domai
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getLabourSituation } from "../domain/labour/labourRules";
 import { emptyLedger, isLedgerEmpty, mergeLedgers } from "../domain/ledger/ledgerRules";
-import { getNation } from "../domain/nations/nationRules";
 import { calculateDailyPoliticalPower } from "../domain/politics/politicsRules";
 import { reconcileProvinces } from "../domain/provinces/provincePopulation";
 import { getUnrestIndustryMultiplier } from "../domain/unrest/unrestRules";
@@ -40,9 +39,12 @@ import { turnOfTheMonth } from "./day/newMonth";
 import { keepOrder } from "./day/order";
 import { movePeople } from "./day/people";
 import { tendUprisings } from "./day/uprisings";
+import { loseProvince } from "./loseProvince";
+import { getNation } from "../domain/nations/nationRules";
 import { moveSupport } from "./day/support";
 import { generateMonthlyReport } from "./generateMonthlyReport";
 import { advanceChapters } from "./chapters";
+import { getOwnedProvinceIds } from "../domain/provinces/provinceRules";
 
 export function simulateDay(state: GameState): GameState {
   const day = beginDay(state);
@@ -107,10 +109,22 @@ export function simulateDay(state: GameState): GameState {
   working = { ...working, provinces: people.provinces };
   const uprisings = tendUprisings(day, working, { stability: order.stability, unrestStage: order.unrestStage, capacityByProvince, workforce: takings.workforce });
   working = { ...working, provinces: uprisings.provinces, placedBuildings: uprisings.placedBuildings, pendingDemand: uprisings.pendingDemand };
+  // A province that broke away is let go, with its people; losing the
+  // capital brings the government down with it.
+  let population = people.population;
+  for (const id of uprisings.lost) {
+    population -= people.provinces[id]?.population ?? 0;
+    working = loseProvince(working, id);
+  }
+  if (!isGameOver && uprisings.lost.includes(getNation(working.nationId).capitalProvinceId)) {
+    isGameOver = true;
+    outcome = "collapsed";
+    gameOverReason = "The capital rose against the government and broke away, and the government fell with it.";
+  }
 
   const updatedStats: CountryStats = {
     treasury: takings.treasury,
-    population: people.population,
+    population,
     food: harvest.food,
     industry,
     stability: order.stability,
@@ -122,7 +136,7 @@ export function simulateDay(state: GameState): GameState {
   const delta: DailyDelta = {
     date: state.date,
     income: takings.income,
-    populationChange: people.population - state.stats.population,
+    populationChange: population - state.stats.population,
     stabilityChange: order.stability - state.stats.stability,
     // Player actions since the last tick count toward today.
     ledger: mergeLedgers(state.pendingLedger, day.ledger),
@@ -206,7 +220,7 @@ export function simulateDay(state: GameState): GameState {
     // The provinces always add up to the national population.
     provinces: reconcileProvinces(
       working.provinces,
-      getNation(working.nationId).provinceIds,
+      getOwnedProvinceIds(working),
       finalStats.population,
       getHousingCapacityByProvince(working),
       finalStats.stability,

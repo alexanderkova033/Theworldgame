@@ -23,9 +23,16 @@ export function dayNumber(date: GameDate): number {
   return ((date.year - 1) * MONTHS_PER_YEAR + (date.month - 1)) * DAYS_PER_MONTH + date.day;
 }
 
+// Days may be negative: counting back before the game began gives year 0
+// and earlier, still the right number of days apart.
 export function addDays(date: GameDate, days: number): GameDate {
   const n = dayNumber(date) - 1 + days;
-  return { year: Math.floor(n / (MONTHS_PER_YEAR * DAYS_PER_MONTH)) + 1, month: (Math.floor(n / DAYS_PER_MONTH) % MONTHS_PER_YEAR) + 1, day: (n % DAYS_PER_MONTH) + 1 };
+  const mod = (a: number, b: number) => ((a % b) + b) % b;
+  return {
+    year: Math.floor(n / (MONTHS_PER_YEAR * DAYS_PER_MONTH)) + 1,
+    month: Math.floor(mod(n, MONTHS_PER_YEAR * DAYS_PER_MONTH) / DAYS_PER_MONTH) + 1,
+    day: mod(n, DAYS_PER_MONTH) + 1,
+  };
 }
 
 export function isFirstDayOfMonth(date: GameDate): boolean {

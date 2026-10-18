@@ -10,7 +10,7 @@ import { getDifficulty } from "../../domain/difficulty/difficultyData";
 import type { GameState } from "../../domain/country/types";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import type { PlacedBuilding, ProvinceState } from "../../domain/provinces/types";
-import { endUprising, getRebelStrengthChange, recallUnpaidMilitia, returnBuildings, seizeBuildings, shouldRise, startUprising } from "../../domain/uprising/uprisingRules";
+import { endUprising, getBreakawayDaysLeft, getRebelStrengthChange, recallUnpaidMilitia, returnBuildings, seizeBuildings, shouldRise, startUprising } from "../../domain/uprising/uprisingRules";
 import type { UnrestStage } from "../../domain/unrest/types";
 import type { Workforce } from "../../domain/workforce/types";
 import { log, type Day } from "./dayContext";
@@ -19,6 +19,7 @@ export interface Uprisings {
   provinces: GameState["provinces"];
   placedBuildings: PlacedBuilding[];
   pendingDemand: Demand | null;
+  lost: string[]; // provinces that broke away today (simulateDay lets them go)
 }
 
 export function tendUprisings(
@@ -33,6 +34,7 @@ export function tendUprisings(
   const riotDaysToRise = getDifficulty(working.difficulty).uprisingRiotDays;
 
   let pendingDemand = working.pendingDemand;
+  const lost: string[] = [];
 
   for (const [id, before] of Object.entries(recallUnpaidMilitia(today.workforce, working.provinces))) {
     // Only rioting on its own counts: when the whole country riots, that is
@@ -68,7 +70,19 @@ export function tendUprisings(
           topic: "uprising",
         });
       } else {
-        p = { ...p, uprising: { ...p.uprising, strength } };
+        // At full strength the clock to breaking away runs; below it, stops.
+        const fullSince = strength >= 100 ? (p.uprising.fullSince ?? date) : null;
+        p = { ...p, uprising: { ...p.uprising, strength, fullSince } };
+        if (getBreakawayDaysLeft(p.uprising!, date) === 0) {
+          lost.push(id);
+          log(day, {
+            date,
+            message: `${name} has broken away and declared itself free! Its people, homes and works are lost to you.`,
+            severity: "danger",
+            topic: "uprising",
+          });
+          continue;
+        }
         // Two weeks in, and two months after each refusal, the rebels write.
         if (!pendingDemand && rebelsSendTerms(p.uprising!, date)) {
           pendingDemand = { kind: "rebelTerms", provinceId: id };
@@ -87,5 +101,5 @@ export function tendUprisings(
     const asker = pickPayRiseProvince(provinces, placedBuildings, date);
     if (asker) pendingDemand = { kind: "payRise", provinceId: asker };
   }
-  return { provinces, placedBuildings, pendingDemand };
+  return { provinces, placedBuildings, pendingDemand, lost };
 }

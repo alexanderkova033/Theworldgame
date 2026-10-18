@@ -7,6 +7,7 @@ export interface Uprising {
   strength: number; // 0-100: how hard it is to end
   militia: number; // companies sent in to put it down
   lastTerms: GameDate | null; // when the rebels last sent their terms
+  fullSince: GameDate | null; // at full strength since this day; held long enough, it breaks away
 }
 
 // A province asking for something by letter (see demandRules.ts): its

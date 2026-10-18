@@ -118,6 +118,7 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     lastDayLedger: raw.lastDayLedger ?? emptyLedger(),
     pendingDecisionId: raw.pendingDecisionId ?? null,
     pendingDemand: raw.pendingDemand ?? null,
+    lostProvinceIds: raw.lostProvinceIds ?? [],
     dangerPauses: raw.dangerPauses ?? [],
     decisionHistory: raw.decisionHistory ?? [],
     // Saves from before uprisings: no province has rioted for long, or risen.
@@ -127,7 +128,7 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
         {
           ...p,
           riotDays: p.riotDays ?? 0,
-          uprising: p.uprising ? { ...p.uprising, lastTerms: p.uprising.lastTerms ?? null } : null,
+          uprising: p.uprising ? { ...p.uprising, lastTerms: p.uprising.lastTerms ?? null, fullSince: p.uprising.fullSince ?? null } : null,
           aggrievedUntil: p.aggrievedUntil ?? null,
           disputeUntil: p.disputeUntil ?? null,
           payRiseUntil: p.payRiseUntil ?? null,

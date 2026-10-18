@@ -785,6 +785,11 @@ function UprisingRow({ state, dispatch, province }: { state: GameState; dispatch
       <p className={`uprisings__trend ${change.total < 0 ? "is-falling" : "is-growing"}`} title={parts.join("\n")}>
         {trend}
       </p>
+      {uprising.breaksAwayIn !== null && (
+        <p className="note is-warning uprisings__breakaway">
+          <strong>At full strength:</strong> {province.name} breaks away for good in {uprising.breaksAwayIn} {uprising.breaksAwayIn === 1 ? "day" : "days"} unless its strength falls.
+        </p>
+      )}
       <div className="uprisings__militia">
         <StatIcon type="militia" size={18} />
         <span>Companies sent in</span>

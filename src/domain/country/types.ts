@@ -141,7 +141,8 @@ export interface GameState {
   researchFocus: Record<ResearchCategory, string | null>; // the node each research area is working toward — see domain/research
   researchProgress: Record<string, number>; // work put into each node so far; kept if you switch direction and come back
   researchPathsFinished: Record<string, GameDate>;
-  pendingDemand: Demand | null; // a province's letter waiting for an answer (see domain/uprising/demandRules.ts) // a research path's key: the day its capstone was finished (see researchRules.ts)
+  pendingDemand: Demand | null;
+  lostProvinceIds: string[]; // provinces that broke away after an uprising: no longer the country's (see domain/uprising) // a province's letter waiting for an answer (see domain/uprising/demandRules.ts) // a research path's key: the day its capstone was finished (see researchRules.ts)
   workforce: Workforce; // salaried scientists and police — see domain/workforce
   foreignPolitics: Record<string, ForeignGovernment>; // every nation but the player's — see domain/diplomacy
   market: MarketState; // the continental market's stock of every good — see domain/market

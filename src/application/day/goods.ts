@@ -7,10 +7,10 @@ import { burnHeatingFuel, getHeatingDemand } from "../../domain/housing/housingR
 import type { LabourSituation } from "../../domain/labour/labourRules";
 import { accrueInterest, isDebtDangerous } from "../../domain/loans/loanRules";
 import { updateMarket } from "../../domain/market/marketRules";
-import { getNation } from "../../domain/nations/nationRules";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
 import { addResources, calculateDailyProduction } from "../../domain/resources/resourceRules";
 import { log, type Day } from "./dayContext";
+import { getOwnedProvinceIds } from "../../domain/provinces/provinceRules";
 
 export interface Goods {
   resources: GameState["resources"]; // after processing and heating
@@ -24,8 +24,7 @@ export function produceGoods(day: Day, working: GameState, labour: LabourSituati
   const date = day.start.date;
 
   // 2a. Raw resources: every owned province produces its terrain's resource.
-  const nation = getNation(working.nationId);
-  const ownedTerrains = nation.provinceIds.map((provinceId) => MAP_GEOMETRY.provinces.find((p) => p.id === provinceId)!.terrain);
+  const ownedTerrains = getOwnedProvinceIds(working).map((provinceId) => MAP_GEOMETRY.provinces.find((p) => p.id === provinceId)!.terrain);
   const producedResources = addResources(working.resources, calculateDailyProduction(ownedTerrains, day.season));
   const market = updateMarket(working.market, day.season, isFirstDayOfMonth(date));
 

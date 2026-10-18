@@ -76,8 +76,10 @@ export function createBuildAction(config: BuildActionConfig): BuildAction {
       canAfford(state.stats, upfrontCost(getBuildCost(state, config.cost))) &&
       canAffordResource(state.resources, config.resourceType, upfrontCost(config.resourceCost)) &&
       countBuildingsInProvince(state, config.type, provinceId) < config.maxPerProvince &&
-      // Nothing is built where rebels hold the ground (see domain/uprising).
-      !state.provinces[provinceId]?.uprising
+      // Only in a province the country holds, and not where rebels hold the
+      // ground (see domain/uprising).
+      state.provinces[provinceId] !== undefined &&
+      !state.provinces[provinceId].uprising
     );
   }
 

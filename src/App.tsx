@@ -325,7 +325,8 @@ function App() {
 
   const nation = getNation(state.nationId);
   const party = getParty(state.partyId);
-  const currentProvinceId = selectedProvinceId ?? nation.capitalProvinceId;
+  // A province that broke away can't stay selected: back to the capital.
+  const currentProvinceId = selectedProvinceId && !state.lostProvinceIds.includes(selectedProvinceId) ? selectedProvinceId : nation.capitalProvinceId;
   const unseenEventCount = Math.max(0, state.events.length - seenEventCount);
   // Non-null past the `!state` guard above — it's memoized from that same value.
   const dailyProduction = production!;
@@ -382,6 +383,7 @@ function App() {
         <div className="game-layout__map-stage">
           <MapPanel
             nation={nation}
+            lostProvinceIds={state.lostProvinceIds}
             placedBuildings={state.placedBuildings}
             selectedProvinceId={currentProvinceId}
             onSelectProvince={selectProvinceOnMap}

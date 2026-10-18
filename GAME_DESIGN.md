@@ -129,6 +129,8 @@ Falling stability brings stages before collapse: discontent slows industry, stri
 
 **Demands.** Unrest isn't only want. Now and then the workers of a province with factories write asking for a pay rise, however well it is doing. Granted, the country pays them 3 Cr a day more for a year and the province calms. Refused, they down tools: for four months the province's mood sits 35 points below the nation's, which means strikes in a steady country and riots, perhaps an uprising, in a shaky one. Two weeks after rising, and two months after each refusal, rebels send their terms: a pardon (30 political power, 3 support with every group) or a year without taxes from the province. Either ends the uprising in peace, with no grievance; refusing hardens it by 10 strength. A letter must be answered.
 
+**Left alone, it spreads, and can be lost.** From rebel strength 70, the provinces next door grow restless: their mood sits 15 points below the nation's. Held at full strength (100) for a month, a province breaks away and declares itself free: its people, homes and works are lost to you, and the map shows it as free land. If the capital breaks away, the government falls. The countdown is shown on the Unrest page, the province card and the advisor from the day it starts.
+
 ## Time
 
 - One **day** is one tick. Pause, or run at 1x, 2x, 3x or 5x.

@@ -18,6 +18,7 @@ import { getNation } from "../nations/nationRules";
 import type { PlacedBuilding } from "../provinces/types";
 import { getModifiers } from "../policy/policyRules";
 import type { ResourceBundle } from "../resources/types";
+import { getOwnedProvinceIds } from "../provinces/provinceRules";
 
 export function getPeoplePerHome(state: GameState): number {
   return PEOPLE_PER_HOME * getModifiers(state).housingCapacityMultiplier;
@@ -31,7 +32,7 @@ export function getHousingCapacity(state: GameState): number {
 // one with none). Sums to getHousingCapacity.
 export function getHousingCapacityByProvince(state: GameState): Record<string, number> {
   const perHome = getPeoplePerHome(state);
-  const capacity: Record<string, number> = Object.fromEntries(getNation(state.nationId).provinceIds.map((id) => [id, 0]));
+  const capacity: Record<string, number> = Object.fromEntries(getOwnedProvinceIds(state).map((id) => [id, 0]));
   for (const building of state.placedBuildings) {
     if (building.type === "housing" && isWorking(building) && building.provinceId in capacity) capacity[building.provinceId] += perHome;
   }

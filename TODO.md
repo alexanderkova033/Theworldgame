@@ -29,6 +29,13 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **Long Reign burdens are drawn at random.** The scripted player takes the first one offered, so the tests measure an average reign, not a player choosing well.
 - **TECHNICAL_DESIGN.md** may still describe the early MVP in places. README and GAME_DESIGN were brought up to date on 2026-10-16.
 
+## Uprisings
+
+- **Borders don't redraw.** A province that broke away is drawn as free land, but the national frontier band is precomputed from the nations' fixed provinces (src/presentation/nationFrontiers.ts), so it still runs around it. Worth fixing when borders can change for other reasons (step 4 or 5 of the roadmap).
+- **A lost coast still counts as a port.** `nationHasPort` reads the nation's fixed provinces, so losing its only coastal province keeps the cheaper market. Rare; fix with the frontier.
+- **A lost province can't be won back yet.** Retaking it belongs to the military (roadmap step 5).
+- **Scripted players never lose a province.** Even the sloppy one sends militia within two months, long before a month at full strength. The tests cover breaking away directly (tests/breakaway.test.ts), not through a played game.
+
 ## Process reminders
 
 - Domain rules live in `src/domain/<concept>/`, cross-domain use cases in `src/application/`, and React only in `src/presentation/`.

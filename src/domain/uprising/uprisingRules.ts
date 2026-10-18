@@ -10,9 +10,15 @@
 // police hold it down, and militia companies sent in wear it down. At zero
 // the uprising is over. One put down by force leaves the province aggrieved
 // for half a year: it rises again sooner, and stronger.
+//
+// Left alone, it spreads: from strength 70 the provinces next door grow
+// restless. Held at full strength for a month, it breaks away for good.
 import {
   MILITIA_SUPPRESSION_PER_DAY,
   UNREST_EASE_MARGIN,
+  UPRISING_BREAKAWAY_DAYS,
+  UPRISING_SPREAD_STRENGTH,
+  UPRISING_SPREAD_UNREST,
   UNREST_RIOTS_BELOW,
   UPRISING_GRIEVANCE_DAYS,
   UPRISING_AGGRIEVED_START_BONUS,
@@ -27,6 +33,7 @@ import {
 } from "../constants";
 import { addDays, dayNumber } from "../country/calendar";
 import type { GameDate } from "../country/types";
+import { getNeighbours } from "../provinces/provinceNeighbours";
 import type { PlacedBuilding, ProvinceState } from "../provinces/types";
 import type { Workforce } from "../workforce/types";
 import type { Uprising } from "./types";
@@ -47,7 +54,7 @@ export function shouldRise(province: ProvinceState, today: GameDate, riotDays: n
 
 export function startUprising(province: ProvinceState, today: GameDate): Uprising {
   const strength = UPRISING_START_STRENGTH + (isAggrieved(province, today) ? UPRISING_AGGRIEVED_START_BONUS : 0);
-  return { since: today, strength, militia: 0, lastTerms: null };
+  return { since: today, strength, militia: 0, lastTerms: null, fullSince: null };
 }
 
 export interface RebelStrengthChange {
@@ -106,6 +113,20 @@ export function getTaxedPopulation(provinces: Record<string, ProvinceState>, nat
     0,
   );
   return Math.max(0, nationalPopulation - untaxed);
+}
+
+// A strong uprising stirs up the provinces next door: their mood sits this
+// far below the nation's while it lasts.
+export function getSpreadUnrest(provinces: Record<string, ProvinceState>, provinceId: string): number {
+  const stirred = getNeighbours(provinceId).some((id) => (provinces[id]?.uprising?.strength ?? 0) >= UPRISING_SPREAD_STRENGTH);
+  return stirred ? UPRISING_SPREAD_UNREST : 0;
+}
+
+// Held at full strength long enough, an uprising breaks away. Days left
+// before it does, or null while it is short of full strength.
+export function getBreakawayDaysLeft(uprising: Uprising, today: GameDate): number | null {
+  if (uprising.fullSince === null) return null;
+  return Math.max(0, UPRISING_BREAKAWAY_DAYS - (dayNumber(today) - dayNumber(uprising.fullSince)));
 }
 
 // Companies not already sent into a province.

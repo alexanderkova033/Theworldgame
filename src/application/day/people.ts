@@ -13,6 +13,7 @@ import { getProvincePopulationTotal } from "../../domain/provinces/provincePopul
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { isWorseStage } from "../../domain/unrest/unrestRules";
 import { isInForce } from "../../domain/uprising/demandRules";
+import { getSpreadUnrest } from "../../domain/uprising/uprisingRules";
 import type { UnrestStage } from "../../domain/unrest/types";
 import { log, type Day } from "./dayContext";
 
@@ -59,7 +60,8 @@ export function movePeople(
     const name = getProvinceName(change.provinceId);
     if (isLocalTrouble(change.to, today.unrestStage) && isWorseStage(change.to, change.from)) {
       const disputed = isInForce(working.provinces[change.provinceId]?.disputeUntil ?? null, date);
-      const why = disputed ? "Its workers are in dispute over pay." : "Too many there have no home or no work.";
+      const stirred = getSpreadUnrest(working.provinces, change.provinceId) > 0;
+      const why = disputed ? "Its workers are in dispute over pay." : stirred ? "The uprising next door has stirred it up." : "Too many there have no home or no work.";
       log(day, {
         date,
         message:

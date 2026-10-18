@@ -297,6 +297,10 @@ export const MILITIA_CAP = 4; // companies the country can keep
 export const MILITIA_SUPPRESSION_PER_DAY = 1.2; // rebel strength each company sent in wears down, per day
 export const MILITIA_SEND_POLITICAL_POWER = 15; // sending a company in is an order, with a price...
 export const MILITIA_SEND_SUPPORT = -2; // ...and every group likes it less
+// Left alone, an uprising spreads and can be lost for good.
+export const UPRISING_SPREAD_STRENGTH = 70; // rebel strength from which it stirs up the provinces next door...
+export const UPRISING_SPREAD_UNREST = 15; // ...setting their mood this far below the nation's
+export const UPRISING_BREAKAWAY_DAYS = 30; // days at full strength (100) before it breaks away from the country
 
 // --- Demands (see domain/uprising/demandRules.ts) ---
 // Unrest isn't only want. Now and then the workers of a province with
