@@ -17,6 +17,7 @@ import { buyBackIsland, canBuyBackIsland, canSignAccord, signIslandAccord } from
 import { getBuyBackPrice } from "../../src/domain/neighbours/treatyRules";
 import { canRaiseRegiment, marchRegiments, raiseRegiment } from "../../src/application/actions/armyActions";
 import { canDeclareWar, declareWar, makePeace } from "../../src/application/actions/warActions";
+import { canPayTribute, payTribute, standFirm } from "../../src/application/actions/ultimatumActions";
 import { getGarrisons } from "../../src/domain/military/militaryRules";
 import { BUY_BACK_MIN_RELATIONS } from "../../src/domain/constants";
 import { canPressureGovernment, pressureGovernment } from "../../src/application/actions/pressureGovernment";
@@ -150,6 +151,8 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
       const wanted = offer.kind === "sell" ? s.stats.food < 200000 : offer.good !== "food" && s.resources[offer.good] >= offer.amount * 2;
       s = trade && wanted && canAcceptOffer(s) ? acceptOffer(s) : declineOffer(s);
     }
+    // A neighbour's ultimatum: paid off with money to spare, else refused.
+    if (s.ultimatum && !s.ultimatum.answered) s = canPayTribute(s) && s.stats.treasury > 5000 ? payTribute(s) : standFirm(s);
     // A letter from a province. A careful player grants a pay rise it can
     // afford and ends an uprising on terms; a sloppy one refuses the pay
     // rise, and takes the cheapest way out of an uprising.

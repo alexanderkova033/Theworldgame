@@ -22,6 +22,7 @@ import type { BurdenId, GameMode } from "../reign/reignData";
 import type { Regiment } from "../military/types";
 import type { FreeProvince } from "../military/battleRules";
 import type { War } from "../military/warRules";
+import type { Ultimatum } from "../military/threatRules";
 
 export interface GameDate {
   year: number;
@@ -158,6 +159,7 @@ export interface GameState {
   pendingOffer: TradeOffer | null; // a neighbour's trade offer waiting for an answer (see domain/neighbours/tradeRules.ts)
   regiments: Regiment[]; // every country's regiments, on the map (see domain/military)
   wars: Record<string, War>; // neighbours you are at war with, by nation id (see domain/military/warRules.ts)
+  ultimatum: Ultimatum | null; // a neighbour threatening war over an island of yours (see domain/military/threatRules.ts)
   sieges: Record<string, number>; // islands your regiments are besieging: days held so far (see battleRules.ts)
   freeProvinces: Record<string, FreeProvince>; // provinces that broke away, held by their rebels: province id to who lives there and how strong (see domain/military/battleRules.ts)
   workforce: Workforce; // salaried scientists and police — see domain/workforce

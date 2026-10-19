@@ -11,6 +11,9 @@ import { startNewGame } from "../src/application/startNewGame";
 import { allChaptersOpen } from "../src/domain/chapters/chapterData";
 import {
   GARRISON_ORDER,
+  RELATIONS_TRIBUTE,
+  THREAT_CHANCE,
+  TRIBUTE,
   SIEGE_DAYS,
   WAR_ISLAND_GARRISON,
   WAR_POLITICAL_POWER,
@@ -32,6 +35,9 @@ import { hydrateGameState } from "../src/presentation/hooks/gameSave";
 import { loseProvince } from "../src/application/loseProvince";
 import { forecastFight, forecastLanding } from "../src/domain/military/battleRules";
 import { canDeclareWar, declareWar, makePeace } from "../src/application/actions/warActions";
+import { payTribute, standFirm } from "../src/application/actions/ultimatumActions";
+import { chooseThreat } from "../src/domain/military/threatRules";
+import { neighbourDice } from "../src/domain/neighbours/neighbourRules";
 import { addDays } from "../src/domain/country/calendar";
 
 const start = startNewGame("astravia", "astravia-harvest-union");
@@ -339,5 +345,78 @@ describe("war over the islands", () => {
     expect(loaded.wars).toEqual({});
     expect(loaded.sieges).toEqual({});
     expect(loaded.neighbours.veldoria.truceUntil).toBeNull();
+  });
+});
+
+describe("a neighbour making war on you", () => {
+  const solmere = "island-2";
+  // A month in which Veldoria's own dice say "threaten".
+  const month = Array.from({ length: 240 }, (_, i) => i + 1).find((m) => neighbourDice("veldoria", m, "threat") < THREAT_CHANCE)!;
+  const firstOf = (m: number) => ({ year: Math.floor((m - 1) / 12) + 1, month: ((m - 1) % 12) + 1, day: 1 });
+  const ready = (nationId: string, provinceId: string, strength = 100) => ({ ...newRegiment(nationId, provinceId), trainingDays: 0, strength });
+  const home = getNation("veldoria").provinceIds;
+  const hostile = { ...base.neighbours.veldoria, relations: -50 };
+  const strong = [ready("veldoria", home[0]), ready("veldoria", home[0]), ready("veldoria", home[1])];
+  const mine = [{ islandId: solmere, garrison: 0 }];
+  // You hold Solmere; Veldoria is hostile and armed.
+  const held: GameState = {
+    ...base,
+    date: firstOf(month),
+    settledIslandIds: [solmere],
+    provinces: { ...base.provinces, [solmere]: { ...base.provinces[capital], population: 600, uprising: null, unrestStage: "calm" } },
+    neighbours: { ...base.neighbours, veldoria: hostile },
+    regiments: strong,
+  };
+  const day = (s: GameState) => simulateDay({ ...s, isPaused: false, pendingDecisionId: null, pendingOffer: null, pendingDemand: null });
+
+  it("threatens only when hostile, out of truce, and clearly stronger than your garrison", () => {
+    expect(chooseThreat(hostile, "veldoria", month, firstOf(month), strong, mine)).toBe(solmere);
+    expect(chooseThreat({ ...hostile, relations: 0 }, "veldoria", month, firstOf(month), strong, mine)).toBeNull();
+    expect(chooseThreat({ ...hostile, truceUntil: firstOf(month + 12) }, "veldoria", month, firstOf(month), strong, mine)).toBeNull();
+    expect(chooseThreat(hostile, "veldoria", month, firstOf(month), strong, [{ islandId: solmere, garrison: 200 }])).toBeNull();
+    expect(chooseThreat(hostile, "veldoria", month, firstOf(month), strong, [])).toBeNull();
+  });
+
+  it("sends an ultimatum first, which stops the clock", () => {
+    const s = { ...held, date: firstOf(month - 1 + 1) };
+    const after = runNeighbours(beginDay(s), s, firstOf(month));
+    expect(after.ultimatum).toMatchObject({ nationId: "veldoria", islandId: solmere, answered: false });
+  });
+
+  const threatened: GameState = { ...held, ultimatum: { nationId: "veldoria", islandId: solmere, warOn: addDays(held.date, 30), answered: false } };
+
+  it("can be paid off: it warms, and there's no war", () => {
+    const paid = payTribute(threatened);
+    expect(paid.ultimatum).toBeNull();
+    expect(paid.stats.treasury).toBe(threatened.stats.treasury - TRIBUTE);
+    expect(paid.neighbours.veldoria.relations).toBe(hostile.relations + RELATIONS_TRIBUTE);
+  });
+
+  it("stood up to, declares war when the ultimatum runs out, lands, and takes an undefended island, then makes peace", () => {
+    let s = standFirm(threatened);
+    expect(s.ultimatum?.answered).toBe(true);
+    s = { ...s, date: addDays(s.date, 30) };
+    s = day(s);
+    expect(s.wars.veldoria).toMatchObject({ byThem: solmere });
+    // Their regiments sail; the island has nobody to hold it.
+    s = { ...s, regiments: s.regiments.map((r) => (r.nationId === "veldoria" ? { ...r, provinceId: solmere, march: null } : r)) };
+    for (let d = 0; d < 60 && s.settledIslandIds.includes(solmere); d++) s = day(s);
+    expect(s.settledIslandIds).not.toContain(solmere);
+    expect(s.foreignIslands[solmere]).toBe("veldoria");
+    expect(s.provinces[solmere]).toBeUndefined();
+    expect(s.wars.veldoria).toBeUndefined(); // it has what it came for
+    expect(s.neighbours.veldoria.truceUntil).not.toBeNull();
+  });
+
+  it("is held off by a garrison: defenders hit back harder", () => {
+    let s: GameState = { ...held, wars: { veldoria: { since: held.date, byThem: solmere } }, regiments: [ready(held.nationId, solmere), ready("veldoria", solmere)] };
+    for (let d = 0; d < 120 && s.regiments.some((r) => r.nationId === "veldoria"); d++) s = day(s);
+    expect(s.settledIslandIds).toContain(solmere);
+    expect(s.regiments.filter((r) => r.nationId === held.nationId)).toHaveLength(1);
+  });
+
+  it("costs no support each month, since they started it", () => {
+    const s = { ...held, date: { year: 1, month: 1, day: 30 }, wars: { veldoria: { since: held.date, byThem: solmere } } };
+    expect(day(s).lastDayLedger.support.war).toBeUndefined();
   });
 });

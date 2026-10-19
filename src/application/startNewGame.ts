@@ -142,6 +142,7 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     freeProvinces: {},
     wars: {},
     sieges: {},
+    ultimatum: null,
     workforce: emptyWorkforce(),
     foreignPolitics: createForeignPolitics(nationId),
     market: createMarket(getSeason(STARTING_DATE)),

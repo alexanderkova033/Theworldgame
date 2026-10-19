@@ -124,6 +124,7 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     regiments: raw.regiments ?? [],
     wars: raw.wars ?? {},
     sieges: raw.sieges ?? {},
+    ultimatum: raw.ultimatum ?? null,
     // Older saves didn't remember who lived in a lost province: nobody, then.
     freeProvinces: raw.freeProvinces ?? Object.fromEntries((raw.lostProvinceIds ?? []).map((id: string) => [id, newFreeProvince(0)])),
     lostProvinceIds: raw.lostProvinceIds ?? [],

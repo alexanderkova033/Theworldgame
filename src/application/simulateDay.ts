@@ -42,7 +42,9 @@ import { keepOrder } from "./day/order";
 import { movePeople } from "./day/people";
 import { tendUprisings } from "./day/uprisings";
 import { runNeighbours } from "./day/neighbours";
-import { drillTheArmy } from "./day/army";
+import { drillTheArmy, enforceUltimatum } from "./day/army";
+import { loseIsland } from "./loseProvince";
+import { makePeace } from "./actions/warActions";
 import { retakeProvince } from "./retakeProvince";
 import { conquer, takeIsland } from "./takeIsland";
 import { getIslandPeople } from "../domain/neighbours/treatyRules";
@@ -209,25 +211,39 @@ export function simulateDay(state: GameState): GameState {
   // the clock decides whether to stop for a letter.
   // Every regiment drills, marches or fights a day (see day/army.ts); a
   // province whose rebels are beaten comes back, with its people.
+  // A neighbour's ultimatum may run out into war first (see day/army.ts).
+  working = { ...working, ...enforceUltimatum(day, working) };
   const army = drillTheArmy(day, working, takings.treasury);
   const retakenPeople = army.retaken.reduce((sum, id) => sum + (working.freeProvinces[id]?.people ?? 0), 0);
-  const capturedPeople = army.captured.reduce((sum, id) => sum + getIslandPeople(id), 0);
   working = army.retaken.reduce((s, id) => retakeProvince(s, id), { ...working, regiments: army.regiments });
   working = { ...working, freeProvinces: army.freeProvinces, sieges: army.sieges };
-  // An island taken in war: theirs no longer, and they won't forget it.
-  for (const id of army.captured) {
-    const holder = working.foreignIslands[id];
-    working = conquer(takeIsland(working, id), id);
-    working = { ...working, neighbours: { ...working.neighbours, [holder]: feel(working.neighbours[holder], RELATIONS_ISLAND_TAKEN, `You took ${getProvinceName(id)} from them`) } };
+  // Islands taken in war, by you or from you.
+  let islandPeople = 0;
+  for (const { islandId: id, by } of army.captured) {
+    if (by === working.nationId) {
+      // Theirs no longer, and they won't forget it.
+      const holder = working.foreignIslands[id];
+      islandPeople += getIslandPeople(id);
+      working = conquer(takeIsland(working, id), id);
+      working = { ...working, neighbours: { ...working.neighbours, [holder]: feel(working.neighbours[holder], RELATIONS_ISLAND_TAKEN, `You took ${getProvinceName(id)} from them`) } };
+    } else {
+      islandPeople -= working.provinces[id]?.population ?? 0;
+      working = loseIsland(working, id, by);
+      // It has what it came for, and makes peace.
+      if (working.wars[by]?.byThem === id) working = makePeace(working, by);
+    }
   }
-  const endStats: CountryStats = { ...finalStats, population: finalStats.population + retakenPeople + capturedPeople };
+  const endStats: CountryStats = { ...finalStats, population: Math.max(0, finalStats.population + retakenPeople + islandPeople) };
   const neighbourMonth = runNeighbours(day, working, date);
 
   return advanceChapters({
     ...working,
     date,
     // A choice of burdens stops the clock until one is taken.
-    isPaused: isGameOver || pendingDecisionId || working.pendingDemand || neighbourMonth.pendingOffer || election.burdenOffer ? true : working.isPaused,
+    isPaused:
+      isGameOver || pendingDecisionId || working.pendingDemand || neighbourMonth.pendingOffer || (neighbourMonth.ultimatum && !neighbourMonth.ultimatum.answered) || election.burdenOffer
+        ? true
+        : working.isPaused,
     isGameOver,
     outcome,
     gameOverReason,

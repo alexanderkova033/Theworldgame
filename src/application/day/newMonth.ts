@@ -104,7 +104,8 @@ export function turnOfTheMonth(
 
   // Every month at war wears on the country (see domain/military/warRules.ts).
   if (!today.isGameOver && isFirstDayOfMonth(date)) {
-    for (const nationId of Object.keys(working.wars)) {
+    // A war they started rallies the country instead: no weariness.
+    for (const nationId of Object.keys(working.wars).filter((id) => !working.wars[id].byThem)) {
       const applied = applyUniformDelta(factionApproval, today.factionWeights, WAR_WEARINESS_PER_MONTH);
       factionApproval = applied.factionApproval;
       book(day, "late", "support", { war: applied.popularity - stats.popularity });

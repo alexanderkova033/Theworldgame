@@ -448,6 +448,13 @@ export const WAR_WEARINESS_PER_MONTH = -1.5; // support with every group, each m
 export const WAR_RELATIONS = -60; // how they feel about you, at most, once you declare
 export const TRUCE_DAYS = 360; // after peace, no war with them for a year
 export const RELATIONS_ISLAND_TAKEN = -20; // an island of theirs taken in war
+
+// A neighbour making war on you (see domain/military/threatRules.ts).
+export const THREAT_CHANCE = 0.3; // a month's chance a hostile neighbour, strong enough, sends an ultimatum
+export const THREAT_STRENGTH_RATIO = 2; // ...strong enough: its spare regiments twice your garrison on the island
+export const ULTIMATUM_DAYS = 30; // days from the ultimatum to war
+export const TRIBUTE = 2000; // Crowns that buy it off...
+export const RELATIONS_TRIBUTE = 40; // ...and warm it this much
 export const WAR_ISLAND_GARRISON = 2; // regiments a neighbour wants on each of its islands while at war (one in peace)
 export const RACE_VOYAGE_DAYS = 90; // their voyage out
 export const RACE_TURNED_BACK_REFUND = 0.5; // share of your settling price refunded when they beat you to it

@@ -55,7 +55,7 @@ The game is about both governing a country and power across the map. Each step l
    - [x] A. Garrisons: a regiment standing in a province holds down unrest and uprisings there, and steadies an island.
    - [x] B. Taking back a lost province: march in, and fight its rebels day by day.
    - [x] C. War over the islands: declare war, sail to an island a neighbour holds, besiege it; war weariness; peace by letter.
-   - [ ] D. The neighbours make war: a hostile, stronger neighbour may attack your islands, after a warning letter.
+   - [x] D. The neighbours make war: a hostile, stronger neighbour may attack your islands, after a warning letter.
 
 Alongside the road, whenever they fit:
 

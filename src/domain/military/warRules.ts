@@ -11,6 +11,7 @@ import type { Neighbour } from "../neighbours/types";
 
 export interface War {
   since: GameDate;
+  byThem?: string; // they declared it, for this island of yours (threatRules.ts); else you did
 }
 
 export function isInTruce(n: Neighbour, today: GameDate): boolean {

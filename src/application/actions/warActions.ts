@@ -67,10 +67,16 @@ export function makePeace(state: GameState, nationId: string): GameState {
   // Your regiments on their islands come home, to the capital.
   const theirIslands = new Set(Object.keys(state.foreignIslands).filter((id) => state.foreignIslands[id] === nationId));
   const capital = getNation(state.nationId).capitalProvinceId;
-  const regiments = state.regiments.map((r) =>
-    r.nationId === state.nationId && (theirIslands.has(r.provinceId) || r.march?.route.some((id) => theirIslands.has(id))) ? { ...r, provinceId: capital, march: null } : r,
-  );
-  const sieges = Object.fromEntries(Object.entries(state.sieges).filter(([id]) => !theirIslands.has(id)));
+  // And theirs on your islands, or on the way, go home to theirs.
+  const yourIslands = new Set(state.settledIslandIds);
+  const theirCapital = getNation(nationId).capitalProvinceId;
+  const regiments = state.regiments.map((r) => {
+    const bound = (ids: ReadonlySet<string>) => ids.has(r.provinceId) || !!r.march?.route.some((id) => ids.has(id));
+    if (r.nationId === state.nationId && bound(theirIslands)) return { ...r, provinceId: capital, march: null };
+    if (r.nationId === nationId && bound(yourIslands)) return { ...r, provinceId: theirCapital, march: null };
+    return r;
+  });
+  const sieges = Object.fromEntries(Object.entries(state.sieges).filter(([id]) => !theirIslands.has(id) && !yourIslands.has(id)));
   return {
     ...state,
     wars,

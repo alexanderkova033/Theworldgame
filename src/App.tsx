@@ -12,6 +12,8 @@ import { getPartiesForNation, getParty } from "./domain/parties/partyRules";
 import { acceptOffer, answerDemand, declineOffer, dismissDecision, resolveDecision } from "./application/actions";
 import { OfferLetter } from "./presentation/components/OfferLetter";
 import { ArmyPanel } from "./presentation/components/ArmyPanel";
+import { UltimatumLetter } from "./presentation/components/UltimatumLetter";
+import { payTribute, standFirm } from "./application/actions/ultimatumActions";
 import { MarchBanner } from "./presentation/components/MapArmies";
 import { getMarchRoute, getReadyRegimentsIn, marchRegiments } from "./application/actions/armyActions";
 import { routeDays } from "./domain/military/militaryRules";
@@ -339,6 +341,14 @@ function App() {
     setOpenModal(null);
   }, [offerKey]);
 
+  // A neighbour's ultimatum, the same way (see UltimatumLetter).
+  const ultimatumKey = state?.ultimatum && !state.ultimatum.answered ? `${state.ultimatum.nationId}:${state.ultimatum.islandId}` : null;
+  useEffect(() => {
+    if (!ultimatumKey) return;
+    playLetter();
+    setOpenModal(null);
+  }, [ultimatumKey]);
+
   // A province's letter, the same way (see DemandLetter).
   const demandKey = state?.pendingDemand ? `${state.pendingDemand.kind}:${state.pendingDemand.provinceId}` : null;
   useEffect(() => {
@@ -606,8 +616,22 @@ function App() {
         }}
       />
       )}
+      {/* A neighbour's ultimatum waits behind any decision; it must be answered. */}
+      {state.chapters.unread.length === 0 && !state.burdenOffer && !state.pendingDecisionId && (
+        <UltimatumLetter
+          state={state}
+          onPay={() => {
+            dispatch(payTribute);
+            resume();
+          }}
+          onStandFirm={() => {
+            dispatch(standFirm);
+            resume();
+          }}
+        />
+      )}
       {/* A neighbour's trade offer waits behind every other letter. */}
-      {state.chapters.unread.length === 0 && !state.burdenOffer && !state.pendingDecisionId && !state.pendingDemand && (
+      {state.chapters.unread.length === 0 && !state.burdenOffer && !state.pendingDecisionId && !state.pendingDemand && !(state.ultimatum && !state.ultimatum.answered) && (
         <OfferLetter
           state={state}
           onAccept={() => {

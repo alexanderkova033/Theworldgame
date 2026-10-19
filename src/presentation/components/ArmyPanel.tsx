@@ -34,7 +34,10 @@ function WarButton({ state, nationId, dispatch }: { state: GameState; nationId: 
   if (war) {
     return (
       <span className="army-panel__war">
-        <span className="army-panel__at-war">At war since {formatDate(war.since)}</span>
+        <span className="army-panel__at-war" title={war.byThem ? `They started it, for ${getProvinceName(war.byThem)}: it costs you no support each month.` : "You started it: every month of it costs support."}>
+          At war since {formatDate(war.since)}
+          {war.byThem ? `, for ${getProvinceName(war.byThem)}` : ""}
+        </span>
         <button
           type="button"
           className="army-panel__war-button"
@@ -50,8 +53,14 @@ function WarButton({ state, nationId, dispatch }: { state: GameState; nationId: 
     );
   }
   const why = whyNoWarWith(state, nationId);
+  const threat = state.ultimatum?.nationId === nationId ? state.ultimatum : null;
   return (
     <span className="army-panel__war">
+      {threat && (
+        <span className="army-panel__at-war">
+          Sails for {getProvinceName(threat.islandId)} on {formatDate(threat.warOn)}
+        </span>
+      )}
       {n && isInTruce(n, state.date) && <span className="army-panel__truce">Truce until {formatDate(n.truceUntil!)}</span>}
       {/* On a wrapper, so the tooltip shows when the button can't be pressed. */}
       <span

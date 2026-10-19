@@ -152,6 +152,23 @@ export function garrisonIslands(nationId: string, regiments: Regiment[], islands
   return moving.size === 0 ? regiments : regiments.map((r) => moving.get(r.id) ?? r);
 }
 
+// A neighbour at war sends every ready regiment at home but its strongest
+// to land on an island of yours, by the quickest way.
+export function sendStrikingForce(nationId: string, regiments: Regiment[], target: string, theirIslands: string[]): Regiment[] {
+  const home = new Set(getNation(nationId).provinceIds);
+  const canEnter = (id: string) => home.has(id) || theirIslands.includes(id) || id === target;
+  const spare = regimentsOf(regiments, nationId)
+    .filter((r) => isReady(r) && home.has(r.provinceId))
+    .sort((a, b) => b.strength - a.strength)
+    .slice(1);
+  const moving = new Map<string, Regiment>();
+  for (const r of spare) {
+    const route = findRoute(r.provinceId, target, canEnter);
+    if (route) moving.set(r.id, startMarch(r, route));
+  }
+  return moving.size === 0 ? regiments : regiments.map((r) => moving.get(r.id) ?? r);
+}
+
 // A neighbour's ruler keeps a share of the regiments its people could
 // support, by temper, and raises one a month while it has fewer and the
 // money beyond its reserve. Each new one drills in whichever of its
