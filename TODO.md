@@ -46,8 +46,8 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 
 ## The race: what step 4 needs from the neighbours
 
-- **A claimed island does nothing for its holder yet.** The neighbours have no economy (only elections), so an island they take is a flag on the map and a loss to you. Step 4 should give it a value to them: its people and yield in their economy.
-- **The race runs on a fixed schedule** (month 27, then every eight; src/domain/constants.ts), the neighbours taking turns. Steady on purpose: it draws no dice, so it never shifts the luck of the balance games, and a player can see it coming. Once neighbours have economies, the schedule could become their own choice (when they can afford a voyage), but keep it free of the shared dice or the balance tests will wobble (a random roll here flipped one Hard game).
+- **The neighbours now choose their own voyages** (step 4, phase A): their computer rulers sail when they can spare the price and their temper wants it, rolling their own dice (domain/neighbours/neighbourRules.ts, neighbourDice), never the game's, so the balance games don't wobble (a shared random roll once flipped a Hard game). An island they take joins their country (its people, and homes), but its trait does nothing for them yet.
+- **Measured 2026-10-19 with the computer rulers choosing:** over five years, a careful player who never settles loses 4.7 islands to them (Astravia, as a neighbour, takes the most); one who settles holds 5.1 and loses 0.9. Difficulty win counts are unchanged.
 - **There is no way to take a claimed island back** (or to buy, trade or contest it). That is step 4 (treaties, trade) and step 5 (the military).
 - **Measured 2026-10-19 over five years:** a careful player who never settles loses 4 islands to the neighbours; one who settles holds about 5.4 and loses about 0.6, ending about 10,000 Cr richer and 24% bigger than one who doesn't.
 

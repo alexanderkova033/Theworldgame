@@ -25,6 +25,9 @@ import {
   NEIGHBOUR_GROWTH_PER_MONTH,
   NEIGHBOUR_TAX_RATE,
   NEIGHBOUR_UPKEEP_SHARE,
+  NEIGHBOUR_VOYAGE_GAP_MONTHS,
+  RACE_FROM_MONTH,
+  SETTLE_COST,
   PEOPLE_PER_HOME,
 } from "../constants";
 import { getSeason } from "../country/calendar";
@@ -109,6 +112,17 @@ function daysOfFood(n: Neighbour): number {
   const yearly = seasons.reduce((sum, m) => sum + n.farms * staffing(n).farms * FOOD_PER_FARM * m, 0) / seasons.length;
   const shortfall = n.population * FOOD_PER_POP_CONSUMPTION - yearly;
   return shortfall <= 0 ? Infinity : n.food / shortfall;
+}
+
+// Whether its ruler sends settlers this month, and where: the island nobody
+// holds with the most people, from the third year, if it can spare the
+// price beyond its reserve, hasn't sailed lately, and its temper says so.
+export function chooseVoyage(n: Neighbour, nationId: string, month: number, target: string | null): boolean {
+  if (!target || month < RACE_FROM_MONTH) return false;
+  if (n.lastVoyageMonth !== null && month - n.lastVoyageMonth < NEIGHBOUR_VOYAGE_GAP_MONTHS) return false;
+  const temper = getPersonality(nationId);
+  if (n.treasury - SETTLE_COST < temper.reserve) return false;
+  return neighbourDice(nationId, month, "voyage") < temper.islandAppetite;
 }
 
 // One thing built a month, by need and then by temper.

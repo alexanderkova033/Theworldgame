@@ -216,7 +216,7 @@ export function simulateDay(state: GameState): GameState {
     factionApproval: month.factionApproval,
     workforce: takings.workforce,
     foreignPolitics: month.foreignPolitics,
-    neighbours: runNeighbours(working, date),
+    ...runNeighbours(day, working, date),
     debt: goods.debt,
     events: day.events.slice(0, MAX_EVENT_LOG_LENGTH),
     history: finalHistory,

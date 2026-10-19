@@ -46,7 +46,7 @@ The game is about both governing a country and power across the map. Each step l
    - [x] E. The race: a neighbour can claim an unsettled island first (the bridge into step 4).
 4. **Neighbours run by the computer.** Each neighbour is a country of its own with a computer ruler of its own temper. Built in this order:
    - [x] Groundwork: they live by the same numbers as you, a month at a time, and build by need and temper; the Neighbours page shows it.
-   - [ ] A. Their own voyages: each decides when it can afford settlers and wants an island, instead of the fixed schedule; islands they hold join their country.
+   - [x] A. Their own voyages: each decides when it can afford settlers and wants an island, instead of the fixed schedule; islands they hold join their country.
    - [ ] B. Relations: how each feels about you, moved by what you do.
    - [ ] C. Trade: they offer by letter to buy or sell goods.
    - [ ] D. Treaties: an island accord, and buying a claimed island back.

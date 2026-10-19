@@ -3,6 +3,7 @@
 // shared dice, and are remembered by saves.
 import { describe, expect, it, vi } from "vitest";
 import { runNeighbours } from "../src/application/day/neighbours";
+import { beginDay } from "../src/application/day/dayContext";
 import { startNewGame } from "../src/application/startNewGame";
 import { addDays } from "../src/domain/country/calendar";
 import type { GameState } from "../src/domain/country/types";
@@ -44,7 +45,7 @@ describe("a neighbour run by the computer", () => {
     expect(neighbourDice("veldoria", 30, "voyage")).not.toBe(neighbourDice("veldoria", 31, "voyage"));
     const state = startNewGame("astravia", "astravia-harvest-union");
     const spy = vi.spyOn(Math, "random");
-    runNeighbours(state, { year: 1, month: 2, day: 1 });
+    runNeighbours(beginDay(state), state, { year: 1, month: 2, day: 1 });
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
   });

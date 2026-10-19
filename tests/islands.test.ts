@@ -29,7 +29,8 @@ import { COLONY_DISTANCE_UNREST, COLONY_DISTANCE_UNREST_LINKED } from "../src/do
 import { updateProvinceOrder } from "../src/domain/provinces/provinceOrder";
 import { runTheRace } from "../src/application/day/race";
 import { beginDay } from "../src/application/day/dayContext";
-import { RACE_EVERY_MONTHS, RACE_FROM_MONTH, RACE_TURNED_BACK_REFUND, RACE_VOYAGE_DAYS } from "../src/domain/constants";
+import { RACE_FROM_MONTH, RACE_TURNED_BACK_REFUND, RACE_VOYAGE_DAYS } from "../src/domain/constants";
+import { runNeighbours } from "../src/application/day/neighbours";
 
 function bounds(path: string) {
   const points = (path.match(/-?\d+(\.\d+)?,-?\d+(\.\d+)?/g) ?? []).map((p) => p.split(",").map(Number));
@@ -287,20 +288,33 @@ describe("the race for the islands", () => {
   const race = (state: GameState) => runTheRace(beginDay(state), state);
   const firstOf = (month: number) => ({ year: Math.floor((month - 1) / 12) + 1, month: ((month - 1) % 12) + 1, day: 1 });
 
+  // Neighbours with money to spare, so only the month and their temper decide.
+  const wealthy: GameState = {
+    ...base,
+    neighbours: Object.fromEntries(Object.entries(base.neighbours).map(([id, n]) => [id, { ...n, treasury: 50000 }])),
+  };
+  const month = (state: GameState, m: number) => runNeighbours(beginDay({ ...state, date: firstOf(m) }), state, firstOf(m));
+
   it("doesn't start before the third year", () => {
-    seedRandom(1);
-    for (let m = 1; m < RACE_FROM_MONTH; m++) expect(race({ ...base, date: firstOf(m) }).foreignVoyages).toEqual([]);
+    for (let m = 1; m < RACE_FROM_MONTH; m++) expect(month(wealthy, m).foreignVoyages).toEqual([]);
   });
 
-  it("sends a neighbour after the island with the most people, on schedule", () => {
-    const sailed = race({ ...base, date: firstOf(RACE_FROM_MONTH) });
-    expect(sailed.foreignVoyages).toHaveLength(1);
-    expect(sailed.foreignVoyages[0].islandId).toBe(kestrel);
-    expect(sailed.foreignVoyages[0].nationId).not.toBe(base.nationId);
-    expect(race({ ...base, date: firstOf(RACE_FROM_MONTH + 1) }).foreignVoyages).toEqual([]);
-    // The other neighbour takes the next turn.
-    const next = race({ ...base, date: firstOf(RACE_FROM_MONTH + RACE_EVERY_MONTHS) });
-    expect(next.foreignVoyages[0].nationId).not.toBe(sailed.foreignVoyages[0].nationId);
+  it("sends a neighbour after the island with the most people, when its ruler chooses", () => {
+    let sailed: ReturnType<typeof month> | null = null;
+    for (let m = RACE_FROM_MONTH; m < RACE_FROM_MONTH + 60 && !sailed; m++) {
+      const after = month(wealthy, m);
+      if (after.foreignVoyages.length > 0) sailed = after;
+    }
+    expect(sailed).not.toBeNull();
+    expect(sailed!.foreignVoyages[0].islandId).toBe(kestrel);
+    expect(sailed!.foreignVoyages[0].nationId).not.toBe(base.nationId);
+    const who = sailed!.foreignVoyages[0].nationId;
+    expect(sailed!.neighbours[who].treasury).toBeLessThan(wealthy.neighbours[who].treasury);
+  });
+
+  it("never sends one that can't spare the price", () => {
+    const poor: GameState = { ...base, neighbours: Object.fromEntries(Object.entries(base.neighbours).map(([id, n]) => [id, { ...n, treasury: 0 }])) };
+    for (let m = RACE_FROM_MONTH; m < RACE_FROM_MONTH + 60; m++) expect(month(poor, m).foreignVoyages).toEqual([]);
   });
 
   const landing: GameState = {
@@ -313,6 +327,8 @@ describe("the race for the islands", () => {
     const mine = foundSettlement(landing, kestrel, "buy");
     const claimed = race(mine);
     expect(claimed.foreignIslands[kestrel]).toBe("caldenreich");
+    // The island's people join the country that took it.
+    expect(claimed.neighbours.caldenreich.population).toBeGreaterThan(mine.neighbours.caldenreich.population);
     expect(claimed.settlements).toEqual([]);
     expect(claimed.stats.treasury).toBe(mine.stats.treasury + getSettleCost("buy") * RACE_TURNED_BACK_REFUND);
     expect(canFoundSettlement(claimed, kestrel, "buy")).toBe(false);

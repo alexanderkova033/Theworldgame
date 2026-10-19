@@ -384,11 +384,11 @@ export const NEIGHBOUR_TAX_RATE = 0.15; // the rate they tax at, as a new game's
 export const NEIGHBOUR_UPKEEP_SHARE = 0.4; // of their income, spent running the country (officials, police, upkeep)
 export const NEIGHBOUR_GROWTH_PER_MONTH = POPULATION_GROWTH_RATE * DAYS_PER_MONTH; // people born, while fed and housed
 
-// The race: from the third year, on a steady schedule, a neighbour sends
-// settlers to an island nobody holds; whoever lands first keeps it. Steady
-// rather than by chance, so a player can see it coming.
-export const RACE_FROM_MONTH = 27; // months since the start: the first neighbour sails...
-export const RACE_EVERY_MONTHS = 8; // ...and another this many months later, and so on
+// The race: from the third year, each neighbour's computer ruler may send
+// settlers to an island nobody holds, when it can spare the price and its
+// temper wants it (see domain/neighbours); whoever lands first keeps it.
+export const RACE_FROM_MONTH = 27; // months since the start before any neighbour sails
+export const NEIGHBOUR_VOYAGE_GAP_MONTHS = 8; // a neighbour sails at most this often
 export const RACE_VOYAGE_DAYS = 90; // their voyage out
 export const RACE_TURNED_BACK_REFUND = 0.5; // share of your settling price refunded when they beat you to it
 export const COLONY_DISTANCE_UNREST = 8; // a colony's mood sits this far below the nation's...
