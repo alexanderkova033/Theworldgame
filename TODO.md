@@ -51,6 +51,11 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **There is no way to take a claimed island back** (or to buy, trade or contest it). That is step 4 (treaties, trade) and step 5 (the military).
 - **Measured 2026-10-19 over five years:** a careful player who never settles loses 4 islands to the neighbours; one who settles holds about 5.4 and loses about 0.6, ending about 10,000 Cr richer and 24% bigger than one who doesn't.
 
+## Relations: notes for trade and treaties
+
+- **Relations are a mood, not a grudge.** Measured 2026-10-19: careful players who settle and win races end five years at neutral with both neighbours, because the -15 for a lost race fades within about 15 months. Trade (phase C) and treaties (phase D) are the natural things to gate on relations, and to move them upward; today almost nothing raises them except backing a neighbour's rulers.
+- **The scripted player never presses elections**, so the balance games never see a warm or hostile neighbour. If trade or treaties come to matter, give the careful player a habit for them, as for settling.
+
 ## Process reminders
 
 - Domain rules live in `src/domain/<concept>/`, cross-domain use cases in `src/application/`, and React only in `src/presentation/`.

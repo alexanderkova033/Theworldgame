@@ -7,7 +7,21 @@ import { beginDay } from "../src/application/day/dayContext";
 import { startNewGame } from "../src/application/startNewGame";
 import { addDays } from "../src/domain/country/calendar";
 import type { GameState } from "../src/domain/country/types";
-import { chooseBuilding, createNeighbour, liveMonth, neighbourDice } from "../src/domain/neighbours/neighbourRules";
+import { chooseBuilding, chooseVoyage, createNeighbour, liveMonth, neighbourDice } from "../src/domain/neighbours/neighbourRules";
+import { fadeFeelings } from "../src/domain/neighbours/relationsRules";
+import { pressureGovernment } from "../src/application/actions/pressureGovernment";
+import { rollForeignMeddling } from "../src/domain/diplomacy/diplomacyRules";
+import { allChaptersOpen } from "../src/domain/chapters/chapterData";
+import {
+  FOREIGN_MEDDLING_SUPPORT,
+  RACE_FROM_MONTH,
+  RELATIONS_BACK_OPPOSITION,
+  RELATIONS_BACK_RULERS,
+  RELATIONS_FADE_PER_MONTH,
+  RELATIONS_HOSTILE,
+  RELATIONS_HOSTILE_MEDDLING,
+  RELATIONS_WARM,
+} from "../src/domain/constants";
 import type { Neighbour } from "../src/domain/neighbours/types";
 import { hydrateGameState } from "../src/presentation/hooks/gameSave";
 
@@ -55,5 +69,52 @@ describe("a neighbour run by the computer", () => {
     expect(Object.keys(state.neighbours).sort()).toEqual(["caldenreich", "veldoria"]);
     const { neighbours: _n, ...old } = state;
     expect(Object.keys(hydrateGameState(JSON.parse(JSON.stringify(old as GameState))).neighbours).sort()).toEqual(["caldenreich", "veldoria"]);
+  });
+});
+
+describe("how a neighbour feels about you", () => {
+  const state: GameState = { ...startNewGame("astravia", "astravia-harvest-union"), chapters: allChaptersOpen(), stats: { ...startNewGame("astravia", "astravia-harvest-union").stats, politicalPower: 200, popularity: 60 } };
+  const gov = state.foreignPolitics.veldoria;
+  const opposition = Object.keys(gov.support).find((p) => p !== gov.rulingPartyId)!;
+
+  it("cools when you back its opposition, warms when you back its rulers, and remembers why", () => {
+    const against = pressureGovernment(state, "veldoria", opposition);
+    expect(against.neighbours.veldoria.relations).toBe(RELATIONS_BACK_OPPOSITION);
+    expect(against.neighbours.veldoria.feelings[0].text).toMatch(/against their government/);
+    expect(pressureGovernment(state, "veldoria", gov.rulingPartyId).neighbours.veldoria.relations).toBe(RELATIONS_BACK_RULERS);
+  });
+
+  it("fades back toward neutral, or toward warm under the party you backed", () => {
+    const cold = { ...state.neighbours.veldoria, relations: -20 };
+    expect(fadeFeelings(cold, false).relations).toBe(-20 + RELATIONS_FADE_PER_MONTH);
+    expect(fadeFeelings({ ...cold, relations: 0 }, true).relations).toBe(RELATIONS_FADE_PER_MONTH);
+    expect(fadeFeelings({ ...cold, relations: 0 }, false).relations).toBe(0);
+  });
+
+  it("campaigns for you when warm, and against you harder when hostile", () => {
+    const spy = vi.spyOn(Math, "random").mockReturnValue(0); // every neighbour meddles this month
+    const unfriendly = { veldoria: { ...gov, backedPartyId: null } };
+    expect(rollForeignMeddling(unfriendly, { veldoria: 0 })[0].supportDelta).toBe(-FOREIGN_MEDDLING_SUPPORT);
+    expect(rollForeignMeddling(unfriendly, { veldoria: RELATIONS_WARM })[0].supportDelta).toBe(FOREIGN_MEDDLING_SUPPORT);
+    expect(rollForeignMeddling(unfriendly, { veldoria: RELATIONS_HOSTILE })[0].supportDelta).toBe(-FOREIGN_MEDDLING_SUPPORT * RELATIONS_HOSTILE_MEDDLING);
+    spy.mockRestore();
+  });
+
+  it("races you harder for the islands when hostile", () => {
+    const rich = { ...createNeighbour("veldoria"), treasury: 50000 };
+    const months = Array.from({ length: 200 }, (_, i) => RACE_FROM_MONTH + i);
+    const sails = (n: typeof rich) => months.filter((m) => chooseVoyage(n, "veldoria", m, "island-1")).length;
+    expect(sails({ ...rich, relations: RELATIONS_HOSTILE })).toBeGreaterThan(sails(rich));
+  });
+
+  it("is remembered by saves, and older saves start neutral", () => {
+    const old = JSON.parse(JSON.stringify(state));
+    for (const n of Object.values(old.neighbours) as Array<Record<string, unknown>>) {
+      delete n.relations;
+      delete n.feelings;
+    }
+    const loaded = hydrateGameState(old);
+    expect(loaded.neighbours.veldoria.relations).toBe(0);
+    expect(loaded.neighbours.veldoria.feelings).toEqual([]);
   });
 });

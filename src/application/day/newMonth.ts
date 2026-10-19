@@ -82,7 +82,8 @@ export function turnOfTheMonth(
     }
 
     // ...and they meddle back in yours.
-    for (const move of rollForeignMeddling(foreignPolitics)) {
+    const relations = Object.fromEntries(Object.entries(working.neighbours).map(([id, n]) => [id, n.relations]));
+    for (const move of rollForeignMeddling(foreignPolitics, relations)) {
       const applied = applyUniformDelta(factionApproval, today.factionWeights, move.supportDelta);
       factionApproval = applied.factionApproval;
       book(day, "late", "support", { foreign: applied.popularity - stats.popularity });

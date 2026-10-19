@@ -122,6 +122,8 @@ Six islands lie off the continent: Kestrel Isles, Solmere, Vashtel Cay, Grey Hol
 
 The two nations you don't play are run by the computer, each by its own temper: Astravia grows its farms and wants land, Caldenreich is careful with money and slow to venture, Veldoria builds industry. They live by the same numbers as your country, a month at a time: farms feed their people by the season, taxes and factories bring in money (four tenths of it spent running the country), and homes cap how far they grow. Each month the computer builds one thing: a farm if the food won't last, homes before people outgrow them, and otherwise, with money to spare beyond its reserve, more of what its temper likes. From the third year it may also send settlers to an island (see Islands, The race). The Neighbours page in Politics shows each one's people, treasury, stability, farms and factories, islands, and what it did last month. Their dice are their own, drawn from the nation and the month, so nothing they do changes your luck.
 
+**How they feel about you** runs from -100 to 100, shown on each card in a word (Warm, Cordial, Indifferent, Cool, Hostile) with the reasons in its tooltip. Backing a neighbour's opposition costs 6, backing its rulers gains 3, beating it to an island costs 15, and driving an island's people out costs 4 with both. Feelings fade by a point a month toward neutral, or toward +20 while the party you backed rules them. From +30 a neighbour campaigns for you in your elections whoever rules it; at -30 or worse it funds your opposition half as hard again and races you for the islands half as keenly again.
+
 ## Politics
 
 - **Taxes** are a lever: more money, less support above the rate people accept.

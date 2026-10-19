@@ -2,7 +2,8 @@
 // costs Crowns and wood now, and the ship lands a couple of months later.
 import { MORE_SETTLERS_COST, MORE_SETTLERS_DAYS, SETTLE_COST, SETTLE_DAYS, SETTLE_WOOD } from "../../domain/constants";
 import { getOwnedProvinceIds } from "../../domain/provinces/provinceRules";
-import { LOCALS_DRIVE_SUPPORT, LOCALS_LAND_PRICE } from "../../domain/constants";
+import { LOCALS_DRIVE_SUPPORT, LOCALS_LAND_PRICE, RELATIONS_LOCALS_DRIVEN } from "../../domain/constants";
+import { feel } from "../../domain/neighbours/relationsRules";
 import { getIslandData } from "../../domain/islands/islandData";
 import type { LocalsTerms } from "../../domain/islands/types";
 import { applyUniformDelta, getFactionWeights } from "../../domain/parties/factionRules";
@@ -75,8 +76,12 @@ export function foundSettlement(state: GameState, islandId: string, terms?: Loca
         : terms === "drive"
           ? `Settlers sail for ${name}, and ${locals!.name} are to be driven off: support ${LOCALS_DRIVE_SUPPORT}.`
           : `Settlers sail for ${name}. They land in about ${SETTLE_DAYS} days.`;
+  const neighbours = driven
+    ? Object.fromEntries(Object.entries(state.neighbours).map(([id, n]) => [id, feel(n, RELATIONS_LOCALS_DRIVEN, `You drove ${locals!.name} from their homes`)]))
+    : state.neighbours;
   return recordAction(state, {
     ...state,
+    neighbours,
     ...(driven ? { factionApproval: driven.factionApproval } : {}),
     stats: { ...state.stats, treasury: state.stats.treasury - getSettleCost(terms), ...(driven ? { popularity: driven.popularity } : {}) },
     resources: { ...state.resources, wood: state.resources.wood - SETTLE_WOOD },

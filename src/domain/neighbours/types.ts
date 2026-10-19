@@ -11,6 +11,13 @@ export interface Neighbour {
   homes: number;
   lastVoyageMonth: number | null; // when it last sent settlers to an island
   lastDeed: string | null; // what it did last month, in plain words, for the Neighbours page
+  relations: number; // -100 to 100: how it feels about you (see relationsRules.ts)
+  feelings: Feeling[]; // why, the latest first: the few things it remembers you for
+}
+
+export interface Feeling {
+  text: string; // what you did, in plain words
+  change: number; // what it did to how they feel
 }
 
 // How a neighbour likes to run its country: what it builds when nothing

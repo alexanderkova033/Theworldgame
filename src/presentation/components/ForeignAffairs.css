@@ -276,3 +276,16 @@
 .foreign-card__deed {
   margin: 0;
 }
+
+.foreign-card__feeling {
+  margin: 0;
+  cursor: help;
+}
+
+.foreign-card__feeling.is-warm strong {
+  color: var(--success);
+}
+
+.foreign-card__feeling.is-hostile strong {
+  color: var(--danger);
+}

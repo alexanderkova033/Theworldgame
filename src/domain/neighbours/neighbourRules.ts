@@ -27,6 +27,7 @@ import {
   NEIGHBOUR_UPKEEP_SHARE,
   NEIGHBOUR_VOYAGE_GAP_MONTHS,
   RACE_FROM_MONTH,
+  RELATIONS_HOSTILE_APPETITE,
   SETTLE_COST,
   PEOPLE_PER_HOME,
 } from "../constants";
@@ -34,6 +35,7 @@ import { getSeason } from "../country/calendar";
 import type { GameDate } from "../country/types";
 import { NATIONS } from "../nations/nationData";
 import { getPersonality } from "./neighbourData";
+import { isHostile } from "./relationsRules";
 import type { Neighbour } from "./types";
 
 // A number in [0, 1) fixed by the nation, the month and what it is for.
@@ -58,6 +60,8 @@ export function createNeighbour(nationId: string): Neighbour {
     homes: Math.ceil((population * 1.05) / PEOPLE_PER_HOME),
     lastVoyageMonth: null,
     lastDeed: null,
+    relations: 0,
+    feelings: [],
   };
 }
 
@@ -122,7 +126,9 @@ export function chooseVoyage(n: Neighbour, nationId: string, month: number, targ
   if (n.lastVoyageMonth !== null && month - n.lastVoyageMonth < NEIGHBOUR_VOYAGE_GAP_MONTHS) return false;
   const temper = getPersonality(nationId);
   if (n.treasury - SETTLE_COST < temper.reserve) return false;
-  return neighbourDice(nationId, month, "voyage") < temper.islandAppetite;
+  // A neighbour that resents you races you harder.
+  const appetite = temper.islandAppetite * (isHostile(n) ? RELATIONS_HOSTILE_APPETITE : 1);
+  return neighbourDice(nationId, month, "voyage") < appetite;
 }
 
 // One thing built a month, by need and then by temper.

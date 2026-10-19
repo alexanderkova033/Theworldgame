@@ -29,7 +29,7 @@ import { COLONY_DISTANCE_UNREST, COLONY_DISTANCE_UNREST_LINKED } from "../src/do
 import { updateProvinceOrder } from "../src/domain/provinces/provinceOrder";
 import { runTheRace } from "../src/application/day/race";
 import { beginDay } from "../src/application/day/dayContext";
-import { RACE_FROM_MONTH, RACE_TURNED_BACK_REFUND, RACE_VOYAGE_DAYS } from "../src/domain/constants";
+import { RACE_FROM_MONTH, RACE_TURNED_BACK_REFUND, RACE_VOYAGE_DAYS, RELATIONS_BEATEN_TO_ISLAND } from "../src/domain/constants";
 import { runNeighbours } from "../src/application/day/neighbours";
 
 function bounds(path: string) {
@@ -339,6 +339,8 @@ describe("the race for the islands", () => {
     const after = race(yours);
     expect(after.foreignIslands[kestrel]).toBeUndefined();
     expect(after.foreignVoyages).toEqual([]);
+    // And they resent it.
+    expect(after.neighbours.caldenreich.relations).toBe(yours.neighbours.caldenreich.relations + RELATIONS_BEATEN_TO_ISLAND);
   });
 
   it("is remembered by saves, and older saves have no claims", () => {

@@ -11,6 +11,8 @@ import { pickRaceTarget } from "../../domain/islands/islandRules";
 import { chooseBuilding, chooseVoyage, liveMonth } from "../../domain/neighbours/neighbourRules";
 import { getNation } from "../../domain/nations/nationRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
+import { fadeFeelings } from "../../domain/neighbours/relationsRules";
+import { isFriendly } from "../../domain/diplomacy/diplomacyRules";
 import { monthNumber } from "../chapters";
 import { log, type Day } from "./dayContext";
 
@@ -21,7 +23,10 @@ export function runNeighbours(day: Day, working: GameState, date: GameDate): Pic
   const neighbours: GameState["neighbours"] = {};
 
   for (const [nationId, before] of Object.entries(working.neighbours)) {
-    const { neighbour, deed } = chooseBuilding(liveMonth(before, nationId, date), nationId);
+    // Feelings fade, toward warm while the party you backed rules them.
+    const gov = working.foreignPolitics[nationId];
+    const faded = fadeFeelings(before, gov ? isFriendly(gov) : false);
+    const { neighbour, deed } = chooseBuilding(liveMonth(faded, nationId, date), nationId);
     // The islands are only raced for once the player can answer (ventures open).
     const target = isFeatureOpen(working, "ventures") ? pickRaceTarget({ ...working, foreignVoyages }) : null;
     if (chooseVoyage(neighbour, nationId, month, target)) {

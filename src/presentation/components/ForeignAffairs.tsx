@@ -7,7 +7,13 @@
 import "./ForeignAffairs.css";
 import { useState, type CSSProperties } from "react";
 import { canPressureGovernment, pressureGovernment } from "../../application/actions";
-import { FOREIGN_TAKEOVER_THRESHOLD, FRIENDLY_GOVERNMENT_INCOME_BONUS, PRESSURE_POLITICAL_POWER_COST } from "../../domain/constants";
+import {
+  FOREIGN_TAKEOVER_THRESHOLD,
+  FRIENDLY_GOVERNMENT_INCOME_BONUS,
+  PRESSURE_POLITICAL_POWER_COST,
+  RELATIONS_HOSTILE,
+  RELATIONS_WARM,
+} from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getPressureStrength, isFriendly } from "../../domain/diplomacy/diplomacyRules";
 import { getModifiers } from "../../domain/policy/policyRules";
@@ -18,6 +24,7 @@ import { playSeal } from "../audio/sound";
 import { StatIcon } from "./StatIcon";
 import { formatAmount, formatSigned } from "../formatNumber";
 import { getPersonality } from "../../domain/neighbours/neighbourData";
+import { relationsWord } from "../../domain/neighbours/relationsRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { BuildingGlyph } from "./CauseIcon";
 
@@ -89,6 +96,19 @@ function NeighbourState({ state, nationId }: { state: GameState; nationId: strin
   return (
     <div className="foreign-card__country">
       <p className="foreign-card__temper">{getPersonality(nationId).temper}</p>
+      <p
+        className={`foreign-card__feeling ${n.relations >= RELATIONS_WARM ? "is-warm" : n.relations <= RELATIONS_HOSTILE ? "is-hostile" : ""}`}
+        title={[
+          n.relations >= RELATIONS_WARM
+            ? "Warm: it campaigns for you in your elections, whoever rules it."
+            : n.relations <= RELATIONS_HOSTILE
+              ? "Hostile: it funds your opposition harder, and races you for the islands."
+              : "From +30 it campaigns for you; at -30 it works against you.",
+          ...n.feelings.map((f) => `${f.text}: ${formatSigned(f.change)}`),
+        ].join("\n")}
+      >
+        Towards you: <strong>{relationsWord(n.relations)}</strong> ({formatSigned(Math.round(n.relations))})
+      </p>
       <ul className="foreign-card__figures">
         <li title="People">
           <StatIcon type="population" size={15} />

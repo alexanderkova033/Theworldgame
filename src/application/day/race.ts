@@ -4,7 +4,8 @@
 // still bound there turn back with half their price. When a neighbour sets
 // out is its own ruler's choice, made with the rest of its month (see
 // day/neighbours.ts).
-import { RACE_TURNED_BACK_REFUND } from "../../domain/constants";
+import { RACE_TURNED_BACK_REFUND, RELATIONS_BEATEN_TO_ISLAND } from "../../domain/constants";
+import { feel } from "../../domain/neighbours/relationsRules";
 import type { GameState } from "../../domain/country/types";
 import { getIslandData } from "../../domain/islands/islandData";
 import { getNation } from "../../domain/nations/nationRules";
@@ -23,7 +24,14 @@ export function runTheRace(day: Day, state: GameState): GameState {
     const nation = getNation(landed.nationId).name;
     const island = getProvinceName(landed.islandId);
     if (working.settledIslandIds.includes(landed.islandId)) {
-      log(day, { date, message: `${nation}'s settlers reach ${island}, find it already yours, and turn back.`, severity: "info", topic: "venture" });
+      const loser = working.neighbours[landed.nationId];
+      if (loser) {
+        working = {
+          ...working,
+          neighbours: { ...working.neighbours, [landed.nationId]: feel(loser, RELATIONS_BEATEN_TO_ISLAND, `Your settlers beat theirs to ${island}`) },
+        };
+      }
+      log(day, { date, message: `${nation}'s settlers reach ${island}, find it already yours, and turn back. ${nation} won't forget it.`, severity: "info", topic: "venture" });
       continue;
     }
     // Yours still at sea turn back, with half what they cost (booked with

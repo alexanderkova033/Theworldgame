@@ -12,6 +12,9 @@ import {
   FRIENDLY_GOVERNMENT_INCOME_BONUS,
   PRESSURE_BASE,
   PRESSURE_MAX,
+  RELATIONS_HOSTILE,
+  RELATIONS_HOSTILE_MEDDLING,
+  RELATIONS_WARM,
   PRESSURE_MIN,
   PRESSURE_OFFSET,
 } from "../constants";
@@ -102,16 +105,20 @@ export interface ForeignMeddling {
 }
 
 // Monthly: each neighbour may lean on your elections. A friendly government
-// (ruled by the party you backed) campaigns for you; any other funds your
-// opposition. So who governs next door matters in both directions.
-export function rollForeignMeddling(foreignPolitics: Record<string, ForeignGovernment>): ForeignMeddling[] {
+// (ruled by the party you backed), or a neighbour warm toward you, campaigns
+// for you; any other funds your opposition, harder if it is hostile (see
+// neighbours/relationsRules.ts). So who governs next door, and how it
+// feels about you, matter in both directions.
+export function rollForeignMeddling(foreignPolitics: Record<string, ForeignGovernment>, relations: Record<string, number> = {}): ForeignMeddling[] {
   const moves: ForeignMeddling[] = [];
   for (const [nationId, gov] of Object.entries(foreignPolitics)) {
     if (Math.random() >= FOREIGN_MEDDLING_CHANCE_PER_MONTH) continue;
+    const feeling = relations[nationId] ?? 0;
+    const forYou = isFriendly(gov) || feeling >= RELATIONS_WARM;
     moves.push({
       nationId,
       partyId: gov.rulingPartyId,
-      supportDelta: isFriendly(gov) ? FOREIGN_MEDDLING_SUPPORT : -FOREIGN_MEDDLING_SUPPORT,
+      supportDelta: forYou ? FOREIGN_MEDDLING_SUPPORT : -FOREIGN_MEDDLING_SUPPORT * (feeling <= RELATIONS_HOSTILE ? RELATIONS_HOSTILE_MEDDLING : 1),
     });
   }
   return moves;

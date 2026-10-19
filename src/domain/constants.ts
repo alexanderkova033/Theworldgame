@@ -389,6 +389,18 @@ export const NEIGHBOUR_GROWTH_PER_MONTH = POPULATION_GROWTH_RATE * DAYS_PER_MONT
 // temper wants it (see domain/neighbours); whoever lands first keeps it.
 export const RACE_FROM_MONTH = 27; // months since the start before any neighbour sails
 export const NEIGHBOUR_VOYAGE_GAP_MONTHS = 8; // a neighbour sails at most this often
+
+// Relations (see domain/neighbours/relationsRules.ts): -100 to 100.
+export const RELATIONS_BACK_OPPOSITION = -6; // pushing their election toward the party out of power
+export const RELATIONS_BACK_RULERS = 3; // ...or toward the party in power
+export const RELATIONS_BEATEN_TO_ISLAND = -15; // your settlers landed before theirs
+export const RELATIONS_LOCALS_DRIVEN = -4; // you drove an island's people out (both neighbours)
+export const RELATIONS_FADE_PER_MONTH = 1; // feelings drift back toward where they rest...
+export const RELATIONS_FRIENDLY_REST = 20; // ...which is here while the party you backed rules them, else 0
+export const RELATIONS_WARM = 30; // from here they campaign for you, whoever rules them
+export const RELATIONS_HOSTILE = -30; // from here down they fund your opposition harder, and race you for islands
+export const RELATIONS_HOSTILE_MEDDLING = 1.5; // how much harder
+export const RELATIONS_HOSTILE_APPETITE = 1.5; // how much keener on islands
 export const RACE_VOYAGE_DAYS = 90; // their voyage out
 export const RACE_TURNED_BACK_REFUND = 0.5; // share of your settling price refunded when they beat you to it
 export const COLONY_DISTANCE_UNREST = 8; // a colony's mood sits this far below the nation's...
