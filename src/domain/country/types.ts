@@ -20,6 +20,7 @@ import type { Workforce } from "../workforce/types";
 import type { ChapterProgress } from "../chapters/chapterData";
 import type { BurdenId, GameMode } from "../reign/reignData";
 import type { Regiment } from "../military/types";
+import type { FreeProvince } from "../military/battleRules";
 
 export interface GameDate {
   year: number;
@@ -77,6 +78,7 @@ export type EventTopic =
   | "breakdown"
   | "repaired"
   | "venture"
+  | "army" // regiments fighting, a province taken back, a regiment lost (see domain/military)
   | "season"
   | "world"
   | "chapter"; // a chapter opening or completed (see domain/chapters)
@@ -154,6 +156,7 @@ export interface GameState {
   neighbours: Record<string, Neighbour>; // every nation but the player's, run by the computer (see domain/neighbours)
   pendingOffer: TradeOffer | null; // a neighbour's trade offer waiting for an answer (see domain/neighbours/tradeRules.ts)
   regiments: Regiment[]; // every country's regiments, on the map (see domain/military)
+  freeProvinces: Record<string, FreeProvince>; // provinces that broke away, held by their rebels: province id to who lives there and how strong (see domain/military/battleRules.ts)
   workforce: Workforce; // salaried scientists and police — see domain/workforce
   foreignPolitics: Record<string, ForeignGovernment>; // every nation but the player's — see domain/diplomacy
   market: MarketState; // the continental market's stock of every good — see domain/market

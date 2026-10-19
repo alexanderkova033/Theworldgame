@@ -25,6 +25,8 @@ import { advanceRegiment, findRoute, getGarrisonOrder, getGarrisons, getRegiment
 import { getNation } from "../src/domain/nations/nationRules";
 import { getNeighbours } from "../src/domain/provinces/provinceNeighbours";
 import { hydrateGameState } from "../src/presentation/hooks/gameSave";
+import { loseProvince } from "../src/application/loseProvince";
+import { forecastFight } from "../src/domain/military/battleRules";
 
 const start = startNewGame("astravia", "astravia-harvest-union");
 const base: GameState = { ...start, chapters: allChaptersOpen(), stats: { ...start.stats, treasury: 20000 }, isPaused: false };
@@ -106,7 +108,7 @@ describe("your regiments", () => {
   it("are paid every day, and one goes home when the treasury is empty", () => {
     const s = raiseRegiment(raiseRegiment(base));
     const day = beginDay(s);
-    expect(drillTheArmy(day, s, -1)).toHaveLength(1);
+    expect(drillTheArmy(day, s, -1).regiments).toHaveLength(1);
     expect(day.events.some((e) => e.message.includes("goes home unpaid"))).toBe(true);
     const next = simulateDay(s);
     // The fees for raising them land with the first day's pay.
@@ -186,5 +188,66 @@ describe("a garrison", () => {
     expect(left.uprising).not.toBeNull();
     expect(held.uprising).toBeNull();
     expect(held.aggrievedUntil).not.toBeNull();
+  });
+});
+
+describe("taking back a province that broke away", () => {
+  const lostId = astravia.find((id) => id !== capital && getNeighbours(capital).includes(id))!;
+  const lost = loseProvince(base, lostId);
+  const people = base.provinces[lostId].population;
+  const at = (s: GameState, provinceId: string, n: number, strength = 100): GameState => ({
+    ...s,
+    regiments: Array.from({ length: n }, () => ({ ...newRegiment(s.nationId, provinceId), trainingDays: 0, strength })),
+  });
+  const day = (s: GameState) => simulateDay({ ...s, isPaused: false, pendingDecisionId: null });
+  const run = (s: GameState, days: number) => {
+    for (let d = 0; d < days && s.lostProvinceIds.includes(lostId); d++) s = day(s);
+    return s;
+  };
+
+  it("remembers who lived there, held by rebels at full strength", () => {
+    expect(lost.freeProvinces[lostId]).toEqual({ people, strength: 100 });
+  });
+
+  it("can be marched into from next door", () => {
+    expect(getMarchRoute(at(lost, capital, 1), capital, lostId)).toEqual([{ provinceId: lostId, days: REGIMENT_MARCH_DAYS }]);
+  });
+
+  it("is fought for day by day: one regiment just wins, two win sooner and keep more men", () => {
+    const one = forecastFight([100], 100);
+    const two = forecastFight([100, 100], 100);
+    expect(one.won).toBe(true);
+    expect(two.won).toBe(true);
+    expect(two.days).toBeLessThan(one.days);
+    expect(two.left / 2).toBeGreaterThan(one.left);
+    expect(forecastFight([40], 100).won).toBe(false);
+  });
+
+  it("comes back with its people when its rebels are beaten, aggrieved, and the regiments worn", () => {
+    const won = run(at(lost, lostId, 2), 200);
+    expect(won.lostProvinceIds).not.toContain(lostId);
+    expect(won.freeProvinces[lostId]).toBeUndefined();
+    expect(won.provinces[lostId].population).toBeGreaterThan(0);
+    expect(won.provinces[lostId].aggrievedUntil).not.toBeNull();
+    expect(won.regiments.every((r) => r.strength < 100)).toBe(true);
+    expect(won.events.some((e) => e.message.includes("is taken back"))).toBe(true);
+  });
+
+  it("costs regiments worn to nothing, and rebels left alone regrow", () => {
+    const beaten = run(at(lost, lostId, 1, 10), 60);
+    expect(beaten.regiments).toHaveLength(0);
+    expect(beaten.lostProvinceIds).toContain(lostId);
+    const weakened = { ...lost, freeProvinces: { [lostId]: { people, strength: 50 } } };
+    expect(day(weakened).freeProvinces[lostId].strength).toBeGreaterThan(50);
+  });
+
+  it("lets worn regiments get their men back at home", () => {
+    expect(day(at(base, capital, 1, 50)).regiments[0].strength).toBeGreaterThan(50);
+  });
+
+  it("is remembered by saves; older saves hold their lost provinces with nobody in them", () => {
+    const old = JSON.parse(JSON.stringify(lost));
+    delete old.freeProvinces;
+    expect(hydrateGameState(old).freeProvinces).toEqual({ [lostId]: { people: 0, strength: 100 } });
   });
 });

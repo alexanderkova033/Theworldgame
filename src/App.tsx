@@ -15,6 +15,8 @@ import { ArmyPanel } from "./presentation/components/ArmyPanel";
 import { MarchBanner } from "./presentation/components/MapArmies";
 import { getMarchRoute, getReadyRegimentsIn, marchRegiments } from "./application/actions/armyActions";
 import { routeDays } from "./domain/military/militaryRules";
+import { forecastFight } from "./domain/military/battleRules";
+import { FREE_REBEL_REGROWTH_PER_DAY } from "./domain/constants";
 import { getAdvisorOutlook } from "./application/getAdvisorOutlook";
 import { getDailyProductionSummary } from "./application/getDailyProductionSummary";
 import { getForecasts } from "./application/getForecasts";
@@ -91,6 +93,11 @@ function App() {
         setMarchFrom(null);
         return;
       }
+      // One that broke away has no card: the Army window shows it.
+      if (latestState.current?.freeProvinces[provinceId]) {
+        if (latestState.current && isFeatureOpen(latestState.current, "army")) setOpenModal("army");
+        return;
+      }
       setSelectedProvinceId(provinceId);
       setProvinceCardOpen(true);
     },
@@ -105,10 +112,20 @@ function App() {
     (to: string) => {
       const s = latestState.current;
       const route = s && marchFrom ? getMarchRoute(s, marchFrom, to) : null;
-      return route ? { route: route.map((leg) => leg.provinceId), days: routeDays(route) } : null;
+      if (!s || !marchFrom || !route) return null;
+      const days = routeDays(route);
+      // Rebels gather strength while the regiments are on the way.
+      const free = s.freeProvinces[to];
+      const fight = free
+        ? forecastFight(
+            getReadyRegimentsIn(s, marchFrom).map((r) => r.strength),
+            Math.min(100, free.strength + days * FREE_REBEL_REGROWTH_PER_DAY),
+          )
+        : null;
+      return { route: route.map((leg) => leg.provinceId), days, fight };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [marchFrom, state?.settledIslandIds, state?.lostProvinceIds, state?.placedBuildings],
+    [marchFrom, state?.settledIslandIds, state?.lostProvinceIds, state?.placedBuildings, state?.freeProvinces],
   );
   const closeProvinceCard = useCallback(() => setProvinceCardOpen(false), []);
 
@@ -200,10 +217,18 @@ function App() {
     selectProvinceOnMap(ids[(at + 1) % ids.length]);
   }, [selectProvinceOnMap]);
 
-  const handleSelectIsland = useCallback((islandId: string) => {
-    setSelectedIslandId(islandId);
-    setOpenModal("ventures");
-  }, []);
+  const handleSelectIsland = useCallback(
+    (islandId: string) => {
+      // An island that broke away is fought for like a province.
+      if (marchFrom || latestState.current?.freeProvinces[islandId]) {
+        selectProvinceOnMap(islandId);
+        return;
+      }
+      setSelectedIslandId(islandId);
+      setOpenModal("ventures");
+    },
+    [marchFrom, selectProvinceOnMap],
+  );
 
   // Keyboard shortcuts: Space toggles pause, 1/2/3/5 set speed, N goes to the next province that needs you. Scoped to
   // "nothing else has focus" so they never double-fire alongside a focused
@@ -448,6 +473,7 @@ function App() {
             marchFrom={marchFrom}
             onPickArmy={pickArmy}
             planMarch={planMarch}
+            freeProvinces={isFeatureOpen(state, "army") ? state.freeProvinces : {}}
           />
           {marchFrom && (
             <MarchBanner

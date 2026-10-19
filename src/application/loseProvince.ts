@@ -4,6 +4,7 @@
 // lostProvinceIds, so every list of "your provinces" passes it by.
 import type { ProjectType } from "../domain/construction/types";
 import type { GameState } from "../domain/country/types";
+import { newFreeProvince } from "../domain/military/battleRules";
 
 export function loseProvince(state: GameState, provinceId: string): GameState {
   const gone = state.placedBuildings.filter((b) => b.provinceId === provinceId);
@@ -13,6 +14,8 @@ export function loseProvince(state: GameState, provinceId: string): GameState {
     ...state,
     provinces,
     lostProvinceIds: [...state.lostProvinceIds, provinceId],
+    // Its rebels hold it, at full strength, until regiments take it back.
+    freeProvinces: { ...state.freeProvinces, [provinceId]: newFreeProvince(lost?.population ?? 0) },
     placedBuildings: state.placedBuildings.filter((b) => b.provinceId !== provinceId),
     projects: state.projects.filter((p) => p.provinceId !== provinceId),
     // The country's tallies of each kind of building (homes are counted

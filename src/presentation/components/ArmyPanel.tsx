@@ -9,6 +9,7 @@ import { disbandRegiment, getMarchRoute, getYourRegiments, haltRegiments, raiseR
 import { CURRENCY_SYMBOL, GARRISON_ORDER, GARRISON_ORDER_CAP, POPULATION_PER_REGIMENT, REGIMENT_RAISE_COST, REGIMENT_SALARY, REGIMENT_TRAINING_DAYS } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getRegimentCap, regimentsOf, routeDays } from "../../domain/military/militaryRules";
+import { forecastFight } from "../../domain/military/battleRules";
 import type { Regiment } from "../../domain/military/types";
 import { getNation } from "../../domain/nations/nationRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
@@ -21,7 +22,11 @@ type Dispatch = (action: (state: GameState) => GameState) => void;
 // Where a regiment is and what it's doing, in a few words.
 function regimentStatus(state: GameState, r: Regiment): string {
   if (r.trainingDays > 0) return `At drill in ${getProvinceName(r.provinceId)}, ${r.trainingDays} days left`;
-  if (!r.march) return `Keeping order in ${getProvinceName(r.provinceId)}`;
+  if (!r.march) {
+    const free = state.freeProvinces[r.provinceId];
+    if (free) return `Fighting the rebels in ${getProvinceName(r.provinceId)} (rebels at ${Math.round(free.strength)})`;
+    return `Keeping order in ${getProvinceName(r.provinceId)}`;
+  }
   const to = r.march.route[r.march.route.length - 1];
   const rest = r.march.route.length > 1 ? getMarchRoute(state, r.march.route[0], to) : [];
   return `Marching to ${getProvinceName(to)}, ${r.march.daysLeft + routeDays(rest ?? [])} days`;
@@ -33,6 +38,7 @@ export function ArmyPanel({ state, dispatch }: { state: GameState; dispatch: Dis
   // Standing one down takes the newest not on the march.
   const standDown = [...yours].reverse().find((r) => !r.march) ?? yours[yours.length - 1];
   const neighbours = Object.keys(state.neighbours);
+  const lost = Object.entries(state.freeProvinces);
 
   return (
     <section className="army-panel">
@@ -66,6 +72,11 @@ export function ArmyPanel({ state, dispatch }: { state: GameState; dispatch: Dis
             {yours.map((r) => (
               <li key={r.id} className="army-panel__regiment">
                 <span className="army-panel__status">{regimentStatus(state, r)}</span>
+                {r.strength < 100 && (
+                  <span className="army-panel__strength" title="How many of its men are fit to fight, of 100. It gets them back resting in a province of yours.">
+                    strength {Math.round(r.strength)}
+                  </span>
+                )}
                 {r.march && r.march.route.length > 1 && (
                   <button type="button" className="army-panel__halt" onClick={() => dispatch((s) => haltRegiments(s, [r.id]))} title={`Stop in ${getProvinceName(r.march.route[0])}, the next place on the way`}>
                     Halt
@@ -81,6 +92,32 @@ export function ArmyPanel({ state, dispatch }: { state: GameState; dispatch: Dis
         </>
       ) : (
         <p className="army-panel__how">Raise a regiment, and it appears on the map in the capital. Once it has drilled, tap its counter, then a province, to march it there.</p>
+      )}
+
+      {lost.length > 0 && (
+        <>
+          <h3 className="army-panel__subhead">Lost provinces</h3>
+          <ul className="army-panel__list">
+            {lost.map(([id, free]) => {
+              const two = forecastFight([100, 100], free.strength);
+              return (
+                <li key={id} className="army-panel__regiment army-panel__lost">
+                  <StatIcon type="uprising" size={18} />
+                  <span className="army-panel__status">
+                    <strong>{getProvinceName(id)}</strong>: rebels at {Math.round(free.strength)} of 100, {formatAmount(free.people)} people
+                  </span>
+                  <span className="army-panel__strength" title="How long two regiments at full strength would take to beat them, once there">
+                    two regiments: {two.days} days
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="army-panel__how">
+            March regiments into a lost province and they fight its rebels until one side is beaten. Win, and it comes back with its people, aggrieved. Rebels left alone grow
+            stronger again.
+          </p>
+        </>
       )}
 
       <h3 className="army-panel__subhead">The neighbours' armies</h3>

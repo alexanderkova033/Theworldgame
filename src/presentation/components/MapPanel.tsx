@@ -20,7 +20,8 @@ import { UNREST_INFO } from "../unrestStages";
 import { JobsIcon, UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
-import { ArmyLayer } from "./MapArmies";
+import { ArmyLayer, type MarchPreview } from "./MapArmies";
+import type { FreeProvince } from "../../domain/military/battleRules";
 import type { Regiment } from "../../domain/military/types";
 
 const TERRAIN_LABELS: Record<Terrain, string> = {
@@ -70,7 +71,8 @@ interface MapPanelProps {
   regiments: Regiment[] | null; // every country's regiments, once the army is open (see domain/military)
   marchFrom: string | null; // where the regiments you picked up stand
   onPickArmy: (provinceId: string) => void; // a counter of yours tapped
-  planMarch: (to: string) => { route: string[]; days: number } | null; // the way there, for the preview
+  planMarch: (to: string) => MarchPreview | null; // the way there, for the preview
+  freeProvinces: Record<string, FreeProvince>; // provinces that broke away, held by rebels
 }
 
 // Every terrain gets a decorative texture, drawn on top of the province's
@@ -618,7 +620,7 @@ const MapLayers = memo(function MapLayers({
         const status = holder
           ? `${holder.name}'s`
           : lostProvinceIds.includes(land.id)
-          ? "broke away: free"
+          ? "broke away: free. March regiments here to take it back"
           : isScouted
             ? "charted"
             : isExpeditionActive
@@ -635,7 +637,7 @@ const MapLayers = memo(function MapLayers({
               venturesOpen ? "map-panel__unclaimed-land--clickable" : "",
               isSelected ? "is-selected" : "",
             ].join(" ")}
-            onClick={venturesOpen ? () => onIslandClick(land.id) : undefined}
+            onClick={venturesOpen || lostProvinceIds.includes(land.id) ? () => onIslandClick(land.id) : undefined}
           >
             <title>
               {land.name} ({status})
@@ -693,7 +695,7 @@ const MapLayers = memo(function MapLayers({
               isSelected ? "is-selected" : "",
             ].join(" ")}
             style={!isOwned ? { fill: owner ? washColor(owner.color) : "#a8946c" } : undefined}
-            onClick={isOwned ? () => onProvinceClick(province.id) : undefined}
+            onClick={isOwned || isFree ? () => onProvinceClick(province.id) : undefined}
             tabIndex={isOwned ? 0 : undefined}
             role={isOwned ? "button" : undefined}
             aria-label={isOwned ? `${province.name}${isSelected ? ", selected" : ""}` : undefined}
@@ -713,7 +715,7 @@ const MapLayers = memo(function MapLayers({
           >
             <title>
               {province.name}
-              {isOwned ? " (yours)" : isFree ? " (broke away: free)" : owner ? ` (${owner.name})` : " (unclaimed)"}
+              {isOwned ? " (yours)" : isFree ? " (broke away: free. March regiments here to take it back)" : owner ? ` (${owner.name})` : " (unclaimed)"}
             </title>
           </path>
         );
@@ -1022,6 +1024,7 @@ export const MapPanel = memo(function MapPanel({
   marchFrom,
   onPickArmy,
   planMarch,
+  freeProvinces,
 }: MapPanelProps) {
   const { provinces } = MAP_GEOMETRY;
 
@@ -1422,7 +1425,7 @@ export const MapPanel = memo(function MapPanel({
             settledIslandIds={settledIslandIds}
             foreignIslands={foreignIslands}
           />
-          {regiments && <ArmyLayer regiments={regiments} playerNationId={nation.id} marchFrom={marchFrom} onPick={handlePickArmy} preview={preview} />}
+          {regiments && <ArmyLayer regiments={regiments} playerNationId={nation.id} marchFrom={marchFrom} onPick={handlePickArmy} preview={preview} freeProvinces={freeProvinces} />}
         </svg>
 
         <div className="map-panel__zoom-controls">

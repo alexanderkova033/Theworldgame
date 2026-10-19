@@ -80,7 +80,7 @@ export function tendUprisings(
           lost.push(id);
           log(day, {
             date,
-            message: `${name} has broken away and declared itself free! Its people, homes and works are lost to you.`,
+            message: `${name} has broken away and declared itself free! Its people, homes and works are lost to you${isFeatureOpen(working, "army") ? ", unless regiments take it back" : ""}.`,
             severity: "danger",
             topic: "uprising",
           });

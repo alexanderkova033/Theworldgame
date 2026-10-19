@@ -43,6 +43,7 @@ import { movePeople } from "./day/people";
 import { tendUprisings } from "./day/uprisings";
 import { runNeighbours } from "./day/neighbours";
 import { drillTheArmy } from "./day/army";
+import { retakeProvince } from "./retakeProvince";
 import { loseProvince } from "./loseProvince";
 import { getNation } from "../domain/nations/nationRules";
 import { moveSupport } from "./day/support";
@@ -201,9 +202,14 @@ export function simulateDay(state: GameState): GameState {
 
   // The neighbours' month (and any trade offer they write) comes before
   // the clock decides whether to stop for a letter.
-  // Every regiment drills or marches a day (see day/army.ts).
-  const regiments = drillTheArmy(day, working, takings.treasury);
-  const neighbourMonth = runNeighbours(day, { ...working, regiments }, date);
+  // Every regiment drills, marches or fights a day (see day/army.ts); a
+  // province whose rebels are beaten comes back, with its people.
+  const army = drillTheArmy(day, working, takings.treasury);
+  const retakenPeople = army.retaken.reduce((sum, id) => sum + (working.freeProvinces[id]?.people ?? 0), 0);
+  working = army.retaken.reduce((s, id) => retakeProvince(s, id), { ...working, regiments: army.regiments });
+  working = { ...working, freeProvinces: army.freeProvinces };
+  const endStats: CountryStats = { ...finalStats, population: finalStats.population + retakenPeople };
+  const neighbourMonth = runNeighbours(day, working, date);
 
   return advanceChapters({
     ...working,
@@ -217,7 +223,7 @@ export function simulateDay(state: GameState): GameState {
     burdens: election.burdens,
     burdenOffer: election.burdenOffer,
     pendingDecisionId,
-    stats: finalStats,
+    stats: endStats,
     unrestStage: order.unrestStage,
     resources: month.resources,
     market: goods.market,
@@ -232,9 +238,9 @@ export function simulateDay(state: GameState): GameState {
     provinces: reconcileProvinces(
       working.provinces,
       getOwnedProvinceIds(working),
-      finalStats.population,
+      endStats.population,
       getHousingCapacityByProvince(working),
-      finalStats.stability,
+      endStats.stability,
     ),
     pendingLedger: emptyLedger(),
     lastDayLedger: mergeLedgers(delta.ledger ?? emptyLedger(), day.late),

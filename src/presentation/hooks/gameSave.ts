@@ -21,6 +21,7 @@ import { getStageForStability } from "../../domain/unrest/unrestRules";
 import { emptyWorkforce } from "../../domain/workforce/workforceRules";
 import { allChaptersOpen } from "../../domain/chapters/chapterData";
 import { createNeighbours } from "../../domain/neighbours/neighbourRules";
+import { newFreeProvince } from "../../domain/military/battleRules";
 
 // GameState has grown fields release over release (debt, researchOutcomes,
 // resourceDemand, ...), and a save is just a blind JSON round-trip with no
@@ -121,6 +122,8 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     pendingDemand: raw.pendingDemand ?? null,
     pendingOffer: raw.pendingOffer ?? null,
     regiments: raw.regiments ?? [],
+    // Older saves didn't remember who lived in a lost province: nobody, then.
+    freeProvinces: raw.freeProvinces ?? Object.fromEntries((raw.lostProvinceIds ?? []).map((id: string) => [id, newFreeProvince(0)])),
     lostProvinceIds: raw.lostProvinceIds ?? [],
     settlements: raw.settlements ?? [],
     settledIslandIds: raw.settledIslandIds ?? [],

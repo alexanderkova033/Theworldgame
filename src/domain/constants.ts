@@ -430,6 +430,12 @@ export const REGIMENT_SAIL_DAYS_LINKED = 10; // ...or between harbours, to an is
 export const GARRISON_ORDER = 6; // local order from each regiment standing in a province...
 export const GARRISON_ORDER_CAP = 2; // ...counting this many at most
 export const GARRISON_SUPPRESSION_PER_DAY = 1.5; // rebel strength each regiment standing in a risen province wears down, per day
+
+// Fighting (see domain/military/battleRules.ts).
+export const REGIMENT_ASSAULT_PER_DAY = 2; // rebel strength a regiment at full strength wears down in a day of fighting...
+export const REBEL_FIGHT_PER_DAY = 1.5; // ...and regiment strength rebels at full strength wear down, spread over the regiments there
+export const FREE_REBEL_REGROWTH_PER_DAY = 0.5; // rebels left alone in a free province gather strength again
+export const REGIMENT_RECOVERY_PER_DAY = 1; // a worn regiment standing in a province of yours gets its men back
 export const RACE_VOYAGE_DAYS = 90; // their voyage out
 export const RACE_TURNED_BACK_REFUND = 0.5; // share of your settling price refunded when they beat you to it
 export const COLONY_DISTANCE_UNREST = 8; // a colony's mood sits this far below the nation's...

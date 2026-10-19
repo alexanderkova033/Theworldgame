@@ -76,3 +76,19 @@
   font-variant-numeric: tabular-nums;
   font-weight: 700;
 }
+
+.army-panel__strength {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.army-panel__lost {
+  border-left-color: #8e2323;
+  justify-content: flex-start;
+}
+
+.army-panel__lost .army-panel__status {
+  flex: 1;
+}

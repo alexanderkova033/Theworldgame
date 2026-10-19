@@ -107,3 +107,36 @@
 .march-banner__cancel {
   padding: 0.2rem 0.8rem;
 }
+
+/* Rebels holding a province that broke away: dark red, under their banner. */
+.map-armies__field--rebels {
+  fill: #5e1410;
+}
+
+.map-armies__banner {
+  fill: #b3261e;
+  stroke: #f4ead0;
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+
+/* How strong a worn force still is. */
+.map-armies__strength-back {
+  fill: #2b1d12;
+  opacity: 0.6;
+}
+
+.map-armies__strength-fill {
+  fill: #e2c27a;
+}
+
+/* A march that would lose its fight. */
+.map-armies__preview.is-losing .map-armies__days-plate {
+  stroke: #b3261e;
+  stroke-width: 2;
+}
+
+/* Rebel strength runs to three figures: smaller, to stay on the counter. */
+.map-armies__count--rebels {
+  font-size: 11.5px;
+}

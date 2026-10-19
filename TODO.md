@@ -63,10 +63,11 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 
 - **Garrisons work only where they stand** (no garrisoned province rose in nine sloppy games), and a country can afford few, so they are a choice of where. The scripted player can keep them with `army: true` (tests/support/carefulPlayer.ts), which raises regiments when it has 3,000 Cr and stands each in the most troubled province without one.
 - **A careful player gains little from garrisons today**: it rarely riots. Their real use comes with war (phases C and D), when regiments on an island are what a landing must beat.
-- **A march can only go through your own land**, so a sea leg can't be blocked and a land march never enters a neighbour. Phase B opens lost provinces to it (`canEnterAsYou` in application/actions/armyActions.ts), phase C a neighbour's island.
+- **A march goes through your own land and lost provinces only** (`canEnterAsYou` in application/actions/armyActions.ts), so a sea leg can't be blocked and a land march never enters a neighbour. Phase C opens a neighbour's island to it.
+- **Fighting is deterministic** (domain/military/battleRules.ts: `fightRebels`, and `forecastFight` for the preview). Phase C can reuse it against a neighbour's garrison, with their regiments' strength in place of the rebels'.
+- **Scripted players never lose a province**, so no balance game retakes one; tests/army.test.ts plays the fight directly.
 - **A sea leg is drawn as a straight line**, and can cross a neighbour's land on the map. A ship's way round the coast would read better.
 - **The neighbours' regiments stand where they were raised.** They need orders of their own (to their coast before a voyage, to an island they hold) once islands can be fought over.
-- **Strength is always 100.** Fighting (phase B) is what wears it down; recovery at rest comes with it.
 - **The browser check:** run tests/support scripts or the iPad driver from PowerShell (Start-Process), not from Git Bash in the background: from Git Bash the driver hung and looked like a frozen page.
 
 ## Process reminders
