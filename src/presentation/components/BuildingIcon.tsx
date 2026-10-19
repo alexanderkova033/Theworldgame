@@ -13,6 +13,7 @@ export const BUILDING_COLORS: Record<ProjectType, string> = {
   granary: "#c9a45c",
   cannery: "#6ea3c9",
   housing: "#e0a87a",
+  harbour: "#5b7f99",
 };
 
 interface BuildingIconProps {
@@ -91,6 +92,16 @@ export function BuildingIcon({ type, x, y, size = 5 }: BuildingIconProps) {
             <ellipse cx={x} cy={y + size * 0.05} rx={size * 0.32} ry={size * 0.16} />
             <polygon points={`${x + size * 0.28},${y + size * 0.05} ${x + size * 0.44},${y - size * 0.06} ${x + size * 0.44},${y + size * 0.16}`} />
           </g>
+        </g>
+      );
+    case "harbour":
+      // An anchor: a ring, a shank with its stock, and two curved flukes.
+      return (
+        <g fill="none" stroke={color} strokeLinecap="round" strokeWidth={size * 0.28}>
+          <circle cx={x} cy={y - size * 0.95} r={size * 0.28} />
+          <line x1={x} y1={y - size * 0.67} x2={x} y2={y + size * 0.95} />
+          <line x1={x - size * 0.55} y1={y - size * 0.35} x2={x + size * 0.55} y2={y - size * 0.35} />
+          <path d={`M${x - size * 0.95},${y + size * 0.25} Q${x - size * 0.8},${y + size * 1.05} ${x},${y + size * 0.95} Q${x + size * 0.8},${y + size * 1.05} ${x + size * 0.95},${y + size * 0.25}`} />
         </g>
       );
     case "housing":

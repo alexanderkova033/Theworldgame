@@ -7,8 +7,8 @@ import "./ActionsPanel.css";
 import { getModifiers } from "../../domain/policy/policyRules";
 import type { ReactNode } from "react";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
-import { buildCannery, buildEducation, buildFactory, buildFarm, buildGranary, buildHousing, buildRoad, buyAndBuild, countBuildingsInProvince, planBuyAndBuild } from "../../application/actions";
-import { getBuildCost, type BuildAction } from "../../application/actions/createBuildAction";
+import { buildCannery, buildEducation, buildFactory, buildFarm, buildGranary, buildHarbour, buildHousing, buildRoad, buyAndBuild, countBuildingsInProvince, planBuyAndBuild } from "../../application/actions";
+import { getBuildCostIn, type BuildAction } from "../../application/actions/createBuildAction";
 import {
   CANNERY_BUILD_DAYS,
   CANNERY_COST,
@@ -31,6 +31,9 @@ import {
   GRANARY_BUILD_DAYS,
   GRANARY_COST,
   GRANARY_WOOD_COST,
+  HARBOUR_BUILD_DAYS,
+  HARBOUR_COST,
+  HARBOUR_WOOD_COST,
   HEATING_FUEL_PER_HOME,
   HOUSING_BUILD_DAYS,
   HOUSING_COST,
@@ -42,6 +45,7 @@ import {
   ROAD_COST,
   ROAD_EFFICIENCY_BONUS,
   ROAD_ORE_COST,
+  SUPPLY_FEE_PER_DAY,
 } from "../../domain/constants";
 import type { ProjectType } from "../../domain/construction/types";
 import { getSeason, type Season } from "../../domain/country/calendar";
@@ -58,7 +62,7 @@ import { BuildingIcon } from "./BuildingIcon";
 import { WrenchIcon } from "./RepairsPanel";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
-import { LockIcon } from "./CauseIcon";
+import { BuildingGlyph, LockIcon } from "./CauseIcon";
 import { chapterFor, isFeatureOpen } from "../../domain/chapters/chapterData";
 
 interface ActionsPanelProps {
@@ -94,12 +98,13 @@ function ResourceGlyph({ type, size = 14 }: { type: ResourceType; size?: number 
   );
 }
 
-type BuildGroup = "people" | "food" | "industry";
+type BuildGroup = "people" | "food" | "industry" | "sea";
 
 const GROUPS: Array<{ key: BuildGroup; title: string }> = [
   { key: "people", title: "Homes & learning" },
   { key: "food", title: "Food" },
   { key: "industry", title: "Industry & roads" },
+  { key: "sea", title: "The sea" },
 ];
 
 interface BuildItem {
@@ -246,13 +251,32 @@ const BUILD_ITEMS: BuildItem[] = [
     hint: `Turns up to ${FISH_PROCESSED_PER_CANNERY} Fish/day into ${formatAmount((FISH_PROCESSED_PER_CANNERY * FOOD_PER_FISH))} food/day, stock permitting`,
     unlockedBy: "agriculture-cannery-works",
   },
+  {
+    type: "harbour",
+    group: "sea",
+    summary: "Links a settled island to the mainland. Needs one on each side.",
+    name: "Harbour",
+    action: buildHarbour,
+    cost: HARBOUR_COST,
+    resourceCost: HARBOUR_WOOD_COST,
+    resourceType: "wood",
+    buildDays: HARBOUR_BUILD_DAYS,
+    yields: (
+      <>
+        <BuildingGlyph type="harbour" size={16} />
+        link
+      </>
+    ),
+    hint: `On the coast or an island. With one on a settled island and one on a coastal province of yours, people cross between them as they would by land, and the island needs no ships chartered to supply it (${SUPPLY_FEE_PER_DAY} Cr a day saved).`,
+  },
 ];
 
 // Why this building can't go up right now — the first thing in the way,
 // in words. Null when it can.
-function blockedReason(item: BuildItem, cost: number, state: GameState, provinceName: string, count: number, max: number, unlockName: string | undefined, isLocked: boolean, shutUntil?: string): string | null {
+function blockedReason(item: BuildItem, cost: number, state: GameState, provinceId: string, provinceName: string, count: number, max: number, unlockName: string | undefined, isLocked: boolean, shutUntil?: string): string | null {
   if (shutUntil) return `Locked. ${shutUntil}.`;
   if (isLocked) return `Locked. Research “${unlockName ?? "a new technique"}” first.`;
+  if (item.action.config.allowedIn && !item.action.config.allowedIn.test(provinceId)) return item.action.config.allowedIn.reason;
   if (count >= max) return `No room: all ${max} are built or underway in ${provinceName}.`;
   const moneyShort = upfront(cost) - state.stats.treasury;
   if (moneyShort > 0) return `Need ${formatAmount(Math.ceil(moneyShort))} more ${CURRENCY_SYMBOL} to start.`;
@@ -321,7 +345,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
               const count = countBuildingsInProvince(state, item.type, selectedProvinceId);
               const max = item.action.maxPerProvince;
               const canBuild = !isLocked && item.action.canBuild(state, selectedProvinceId);
-              const cost = getBuildCost(state, item.cost);
+              const cost = getBuildCostIn(state, item.action.config, selectedProvinceId);
               const treasury = Math.floor(state.stats.treasury);
               const stock = Math.floor(state.resources[item.resourceType]);
               // Short: can't even start. Partial: can start, but today's
@@ -338,7 +362,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
                 ? `Rebels hold ${provinceName}. Nothing can be built there until the uprising ends.`
                 : plan
                 ? `Need ${Math.ceil(upfront(item.resourceCost) - state.resources[item.resourceType])} more ${item.resourceType}. Buy & build gets ${Math.round(plan.amount)} for ${formatAmount(Math.round(plan.goodsCost))} ${CURRENCY_SYMBOL}.`
-                : blockedReason(item, cost, state, provinceName, count, max, unlockName, isLocked, shutUntil);
+                : blockedReason(item, cost, state, selectedProvinceId, provinceName, count, max, unlockName, isLocked, shutUntil);
               const workers = item.type in jobsPer ? jobsPer[item.type as JobBuilding] : 0;
 
               return (

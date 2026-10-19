@@ -22,6 +22,8 @@ import {
   REPAIR_DAYS,
   ROAD_COST,
   ROAD_ORE_COST,
+  HARBOUR_COST,
+  HARBOUR_WOOD_COST,
 } from "../constants";
 import type { ProjectType } from "../construction/types";
 import type { GameState } from "../country/types";
@@ -36,6 +38,7 @@ const BUILD_PRICES: Record<ProjectType, { treasury: number; resourceType: Resour
   granary: { treasury: GRANARY_COST, resourceType: "wood", resourceAmount: GRANARY_WOOD_COST },
   cannery: { treasury: CANNERY_COST, resourceType: "ore", resourceAmount: CANNERY_ORE_COST },
   housing: { treasury: HOUSING_COST, resourceType: "wood", resourceAmount: HOUSING_WOOD_COST },
+  harbour: { treasury: HARBOUR_COST, resourceType: "wood", resourceAmount: HARBOUR_WOOD_COST },
 };
 
 export interface RepairCost {

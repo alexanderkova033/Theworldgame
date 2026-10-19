@@ -1,8 +1,19 @@
 import "./ExpeditionPanel.css";
-import { canFoundSettlement, canSendExpedition, foundSettlement, sendExpedition } from "../../application/actions";
-import { CURRENCY_SYMBOL, EXPEDITION_COST, EXPEDITION_DAYS, SETTLE_COST, SETTLE_DAYS, SETTLE_WOOD } from "../../domain/constants";
+import { canFoundSettlement, canSendExpedition, canSendMoreSettlers, foundSettlement, sendExpedition, sendMoreSettlers } from "../../application/actions";
+import {
+  CURRENCY_SYMBOL,
+  EXPEDITION_COST,
+  EXPEDITION_DAYS,
+  MORE_SETTLERS_COST,
+  MORE_SETTLERS_DAYS,
+  SETTLE_COST,
+  SETTLE_DAYS,
+  SETTLE_PEOPLE,
+  SETTLE_WOOD,
+  SUPPLY_FEE_PER_DAY,
+} from "../../domain/constants";
 import { getIslandData } from "../../domain/islands/islandData";
-import { whyNotSettle } from "../../domain/islands/islandRules";
+import { getLinkedIslands, whyNotSettle } from "../../domain/islands/islandRules";
 import { formatAmount } from "../formatNumber";
 import type { GameState } from "../../domain/country/types";
 import { getIslandExpeditionData } from "../../domain/expeditions/expeditionData";
@@ -71,7 +82,26 @@ function SettleSection({ state, islandId, dispatch }: { state: GameState; island
         </p>
       )}
       {state.settledIslandIds.includes(islandId) && !state.lostProvinceIds.includes(islandId) && (
-        <p className="expedition-panel__hint">Settled: one of your provinces.</p>
+        <>
+          <p className="expedition-panel__hint">
+            Settled: one of your provinces.{" "}
+            {getLinkedIslands(state).has(islandId)
+              ? "Linked to the mainland by harbours."
+              : `Not linked: ships chartered to supply it cost ${SUPPLY_FEE_PER_DAY} ${CURRENCY_SYMBOL} a day. A harbour there and one on your coast link it.`}
+          </p>
+          {!sailing && (
+            <button
+              disabled={!canSendMoreSettlers(state, islandId)}
+              title={`${SETTLE_PEOPLE} more settlers from your most crowded province, in about ${MORE_SETTLERS_DAYS} days`}
+              onClick={() => {
+                playShipBell();
+                dispatch((s) => sendMoreSettlers(s, islandId));
+              }}
+            >
+              Send More Settlers ({formatAmount(MORE_SETTLERS_COST)} {CURRENCY_SYMBOL})
+            </button>
+          )}
+        </>
       )}
       {state.lostProvinceIds.includes(islandId) && <p className="expedition-panel__hint">Broke away, and is free.</p>}
       {sailing && (
@@ -86,7 +116,7 @@ function SettleSection({ state, islandId, dispatch }: { state: GameState; island
         <button
           className="btn-primary"
           disabled={!canFoundSettlement(state, islandId)}
-          title={short ?? `Settlers sail with the makings of their first homes, and land in about ${SETTLE_DAYS} days. They come from your most crowded province.`}
+          title={short ?? `${SETTLE_PEOPLE} settlers sail with the makings of their first homes and a farm, and land in about ${SETTLE_DAYS} days. They come from your most crowded province.`}
           onClick={() => {
             playShipBell();
             dispatch((s) => foundSettlement(s, islandId));

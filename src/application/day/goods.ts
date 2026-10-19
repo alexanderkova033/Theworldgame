@@ -9,7 +9,7 @@ import { accrueInterest, isDebtDangerous } from "../../domain/loans/loanRules";
 import { updateMarket } from "../../domain/market/marketRules";
 import { addResources, calculateDailyProduction } from "../../domain/resources/resourceRules";
 import { log, type Day } from "./dayContext";
-import { getOwnedProvinceIds, getPlace } from "../../domain/provinces/provinceRules";
+import { getProducingTerrains } from "../../domain/islands/islandRules";
 
 export interface Goods {
   resources: GameState["resources"]; // after processing and heating
@@ -23,8 +23,7 @@ export function produceGoods(day: Day, working: GameState, labour: LabourSituati
   const date = day.start.date;
 
   // 2a. Raw resources: every owned province produces its terrain's resource.
-  const ownedTerrains = getOwnedProvinceIds(working).map((provinceId) => getPlace(provinceId)!.terrain);
-  const producedResources = addResources(working.resources, calculateDailyProduction(ownedTerrains, day.season));
+  const producedResources = addResources(working.resources, calculateDailyProduction(getProducingTerrains(working), day.season));
   const market = updateMarket(working.market, day.season, isFirstDayOfMonth(date));
 
   // 2b. Granaries and canneries turn today's grain and fish into food,

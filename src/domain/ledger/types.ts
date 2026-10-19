@@ -3,7 +3,7 @@
 // simulateDay.ts and application/actions/recordAction.ts), and summed into
 // each MonthlyReport — so the Reports tab can say "the treasury fell because
 // of wages and building", not just "the treasury fell".
-export type TreasuryCause = "taxes" | "industry" | "salaries" | "construction" | "trade" | "loans" | "oneOffs" | "events";
+export type TreasuryCause = "taxes" | "industry" | "salaries" | "construction" | "trade" | "loans" | "oneOffs" | "events" | "colonies";
 
 export type FoodCause = "farms" | "processing" | "eating" | "trade" | "oneOffs" | "events";
 

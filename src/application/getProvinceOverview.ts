@@ -10,6 +10,7 @@ import {
 } from "../domain/constants";
 import type { GameDate, GameState } from "../domain/country/types";
 import { isInForce } from "../domain/uprising/demandRules";
+import { getLinkedIslands } from "../domain/islands/islandRules";
 import { getHousingCapacityByProvince } from "../domain/housing/housingRules";
 import { getLabourSituation, type Sector, type SectorJobs } from "../domain/labour/labourRules";
 import { getNation } from "../domain/nations/nationRules";
@@ -60,7 +61,7 @@ export function getProvinceOverview(state: GameState): ProvinceOverview[] {
   const nation = getNation(state.nationId);
   const capacity = getHousingCapacityByProvince(state);
   const labour = getLabourSituation(state);
-  const migration = planMigration(state.provinces, capacity, labour.provinces);
+  const migration = planMigration(state.provinces, capacity, labour.provinces, getLinkedIslands(state));
   return getOwnedProvinceIds(state).map((id) => {
     const p = state.provinces[id];
     const l = labour.provinces[id];

@@ -9,7 +9,8 @@ import { useEffect, type ReactNode } from "react";
 import { buyAndBuild, repairBuilding } from "../../application/actions";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
 import { getProvinceSuggestions, type Suggestion } from "../../application/getProvinceSuggestions";
-import { CURRENCY_SYMBOL } from "../../domain/constants";
+import { CURRENCY_SYMBOL, SUPPLY_FEE_PER_DAY } from "../../domain/constants";
+import { getLinkedIslands, isIsland } from "../../domain/islands/islandRules";
 import { getRepairCost } from "../../domain/maintenance/maintenanceRules";
 import { getModifiers } from "../../domain/policy/policyRules";
 import { playBuild } from "../audio/sound";
@@ -38,6 +39,7 @@ const BUILDING_NAMES: Record<ProjectType, [string, string]> = {
   education: ["School", "Schools"],
   granary: ["Granary", "Granaries"],
   cannery: ["Cannery", "Canneries"],
+  harbour: ["Harbour", "Harbours"],
 };
 
 const SECTOR_LABELS: Array<[Sector, string]> = [
@@ -322,6 +324,14 @@ export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }
                 );
               })}
         </Fact>
+
+        {isIsland(province.id) && (
+          <Fact icon={<BuildingGlyph type="harbour" size={16} />} label="Sea" alert={!getLinkedIslands(state).has(province.id)}>
+            {getLinkedIslands(state).has(province.id)
+              ? "Linked to the mainland by harbours: people cross freely"
+              : `Not linked: supply ships cost ${SUPPLY_FEE_PER_DAY} ${CURRENCY_SYMBOL} a day. A harbour here and one on your coast link it.`}
+          </Fact>
+        )}
 
         {projects.length > 0 && (
           <Fact icon={<HourglassIcon size={16} />} label="Underway">

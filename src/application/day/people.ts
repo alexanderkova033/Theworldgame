@@ -14,6 +14,7 @@ import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { isWorseStage } from "../../domain/unrest/unrestRules";
 import { isInForce } from "../../domain/uprising/demandRules";
 import { getSpreadUnrest } from "../../domain/uprising/uprisingRules";
+import { getLinkedIslands } from "../../domain/islands/islandRules";
 import type { UnrestStage } from "../../domain/unrest/types";
 import { log, type Day } from "./dayContext";
 
@@ -51,7 +52,7 @@ export function movePeople(
       },
     ]),
   );
-  const migrated = applyMigration(grown, planMigration(grown, today.capacityByProvince, today.labour.provinces));
+  const migrated = applyMigration(grown, planMigration(grown, today.capacityByProvince, today.labour.provinces, getLinkedIslands(working)));
   const population = getProvincePopulationTotal(migrated);
 
   // A province striking or rioting worse than the rest is announced.

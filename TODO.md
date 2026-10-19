@@ -38,10 +38,10 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 
 ## Islands: notes for the next phase
 
-- **Settlers land with homes but no work.** A new colony's workers are all jobless, so it slides toward strikes until something is built there. Phase B should give it a start (its trait's workplace, or settlers bringing tools), and decide whether that is a gift or a cost.
-- **What a colony is worth isn't measured yet.** Scripted players don't settle, so balance is unchanged. Phase B adds the costs of the sea (supply fee, harbours) and should teach the careful player to settle, then measure whether one pays its way within about two years.
-- **Taxes and output come for free once settled.** The only running cost of a colony today is what you build there. The supply fee in phase B is the lever.
-- **Settled islands use the province systems unchanged** (homes, jobs, unrest, uprisings, breaking away), except commuting and migration, which stop at the shore. Phase D only needs to tune them (distance), not build them.
+- **Colonies are an investment, not a profit, within five years.** Measured 2026-10-19: settling and linking all three empty islands leaves a careful player about 3,800 Cr poorer after five years (ventures included) and about 4% bigger. Phase C's peopled islands start with people, so they should pay back faster; keep an eye that they don't make the empty ones pointless.
+- **The scripted player settles only with `settle: true`** (tests/support/carefulPlayer.ts), so the balance tests measure a country that never settles. Phase C should extend that habit to peopled islands, and phase E (the race) will want it on by default.
+- **Settled islands use the province systems unchanged** (homes, jobs, unrest, uprisings, breaking away), except commuting, which stops at the shore, and migration, which crosses only between harbours. Phase D only needs to tune them (distance), not build them.
+- **Locals are data only so far** (domain/islands/islandData.ts): a name and a number on three islands. Phase C decides what settling among them means, through the letter system (domain/uprising/demandRules.ts is the pattern).
 
 ## Process reminders
 

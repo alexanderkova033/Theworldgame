@@ -35,9 +35,11 @@ export function planMigration(
   provinces: Record<string, ProvinceState>,
   capacityByProvince: Record<string, number>,
   labour: Record<string, ProvinceLabour>,
+  linkedIslands: ReadonlySet<string> = new Set(),
 ): Record<string, number> {
-  // By land only: an island's people stay put, and nobody walks to one.
-  const ids = Object.keys(provinces).filter((id) => !isIsland(id));
+  // By land, or across the sea between harbours: an island not linked to
+  // the mainland keeps its people, and nobody reaches it (domain/islands).
+  const ids = Object.keys(provinces).filter((id) => !isIsland(id) || linkedIslands.has(id));
   const room: Record<string, number> = {};
   const homeless: Record<string, number> = {};
   const jobless: Record<string, number> = {};

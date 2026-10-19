@@ -21,6 +21,9 @@ import { hydrateGameState } from "../src/presentation/hooks/gameSave";
 import { seedRandom } from "./support/seededRandom";
 
 beforeEach(() => seedRandom(20261019));
+// Shared states below are built as the file loads, before any test runs:
+// seed them too, so they don't depend on which test file ran first.
+seedRandom(20261019);
 
 describe("the map's neighbours", () => {
   it("go both ways, and every province has one", () => {

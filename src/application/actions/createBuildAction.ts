@@ -28,6 +28,12 @@ export interface BuildActionConfig {
   requiresResearch?: boolean;
   // A building that belongs to a system still shut (see domain/chapters).
   feature?: Feature;
+  // Only in some provinces (a harbour: on the coast or an island), with
+  // the reason for the Build window when not.
+  allowedIn?: { test: (provinceId: string) => boolean; reason: string };
+  // A province where it costs more or less than usual (a harbour on a
+  // sheltered anchorage).
+  costShareIn?: (provinceId: string) => number;
 }
 
 // A build action is a function, but also carries its own affordability
@@ -68,14 +74,21 @@ export function getBuildCost(state: GameState, baseCost: number): number {
   return Math.round(baseCost * getModifiers(state).buildCostMultiplier);
 }
 
+// What it costs in this province: the usual price (see getBuildCost), times
+// any share the province has for this building.
+export function getBuildCostIn(state: GameState, config: BuildActionConfig, provinceId: string): number {
+  return getBuildCost(state, config.cost) * (config.costShareIn?.(provinceId) ?? 1);
+}
+
 export function createBuildAction(config: BuildActionConfig): BuildAction {
   function canBuild(state: GameState, provinceId: string): boolean {
     return (
       (!config.feature || isFeatureOpen(state, config.feature)) &&
       (!config.requiresResearch || isBuildingUnlocked(state.enactedResearchIds, config.type)) &&
-      canAfford(state.stats, upfrontCost(getBuildCost(state, config.cost))) &&
+      canAfford(state.stats, upfrontCost(getBuildCostIn(state, config, provinceId))) &&
       canAffordResource(state.resources, config.resourceType, upfrontCost(config.resourceCost)) &&
       countBuildingsInProvince(state, config.type, provinceId) < config.maxPerProvince &&
+      (!config.allowedIn || config.allowedIn.test(provinceId)) &&
       // Only in a province the country holds, and not where rebels hold the
       // ground (see domain/uprising).
       state.provinces[provinceId] !== undefined &&
@@ -86,7 +99,7 @@ export function createBuildAction(config: BuildActionConfig): BuildAction {
   function build(state: GameState, provinceId: string): GameState {
     if (!canBuild(state, provinceId)) return state;
 
-    const cost = getBuildCost(state, config.cost);
+    const cost = getBuildCostIn(state, config, provinceId);
     const treasuryUpfront = upfrontCost(cost);
     const resourceUpfront = upfrontCost(config.resourceCost);
 

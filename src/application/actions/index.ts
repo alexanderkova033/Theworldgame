@@ -20,4 +20,5 @@ export { setTaxRate } from "./setTaxRate";
 export { canCourtGroup, canCrackDown, canHoldRally, courtGroup, crackDown, holdRally } from "./politicalActions";
 export { canDisbandMilitia, canRaiseMilitia, canRecallMilitia, canSendMilitia, disbandMilitia, raiseMilitia, recallMilitia, sendMilitia } from "./militiaActions";
 export { answerDemand, canAnswerDemand, getDemandAnswers } from "./demandActions";
-export { canFoundSettlement, foundSettlement } from "./settlementActions";
+export { canFoundSettlement, canSendMoreSettlers, foundSettlement, sendMoreSettlers } from "./settlementActions";
+export { buildHarbour } from "./buildHarbour";

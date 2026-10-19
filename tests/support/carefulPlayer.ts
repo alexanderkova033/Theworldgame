@@ -14,6 +14,14 @@ import { canRaiseMilitia, canSendMilitia, raiseMilitia, sendMilitia } from "../.
 import { answerDemand, canAnswerDemand } from "../../src/application/actions/demandActions";
 import { dayNumber } from "../../src/domain/country/calendar";
 import { getFreeMilitia } from "../../src/domain/uprising/uprisingRules";
+import { buildHarbour } from "../../src/application/actions/buildHarbour";
+import { canFoundSettlement, foundSettlement } from "../../src/application/actions/settlementActions";
+import { canSendExpedition, sendExpedition } from "../../src/application/actions/sendExpedition";
+import { isFeatureOpen } from "../../src/domain/chapters/chapterData";
+import { HARBOUR_WOOD_COST, SETTLE_WOOD } from "../../src/domain/constants";
+import { ISLANDS } from "../../src/domain/islands/islandData";
+import { isHarbourSite, isIsland } from "../../src/domain/islands/islandRules";
+import { getOwnedProvinceIds } from "../../src/domain/provinces/provinceRules";
 import { focusResearch } from "../../src/application/actions/researchActions";
 import { resolveDecision } from "../../src/application/actions/resolveDecision";
 import { setTaxRate } from "../../src/application/actions/setTaxRate";
@@ -86,9 +94,10 @@ export interface PlayOptions {
   // only when it's nearly gone. Difficulty levels are measured against both.
   skill?: "careful" | "sloppy";
   mode?: GameMode; // Three Terms by default; a Long Reign plays on past the third election
+  settle?: boolean; // also scouts the empty islands, settles them and links them with harbours
 }
 
-export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty, skill = "careful", mode }: PlayOptions): GameState {
+export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty, skill = "careful", mode, settle = false }: PlayOptions): GameState {
   const sloppy = skill === "sloppy";
   let s = takeLoan(startNewGame(nation, party, difficulty, mode));
   if (!sloppy) s = setTaxRate(s, 0.12);
@@ -155,8 +164,36 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
       if (!s.researchFocus[area] && next && getResearchNodeStatus(s, next) === "available") s = focusResearch(s, next.id);
     }
 
+    if (settle) s = settleIslands(s);
     s = simulateDay({ ...s, isPaused: false });
     onDay?.(s);
+  }
+  return s;
+}
+
+// Scout the empty islands one by one, settle each once there's money to
+// spare, and link every colony with a harbour there and one on the coast.
+function settleIslands(state: GameState): GameState {
+  let s = state;
+  if (!isFeatureOpen(s, "ventures")) return s;
+  const empty = ISLANDS.filter((i) => !i.locals).map((i) => i.id);
+  const unscouted = empty.find((id) => !s.scoutedIslandIds.includes(id));
+  if (unscouted && s.expeditions.length === 0 && s.stats.treasury > 2500 && canSendExpedition(s, unscouted)) s = sendExpedition(s, unscouted);
+  if (s.settlements.length === 0 && s.stats.treasury > 5000) {
+    const stocked = ensure(s, "wood", SETTLE_WOOD + 5);
+    const ready = empty.find((id) => canFoundSettlement(stocked, id));
+    if (ready) s = foundSettlement(stocked, ready);
+  }
+  const held = getOwnedProvinceIds(s);
+  const colonies = held.filter(isIsland);
+  if (colonies.length > 0 && s.stats.treasury > 4000) {
+    const hasHarbour = (id: string) => s.placedBuildings.some((b) => b.provinceId === id && b.type === "harbour") || s.projects.some((p) => p.provinceId === id && p.type === "harbour");
+    const coastHarbour = held.some((id) => !isIsland(id) && hasHarbour(id));
+    const sites = [...(coastHarbour ? [] : held.filter((id) => !isIsland(id) && isHarbourSite(id)).slice(0, 1)), ...colonies.filter((id) => !hasHarbour(id))];
+    for (const site of sites) {
+      const stocked = ensure(s, "wood", HARBOUR_WOOD_COST + 5);
+      if (buildHarbour.canBuild(stocked, site)) s = buildHarbour(stocked, site);
+    }
   }
   return s;
 }

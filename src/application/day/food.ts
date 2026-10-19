@@ -3,6 +3,7 @@
 import type { GameState } from "../../domain/country/types";
 import { produceFood, updateFood } from "../../domain/food/foodRules";
 import type { LabourSituation } from "../../domain/labour/labourRules";
+import { getGrazingFood } from "../../domain/islands/islandRules";
 import { book, log, type Day } from "./dayContext";
 
 export interface Harvest {
@@ -11,8 +12,10 @@ export interface Harvest {
 }
 
 export function feedThePeople(day: Day, working: GameState, labour: LabourSituation, processedFood: number): Harvest {
-  const { newFoodStock, isShortage } = updateFood(working.stats, labour.staffed.farms, day.season, processedFood, day.mods);
-  const farmFood = produceFood(labour.staffed.farms, day.season, day.mods);
+  // An island's flocks count with the farms (see domain/islands).
+  const grazing = getGrazingFood(working);
+  const { newFoodStock, isShortage } = updateFood(working.stats, labour.staffed.farms, day.season, processedFood + grazing, day.mods);
+  const farmFood = produceFood(labour.staffed.farms, day.season, day.mods) + grazing;
   // What was actually eaten: in a shortage, less than people needed.
   const eaten = working.stats.food + farmFood + processedFood - newFoodStock;
   book(day, "ledger", "food", { farms: farmFood, processing: processedFood, eating: -eaten });

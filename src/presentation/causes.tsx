@@ -35,15 +35,16 @@ export const CAUSES: Record<LedgerMetric, Record<string, CauseInfo>> = {
   treasury: {
     taxes: { label: "Taxes", hint: "Tax paid by the population", icon: (size) => <TaxIcon size={size} /> },
     industry: { label: "Industry", hint: "What the factories earn", icon: (size) => <StatIcon type="industry" size={size} /> },
-    salaries: { label: "Wages", hint: "Scientists' and police wages, and hiring fees", icon: (size) => <WagesIcon size={size} /> },
+    salaries: { label: "Wages", hint: "Scientists', police and militia wages, hiring fees, and pay rises granted", icon: (size) => <WagesIcon size={size} /> },
     construction: { label: "Building", hint: "Building and repairing: down payments and daily instalments", icon: (size) => <NavIcon type="build" size={size} /> },
     trade: TRADE,
     loans: { label: "Loans", hint: "Money borrowed, minus money paid back", icon: (size) => <LoanIcon size={size} /> },
     oneOffs: ONE_OFFS,
     events: EVENTS,
+    colonies: { label: "Islands", hint: "The salt trade, less ships chartered to supply colonies with no harbour link", icon: (size) => <NavIcon type="ventures" size={size} /> },
   },
   food: {
-    farms: { label: "Farms", hint: "Harvest from staffed farms", icon: (size) => <BuildingGlyph type="farm" size={size} /> },
+    farms: { label: "Farms", hint: "Harvest from staffed farms, and island flocks", icon: (size) => <BuildingGlyph type="farm" size={size} /> },
     processing: { label: "Granaries", hint: "Granaries and canneries turning grain and fish into food", icon: (size) => <BuildingGlyph type="granary" size={size} /> },
     eating: { label: "Eating", hint: "What the population ate", icon: (size) => <StatIcon type="population" size={size} /> },
     trade: TRADE,

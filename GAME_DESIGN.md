@@ -106,7 +106,11 @@ You can also take loans in batches. Interest compounds daily, and heavy debt cos
 
 ## Islands
 
-Six islands lie off the continent: Kestrel Isles, Solmere, Vashtel Cay, Grey Holm, Marrowind and Saltreach. Each has a terrain and a trait that makes it worth the voyage (rich fishing, an ore seam, a sheltered anchorage...), and three have people of their own. A venture scouts an island and brings back a one-time find. A scouted, empty island can then be settled: 1,500 Cr and 20 wood, and two months later 300 settlers land, taken from your most crowded province, with their first homes built. From then on the island is one of your provinces, built on, taxed and governed like any other, and drawn in your colour. The sea still lies between: islanders don't commute to the mainland and nobody drifts across. There is no limit on how many you settle.
+Six islands lie off the continent: Kestrel Isles, Solmere, Vashtel Cay, Grey Holm, Marrowind and Saltreach. Each has a terrain and a trait that makes it worth the voyage (rich fishing, an ore seam, a sheltered anchorage...), and three have people of their own. A venture scouts an island and brings back a one-time find. A scouted, empty island can then be settled: 1,500 Cr and 20 wood, and two months later 300 settlers land, taken from your most crowded province, with their first homes and a farm. From then on the island is one of your provinces, built on, taxed and governed like any other, and drawn in your colour. There is no limit on how many you settle, and more settlers can be sent to a colony (400 Cr, a month at sea).
+
+**The sea.** Islanders never commute to the mainland. A **harbour** (800 Cr and 30 wood, on the coast or an island) links a colony once there is one on the island and one on a coastal province of yours: then people cross between them as they would by land. A colony not linked needs ships chartered to supply it, 4 Cr a day each.
+
+**Traits.** Kestrel Isles' fishing grounds, Solmere's ore seam and Marrowind's old forest double what their terrain yields; Vashtel Cay's anchorage halves the price of a harbour there; Grey Holm's flocks add 300 food a day; Saltreach's salt pans bring in 6 Cr a day. Settling all three empty islands and linking them costs a careful player about 3,800 Cr over five years, ventures included, for about 4% more people; colonies pay back over a longer reign.
 
 ## Politics
 

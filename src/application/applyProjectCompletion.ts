@@ -25,7 +25,9 @@ export function applyProjectCompletion(state: GameState, project: Project): Game
     case "cannery":
       return { ...state, canneryCount: state.canneryCount + 1, placedBuildings };
     case "housing":
-      // Counted straight from placedBuildings — see getWorkingCounts.
+    case "harbour":
+      // Counted straight from placedBuildings (see getWorkingCounts and
+      // domain/islands).
       return { ...state, placedBuildings };
     case "education":
       return { ...state, educationLevel: state.educationLevel + 1, placedBuildings };

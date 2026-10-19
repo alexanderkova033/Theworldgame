@@ -1,6 +1,8 @@
 // The islands: every one drawn on the map has its data (trait, locals) and
 // a venture reward, and lies clear of the continent and of the others.
 import { describe, expect, it } from "vitest";
+import { NATIONS, playCarefully } from "./support/carefulPlayer";
+import { seedRandom } from "./support/seededRandom";
 import { ISLAND_EXPEDITIONS } from "../src/domain/expeditions/expeditionData";
 import { ISLANDS } from "../src/domain/islands/islandData";
 import { MAP_GEOMETRY } from "../src/domain/provinces/provinceData";
@@ -16,6 +18,13 @@ import { getHousingCapacityByProvince } from "../src/domain/housing/housingRules
 import { getLabourSituation } from "../src/domain/labour/labourRules";
 import { planMigration } from "../src/domain/provinces/provinceMigration";
 import { hydrateGameState } from "../src/presentation/hooks/gameSave";
+import { buildHarbour } from "../src/application/actions/buildHarbour";
+import { getBuildCostIn } from "../src/application/actions/createBuildAction";
+import { canSendMoreSettlers } from "../src/application/actions/settlementActions";
+import { applySettlementArrival } from "../src/application/applySettlementArrival";
+import { getDailyProductionSummary } from "../src/application/getDailyProductionSummary";
+import { ANCHORAGE_HARBOUR_COST_SHARE, GRAZING_FOOD_PER_DAY, SUPPLY_FEE_PER_DAY } from "../src/domain/constants";
+import { getGrazingFood, getLinkedIslands, getProducingTerrains } from "../src/domain/islands/islandRules";
 
 function bounds(path: string) {
   const points = (path.match(/-?\d+(\.\d+)?,-?\d+(\.\d+)?/g) ?? []).map((p) => p.split(",").map(Number));
@@ -117,5 +126,87 @@ describe("settling an island", () => {
     expect(loaded.settlements).toEqual([]);
     expect(loaded.settledIslandIds).toEqual([]);
     expect(hydrateGameState(JSON.parse(JSON.stringify(landed))).settledIslandIds).toEqual([empty]);
+  });
+});
+
+describe("the sea", () => {
+  const start = startNewGame("astravia", "astravia-harvest-union");
+  const rich: GameState = {
+    ...start,
+    chapters: allChaptersOpen(),
+    stats: { ...start.stats, treasury: 20000 },
+    resources: { ...start.resources, wood: 200 },
+  };
+  const solmere = "island-2"; // ore seam
+  const vashtel = "island-3"; // anchorage
+  const greyHolm = "island-4"; // grazing
+  const coast = getOwnedProvinceIds(rich).find((id) => getPlace(id)?.terrain === "coast")!;
+  const inland = getOwnedProvinceIds(rich).find((id) => getPlace(id)?.terrain !== "coast")!;
+
+  // A colony on Solmere, as if its settlers had just landed.
+  const colony = applySettlementArrival({ ...rich, scoutedIslandIds: [solmere] }, solmere);
+  const harbour = (state: GameState, provinceId: string): GameState => ({
+    ...state,
+    placedBuildings: [...state.placedBuildings, { id: `harbour-${provinceId}`, provinceId, type: "harbour" }],
+  });
+
+  it("lands settlers with a farm as well as homes", () => {
+    expect(colony.placedBuildings.some((b) => b.provinceId === solmere && b.type === "farm")).toBe(true);
+    expect(colony.farmCount).toBe(rich.farmCount + 1);
+  });
+
+  it("puts a harbour on the coast or an island only, cheaper on an anchorage", () => {
+    expect(buildHarbour.canBuild(colony, solmere)).toBe(true);
+    expect(buildHarbour.canBuild(colony, coast)).toBe(true);
+    expect(buildHarbour.canBuild(colony, inland)).toBe(false);
+    expect(getBuildCostIn(colony, buildHarbour.config, vashtel)).toBe(getBuildCostIn(colony, buildHarbour.config, coast) * ANCHORAGE_HARBOUR_COST_SHARE);
+  });
+
+  it("charges for supply ships until a harbour on each side links the colony", () => {
+    expect(getDailyProductionSummary(colony).colonyIncome).toBe(-SUPPLY_FEE_PER_DAY);
+    expect(getLinkedIslands(harbour(colony, solmere)).has(solmere)).toBe(false); // only one side
+    const linked = harbour(harbour(colony, solmere), coast);
+    expect(getLinkedIslands(linked).has(solmere)).toBe(true);
+    expect(getDailyProductionSummary(linked).colonyIncome).toBe(0);
+  });
+
+  it("lets people cross between linked harbours", () => {
+    const linked = harbour(harbour(colony, solmere), coast);
+    const crowded = { ...linked, provinces: { ...linked.provinces, [solmere]: { ...linked.provinces[solmere], population: 0 } } };
+    const labour = getLabourSituation(crowded);
+    const capacity = getHousingCapacityByProvince(crowded);
+    expect(planMigration(crowded.provinces, capacity, labour.provinces, getLinkedIslands(crowded))[solmere] ?? 0).toBeGreaterThan(0);
+    expect(planMigration(crowded.provinces, capacity, labour.provinces)[solmere] ?? 0).toBe(0);
+  });
+
+  it("doubles what Solmere's terrain yields, and Grey Holm's flocks feed people", () => {
+    const hills = (state: GameState) => getProducingTerrains(state).filter((t) => t === "hills").length;
+    expect(hills(colony) - hills(rich)).toBe(2);
+    const flocks = applySettlementArrival({ ...rich, scoutedIslandIds: [greyHolm] }, greyHolm);
+    expect(getGrazingFood(flocks)).toBe(GRAZING_FOOD_PER_DAY);
+  });
+
+  it("sends more settlers to a colony held, and they only add people", () => {
+    expect(canSendMoreSettlers(colony, solmere)).toBe(true);
+    const before = colony.provinces[solmere].population;
+    const more = applySettlementArrival(colony, solmere);
+    expect(more.provinces[solmere].population).toBeGreaterThan(before);
+    expect(more.farmCount).toBe(colony.farmCount);
+  });
+});
+
+// A careful player who settles the empty islands and links them: still
+// wins, and the country ends bigger. (Measured 2026-10-19: about 4% more
+// people and 3,800 Cr less after five years, ventures included; colonies
+// pay back over a longer reign.)
+describe("a careful player who settles", { timeout: 60000 }, () => {
+  it.each(NATIONS)("still wins in %s, with more people", (nation, party) => {
+    seedRandom(20261015);
+    const plain = playCarefully(nation, party, { days: 5 * 365 });
+    seedRandom(20261015);
+    const settler = playCarefully(nation, party, { days: 5 * 365, settle: true });
+    expect(settler.outcome).toBe("victory");
+    expect(settler.settledIslandIds.length).toBeGreaterThan(0);
+    expect(settler.stats.population).toBeGreaterThan(plain.stats.population);
   });
 });

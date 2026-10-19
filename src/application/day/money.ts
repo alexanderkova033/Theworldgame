@@ -5,6 +5,7 @@ import { getDiplomacyIncomeMultiplier } from "../../domain/diplomacy/diplomacyRu
 import { getDailyIncomeParts } from "../../domain/economy/economyRules";
 import { getTaxedPopulation } from "../../domain/uprising/uprisingRules";
 import { getPayRiseBill } from "../../domain/uprising/demandRules";
+import { getColonyAccounts } from "../../domain/islands/islandRules";
 import { getDailySalaries, layOffUntilAffordable } from "../../domain/workforce/workforceRules";
 import { book, log, type Day } from "./dayContext";
 
@@ -24,13 +25,14 @@ export function payTheBills(day: Day, working: GameState): Takings {
     working.taxRate,
     day.efficiency * day.mods.incomeMultiplier * getDiplomacyIncomeMultiplier(working.foreignPolitics),
   );
-  const grossIncome = taxIncome + industryIncome;
+  const colonies = getColonyAccounts(working);
+  const grossIncome = taxIncome + industryIncome + colonies.supply + colonies.salt;
   const { workforce, laidOff } = layOffUntilAffordable(working.workforce, working.stats.treasury + grossIncome, day.mods.wageMultiplier);
   if (laidOff > 0) {
     log(day, { date: day.start.date, message: `The treasury can't cover wages, and ${laidOff} unpaid staff walk off the job.`, severity: "warning", topic: "money" });
   }
   const salaries = getDailySalaries(workforce, day.mods.wageMultiplier) + getPayRiseBill(working.provinces, working.date);
   const income = grossIncome - salaries;
-  book(day, "ledger", "treasury", { taxes: taxIncome, industry: industryIncome, salaries: -salaries });
+  book(day, "ledger", "treasury", { taxes: taxIncome, industry: industryIncome, salaries: -salaries, colonies: colonies.supply + colonies.salt });
   return { workforce, income, treasury: working.stats.treasury + income };
 }

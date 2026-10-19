@@ -43,7 +43,7 @@ export const ISLANDS: IslandData[] = [
   {
     id: "island-4",
     trait: "grazing",
-    traitText: "Windswept grazing: poor for grain, but homes there are cheap to build.",
+    traitText: "Windswept grazing: its flocks add 300 food a day.",
     locals: null,
   },
   {
@@ -55,7 +55,7 @@ export const ISLANDS: IslandData[] = [
   {
     id: "island-6",
     trait: "saltPans",
-    traitText: "Salt pans: fish and grain kept there go further, so its canneries and granaries work harder.",
+    traitText: "Salt pans: the salt trade brings in 6 Cr a day.",
     locals: { name: "the Saltreach salt-panners", people: 600 },
   },
 ];

@@ -94,10 +94,14 @@ export function advanceBuildings(day: Day): GameState {
   const sailing = working.settlements.map((s) => ({ ...s, daysRemaining: s.daysRemaining - 1 }));
   working = { ...working, settlements: sailing.filter((s) => s.daysRemaining > 0) };
   for (const landed of sailing.filter((s) => s.daysRemaining <= 0)) {
+    // A ship to a colony already held only brings more people.
+    const first = !working.settledIslandIds.includes(landed.islandId);
     working = applySettlementArrival(working, landed.islandId);
     log(day, {
       date: state.date,
-      message: `Settlers land on ${getProvinceName(landed.islandId)}, and build their first homes. It is one of your provinces now.`,
+      message: first
+        ? `Settlers land on ${getProvinceName(landed.islandId)}, with the makings of their first homes and a farm. It is one of your provinces now.`
+        : `More settlers land on ${getProvinceName(landed.islandId)}.`,
       severity: "info",
       topic: "venture",
     });

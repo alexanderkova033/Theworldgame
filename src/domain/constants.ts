@@ -358,10 +358,26 @@ export const EXPEDITION_DAYS = 40;
 
 // --- Settling the islands (see domain/islands) ---
 export const SETTLE_COST = 1500; // Crowns to found a settlement on a scouted island...
-export const SETTLE_WOOD = 20; // ...and wood for the settlers' first homes
+export const SETTLE_WOOD = 20; // ...and wood for the settlers' first homes and farm
 export const SETTLE_DAYS = 60; // the voyage out and the first season ashore
 export const SETTLE_PEOPLE = 300; // settlers, taken from the mainland when they land
-export const SETTLE_HOMES = 1; // homes standing when they arrive
+export const SETTLE_HOMES = 1; // homes standing when they arrive...
+export const SETTLE_FARMS = 1; // ...and a farm, so they have work from the first day
+export const MORE_SETTLERS_COST = 400; // another shipload to a settled island...
+export const MORE_SETTLERS_DAYS = 30; // ...a month at sea
+// The sea between: a colony is linked to the mainland once it has a
+// harbour and so does a coastal province of yours. Linked, people cross as
+// they would by land, and supplies go by the regular boats. Unlinked, the
+// country charters ships to keep it supplied.
+export const HARBOUR_COST = 800;
+export const HARBOUR_WOOD_COST = 30;
+export const HARBOUR_BUILD_DAYS = 60;
+export const MAX_HARBOURS_PER_PROVINCE = 1;
+export const SUPPLY_FEE_PER_DAY = 4; // Crowns a day for each colony not linked by harbours
+// Island traits (see domain/islands/islandData.ts).
+export const ANCHORAGE_HARBOUR_COST_SHARE = 0.5; // a harbour on a sheltered anchorage costs this share
+export const GRAZING_FOOD_PER_DAY = 300; // food a day from an island's flocks
+export const SALT_TRADE_PER_DAY = 6; // Crowns a day from an island's salt pans
 
 // --- Loans (see domain/loans/loanRules.ts) ---
 export const LOAN_BATCH_SIZE = 2000; // treasury received (and added to debt) per "Take Loan" click

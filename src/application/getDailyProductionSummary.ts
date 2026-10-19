@@ -21,12 +21,13 @@ import { calculateDailyProduction } from "../domain/resources/resourceRules";
 import type { ResourceBundle } from "../domain/resources/types";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
 import { getDailySalaries } from "../domain/workforce/workforceRules";
-import { getOwnedProvinceIds, getPlace } from "../domain/provinces/provinceRules";
+import { getColonyAccounts, getGrazingFood, getProducingTerrains } from "../domain/islands/islandRules";
 
 export interface DailyProductionSummary {
   taxIncome: number;
   industryIncome: number;
   salaries: number; // paid out daily to scientists, police and militia, and pay rises granted
+  colonyIncome: number; // the islands: the salt trade, less supply fees for colonies not linked by harbours
   totalIncome: number; // net of salaries
   buildingInstalments: number; // the daily share of every project still being paid off (see createBuildAction)
   netTreasury: number; // what the treasury actually moves by in a day: income, less wages, less instalments
@@ -60,14 +61,13 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const buildingInstalments = state.projects.reduce((sum, project) => sum + project.treasuryCostPerDay, 0);
 
   const { foodProduced: processedFood } = produceProcessedFood(staffed.granaries, staffed.canneries, state.resources);
-  const farmFood = produceFood(staffed.farms, season, mods);
+  const farmFood = produceFood(staffed.farms, season, mods) + getGrazingFood(state);
   const foodProduced = farmFood + processedFood;
   const foodConsumed = consumeFood(state.stats, mods);
 
-  const ownedTerrains = getOwnedProvinceIds(state).map(
-    (provinceId) => getPlace(provinceId)!.terrain,
-  );
-  const rawProduction = calculateDailyProduction(ownedTerrains, season);
+  const rawProduction = calculateDailyProduction(getProducingTerrains(state), season);
+  const colonies = getColonyAccounts(state);
+  const colonyIncome = colonies.supply + colonies.salt;
   // Today's net, after winter heating is burned (coal first, then wood).
   const heatingFuel = getHeatingDemand(state, season);
   const heating = burnHeatingFuel(
@@ -82,9 +82,10 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
     taxIncome,
     industryIncome,
     salaries,
-    totalIncome: taxIncome + industryIncome - salaries,
+    colonyIncome,
+    totalIncome: taxIncome + industryIncome + colonyIncome - salaries,
     buildingInstalments,
-    netTreasury: taxIncome + industryIncome - salaries - buildingInstalments,
+    netTreasury: taxIncome + industryIncome + colonyIncome - salaries - buildingInstalments,
     season,
     farmFood,
     processedFood,

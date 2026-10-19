@@ -21,6 +21,9 @@ import type { ProvinceState } from "../src/domain/provinces/types";
 import { seedRandom } from "./support/seededRandom";
 
 beforeEach(() => seedRandom(20261018));
+// Shared states below are built as the file loads, before any test runs:
+// seed them too, so they don't depend on which test file ran first.
+seedRandom(20261018);
 
 // On Normal: 30 days, or 10 while it remembers being put down.
 const UPRISING_RIOT_DAYS = getDifficulty("normal").uprisingRiotDays;
