@@ -14,7 +14,7 @@ import type { DailyProductionSummary } from "../../application/getDailyProductio
 import { BUILDINGS, PEOPLE, type Destination, type OpenPanel } from "../navigation";
 import { getForecasts } from "../../application/getForecasts";
 import { formatDate } from "../../domain/country/calendar";
-import { CURRENCY_SYMBOL } from "../../domain/constants";
+import { CURRENCY_SYMBOL, REGIMENT_SALARY } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getTotalScientists } from "../../domain/workforce/workforceRules";
 import { formatAmount, formatSigned } from "../formatNumber";
@@ -22,7 +22,7 @@ import { TaxIcon, WagesIcon } from "./CauseIcon";
 import { NavIcon } from "./NavIcon";
 import { StatIcon } from "./StatIcon";
 
-type LineKey = "taxes" | "industry" | "wages" | "building";
+type LineKey = "taxes" | "industry" | "wages" | "army" | "building";
 
 interface BudgetLine {
   key: LineKey;
@@ -122,6 +122,18 @@ export function BudgetPanel({ state, production, onOpenPanel }: { state: GameSta
       detail: scientists + police > 0 ? `${plural(scientists, "scientist", "scientists")} and ${plural(police, "officer", "officers")}` : "Nobody on the payroll",
       value: -production.salaries,
     },
+    ...(production.armyPay > 0
+      ? [
+          {
+            key: "army" as const,
+            icon: <StatIcon type="regiment" size={20} />,
+            label: "Army",
+            detail: `Pay for ${plural(production.armyPay / REGIMENT_SALARY, "regiment", "regiments")}`,
+            value: -production.armyPay,
+            go: { panel: "army" as const, label: "Army" },
+          },
+        ]
+      : []),
     {
       key: "building",
       icon: <NavIcon type="build" size={20} />,

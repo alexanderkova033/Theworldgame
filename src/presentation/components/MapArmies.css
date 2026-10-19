@@ -1,0 +1,109 @@
+/* Regiment counters on the map, and the lines of their marches. */
+.map-armies__field {
+  stroke: #2b1d12;
+  stroke-width: 1.4;
+}
+
+.map-armies__mark {
+  fill: #f4ead0;
+  stroke: #2b1d12;
+  stroke-width: 0.8;
+}
+
+.map-armies__cross {
+  stroke-width: 1.4;
+}
+
+.map-armies__count {
+  font: 700 14px var(--font-body, Georgia, serif);
+  fill: #fffaf0;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: #2b1d12;
+  stroke-width: 2.4px;
+  pointer-events: none;
+}
+
+.map-armies__counter.is-pickable {
+  cursor: pointer;
+}
+
+/* Still at drill: drawn faint, and can't be picked up. */
+.map-armies__counter.is-drilling {
+  opacity: 0.6;
+}
+
+.map-armies__counter.is-drilling .map-armies__field {
+  stroke-dasharray: 3 2;
+}
+
+/* Picked up: a gilt ring round it. */
+.map-armies__counter.is-picked .map-armies__field {
+  stroke: var(--gilt-bright, #e2c27a);
+  stroke-width: 5;
+}
+
+.map-armies__counter:focus-visible {
+  outline: none;
+}
+
+.map-armies__counter:focus-visible .map-armies__field {
+  stroke: var(--gilt-bright, #e2c27a);
+  stroke-width: 3;
+}
+
+.map-armies__way {
+  fill: none;
+  stroke: #2b1d12;
+  stroke-width: 3;
+  stroke-dasharray: 8 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.75;
+}
+
+.map-armies__way.is-preview {
+  stroke: #7a531f;
+  opacity: 0.9;
+}
+
+.map-armies__way-end {
+  fill: #2b1d12;
+  opacity: 0.75;
+}
+
+.map-armies__days-plate {
+  fill: #f4ead0;
+  stroke: #7a531f;
+  stroke-width: 1.2;
+}
+
+.map-armies__days {
+  font: 700 13px var(--font-body, Georgia, serif);
+  fill: #2b1d12;
+  text-anchor: middle;
+}
+
+/* While regiments are picked up: a plate along the top of the map. */
+.march-banner {
+  position: absolute;
+  top: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: calc(100% - 2rem);
+  padding: 0.45rem 0.6rem 0.45rem 0.8rem;
+  border: 2px solid var(--gilt);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink, #2b1d12);
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.3);
+}
+
+.march-banner__cancel {
+  padding: 0.2rem 0.8rem;
+}

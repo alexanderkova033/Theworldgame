@@ -15,7 +15,8 @@
 //   7b uprisings  provinces rising, rebel strength, uprisings ending
 //   - the day is recorded and the calendar turns (here)
 //   8 newMonth    world events, the rival, the neighbours, the season
-//   8b neighbours the computer-run neighbours live a month and build
+//   7c army      every country's regiments drill or march
+//   8b neighbours the computer-run neighbours live a month, build, and recruit
 //   9 election    a general election, every so often
 //   - a decision may arrive (here)
 //   - a chapter may open, or be completed (chapters.ts)
@@ -41,6 +42,7 @@ import { keepOrder } from "./day/order";
 import { movePeople } from "./day/people";
 import { tendUprisings } from "./day/uprisings";
 import { runNeighbours } from "./day/neighbours";
+import { drillTheArmy } from "./day/army";
 import { loseProvince } from "./loseProvince";
 import { getNation } from "../domain/nations/nationRules";
 import { moveSupport } from "./day/support";
@@ -199,7 +201,9 @@ export function simulateDay(state: GameState): GameState {
 
   // The neighbours' month (and any trade offer they write) comes before
   // the clock decides whether to stop for a letter.
-  const neighbourMonth = runNeighbours(day, working, date);
+  // Every regiment drills or marches a day (see day/army.ts).
+  const regiments = drillTheArmy(day, working, takings.treasury);
+  const neighbourMonth = runNeighbours(day, { ...working, regiments }, date);
 
   return advanceChapters({
     ...working,

@@ -50,9 +50,12 @@ The game is about both governing a country and power across the map. Each step l
    - [x] B. Relations: how each feels about you, moved by what you do.
    - [x] C. Trade: they offer by letter to buy or sell goods.
    - [x] D. Treaties: an island accord, and buying a claimed island back.
-5. **A military with real depth.**
-   - [ ] Garrisons and soldiers growing out of police and uprisings.
-   - [ ] Borders and contested islands worth fighting over; wars and fronts.
+5. **A military with real depth.** Regiments are counters on the map, moved province to province and fighting where they meet (closer to HoI4 or WorldBox than to bars in a window). War reaches only islands and your own lost provinces, never a neighbour's mainland. The militia stays a separate, cheap home force for uprisings. Built in this order:
+   - [x] Groundwork: the Army window, regiments raised, drilled, paid and marched on the map (over land, and by sea to your islands); the neighbours raise their own by temper.
+   - [ ] A. Garrisons: a regiment standing in a province holds down unrest and uprisings there, and steadies an island.
+   - [ ] B. Taking back a lost province: march in, and fight its rebels day by day.
+   - [ ] C. War over the islands: declare war, sail to an island a neighbour holds, besiege it; war weariness; peace by letter.
+   - [ ] D. The neighbours make war: a hostile, stronger neighbour may attack your islands, after a warning letter.
 
 Alongside the road, whenever they fit:
 

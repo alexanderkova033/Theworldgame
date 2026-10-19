@@ -7,6 +7,7 @@ import { getTaxedPopulation } from "../../domain/uprising/uprisingRules";
 import { getPayRiseBill } from "../../domain/uprising/demandRules";
 import { getColonyAccounts } from "../../domain/islands/islandRules";
 import { getDailySalaries, layOffUntilAffordable } from "../../domain/workforce/workforceRules";
+import { getArmyPay } from "../../domain/military/militaryRules";
 import { book, log, type Day } from "./dayContext";
 
 export interface Takings {
@@ -32,7 +33,8 @@ export function payTheBills(day: Day, working: GameState): Takings {
     log(day, { date: day.start.date, message: `The treasury can't cover wages, and ${laidOff} unpaid staff walk off the job.`, severity: "warning", topic: "money" });
   }
   const salaries = getDailySalaries(workforce, day.mods.wageMultiplier) + getPayRiseBill(working.provinces, working.date);
-  const income = grossIncome - salaries;
-  book(day, "ledger", "treasury", { taxes: taxIncome, industry: industryIncome, salaries: -salaries, colonies: colonies.supply + colonies.salt });
+  const armyPay = getArmyPay(working.regiments, working.nationId);
+  const income = grossIncome - salaries - armyPay;
+  book(day, "ledger", "treasury", { taxes: taxIncome, industry: industryIncome, salaries: -salaries, colonies: colonies.supply + colonies.salt, army: -armyPay });
   return { workforce, income, treasury: working.stats.treasury + income };
 }

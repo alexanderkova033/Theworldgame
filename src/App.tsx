@@ -11,6 +11,10 @@ import { getElectionThreshold } from "./domain/parties/electionRules";
 import { getPartiesForNation, getParty } from "./domain/parties/partyRules";
 import { acceptOffer, answerDemand, declineOffer, dismissDecision, resolveDecision } from "./application/actions";
 import { OfferLetter } from "./presentation/components/OfferLetter";
+import { ArmyPanel } from "./presentation/components/ArmyPanel";
+import { MarchBanner } from "./presentation/components/MapArmies";
+import { getMarchRoute, getReadyRegimentsIn, marchRegiments } from "./application/actions/armyActions";
+import { routeDays } from "./domain/military/militaryRules";
 import { getAdvisorOutlook } from "./application/getAdvisorOutlook";
 import { getDailyProductionSummary } from "./application/getDailyProductionSummary";
 import { getForecasts } from "./application/getForecasts";
@@ -18,7 +22,7 @@ import { getHeatingOutlook } from "./application/getHeatingOutlook";
 import { getMaterialShortages } from "./application/getMaterialShortages";
 import { getProvinceOverview, getProvinceStatus, type ProvinceStatus } from "./application/getProvinceOverview";
 import { getTroubledProvinces } from "./application/getTroubledProvinces";
-import { playBreakthrough, playDanger, playGameOver, playLetter } from "./presentation/audio/sound";
+import { playBreakthrough, playDanger, playGameOver, playLetter, playSeal } from "./presentation/audio/sound";
 import { AdvisorStrip } from "./presentation/components/AdvisorStrip";
 import { DecisionModal } from "./presentation/components/DecisionModal";
 import { DemandLetter } from "./presentation/components/DemandLetter";
@@ -74,10 +78,38 @@ function App() {
   const [selectedProvinceId, setSelectedProvinceId] = useState<string | null>(null);
   // Clicking a province on the map also opens its card (see ProvinceCard).
   const [isProvinceCardOpen, setProvinceCardOpen] = useState(false);
-  const selectProvinceOnMap = useCallback((provinceId: string) => {
-    setSelectedProvinceId(provinceId);
-    setProvinceCardOpen(true);
-  }, []);
+  // Regiments picked up on the map, by the province they stand in: the
+  // next province tapped is where they march (see MapArmies.tsx).
+  const [marchFrom, setMarchFrom] = useState<string | null>(null);
+  const selectProvinceOnMap = useCallback(
+    (provinceId: string) => {
+      if (marchFrom) {
+        if (provinceId !== marchFrom) {
+          playSeal();
+          dispatch((s) => marchRegiments(s, marchFrom, provinceId));
+        }
+        setMarchFrom(null);
+        return;
+      }
+      setSelectedProvinceId(provinceId);
+      setProvinceCardOpen(true);
+    },
+    [marchFrom, dispatch],
+  );
+  const pickArmy = useCallback((provinceId: string) => setMarchFrom((from) => (from === provinceId ? null : provinceId)), []);
+  // The way to a province, for the map's preview while regiments are
+  // picked up. Rebuilt only when what is yours changes.
+  const latestState = useRef(state);
+  latestState.current = state;
+  const planMarch = useCallback(
+    (to: string) => {
+      const s = latestState.current;
+      const route = s && marchFrom ? getMarchRoute(s, marchFrom, to) : null;
+      return route ? { route: route.map((leg) => leg.provinceId), days: routeDays(route) } : null;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [marchFrom, state?.settledIslandIds, state?.lostProvinceIds, state?.placedBuildings],
+  );
   const closeProvinceCard = useCallback(() => setProvinceCardOpen(false), []);
 
   // Which unclaimed island the Ventures panel is showing. Same idea as
@@ -186,6 +218,10 @@ function App() {
         showNextProblem();
         return;
       }
+      if (e.key === "Escape" && marchFrom) {
+        setMarchFrom(null);
+        return;
+      }
       if (e.target !== document.body) return;
       if (e.code === "Space") {
         e.preventDefault();
@@ -197,7 +233,7 @@ function App() {
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [state, pause, resume, setSpeed, showNextProblem]);
+  }, [state, pause, resume, setSpeed, showNextProblem, marchFrom]);
 
   // A breakthrough just landed in the log: its own peal. A danger-severity
   // event: an alert, but no more than once every few seconds, since
@@ -361,7 +397,7 @@ function App() {
   return (
     <div className="game-layout">
       <TopBar
-        locked={{ laws: lockedReason(state, "laws") ?? undefined, research: lockedReason(state, "research") ?? undefined }}
+        locked={{ laws: lockedReason(state, "laws") ?? undefined, research: lockedReason(state, "research") ?? undefined, army: lockedReason(state, "army") ?? undefined }}
         electionThreshold={getElectionThreshold(state)}
         nationName={nation.name}
         partyName={party.name}
@@ -408,7 +444,18 @@ function App() {
             provinceOverview={provinceOverview}
             problemCount={troubledIds.length}
             onNextProblem={showNextProblem}
+            regiments={isFeatureOpen(state, "army") ? state.regiments : null}
+            marchFrom={marchFrom}
+            onPickArmy={pickArmy}
+            planMarch={planMarch}
           />
+          {marchFrom && (
+            <MarchBanner
+              count={getReadyRegimentsIn(state, marchFrom).length}
+              from={marchFrom}
+              onCancel={() => setMarchFrom(null)}
+            />
+          )}
           {isProvinceCardOpen &&
             (() => {
               const province = provinceOverview.find((p) => p.id === currentProvinceId);
@@ -477,6 +524,12 @@ function App() {
       {openModal === "research" && (
         <Modal title="Research" window="research" icon={<NavIcon type="research" size={22} />} onClose={() => setOpenModal(null)} wide>
           <ResearchPanel state={state} alerts={advisor?.alerts ?? []} dispatch={dispatch} />
+        </Modal>
+      )}
+
+      {openModal === "army" && (
+        <Modal title="Army" window="army" icon={<NavIcon type="army" size={22} />} onClose={() => setOpenModal(null)}>
+          <ArmyPanel state={state} dispatch={dispatch} />
         </Modal>
       )}
 

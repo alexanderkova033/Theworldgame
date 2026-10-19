@@ -18,6 +18,7 @@ const FEATURE_NAMES: Record<Feature, string> = {
   voters: "Voters (Politics)",
   neighbours: "Neighbours (Politics)",
   ventures: "Ventures to the islands (the map)",
+  army: "the Army, and regiments on the map",
 };
 
 interface ChapterBriefingProps {

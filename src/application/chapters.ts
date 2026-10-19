@@ -9,6 +9,7 @@ import { isFirstDayOfMonth } from "../domain/country/calendar";
 import { generateId } from "../domain/country/id";
 import type { GameDate, GameState } from "../domain/country/types";
 import { getElectionThreshold } from "../domain/parties/electionRules";
+import { RELATIONS_HOSTILE } from "../domain/constants";
 
 // Months since the game began: 1 in the first month, 2 in the second...
 export function monthNumber(date: GameDate): number {
@@ -30,6 +31,11 @@ const TRIGGERS: Record<ChapterId, (s: GameState, month: number, monthStart: bool
   voters: (s, month) => month >= 10 && s.stats.popularity < getElectionThreshold(s) + 5,
   envoys: (s, month) => month >= 6 && s.lastDayLedger.support.foreign !== undefined,
   captain: (_s, month, monthStart) => monthStart && month >= 13 && Math.random() < 0.3,
+  // Trouble the army would answer: a province risen, a neighbour's
+  // settlers at sea, or a neighbour turned hostile.
+  army: (s, month) =>
+    month >= 18 &&
+    (Object.values(s.provinces).some((p) => p.uprising) || s.foreignVoyages.length > 0 || Object.values(s.neighbours).some((n) => n.relations <= RELATIONS_HOSTILE)),
 };
 
 // Each chapter's objectives, in the order of its words (chapterData.ts).
@@ -42,6 +48,7 @@ export const OBJECTIVE_CHECKS: Record<ChapterId, Array<(s: GameState) => boolean
   voters: [(s) => s.chapters.deeds.includes("courted")],
   envoys: [(s) => s.chapters.deeds.includes("pressed")],
   captain: [(s) => s.expeditions.length > 0 || s.scoutedIslandIds.length > 0],
+  army: [(s) => s.regiments.some((r) => r.nationId === s.nationId)],
 };
 
 export function objectivesMet(state: GameState, id: ChapterId): boolean[] {

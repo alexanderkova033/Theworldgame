@@ -26,6 +26,7 @@ const TABS: Array<{ key: PanelKey; label: string; icon: () => ReactNode }> = [
   { key: "politics", label: "Politics", icon: () => <NavIcon type="politics" size={22} /> },
   { key: "laws", label: "Laws", icon: () => <NavIcon type="laws" size={22} /> },
   { key: "research", label: "Research", icon: () => <NavIcon type="research" size={22} /> },
+  { key: "army", label: "Army", icon: () => <NavIcon type="army" size={22} /> },
   { key: "reports", label: "Reports", icon: () => <NavIcon type="reports" size={22} /> },
 ];
 

@@ -418,6 +418,15 @@ export const BUY_BACK_MIN_RELATIONS = 30; // Warm, to sell you an island they ho
 export const BUY_BACK_BASE_PRICE = 3000; // ...for this...
 export const BUY_BACK_PRICE_PER_PERSON = 2; // ...and this for each person living there
 export const RELATIONS_ISLAND_SOLD = -15; // they part with it unwillingly
+
+// Regiments (see domain/military).
+export const POPULATION_PER_REGIMENT = 2500; // a country keeps one regiment for this many people
+export const REGIMENT_RAISE_COST = 500; // Crowns to raise one...
+export const REGIMENT_SALARY = 5; // ...and its pay, a day
+export const REGIMENT_TRAINING_DAYS = 30; // drill before it can march
+export const REGIMENT_MARCH_DAYS = 5; // days to march into the province next door
+export const REGIMENT_SAIL_DAYS = 20; // days to sail between a coast and an island...
+export const REGIMENT_SAIL_DAYS_LINKED = 10; // ...or between harbours, to an island linked by them
 export const RACE_VOYAGE_DAYS = 90; // their voyage out
 export const RACE_TURNED_BACK_REFUND = 0.5; // share of your settling price refunded when they beat you to it
 export const COLONY_DISTANCE_UNREST = 8; // a colony's mood sits this far below the nation's...

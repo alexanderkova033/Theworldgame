@@ -4,9 +4,9 @@
 import type { Personality } from "./types";
 
 export const PERSONALITIES: Record<string, Personality> = {
-  astravia: { temper: "Grows its farms, and wants land", grows: "farm", reserve: 800, islandAppetite: 0.35, industryBonus: 1, order: 60 },
-  caldenreich: { temper: "Careful with money, slow to venture", grows: "factory", reserve: 2500, islandAppetite: 0.15, industryBonus: 1, order: 70 },
-  veldoria: { temper: "Builds industry, hungry for ore", grows: "factory", reserve: 600, islandAppetite: 0.25, industryBonus: 1.15, order: 60 },
+  astravia: { temper: "Grows its farms, and wants land", grows: "farm", reserve: 800, islandAppetite: 0.35, industryBonus: 1, order: 60, martial: 0.4 },
+  caldenreich: { temper: "Careful with money, slow to venture", grows: "factory", reserve: 2500, islandAppetite: 0.15, industryBonus: 1, order: 70, martial: 0.75 },
+  veldoria: { temper: "Builds industry, hungry for ore", grows: "factory", reserve: 600, islandAppetite: 0.25, industryBonus: 1.15, order: 60, martial: 0.6 },
 };
 
 export function getPersonality(nationId: string): Personality {

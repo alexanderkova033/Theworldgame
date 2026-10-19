@@ -21,6 +21,7 @@ import { calculateDailyProduction } from "../domain/resources/resourceRules";
 import type { ResourceBundle } from "../domain/resources/types";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
 import { getDailySalaries } from "../domain/workforce/workforceRules";
+import { getArmyPay } from "../domain/military/militaryRules";
 import { getColonyAccounts, getGrazingFood, getProducingTerrains } from "../domain/islands/islandRules";
 
 export interface DailyProductionSummary {
@@ -28,6 +29,7 @@ export interface DailyProductionSummary {
   industryIncome: number;
   salaries: number; // paid out daily to scientists, police and militia, and pay rises granted
   colonyIncome: number; // the islands: the salt trade, less supply fees for colonies not linked by harbours
+  armyPay: number; // your regiments' pay (see domain/military)
   totalIncome: number; // net of salaries
   buildingInstalments: number; // the daily share of every project still being paid off (see createBuildAction)
   netTreasury: number; // what the treasury actually moves by in a day: income, less wages, less instalments
@@ -68,6 +70,7 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const rawProduction = calculateDailyProduction(getProducingTerrains(state), season);
   const colonies = getColonyAccounts(state);
   const colonyIncome = colonies.supply + colonies.salt;
+  const armyPay = getArmyPay(state.regiments, state.nationId);
   // Today's net, after winter heating is burned (coal first, then wood).
   const heatingFuel = getHeatingDemand(state, season);
   const heating = burnHeatingFuel(
@@ -83,9 +86,10 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
     industryIncome,
     salaries,
     colonyIncome,
-    totalIncome: taxIncome + industryIncome + colonyIncome - salaries,
+    armyPay,
+    totalIncome: taxIncome + industryIncome + colonyIncome - salaries - armyPay,
     buildingInstalments,
-    netTreasury: taxIncome + industryIncome + colonyIncome - salaries - buildingInstalments,
+    netTreasury: taxIncome + industryIncome + colonyIncome - salaries - armyPay - buildingInstalments,
     season,
     farmFood,
     processedFood,

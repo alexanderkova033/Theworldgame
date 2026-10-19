@@ -38,6 +38,7 @@
   --ink-laws: var(--oxblood); /* the statute book */
   --ink-research: var(--prussian); /* the workshop */
   --ink-reports: #5a3e1e; /* sepia: the record */
+  --ink-army: #3a4250; /* gunmetal: the armoury */
   --window-ink: var(--oxblood); /* set per window (Modal.css) */
   --gilt: #b08a3e;
   --gilt-bright: #e2c27a;

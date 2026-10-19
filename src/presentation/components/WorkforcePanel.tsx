@@ -106,7 +106,7 @@ export function ScientistStepper({ state, category, dispatch }: { state: GameSta
 // to draw and it's a number instead.
 const MAX_SEATS_DRAWN = 24;
 
-function Seats({ used, cap, label }: { used: number; cap: number; label: string }) {
+export function Seats({ used, cap, label }: { used: number; cap: number; label: string }) {
   return (
     <span className="workforce-panel__seats" title={`${label}: ${used} of ${cap}`}>
       {cap <= MAX_SEATS_DRAWN &&
@@ -119,7 +119,7 @@ function Seats({ used, cap, label }: { used: number; cap: number; label: string 
 }
 
 // What one hire costs and does, said once for the group.
-function HireTerms({ hire, wage, children }: { hire: number; wage: number; children: ReactNode }) {
+export function HireTerms({ hire, wage, children }: { hire: number; wage: number; children: ReactNode }) {
   return (
     <span className="workforce-panel__terms">
       <span title={`Costs ${hire} ${CURRENCY_SYMBOL} to hire, then ${wage} ${CURRENCY_SYMBOL} a day`}>

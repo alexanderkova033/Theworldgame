@@ -1,7 +1,7 @@
 // Small pictorial glyphs for the top-bar tab buttons — same hand-drawn-shape
 // approach as StatIcon/ResourceIcon/BuildingIcon, so the tab row reads as
 // imagery rather than plain text labels.
-export type NavIconType = "build" | "market" | "reports" | "laws" | "ventures" | "politics" | "research";
+export type NavIconType = "build" | "market" | "reports" | "laws" | "ventures" | "politics" | "research" | "army";
 
 interface NavIconProps {
   type: NavIconType;
@@ -18,6 +18,19 @@ export function NavIcon({ type, size = 26 }: NavIconProps) {
 
 function renderShape(type: NavIconType) {
   switch (type) {
+    case "army":
+      // Crossed sabres, as for a regiment.
+      return (
+        <g strokeLinecap="round">
+          <path d="M-6.8,6.8 C-3,2.6 1.6,-2.6 6.6,-7.6" fill="none" stroke="#2f343b" strokeWidth={2.9} />
+          <path d="M-6.8,6.8 C-3,2.6 1.6,-2.6 6.6,-7.6" fill="none" stroke="#d7dade" strokeWidth={1.3} />
+          <path d="M6.8,6.8 C3,2.6 -1.6,-2.6 -6.6,-7.6" fill="none" stroke="#2f343b" strokeWidth={2.9} />
+          <path d="M6.8,6.8 C3,2.6 -1.6,-2.6 -6.6,-7.6" fill="none" stroke="#aeb4bd" strokeWidth={1.3} />
+          <path d="M-7.6,4.4 L-4.4,7.6 M7.6,4.4 L4.4,7.6" stroke="#c9a24a" strokeWidth={1.7} />
+          <circle cx={-7.4} cy={7.4} r={1.2} fill="#93731f" />
+          <circle cx={7.4} cy={7.4} r={1.2} fill="#93731f" />
+        </g>
+      );
     case "build":
       // A gold coin behind a crossed pick — build & trade at a glance.
       return (

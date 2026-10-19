@@ -59,6 +59,15 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **Treaties work, and may be generous.** Measured 2026-10-19 over nine five-year games, with a scripted player that trades, signs accords when it can and backs the rulers of any neighbour holding an island: without settling, it signs 27 accords and buys back all 18 islands lost, ending with none in foreign hands; all nine games still won. If losing the race should sting more, raise BUY_BACK_BASE_PRICE or make the neighbour refuse an island it settled recently.
 - **For step 5 (the military):** a neighbour's island is `foreignIslands`; `buyBackIsland` (application/actions/treatyActions.ts) shows what taking one hands over (province, homes and farm, people, scouted). A hostile neighbour (-30) is the obvious one to fight; an accord is the obvious thing a war would break.
 
+## The army: notes for garrisons and war
+
+- **Regiments only stand and march for now.** Nothing reads where they are. Garrisons (phase A) are the first thing to: a regiment in a province should hold down its unrest and its uprising, like police but local.
+- **A march can only go through your own land**, so a sea leg can't be blocked and a land march never enters a neighbour. Phase B opens lost provinces to it (`canEnterAsYou` in application/actions/armyActions.ts), phase C a neighbour's island.
+- **A sea leg is drawn as a straight line**, and can cross a neighbour's land on the map. A ship's way round the coast would read better.
+- **The neighbours' regiments stand where they were raised.** They need orders of their own (to their coast before a voyage, to an island they hold) once islands can be fought over.
+- **Strength is always 100.** Fighting (phase B) is what wears it down; recovery at rest comes with it.
+- **The browser check:** run tests/support scripts or the iPad driver from PowerShell (Start-Process), not from Git Bash in the background: from Git Bash the driver hung and looked like a frozen page.
+
 ## Process reminders
 
 - Domain rules live in `src/domain/<concept>/`, cross-domain use cases in `src/application/`, and React only in `src/presentation/`.

@@ -32,4 +32,5 @@ export interface Personality {
   islandAppetite: number; // 0-1: the chance in a month it sends settlers, when it can
   industryBonus: number; // its factories' output, against the usual (Veldoria's early industry)
   order: number; // the stability it settles at while fed and housed (Caldenreich's steady administration)
+  martial: number; // 0-1: the share of the regiments its people could keep that it does keep
 }

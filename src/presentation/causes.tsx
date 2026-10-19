@@ -41,6 +41,7 @@ export const CAUSES: Record<LedgerMetric, Record<string, CauseInfo>> = {
     loans: { label: "Loans", hint: "Money borrowed, minus money paid back", icon: (size) => <LoanIcon size={size} /> },
     oneOffs: ONE_OFFS,
     events: EVENTS,
+    army: { label: "Army", hint: "Raising regiments, and their pay", icon: (size) => <StatIcon type="regiment" size={size} /> },
     colonies: { label: "Islands", hint: "The salt trade, less ships chartered to supply colonies with no harbour link", icon: (size) => <NavIcon type="ventures" size={size} /> },
   },
   food: {

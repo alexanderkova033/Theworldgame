@@ -20,6 +20,8 @@ import { UNREST_INFO } from "../unrestStages";
 import { JobsIcon, UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
+import { ArmyLayer } from "./MapArmies";
+import type { Regiment } from "../../domain/military/types";
 
 const TERRAIN_LABELS: Record<Terrain, string> = {
   hills: "Hills",
@@ -65,6 +67,10 @@ interface MapPanelProps {
   lostProvinceIds: string[]; // broke away after an uprising: drawn as free land (see domain/uprising)
   settledIslandIds: string[]; // islands settled: drawn and picked like your provinces (see domain/islands)
   foreignIslands: Record<string, string>; // islands a neighbour claimed: drawn in their colour
+  regiments: Regiment[] | null; // every country's regiments, once the army is open (see domain/military)
+  marchFrom: string | null; // where the regiments you picked up stand
+  onPickArmy: (provinceId: string) => void; // a counter of yours tapped
+  planMarch: (to: string) => { route: string[]; days: number } | null; // the way there, for the preview
 }
 
 // Every terrain gets a decorative texture, drawn on top of the province's
@@ -1012,6 +1018,10 @@ export const MapPanel = memo(function MapPanel({
   lostProvinceIds,
   settledIslandIds,
   foreignIslands,
+  regiments,
+  marchFrom,
+  onPickArmy,
+  planMarch,
 }: MapPanelProps) {
   const { provinces } = MAP_GEOMETRY;
 
@@ -1321,6 +1331,22 @@ export const MapPanel = memo(function MapPanel({
     [onSelectProvince],
   );
 
+  // A counter tapped at the end of a drag is the drag, not a tap.
+  const handlePickArmy = useCallback(
+    (provinceId: string) => {
+      if (suppressNextClick.current) {
+        suppressNextClick.current = false;
+        return;
+      }
+      onPickArmy(provinceId);
+    },
+    [onPickArmy],
+  );
+  const preview = useMemo(
+    () => (marchFrom && hoveredProvinceId && hoveredProvinceId !== marchFrom ? planMarch(hoveredProvinceId) : null),
+    [marchFrom, hoveredProvinceId, planMarch],
+  );
+
   const handleIslandClick = useCallback(
     (islandId: string) => {
       if (suppressNextClick.current) {
@@ -1396,6 +1422,7 @@ export const MapPanel = memo(function MapPanel({
             settledIslandIds={settledIslandIds}
             foreignIslands={foreignIslands}
           />
+          {regiments && <ArmyLayer regiments={regiments} playerNationId={nation.id} marchFrom={marchFrom} onPick={handlePickArmy} preview={preview} />}
         </svg>
 
         <div className="map-panel__zoom-controls">

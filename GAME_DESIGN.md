@@ -63,6 +63,7 @@ Systems arrive as they matter, and not before. A game opens with only building, 
 | Trouble in the Streets | police and crackdowns, at the first unrest | 14 |
 | Envoys Arrive | pressure abroad, once a neighbour campaigns | 15 |
 | A Captain's Offer | ventures to the islands | 20 |
+| A Standing Army | regiments, once a province has risen, a neighbour's settlers are at sea, or a neighbour turns hostile (from month 18) | 24 |
 
 Open chapters and their objectives sit in a slip at the top right of the map; an objective still to do opens the window where it is done. Letters about a later system (a border incident, a general strike) wait for its chapter, and the advisor only suggests what is open.
 
@@ -154,6 +155,14 @@ Falling stability brings stages before collapse: discontent slows industry, stri
 **Demands.** Unrest isn't only want. Now and then the workers of a province with factories write asking for a pay rise, however well it is doing. Granted, the country pays them 3 Cr a day more for a year and the province calms. Refused, they down tools: for four months the province's mood sits 35 points below the nation's, which means strikes in a steady country and riots, perhaps an uprising, in a shaky one. Two weeks after rising, and two months after each refusal, rebels send their terms: a pardon (30 political power, 3 support with every group) or a year without taxes from the province. Either ends the uprising in peace, with no grievance; refusing hardens it by 10 strength. A letter must be answered.
 
 **Left alone, it spreads, and can be lost.** From rebel strength 70, the provinces next door grow restless: their mood sits 15 points below the nation's. Held at full strength (100) for a month, a province breaks away and declares itself free: its people, homes and works are lost to you, and the map shows it as free land. If the capital breaks away, the government falls. The countdown is shown on the Unrest page, the province card and the advisor from the day it starts.
+
+## The army
+
+**Regiments** are trained soldiers, opened by the chapter A Standing Army. Each costs 500 Cr to raise and 5 Cr a day (booked as Army in the reports), and a country keeps at most one for every 2,500 people. A new regiment drills in the capital for 30 days. Then it can be marched: tap its counter on the map, then any province of yours, and it goes the quickest way, 5 days a province over land, or 20 days by sea between a coast and an island (10 between two harbours). The counters are drawn in each country's colour with the number of regiments standing there; a march under way shows as a dashed line, and the counter moves along it. If the treasury is empty after paying them, the newest regiment goes home. The Army window lists where each stands or is going, and how many the neighbours keep.
+
+**The neighbours' armies.** Each neighbour keeps a share of the regiments its people could support, by temper (Caldenreich three quarters, Veldoria three fifths, Astravia two fifths), raising one a month while it has fewer and the money beyond its reserve, and spreading them along its provinces. Measured over five years: two to four regiments each, and the race for the islands is unchanged.
+
+Regiments do nothing yet but stand and march; garrisons come next (see ROADMAP step 5).
 
 ## Time
 

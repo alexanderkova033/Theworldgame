@@ -28,6 +28,8 @@ import { getPersonality } from "../../domain/neighbours/neighbourData";
 import { relationsWord } from "../../domain/neighbours/relationsRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { BuildingGlyph } from "./CauseIcon";
+import { isFeatureOpen } from "../../domain/chapters/chapterData";
+import { regimentsOf } from "../../domain/military/militaryRules";
 import { formatDate } from "../../domain/country/calendar";
 import { getBuyBackPrice, getIslandPeople, hasAccord, whyNoAccord, whyNoBuyBack } from "../../domain/neighbours/treatyRules";
 
@@ -131,6 +133,12 @@ function NeighbourState({ state, nationId }: { state: GameState; nationId: strin
           <BuildingGlyph type="factory" size={15} />
           {n.factories}
         </li>
+        {isFeatureOpen(state, "army") && (
+          <li title="Regiments, counting those still at drill">
+            <StatIcon type="regiment" size={15} />
+            {regimentsOf(state.regiments, nationId).length}
+          </li>
+        )}
       </ul>
       {islands.length > 0 && <p className="foreign-card__islands">Holds {islands.map(([, name]) => name).join(" and ")}.</p>}
       {n.lastDeed && <p className="foreign-card__deed">Last month: {n.lastDeed.toLowerCase()}.</p>}

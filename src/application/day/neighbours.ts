@@ -4,7 +4,7 @@
 // people. Building is quiet (the Neighbours page shows it); a voyage is
 // news, and the country is told at once, since it is a race.
 import { isFeatureOpen } from "../../domain/chapters/chapterData";
-import { RACE_VOYAGE_DAYS, SETTLE_COST } from "../../domain/constants";
+import { DAYS_PER_MONTH, RACE_VOYAGE_DAYS, SETTLE_COST } from "../../domain/constants";
 import { isFirstDayOfMonth } from "../../domain/country/calendar";
 import type { GameDate, GameState } from "../../domain/country/types";
 import { pickRaceTarget } from "../../domain/islands/islandRules";
@@ -14,13 +14,15 @@ import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { fadeFeelings } from "../../domain/neighbours/relationsRules";
 import { draftOffer } from "../../domain/neighbours/tradeRules";
 import { hasAccord } from "../../domain/neighbours/treatyRules";
+import { chooseRecruit, getArmyPay } from "../../domain/military/militaryRules";
 import { nationHasPort } from "../../domain/market/marketRules";
 import { isFriendly } from "../../domain/diplomacy/diplomacyRules";
 import { monthNumber } from "../chapters";
 import { log, type Day } from "./dayContext";
 
-export function runNeighbours(day: Day, working: GameState, date: GameDate): Pick<GameState, "neighbours" | "foreignVoyages" | "pendingOffer"> {
-  if (!isFirstDayOfMonth(date)) return { neighbours: working.neighbours, foreignVoyages: working.foreignVoyages, pendingOffer: working.pendingOffer };
+export function runNeighbours(day: Day, working: GameState, date: GameDate): Pick<GameState, "neighbours" | "foreignVoyages" | "pendingOffer" | "regiments"> {
+  if (!isFirstDayOfMonth(date)) return { neighbours: working.neighbours, foreignVoyages: working.foreignVoyages, pendingOffer: working.pendingOffer, regiments: working.regiments };
+  let regiments = working.regiments;
   const month = monthNumber(date);
   let foreignVoyages = working.foreignVoyages;
   let pendingOffer = working.pendingOffer;
@@ -50,6 +52,18 @@ export function runNeighbours(day: Day, working: GameState, date: GameDate): Pic
       neighbours[nationId] = { ...neighbour, lastDeed: deed };
     }
     if (canOffer && !pendingOffer) pendingOffer = draftOffer(neighbours[nationId], nationId, month, working.market, hasPort, working.resources);
+    // Its army: a month's pay, and perhaps a new regiment (militaryRules.ts).
+    // Unpaid, its newest goes home.
+    const paid = { ...neighbours[nationId], treasury: neighbours[nationId].treasury - getArmyPay(regiments, nationId) * DAYS_PER_MONTH };
+    const own = regiments.filter((r) => r.nationId === nationId);
+    if (paid.treasury < 0 && own.length > 0) {
+      regiments = regiments.filter((r) => r !== own[own.length - 1]);
+      neighbours[nationId] = paid;
+    } else {
+      const { neighbour: after, recruit } = chooseRecruit(paid, nationId, regiments);
+      neighbours[nationId] = after;
+      if (recruit) regiments = [...regiments, recruit];
+    }
   }
-  return { neighbours, foreignVoyages, pendingOffer };
+  return { neighbours, foreignVoyages, pendingOffer, regiments };
 }

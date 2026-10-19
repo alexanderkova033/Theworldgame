@@ -11,9 +11,9 @@
 
 // The systems a chapter can open. Building, people, the budget, taxes,
 // loans and rallies are open from the first day.
-export type Feature = "market" | "laws" | "research" | "unrest" | "voters" | "neighbours" | "ventures";
+export type Feature = "market" | "laws" | "research" | "unrest" | "voters" | "neighbours" | "ventures" | "army";
 
-export type ChapterId = "first-winter" | "exchange" | "assembly" | "society" | "streets" | "voters" | "envoys" | "captain";
+export type ChapterId = "first-winter" | "exchange" | "assembly" | "society" | "streets" | "voters" | "envoys" | "captain" | "army";
 
 export interface ChapterData {
   id: ChapterId;
@@ -104,6 +104,16 @@ export const CHAPTERS: ChapterData[] = [
     objectives: ["Charter a venture"],
     until: "Opens when a captain offers to sail for you, in the second year",
     by: 20,
+  },
+  {
+    id: "army",
+    title: "A Standing Army",
+    opens: ["army"],
+    briefing:
+      "The neighbours keep regiments, and their colours can be seen drilling along the borders. You may now raise regiments of your own: trained soldiers, paid by the day, who march anywhere in the country and sail to its islands. Tap a regiment on the map, then a province, to send it there.",
+    objectives: ["Raise a regiment"],
+    until: "Opens when the neighbours' armies are noticed, in the second year",
+    by: 24,
   },
 ];
 

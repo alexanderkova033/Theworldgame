@@ -15,6 +15,7 @@ export type StatIconType =
   | "politicalPower"
   | "police"
   | "militia"
+  | "regiment"
   | "uprising";
 
 interface StatIconProps {
@@ -148,6 +149,19 @@ function renderShape(type: StatIconType) {
           <rect x={-7.6} y={4.6} width={15.2} height={2.6} rx={1.2} fill="#2b1d12" stroke="#120a05" strokeWidth={0.5} />
           <path d="M0,-6.6 C-1.8,-8.4 -1.3,-10.4 0.2,-10.9 C1.5,-10.1 1.7,-8.3 0,-6.6 Z" fill="#f4ead0" stroke="#9c8a66" strokeWidth={0.4} />
           <path d="M0,-3.2 L2.3,-0.4 L0,2.4 L-2.3,-0.4 Z" fill="#e6c56a" stroke="#93731f" strokeWidth={0.4} />
+        </g>
+      );
+    case "regiment":
+      // Crossed sabres, steel blades and brass hilts: a regiment of the line.
+      return (
+        <g strokeLinecap="round">
+          <path d="M-6.8,6.8 C-3,2.6 1.6,-2.6 6.6,-7.6" fill="none" stroke="#2f343b" strokeWidth={2.9} />
+          <path d="M-6.8,6.8 C-3,2.6 1.6,-2.6 6.6,-7.6" fill="none" stroke="#d7dade" strokeWidth={1.3} />
+          <path d="M6.8,6.8 C3,2.6 -1.6,-2.6 -6.6,-7.6" fill="none" stroke="#2f343b" strokeWidth={2.9} />
+          <path d="M6.8,6.8 C3,2.6 -1.6,-2.6 -6.6,-7.6" fill="none" stroke="#aeb4bd" strokeWidth={1.3} />
+          <path d="M-7.6,4.4 L-4.4,7.6 M7.6,4.4 L4.4,7.6" stroke="#c9a24a" strokeWidth={1.7} />
+          <circle cx={-7.4} cy={7.4} r={1.2} fill="#93731f" />
+          <circle cx={7.4} cy={7.4} r={1.2} fill="#93731f" />
         </g>
       );
     case "uprising":

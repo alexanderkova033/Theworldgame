@@ -7,12 +7,13 @@
 //   Build     buildings · people (homes, jobs, heating, food)
 //   Money     budget (taxes, loans) · market
 //   Politics  support (the chamber, what moves it, rallies) · voters (groups, courting, parties) · unrest (police, crackdowns) · neighbours
+//   Army      regiments: raising them, where they stand and march (moved on the map)
 //   Laws, Research, Reports, and Ventures (opened from an island on the map)
 import type { AdvisorAlert, AdvisorAlertKind } from "../application/getAdvisorOutlook";
 import { chapterFor, isFeatureOpen, type ChapterId, type Feature } from "../domain/chapters/chapterData";
 import type { GameState } from "../domain/country/types";
 
-export type PanelKey = "build" | "money" | "politics" | "laws" | "research" | "reports" | "ventures";
+export type PanelKey = "build" | "money" | "politics" | "laws" | "research" | "reports" | "ventures" | "army";
 
 export type BuildSection = "buildings" | "people";
 export type MoneySection = "budget" | "market";
@@ -43,7 +44,7 @@ export function politicsSectionFor(state: GameState): PoliticsSection {
 
 // The windows and sections that stay shut until a chapter opens them (see
 // domain/chapters).
-const PANEL_FEATURES: Partial<Record<PanelKey, Feature>> = { laws: "laws", research: "research", ventures: "ventures" };
+const PANEL_FEATURES: Partial<Record<PanelKey, Feature>> = { laws: "laws", research: "research", ventures: "ventures", army: "army" };
 const SECTION_FEATURES: Partial<Record<Section, Feature>> = { market: "market", voters: "voters", unrest: "unrest", neighbours: "neighbours" };
 
 // Why a window or section is shut, or null when it's open.
@@ -93,6 +94,7 @@ const WINDOW_NAMES: Record<PanelKey, string> = {
   research: "Research",
   reports: "Reports",
   ventures: "Ventures",
+  army: "Army",
 };
 
 const SECTION_NAMES: Record<Section, string> = {
@@ -122,6 +124,7 @@ export const OBJECTIVE_DESTINATIONS: Record<ChapterId, Array<Destination | null>
   voters: [{ panel: "politics", section: "voters" }],
   envoys: [{ panel: "politics", section: "neighbours" }],
   captain: [{ panel: "ventures" }],
+  army: [{ panel: "army" }],
 };
 
 export function alertDestination(alert: AdvisorAlert, state: GameState): Destination {

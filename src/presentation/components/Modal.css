@@ -48,6 +48,7 @@
 .modal[data-window="laws"] { --window-ink: var(--ink-laws); }
 .modal[data-window="research"] { --window-ink: var(--ink-research); }
 .modal[data-window="reports"] { --window-ink: var(--ink-reports); }
+.modal[data-window="army"] { --window-ink: var(--ink-army); }
 
 .modal.modal--wide {
   max-width: 64rem;
