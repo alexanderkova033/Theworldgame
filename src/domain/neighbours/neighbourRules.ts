@@ -61,6 +61,7 @@ export function createNeighbour(nationId: string): Neighbour {
     lastVoyageMonth: null,
     lastDeed: null,
     relations: 0,
+    accordUntil: null,
     feelings: [],
   };
 }

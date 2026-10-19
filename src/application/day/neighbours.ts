@@ -13,6 +13,7 @@ import { getNation } from "../../domain/nations/nationRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { fadeFeelings } from "../../domain/neighbours/relationsRules";
 import { draftOffer } from "../../domain/neighbours/tradeRules";
+import { hasAccord } from "../../domain/neighbours/treatyRules";
 import { nationHasPort } from "../../domain/market/marketRules";
 import { isFriendly } from "../../domain/diplomacy/diplomacyRules";
 import { monthNumber } from "../chapters";
@@ -35,7 +36,8 @@ export function runNeighbours(day: Day, working: GameState, date: GameDate): Pic
     const { neighbour, deed } = chooseBuilding(liveMonth(faded, nationId, date), nationId);
     // The islands are only raced for once the player can answer (ventures open).
     const target = isFeatureOpen(working, "ventures") ? pickRaceTarget({ ...working, foreignVoyages }) : null;
-    if (chooseVoyage(neighbour, nationId, month, target)) {
+    // An island accord with you holds their settlers back (treatyRules.ts).
+    if (!hasAccord(neighbour, date) && chooseVoyage(neighbour, nationId, month, target)) {
       foreignVoyages = [...foreignVoyages, { nationId, islandId: target!, daysRemaining: RACE_VOYAGE_DAYS, totalDays: RACE_VOYAGE_DAYS }];
       neighbours[nationId] = { ...neighbour, treasury: neighbour.treasury - SETTLE_COST, lastVoyageMonth: month, lastDeed: `Sent settlers to ${getProvinceName(target!)}` };
       log(day, {

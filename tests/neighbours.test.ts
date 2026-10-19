@@ -29,6 +29,10 @@ import {
 } from "../src/domain/constants";
 import type { Neighbour } from "../src/domain/neighbours/types";
 import { hydrateGameState } from "../src/presentation/hooks/gameSave";
+import { buyBackIsland, canBuyBackIsland, canSignAccord, signIslandAccord } from "../src/application/actions/treatyActions";
+import { getBuyBackPrice, getIslandPeople, hasAccord } from "../src/domain/neighbours/treatyRules";
+import { getOwnedProvinceIds } from "../src/domain/provinces/provinceRules";
+import { ACCORD_COST, ACCORD_DAYS, ACCORD_MIN_RELATIONS, BUY_BACK_MIN_RELATIONS, RELATIONS_ACCORD, RELATIONS_ISLAND_SOLD } from "../src/domain/constants";
 
 function tenYears(nationId: string): Neighbour[] {
   let n = createNeighbour(nationId);
@@ -166,5 +170,68 @@ describe("trade with a neighbour", () => {
     const declined = declineOffer(offered);
     expect(declined.pendingOffer).toBeNull();
     expect(declined.stats).toEqual(offered.stats);
+  });
+});
+
+describe("treaties with a neighbour", () => {
+  const start = startNewGame("astravia", "astravia-harvest-union");
+  const base: GameState = { ...start, chapters: allChaptersOpen(), stats: { ...start.stats, treasury: 20000 } };
+  const firstOf = (month: number) => ({ year: Math.floor((month - 1) / 12) + 1, month: ((month - 1) % 12) + 1, day: 1 });
+  const withNeighbour = (nationId: string, change: Partial<Neighbour>, state = base): GameState => ({
+    ...state,
+    neighbours: { ...state.neighbours, [nationId]: { ...state.neighbours[nationId], ...change } },
+  });
+
+  it("an island accord needs them Cordial and the price, and holds for two years", () => {
+    expect(canSignAccord(withNeighbour("veldoria", { relations: 0 }), "veldoria")).toBe(false);
+    const cordial = withNeighbour("veldoria", { relations: ACCORD_MIN_RELATIONS });
+    expect(canSignAccord({ ...cordial, stats: { ...cordial.stats, treasury: ACCORD_COST - 1 } }, "veldoria")).toBe(false);
+    const signed = signIslandAccord(cordial, "veldoria");
+    expect(signed.stats.treasury).toBe(cordial.stats.treasury - ACCORD_COST);
+    expect(signed.neighbours.veldoria.relations).toBe(ACCORD_MIN_RELATIONS + RELATIONS_ACCORD);
+    expect(hasAccord(signed.neighbours.veldoria, addDays(base.date, ACCORD_DAYS - 1))).toBe(true);
+    expect(hasAccord(signed.neighbours.veldoria, addDays(base.date, ACCORD_DAYS))).toBe(false);
+    expect(canSignAccord(signed, "veldoria")).toBe(false); // one at a time
+  });
+
+  it("while an accord holds, they send no settlers", () => {
+    const wealthy: GameState = {
+      ...base,
+      neighbours: Object.fromEntries(Object.entries(base.neighbours).map(([id, n]) => [id, { ...n, treasury: 50000, accordUntil: firstOf(RACE_FROM_MONTH + 61) }])),
+    };
+    for (let m = RACE_FROM_MONTH; m < RACE_FROM_MONTH + 60; m++) {
+      expect(runNeighbours(beginDay({ ...wealthy, date: firstOf(m) }), wealthy, firstOf(m)).foreignVoyages).toEqual([]);
+    }
+  });
+
+  const kestrel = "island-1";
+  const held = withNeighbour("veldoria", { relations: BUY_BACK_MIN_RELATIONS, population: 100000 }, { ...base, foreignIslands: { [kestrel]: "veldoria" } });
+
+  it("buying back an island needs them Warm and the price", () => {
+    expect(canBuyBackIsland(withNeighbour("veldoria", { relations: BUY_BACK_MIN_RELATIONS - 1 }, held), kestrel)).toBe(false);
+    expect(canBuyBackIsland({ ...held, stats: { ...held.stats, treasury: getBuyBackPrice(kestrel) - 1 } }, kestrel)).toBe(false);
+    expect(canBuyBackIsland(held, kestrel)).toBe(true);
+    expect(canBuyBackIsland(base, kestrel)).toBe(false); // nobody holds it
+  });
+
+  it("bought back, the island is your province and its people yours, and they cool", () => {
+    const bought = buyBackIsland(held, kestrel);
+    const people = getIslandPeople(kestrel);
+    expect(bought.foreignIslands[kestrel]).toBeUndefined();
+    expect(bought.settledIslandIds).toContain(kestrel);
+    expect(bought.scoutedIslandIds).toContain(kestrel);
+    expect(getOwnedProvinceIds(bought)).toContain(kestrel);
+    expect(bought.provinces[kestrel].population).toBe(people);
+    expect(bought.stats.population).toBe(held.stats.population + people);
+    expect(bought.stats.treasury).toBe(held.stats.treasury - getBuyBackPrice(kestrel));
+    expect(bought.neighbours.veldoria.treasury).toBe(held.neighbours.veldoria.treasury + getBuyBackPrice(kestrel));
+    expect(bought.neighbours.veldoria.population).toBe(100000 - people);
+    expect(bought.neighbours.veldoria.relations).toBe(BUY_BACK_MIN_RELATIONS + RELATIONS_ISLAND_SOLD);
+  });
+
+  it("is remembered by saves, and older saves have no accord", () => {
+    const old = JSON.parse(JSON.stringify(base));
+    for (const n of Object.values(old.neighbours) as Array<Record<string, unknown>>) delete n.accordUntil;
+    expect(hydrateGameState(old).neighbours.veldoria.accordUntil).toBeNull();
   });
 });

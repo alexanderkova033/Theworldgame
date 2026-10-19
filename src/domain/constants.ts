@@ -408,6 +408,16 @@ export const TRADE_OFFER_CHANCE = 0.15; // a month, for each neighbour, once the
 export const TRADE_SELL_DISCOUNT = 0.15; // their food, under the market's price...
 export const TRADE_BUY_PREMIUM = 0.2; // ...and what they want, over what the market pays you
 export const TRADE_PRICE_PER_RELATION = 0.001; // and each point of relations moves the price this share in your favour
+
+// Treaties (see domain/neighbours/treatyRules.ts).
+export const ACCORD_COST = 1500; // an island accord: they send no settlers...
+export const ACCORD_DAYS = 720; // ...for two years
+export const ACCORD_MIN_RELATIONS = 10; // Cordial, to sign
+export const RELATIONS_ACCORD = 5; // and they think better of you for asking
+export const BUY_BACK_MIN_RELATIONS = 30; // Warm, to sell you an island they hold...
+export const BUY_BACK_BASE_PRICE = 3000; // ...for this...
+export const BUY_BACK_PRICE_PER_PERSON = 2; // ...and this for each person living there
+export const RELATIONS_ISLAND_SOLD = -15; // they part with it unwillingly
 export const RACE_VOYAGE_DAYS = 90; // their voyage out
 export const RACE_TURNED_BACK_REFUND = 0.5; // share of your settling price refunded when they beat you to it
 export const COLONY_DISTANCE_UNREST = 8; // a colony's mood sits this far below the nation's...

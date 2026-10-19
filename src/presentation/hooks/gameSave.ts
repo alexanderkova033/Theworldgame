@@ -127,7 +127,7 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     foreignIslands: raw.foreignIslands ?? {},
     // Saves from before the neighbours ran their own countries: they start afresh.
     neighbours: raw.neighbours
-      ? Object.fromEntries(Object.entries(raw.neighbours).map(([id, n]) => [id, { ...n, relations: n.relations ?? 0, feelings: n.feelings ?? [] }]))
+      ? Object.fromEntries(Object.entries(raw.neighbours).map(([id, n]) => [id, { ...n, relations: n.relations ?? 0, accordUntil: n.accordUntil ?? null, feelings: n.feelings ?? [] }]))
       : createNeighbours(raw.nationId!),
     dangerPauses: raw.dangerPauses ?? [],
     decisionHistory: raw.decisionHistory ?? [],

@@ -48,14 +48,16 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 
 - **The neighbours now choose their own voyages** (step 4, phase A): their computer rulers sail when they can spare the price and their temper wants it, rolling their own dice (domain/neighbours/neighbourRules.ts, neighbourDice), never the game's, so the balance games don't wobble (a shared random roll once flipped a Hard game). An island they take joins their country (its people, and homes), but its trait does nothing for them yet.
 - **Measured 2026-10-19 with the computer rulers choosing:** over five years, a careful player who never settles loses 4.7 islands to them (Astravia, as a neighbour, takes the most); one who settles holds 5.1 and loses 0.9. Difficulty win counts are unchanged.
-- **There is no way to take a claimed island back** (or to buy, trade or contest it). That is step 4 (treaties, trade) and step 5 (the military).
+- **A claimed island can only be bought back** (step 4, treaties), never taken. Taking one is step 5 (the military).
 - **Measured 2026-10-19 over five years:** a careful player who never settles loses 4 islands to the neighbours; one who settles holds about 5.4 and loses about 0.6, ending about 10,000 Cr richer and 24% bigger than one who doesn't.
 
 ## Relations: notes for trade and treaties
 
 - **Relations are a mood, not a grudge.** Measured 2026-10-19: careful players who settle and win races end five years at neutral with both neighbours, because the -15 for a lost race fades within about 15 months. Trade (phase C) and treaties (phase D) are the natural things to gate on relations, and to move them upward; today almost nothing raises them except backing a neighbour's rulers.
-- **The scripted player never presses elections**, so the balance games never see a warm or hostile neighbour. It declines every trade offer unless given `trade: true` (tests/support/carefulPlayer.ts).
+- **The scripted player presses elections only with `treaties: true`**, and then only to warm a neighbour that holds an island; otherwise the balance games never see a warm or hostile neighbour. It declines every trade offer unless given `trade: true` (tests/support/carefulPlayer.ts).
 - **Trade is modest.** Measured 2026-10-19: about 4.7 offers in five years; a scripted trader takes 1.6 of them. Buy offers need the good in your store, and a careful player keeps very little ore, wood or coal, so most offers are food. Real players with fuller stores will see more. If trade should matter more, the neighbours need goods of their own to sell (their economy has only food and Crowns today).
+- **Treaties work, and may be generous.** Measured 2026-10-19 over nine five-year games, with a scripted player that trades, signs accords when it can and backs the rulers of any neighbour holding an island: without settling, it signs 27 accords and buys back all 18 islands lost, ending with none in foreign hands; all nine games still won. If losing the race should sting more, raise BUY_BACK_BASE_PRICE or make the neighbour refuse an island it settled recently.
+- **For step 5 (the military):** a neighbour's island is `foreignIslands`; `buyBackIsland` (application/actions/treatyActions.ts) shows what taking one hands over (province, homes and farm, people, scouted). A hostile neighbour (-30) is the obvious one to fight; an accord is the obvious thing a war would break.
 
 ## Process reminders
 

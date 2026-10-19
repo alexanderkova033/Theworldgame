@@ -277,6 +277,33 @@
   margin: 0;
 }
 
+/* Treaties: an accord, and islands to buy back. */
+.foreign-card__treaties {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.foreign-card__treaty-wrap {
+  display: inline-flex;
+}
+
+.foreign-card__treaty {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.foreign-card__accord {
+  margin: 0;
+  font-size: 0.875rem;
+  cursor: help;
+}
+
 .foreign-card__feeling {
   margin: 0;
   cursor: help;

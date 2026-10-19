@@ -13,6 +13,10 @@ import { repairBuilding } from "../../src/application/actions/repairBuilding";
 import { canRaiseMilitia, canSendMilitia, raiseMilitia, sendMilitia } from "../../src/application/actions/militiaActions";
 import { answerDemand, canAnswerDemand } from "../../src/application/actions/demandActions";
 import { acceptOffer, canAcceptOffer, declineOffer } from "../../src/application/actions/tradeActions";
+import { buyBackIsland, canBuyBackIsland, canSignAccord, signIslandAccord } from "../../src/application/actions/treatyActions";
+import { getBuyBackPrice } from "../../src/domain/neighbours/treatyRules";
+import { BUY_BACK_MIN_RELATIONS } from "../../src/domain/constants";
+import { canPressureGovernment, pressureGovernment } from "../../src/application/actions/pressureGovernment";
 import { dayNumber } from "../../src/domain/country/calendar";
 import { getFreeMilitia } from "../../src/domain/uprising/uprisingRules";
 import { buildHarbour } from "../../src/application/actions/buildHarbour";
@@ -97,9 +101,10 @@ export interface PlayOptions {
   mode?: GameMode; // Three Terms by default; a Long Reign plays on past the third election
   settle?: boolean; // also scouts the empty islands, settles them and links them with harbours
   trade?: boolean; // also takes the neighbours' good trade offers
+  treaties?: boolean; // also signs island accords, and buys back the islands neighbours hold, when it can spare the money
 }
 
-export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty, skill = "careful", mode, settle = false, trade = false }: PlayOptions): GameState {
+export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty, skill = "careful", mode, settle = false, trade = false, treaties = false }: PlayOptions): GameState {
   const sloppy = skill === "sloppy";
   let s = takeLoan(startNewGame(nation, party, difficulty, mode));
   if (!sloppy) s = setTaxRate(s, 0.12);
@@ -174,6 +179,7 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
     }
 
     if (settle) s = settleIslands(s);
+    if (treaties) s = signTreaties(s);
     s = simulateDay({ ...s, isPaused: false });
     onDay?.(s);
   }
@@ -216,5 +222,21 @@ function settleIslands(state: GameState): GameState {
 export function playIdle(nation: string, party: string, days: number): GameState {
   let s = startNewGame(nation, party);
   for (let day = 0; day < days && !s.isGameOver; day++) s = simulateDay({ ...s, isPaused: false });
+  return s;
+}
+
+// Keep the neighbours from the islands with an accord whenever one will
+// sign, and buy back any island they hold once there's money to spare,
+// backing its rulers until it is warm enough to sell.
+function signTreaties(state: GameState): GameState {
+  let s = state;
+  for (const nationId of new Set(Object.values(s.foreignIslands))) {
+    const gov = s.foreignPolitics[nationId];
+    if (gov && s.neighbours[nationId].relations < BUY_BACK_MIN_RELATIONS && canPressureGovernment(s, nationId)) s = pressureGovernment(s, nationId, gov.rulingPartyId);
+  }
+  for (const nationId of Object.keys(s.neighbours)) if (s.stats.treasury > 4000 && canSignAccord(s, nationId)) s = signIslandAccord(s, nationId);
+  for (const islandId of Object.keys(s.foreignIslands)) {
+    if (s.stats.treasury > getBuyBackPrice(islandId) + 3000 && canBuyBackIsland(s, islandId)) s = buyBackIsland(s, islandId);
+  }
   return s;
 }

@@ -1,3 +1,5 @@
+import type { GameDate } from "../country/types";
+
 // A neighbouring nation as a country of its own, run by the computer (see
 // neighbourRules.ts). Lighter than the player's: whole-country numbers, no
 // provinces, a month at a time.
@@ -12,6 +14,7 @@ export interface Neighbour {
   lastVoyageMonth: number | null; // when it last sent settlers to an island
   lastDeed: string | null; // what it did last month, in plain words, for the Neighbours page
   relations: number; // -100 to 100: how it feels about you (see relationsRules.ts)
+  accordUntil: GameDate | null; // an island accord with you holds until this day (see treatyRules.ts)
   feelings: Feeling[]; // why, the latest first: the few things it remembers you for
 }
 

@@ -23,3 +23,4 @@ export { answerDemand, canAnswerDemand, getDemandAnswers } from "./demandActions
 export { canFoundSettlement, canSendMoreSettlers, foundSettlement, sendMoreSettlers } from "./settlementActions";
 export { buildHarbour } from "./buildHarbour";
 export { acceptOffer, canAcceptOffer, declineOffer } from "./tradeActions";
+export { buyBackIsland, canBuyBackIsland, canSignAccord, signIslandAccord } from "./treatyActions";

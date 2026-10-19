@@ -6,8 +6,9 @@
 // go negative. Pointing at a "back" button shows the push on the bar.
 import "./ForeignAffairs.css";
 import { useState, type CSSProperties } from "react";
-import { canPressureGovernment, pressureGovernment } from "../../application/actions";
+import { buyBackIsland, canBuyBackIsland, canPressureGovernment, canSignAccord, pressureGovernment, signIslandAccord } from "../../application/actions";
 import {
+  ACCORD_COST,
   FOREIGN_TAKEOVER_THRESHOLD,
   FRIENDLY_GOVERNMENT_INCOME_BONUS,
   PRESSURE_POLITICAL_POWER_COST,
@@ -27,6 +28,8 @@ import { getPersonality } from "../../domain/neighbours/neighbourData";
 import { relationsWord } from "../../domain/neighbours/relationsRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { BuildingGlyph } from "./CauseIcon";
+import { formatDate } from "../../domain/country/calendar";
+import { getBuyBackPrice, getIslandPeople, hasAccord, whyNoAccord, whyNoBuyBack } from "../../domain/neighbours/treatyRules";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
 
@@ -92,7 +95,7 @@ function Meter({ gov, partyIds, backing, strength }: { gov: ForeignGovernment; p
 function NeighbourState({ state, nationId }: { state: GameState; nationId: string }) {
   const n = state.neighbours[nationId];
   if (!n) return null;
-  const islands = Object.entries(state.foreignIslands).filter(([, holder]) => holder === nationId).map(([id]) => getProvinceName(id));
+  const islands = Object.entries(state.foreignIslands).filter(([, holder]) => holder === nationId).map(([id]) => [id, getProvinceName(id)]);
   return (
     <div className="foreign-card__country">
       <p className="foreign-card__temper">{getPersonality(nationId).temper}</p>
@@ -129,8 +132,67 @@ function NeighbourState({ state, nationId }: { state: GameState; nationId: strin
           {n.factories}
         </li>
       </ul>
-      {islands.length > 0 && <p className="foreign-card__islands">Holds {islands.join(" and ")}.</p>}
+      {islands.length > 0 && <p className="foreign-card__islands">Holds {islands.map(([, name]) => name).join(" and ")}.</p>}
       {n.lastDeed && <p className="foreign-card__deed">Last month: {n.lastDeed.toLowerCase()}.</p>}
+    </div>
+  );
+}
+
+// What it will sign with you: an island accord, and any island it holds,
+// sold back. Each button says what it costs; its tooltip, what it needs.
+function Treaties({ state, nationId, dispatch }: { state: GameState; nationId: string; dispatch: Dispatch }) {
+  const n = state.neighbours[nationId];
+  if (!n) return null;
+  const name = getNation(nationId).name;
+  const islands = Object.keys(state.foreignIslands).filter((id) => state.foreignIslands[id] === nationId);
+  const accordWhy = whyNoAccord(n, state.date, state.stats.treasury);
+  return (
+    <div className="foreign-card__treaties">
+      {hasAccord(n, state.date) ? (
+        <p className="foreign-card__accord" title={`${name} sends no settlers to any island until then.`}>
+          Island accord until {formatDate(n.accordUntil!)}
+        </p>
+      ) : (
+        <span className="foreign-card__treaty-wrap" title={`For two years ${name} sends no settlers to any island, and thinks better of you.${accordWhy ? ` ${accordWhy}` : ""}`}>
+          <button
+            type="button"
+            className="foreign-card__treaty"
+            disabled={!canSignAccord(state, nationId)}
+            onClick={() => {
+              playSeal();
+              dispatch((s) => signIslandAccord(s, nationId));
+            }}
+          >
+            Island accord
+            <StatIcon type="treasury" size={14} />
+            {formatAmount(ACCORD_COST)}
+          </button>
+        </span>
+      )}
+      {islands.map((islandId) => {
+        const why = whyNoBuyBack(n, islandId, state.stats.treasury);
+        return (
+          <span
+            key={islandId}
+            className="foreign-card__treaty-wrap"
+            title={`${getProvinceName(islandId)} becomes one of your provinces, and its ${formatAmount(getIslandPeople(islandId))} people your own. ${name} parts with it unwillingly.${why ? ` ${why}` : ""}`}
+          >
+            <button
+              type="button"
+              className="foreign-card__treaty"
+              disabled={!canBuyBackIsland(state, islandId)}
+              onClick={() => {
+                playSeal();
+                dispatch((s) => buyBackIsland(s, islandId));
+              }}
+            >
+              Buy {getProvinceName(islandId)}
+              <StatIcon type="treasury" size={14} />
+              {formatAmount(getBuyBackPrice(islandId))}
+            </button>
+          </span>
+        );
+      })}
     </div>
   );
 }
@@ -156,6 +218,7 @@ function ForeignCard({ state, nationId, gov, strength, dispatch }: { state: Game
       </div>
 
       <NeighbourState state={state} nationId={nationId} />
+      <Treaties state={state} nationId={nationId} dispatch={dispatch} />
 
       <Meter gov={gov} partyIds={partyIds} backing={backing} strength={strength} />
 
