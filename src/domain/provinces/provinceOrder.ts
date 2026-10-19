@@ -16,6 +16,7 @@ import type { GameDate } from "../country/types";
 import type { ProvinceLabour } from "../labour/labourRules";
 import { getDisputeUnrest } from "../uprising/demandRules";
 import { getSpreadUnrest } from "../uprising/uprisingRules";
+import { getDistanceUnrest } from "../islands/islandRules";
 import type { UnrestStage } from "../unrest/types";
 import { applyCrackdown, isWorseStage, updateUnrestStage } from "../unrest/unrestRules";
 import type { ProvinceState } from "./types";
@@ -38,6 +39,7 @@ export function updateProvinceOrder(
   capacityByProvince: Record<string, number>,
   labour: Record<string, ProvinceLabour>,
   today: GameDate,
+  linkedIslands: ReadonlySet<string> = new Set(),
 ): { provinces: Record<string, ProvinceState>; changes: ProvinceStageChange[] } {
   const changes: ProvinceStageChange[] = [];
   const next: Record<string, ProvinceState> = {};
@@ -51,10 +53,14 @@ export function updateProvinceOrder(
     const l = labour[id];
     const unemploymentShare = l && l.workers > 0 ? l.unemployed / l.workers : 0;
     // A refused demand keeps it well below the nation for a while (domain/uprising).
-    // So does a strong uprising next door.
+    // So does a strong uprising next door, and a little, being a colony far
+    // from the capital (domain/islands).
     const target = Math.max(
       0,
-      getProvinceStabilityTarget(nationalStability, homelessShare, unemploymentShare) - getDisputeUnrest(p, today) - getSpreadUnrest(provinces, id),
+      getProvinceStabilityTarget(nationalStability, homelessShare, unemploymentShare) -
+        getDisputeUnrest(p, today) -
+        getSpreadUnrest(provinces, id) -
+        getDistanceUnrest(id, linkedIslands),
     );
     const stability = p.stability + (target - p.stability) * PROVINCE_STABILITY_DRIFT;
     const unrestStage = updateUnrestStage(p.unrestStage, stability);

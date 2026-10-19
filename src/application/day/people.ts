@@ -14,7 +14,7 @@ import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { isWorseStage } from "../../domain/unrest/unrestRules";
 import { isInForce } from "../../domain/uprising/demandRules";
 import { getSpreadUnrest } from "../../domain/uprising/uprisingRules";
-import { getLinkedIslands } from "../../domain/islands/islandRules";
+import { getLinkedIslands, isIsland } from "../../domain/islands/islandRules";
 import type { UnrestStage } from "../../domain/unrest/types";
 import { log, type Day } from "./dayContext";
 
@@ -53,16 +53,29 @@ export function movePeople(
     ]),
   );
   const migrated = applyMigration(grown, planMigration(grown, today.capacityByProvince, today.labour.provinces, getLinkedIslands(working)));
+  const capacity = today.capacityByProvince;
   const population = getProvincePopulationTotal(migrated);
 
   // A province striking or rioting worse than the rest is announced.
-  const order = updateProvinceOrder(migrated, today.stability, today.capacityByProvince, today.labour.provinces, date);
+  const linked = getLinkedIslands(working);
+  const order = updateProvinceOrder(migrated, today.stability, today.capacityByProvince, today.labour.provinces, date, linked);
   for (const change of order.changes) {
     const name = getProvinceName(change.provinceId);
     if (isLocalTrouble(change.to, today.unrestStage) && isWorseStage(change.to, change.from)) {
       const disputed = isInForce(working.provinces[change.provinceId]?.disputeUntil ?? null, date);
       const stirred = getSpreadUnrest(working.provinces, change.provinceId) > 0;
-      const why = disputed ? "Its workers are in dispute over pay." : stirred ? "The uprising next door has stirred it up." : "Too many there have no home or no work.";
+      // A colony with homes and work enough is restless for being far away.
+      const p = migrated[change.provinceId];
+      const l = today.labour.provinces[change.provinceId];
+      const wanting = (p && p.population > (capacity[change.provinceId] ?? 0) * 1.01) || (l && l.workers > 0 && l.unemployed / l.workers >= 0.1);
+      const far = isIsland(change.provinceId) && !wanting;
+      const why = disputed
+        ? "Its workers are in dispute over pay."
+        : stirred
+          ? "The uprising next door has stirred it up."
+          : far
+            ? "It is far from the mainland, and feels forgotten."
+            : "Too many there have no home or no work.";
       log(day, {
         date,
         message:

@@ -25,6 +25,8 @@ import { applySettlementArrival } from "../src/application/applySettlementArriva
 import { getDailyProductionSummary } from "../src/application/getDailyProductionSummary";
 import { ANCHORAGE_HARBOUR_COST_SHARE, GRAZING_FOOD_PER_DAY, SUPPLY_FEE_PER_DAY } from "../src/domain/constants";
 import { getGrazingFood, getLinkedIslands, getProducingTerrains } from "../src/domain/islands/islandRules";
+import { COLONY_DISTANCE_UNREST, COLONY_DISTANCE_UNREST_LINKED } from "../src/domain/constants";
+import { updateProvinceOrder } from "../src/domain/provinces/provinceOrder";
 
 function bounds(path: string) {
   const points = (path.match(/-?\d+(\.\d+)?,-?\d+(\.\d+)?/g) ?? []).map((p) => p.split(",").map(Number));
@@ -249,5 +251,28 @@ describe("settling among people already there", () => {
     const landed = applySettlementArrival(scouted, kestrel, "drive");
     expect(landed.provinces[kestrel].population).toBeLessThan(locals);
     expect(landed.stats.population).toBe(scouted.stats.population);
+  });
+});
+
+describe("a colony far from the capital", () => {
+  const start = startNewGame("astravia", "astravia-harvest-union");
+  const solmere = "island-2";
+  const colony = applySettlementArrival({ ...start, scoutedIslandIds: [solmere] }, solmere);
+  const mainland = getOwnedProvinceIds(colony).find((id) => !id.startsWith("island"))!;
+  // Everyone housed and employed, so only distance moves the mood.
+  const ids = Object.keys(colony.provinces);
+  const capacity = Object.fromEntries(ids.map((id) => [id, 1e9]));
+  const labour = Object.fromEntries(ids.map((id) => [id, { workers: 0, unemployed: 0 }]));
+  const settle = (linked: ReadonlySet<string>) => {
+    let provinces = colony.provinces;
+    for (let i = 0; i < 200; i++) provinces = updateProvinceOrder(provinces, 60, capacity, labour as never, colony.date, linked).provinces;
+    return provinces;
+  };
+
+  it("sits a little below the nation's mood, less once linked", () => {
+    const apart = settle(new Set());
+    const linked = settle(new Set([solmere]));
+    expect(apart[mainland].stability - apart[solmere].stability).toBeCloseTo(COLONY_DISTANCE_UNREST, 0);
+    expect(linked[mainland].stability - linked[solmere].stability).toBeCloseTo(COLONY_DISTANCE_UNREST_LINKED, 0);
   });
 });

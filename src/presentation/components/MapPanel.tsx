@@ -605,7 +605,15 @@ const MapLayers = memo(function MapLayers({
         const isScouted = scoutedIslandIds.includes(land.id);
         const isExpeditionActive = expeditionIslandIds.includes(land.id);
         const isSelected = land.id === selectedIslandId;
-        const status = isScouted ? "charted" : isExpeditionActive ? "venture under way" : venturesOpen ? "uncharted: click to charter a venture" : "uncharted";
+        const status = lostProvinceIds.includes(land.id)
+          ? "broke away: free"
+          : isScouted
+            ? "charted"
+            : isExpeditionActive
+              ? "venture under way"
+              : venturesOpen
+                ? "uncharted: click to charter a venture"
+                : "uncharted";
         return (
           <path
             key={land.id}

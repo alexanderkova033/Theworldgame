@@ -17,7 +17,18 @@
 // but keep to their own ways for a year, so the island's mood sits low), or
 // drive them out (every group thinks less of you, and only your settlers
 // remain).
-import { ANCHORAGE_HARBOUR_COST_SHARE, GRAZING_FOOD_PER_DAY, SALT_TRADE_PER_DAY, SUPPLY_FEE_PER_DAY } from "../constants";
+//
+// Far from the capital, a colony's mood sits a little below the nation's,
+// less so once harbours link it. Otherwise colonies are governed like any
+// province: they can make demands, rise, and break away.
+import {
+  ANCHORAGE_HARBOUR_COST_SHARE,
+  COLONY_DISTANCE_UNREST,
+  COLONY_DISTANCE_UNREST_LINKED,
+  GRAZING_FOOD_PER_DAY,
+  SALT_TRADE_PER_DAY,
+  SUPPLY_FEE_PER_DAY,
+} from "../constants";
 import type { GameState } from "../country/types";
 import { isWorking } from "../maintenance/maintenanceRules";
 import { MAP_GEOMETRY } from "../provinces/provinceData";
@@ -67,6 +78,13 @@ export function getLinkedIslands(state: GameState): Set<string> {
   const owned = getOwnedProvinceIds(state);
   const mainlandHarbour = owned.some((id) => !isIsland(id) && hasHarbour(state, id));
   return new Set(mainlandHarbour ? getHeldIslands(state).filter((id) => hasHarbour(state, id)) : []);
+}
+
+// Far from the capital, a colony's mood sits a little below the nation's;
+// regular boats between harbours bring it closer.
+export function getDistanceUnrest(provinceId: string, linkedIslands: ReadonlySet<string>): number {
+  if (!isIsland(provinceId)) return 0;
+  return linkedIslands.has(provinceId) ? COLONY_DISTANCE_UNREST_LINKED : COLONY_DISTANCE_UNREST;
 }
 
 // What the colonies cost and bring in each day, in Crowns: the supply fee

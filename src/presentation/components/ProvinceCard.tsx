@@ -63,6 +63,9 @@ function getNeed(p: ProvinceOverview): { text: string; urgent: boolean } {
     if (p.stirred && status.homes !== "over" && status.jobs !== "jobless") {
       return { text: `${UNREST_INFO[status.stage].name}: the uprising next door has stirred it up.`, urgent: true };
     }
+    if (isIsland(p.id) && status.homes !== "over" && status.jobs !== "jobless") {
+      return { text: `${UNREST_INFO[status.stage].name}: far from the mainland, it feels forgotten.`, urgent: true };
+    }
     const why = status.homes === "over" ? "homes" : "work";
     return { text: `${UNREST_INFO[status.stage].name}: too many here have no ${why}.`, urgent: true };
   }

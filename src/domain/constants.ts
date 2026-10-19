@@ -378,6 +378,8 @@ export const HARBOUR_WOOD_COST = 30;
 export const HARBOUR_BUILD_DAYS = 60;
 export const MAX_HARBOURS_PER_PROVINCE = 1;
 export const SUPPLY_FEE_PER_DAY = 4; // Crowns a day for each colony not linked by harbours
+export const COLONY_DISTANCE_UNREST = 8; // a colony's mood sits this far below the nation's...
+export const COLONY_DISTANCE_UNREST_LINKED = 4; // ...or this far, once harbours link it to the mainland
 // Island traits (see domain/islands/islandData.ts).
 export const ANCHORAGE_HARBOUR_COST_SHARE = 0.5; // a harbour on a sheltered anchorage costs this share
 export const GRAZING_FOOD_PER_DAY = 300; // food a day from an island's flocks
