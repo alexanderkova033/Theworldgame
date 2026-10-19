@@ -378,6 +378,12 @@ export const HARBOUR_WOOD_COST = 30;
 export const HARBOUR_BUILD_DAYS = 60;
 export const MAX_HARBOURS_PER_PROVINCE = 1;
 export const SUPPLY_FEE_PER_DAY = 4; // Crowns a day for each colony not linked by harbours
+// --- Neighbours run by the computer (see domain/neighbours) ---
+// They live by the same numbers as the player's country, a month at a time.
+export const NEIGHBOUR_TAX_RATE = 0.15; // the rate they tax at, as a new game's
+export const NEIGHBOUR_UPKEEP_SHARE = 0.4; // of their income, spent running the country (officials, police, upkeep)
+export const NEIGHBOUR_GROWTH_PER_MONTH = POPULATION_GROWTH_RATE * DAYS_PER_MONTH; // people born, while fed and housed
+
 // The race: from the third year, on a steady schedule, a neighbour sends
 // settlers to an island nobody holds; whoever lands first keeps it. Steady
 // rather than by chance, so a player can see it coming.

@@ -238,3 +238,41 @@
 .foreign-card__back:disabled span {
   color: inherit;
 }
+
+/* The country the computer runs: a line of temper, its figures, its islands
+   and what it did last. */
+.foreign-card__country {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0.35rem 0 0.5rem;
+  font-size: 0.875rem;
+}
+
+.foreign-card__temper {
+  margin: 0;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.foreign-card__figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.foreign-card__figures li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: help;
+}
+
+.foreign-card__islands,
+.foreign-card__deed {
+  margin: 0;
+}

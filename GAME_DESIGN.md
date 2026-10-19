@@ -118,6 +118,10 @@ Six islands lie off the continent: Kestrel Isles, Solmere, Vashtel Cay, Grey Hol
 
 **Traits.** Kestrel Isles' fishing grounds, Solmere's ore seam and Marrowind's old forest double what their terrain yields; Vashtel Cay's anchorage halves the price of a harbour there; Grey Holm's flocks add 300 food a day; Saltreach's salt pans bring in 6 Cr a day. Settling only the three empty islands and linking them costs a careful player about 3,800 Cr over five years, ventures included, for about 4% more people. Settling all six, buying land where it can, leaves it about 8,500 Cr richer and 28% bigger: the peopled islands are the prize.
 
+## The neighbours
+
+The two nations you don't play are run by the computer, each by its own temper: Astravia grows its farms and wants land, Caldenreich is careful with money and slow to venture, Veldoria builds industry. They live by the same numbers as your country, a month at a time: farms feed their people by the season, taxes and factories bring in money (four tenths of it spent running the country), and homes cap how far they grow. Each month the computer builds one thing: a farm if the food won't last, homes before people outgrow them, and otherwise, with money to spare beyond its reserve, more of what its temper likes. The Neighbours page in Politics shows each one's people, treasury, stability, farms and factories, islands, and what it did last month. Their dice are their own, drawn from the nation and the month, so nothing they do changes your luck.
+
 ## Politics
 
 - **Taxes** are a lever: more money, less support above the rate people accept.

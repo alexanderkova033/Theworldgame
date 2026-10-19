@@ -15,6 +15,7 @@
 //   7b uprisings  provinces rising, rebel strength, uprisings ending
 //   - the day is recorded and the calendar turns (here)
 //   8 newMonth    world events, the rival, the neighbours, the season
+//   8b neighbours the computer-run neighbours live a month and build
 //   9 election    a general election, every so often
 //   - a decision may arrive (here)
 //   - a chapter may open, or be completed (chapters.ts)
@@ -39,6 +40,7 @@ import { turnOfTheMonth } from "./day/newMonth";
 import { keepOrder } from "./day/order";
 import { movePeople } from "./day/people";
 import { tendUprisings } from "./day/uprisings";
+import { runNeighbours } from "./day/neighbours";
 import { loseProvince } from "./loseProvince";
 import { getNation } from "../domain/nations/nationRules";
 import { moveSupport } from "./day/support";
@@ -214,6 +216,7 @@ export function simulateDay(state: GameState): GameState {
     factionApproval: month.factionApproval,
     workforce: takings.workforce,
     foreignPolitics: month.foreignPolitics,
+    neighbours: runNeighbours(working, date),
     debt: goods.debt,
     events: day.events.slice(0, MAX_EVENT_LOG_LENGTH),
     history: finalHistory,

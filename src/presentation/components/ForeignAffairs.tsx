@@ -1,4 +1,5 @@
-// Foreign affairs, inside the Politics tab: one card per neighbor, with its
+// Foreign affairs, inside the Politics tab: one card per neighbor: the
+// country its computer ruler runs (see domain/neighbours), then its
 // electorate split as a two-color bar (ruling party crowned) and a "back"
 // button for each side. How far a push moves them comes from your own
 // popularity + stability, stated once up top with its price — and it can
@@ -15,7 +16,10 @@ import { getNation } from "../../domain/nations/nationRules";
 import { getParty } from "../../domain/parties/partyRules";
 import { playSeal } from "../audio/sound";
 import { StatIcon } from "./StatIcon";
-import { formatSigned } from "../formatNumber";
+import { formatAmount, formatSigned } from "../formatNumber";
+import { getPersonality } from "../../domain/neighbours/neighbourData";
+import { getProvinceName } from "../../domain/provinces/provinceRules";
+import { BuildingGlyph } from "./CauseIcon";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
 
@@ -76,6 +80,41 @@ function Meter({ gov, partyIds, backing, strength }: { gov: ForeignGovernment; p
   );
 }
 
+// The country the computer runs: its temper, its numbers, its islands, and
+// what it did last month.
+function NeighbourState({ state, nationId }: { state: GameState; nationId: string }) {
+  const n = state.neighbours[nationId];
+  if (!n) return null;
+  const islands = Object.entries(state.foreignIslands).filter(([, holder]) => holder === nationId).map(([id]) => getProvinceName(id));
+  return (
+    <div className="foreign-card__country">
+      <p className="foreign-card__temper">{getPersonality(nationId).temper}</p>
+      <ul className="foreign-card__figures">
+        <li title="People">
+          <StatIcon type="population" size={15} />
+          {formatAmount(n.population)}
+        </li>
+        <li title="Crowns in its treasury">
+          <StatIcon type="treasury" size={15} />
+          {formatAmount(n.treasury)}
+        </li>
+        <li title="Stability">
+          <StatIcon type="stability" size={15} />
+          {Math.round(n.stability)}
+        </li>
+        <li title="Farms and factories">
+          <BuildingGlyph type="farm" size={15} />
+          {n.farms}
+          <BuildingGlyph type="factory" size={15} />
+          {n.factories}
+        </li>
+      </ul>
+      {islands.length > 0 && <p className="foreign-card__islands">Holds {islands.join(" and ")}.</p>}
+      {n.lastDeed && <p className="foreign-card__deed">Last month: {n.lastDeed.toLowerCase()}.</p>}
+    </div>
+  );
+}
+
 function ForeignCard({ state, nationId, gov, strength, dispatch }: { state: GameState; nationId: string; gov: ForeignGovernment; strength: number; dispatch: Dispatch }) {
   const [backing, setBacking] = useState<string | null>(null);
   const nation = getNation(nationId);
@@ -95,6 +134,8 @@ function ForeignCard({ state, nationId, gov, strength, dispatch }: { state: Game
           </span>
         )}
       </div>
+
+      <NeighbourState state={state} nationId={nationId} />
 
       <Meter gov={gov} partyIds={partyIds} backing={backing} strength={strength} />
 

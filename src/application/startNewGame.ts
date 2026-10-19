@@ -19,6 +19,7 @@ import { emptyLedger } from "../domain/ledger/ledgerRules";
 import { emptyWorkforce } from "../domain/workforce/workforceRules";
 import { newChapterProgress } from "../domain/chapters/chapterData";
 import type { GameMode } from "../domain/reign/reignData";
+import { createNeighbours } from "../domain/neighbours/neighbourRules";
 
 // The reign opens on New Year's Day, in the dead of winter (see getSeason):
 // farms barely yield, so the very first thing the player sees is food
@@ -135,6 +136,7 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     settledIslandIds: [],
     foreignVoyages: [],
     foreignIslands: {},
+    neighbours: createNeighbours(nationId),
     workforce: emptyWorkforce(),
     foreignPolitics: createForeignPolitics(nationId),
     market: createMarket(getSeason(STARTING_DATE)),

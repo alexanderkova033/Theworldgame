@@ -1,6 +1,5 @@
-// The continent is currently divided among three playable nations. The rest
-// of the map (whichever nation the player doesn't pick) is shown but not
-// controllable — a placeholder for AI-controlled neighbors down the line.
+// The continent is divided among three playable nations. The two the player
+// doesn't pick are run by the computer (see domain/neighbours).
 import type { Nation } from "./types";
 
 export const NATIONS: Nation[] = [

@@ -20,6 +20,7 @@ import { emptyResourceBundle } from "../../domain/resources/resourceRules";
 import { getStageForStability } from "../../domain/unrest/unrestRules";
 import { emptyWorkforce } from "../../domain/workforce/workforceRules";
 import { allChaptersOpen } from "../../domain/chapters/chapterData";
+import { createNeighbours } from "../../domain/neighbours/neighbourRules";
 
 // GameState has grown fields release over release (debt, researchOutcomes,
 // resourceDemand, ...), and a save is just a blind JSON round-trip with no
@@ -123,6 +124,8 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     settledIslandIds: raw.settledIslandIds ?? [],
     foreignVoyages: raw.foreignVoyages ?? [],
     foreignIslands: raw.foreignIslands ?? {},
+    // Saves from before the neighbours ran their own countries: they start afresh.
+    neighbours: raw.neighbours ?? createNeighbours(raw.nationId!),
     dangerPauses: raw.dangerPauses ?? [],
     decisionHistory: raw.decisionHistory ?? [],
     // Saves from before uprisings: no province has rioted for long, or risen.
