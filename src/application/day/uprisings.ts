@@ -10,6 +10,7 @@ import { getDifficulty } from "../../domain/difficulty/difficultyData";
 import type { GameState } from "../../domain/country/types";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import type { PlacedBuilding, ProvinceState } from "../../domain/provinces/types";
+import { getGarrisons } from "../../domain/military/militaryRules";
 import { endUprising, getBreakawayDaysLeft, getRebelStrengthChange, recallUnpaidMilitia, returnBuildings, seizeBuildings, shouldRise, startUprising } from "../../domain/uprising/uprisingRules";
 import type { UnrestStage } from "../../domain/unrest/types";
 import type { Workforce } from "../../domain/workforce/types";
@@ -36,10 +37,12 @@ export function tendUprisings(
   let pendingDemand = working.pendingDemand;
   const lost: string[] = [];
 
+  const garrisons = getGarrisons(working.regiments, working.nationId);
   for (const [id, before] of Object.entries(recallUnpaidMilitia(today.workforce, working.provinces))) {
     // Only rioting on its own counts: when the whole country riots, that is
-    // the nation's trouble (and collapse its end), not one province's.
-    const riotingAlone = before.unrestStage === "riots" && today.unrestStage !== "riots";
+    // the nation's trouble (and collapse its end), not one province's. And
+    // not while a regiment stands there (domain/military).
+    const riotingAlone = before.unrestStage === "riots" && today.unrestStage !== "riots" && !garrisons[id];
     let p: ProvinceState = { ...before, riotDays: riotingAlone ? before.riotDays + 1 : 0 };
     const name = getProvinceName(id);
 
@@ -48,17 +51,17 @@ export function tendUprisings(
       placedBuildings = seizeBuildings(placedBuildings, id);
       log(day, {
         date,
-        message: `${name} has risen against the government! Rebels hold its farms and works, and it pays no taxes. ${militiaOpen ? "Send in the militia, or calm the country and wait it out." : "Calm the country and it will burn out."}`,
+        message: `${name} has risen against the government! Rebels hold its farms and works, and it pays no taxes. ${isFeatureOpen(working, "army") ? "Send in the militia or march a regiment there, or calm the country and wait it out." : militiaOpen ? "Send in the militia, or calm the country and wait it out." : "Calm the country and it will burn out."}`,
         severity: "danger",
         topic: "uprising",
       });
     } else if (p.uprising) {
       const homelessShare = p.population > 0 ? Math.max(0, p.population - (today.capacityByProvince[id] ?? 0)) / p.population : 0;
-      const change = getRebelStrengthChange(p.uprising, homelessShare, today.stability, today.workforce.police);
+      const change = getRebelStrengthChange(p.uprising, homelessShare, today.stability, today.workforce.police, garrisons[id] ?? 0);
       const strength = Math.min(100, Math.max(0, p.uprising.strength + change.total));
       if (strength <= 0) {
         // Over. Put down by force, it remembers; burnt out, it doesn't.
-        const byForce = p.uprising.militia > 0;
+        const byForce = p.uprising.militia > 0 || (garrisons[id] ?? 0) > 0;
         placedBuildings = returnBuildings(placedBuildings, id);
         p = endUprising(p, date, byForce);
         log(day, {

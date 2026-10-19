@@ -10,6 +10,8 @@ import { simulateDay } from "../src/application/simulateDay";
 import { startNewGame } from "../src/application/startNewGame";
 import { allChaptersOpen } from "../src/domain/chapters/chapterData";
 import {
+  GARRISON_ORDER,
+  GARRISON_ORDER_CAP,
   POPULATION_PER_REGIMENT,
   REGIMENT_MARCH_DAYS,
   REGIMENT_RAISE_COST,
@@ -19,7 +21,7 @@ import {
 } from "../src/domain/constants";
 import type { GameState } from "../src/domain/country/types";
 import { isHarbourSite, isIsland } from "../src/domain/islands/islandRules";
-import { advanceRegiment, findRoute, getRegimentCap, isReady, newRegiment, routeDays, startMarch } from "../src/domain/military/militaryRules";
+import { advanceRegiment, findRoute, getGarrisonOrder, getGarrisons, getRegimentCap, isReady, newRegiment, routeDays, startMarch } from "../src/domain/military/militaryRules";
 import { getNation } from "../src/domain/nations/nationRules";
 import { getNeighbours } from "../src/domain/provinces/provinceNeighbours";
 import { hydrateGameState } from "../src/presentation/hooks/gameSave";
@@ -137,5 +139,52 @@ describe("the neighbours' armies", () => {
     expect(hydrateGameState(old).regiments).toEqual(s.regiments);
     delete old.regiments;
     expect(hydrateGameState(old).regiments).toEqual([]);
+  });
+});
+
+describe("a garrison", () => {
+  const province = astravia.find((id) => id !== capital)!;
+  const standing = (s: GameState, provinceId: string, march = false): GameState => ({
+    ...s,
+    regiments: [{ ...newRegiment(s.nationId, provinceId), trainingDays: 0, march: march ? { route: [capital], legDays: 5, daysLeft: 3 } : null }],
+  });
+  const withProvince = (s: GameState, change: Partial<GameState["provinces"][string]>): GameState => ({
+    ...s,
+    provinces: { ...s.provinces, [province]: { ...s.provinces[province], ...change } },
+  });
+  const day = (s: GameState) => simulateDay({ ...s, isPaused: false, pendingDecisionId: null });
+
+  it("counts only regiments drilled and standing still", () => {
+    expect(getGarrisons(standing(base, province).regiments, base.nationId)).toEqual({ [province]: 1 });
+    expect(getGarrisons(standing(base, province, true).regiments, base.nationId)).toEqual({});
+    expect(getGarrisons([newRegiment(base.nationId, province)], base.nationId)).toEqual({}); // still at drill
+    expect(getGarrisonOrder(1)).toBe(GARRISON_ORDER);
+    expect(getGarrisonOrder(5)).toBe(GARRISON_ORDER * GARRISON_ORDER_CAP);
+  });
+
+  it("steadies the province it stands in", () => {
+    const shaky = withProvince(base, { stability: 20 });
+    const without = day(shaky).provinces[province].stability;
+    const withGarrison = day(standing(shaky, province)).provinces[province].stability;
+    expect(withGarrison).toBeGreaterThan(without);
+  });
+
+  it("keeps rioting from counting toward an uprising", () => {
+    const rioting = withProvince(base, { unrestStage: "riots", stability: 5, riotDays: 10 });
+    expect(day(rioting).provinces[province].riotDays).toBe(11);
+    expect(day(standing(rioting, province)).provinces[province].riotDays).toBe(0);
+  });
+
+  it("wears a risen province down, and ending it that way leaves a grievance", () => {
+    const risen = withProvince(base, {
+      unrestStage: "riots",
+      stability: 5,
+      uprising: { since: base.date, strength: 1, militia: 0, lastTerms: base.date, fullSince: null },
+    });
+    const left = day(risen).provinces[province];
+    const held = day(standing(risen, province)).provinces[province];
+    expect(left.uprising).not.toBeNull();
+    expect(held.uprising).toBeNull();
+    expect(held.aggrievedUntil).not.toBeNull();
   });
 });

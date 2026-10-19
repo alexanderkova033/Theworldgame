@@ -5,6 +5,8 @@
 // sails between a coast and an island in a few weeks (faster between two
 // harbours). The way there is the quickest, through places it may enter.
 import {
+  GARRISON_ORDER,
+  GARRISON_ORDER_CAP,
   POPULATION_PER_REGIMENT,
   REGIMENT_MARCH_DAYS,
   REGIMENT_RAISE_COST,
@@ -29,6 +31,19 @@ export function getRegimentCap(population: number): number {
 // A country's regiments' pay, a day.
 export function getArmyPay(regiments: Regiment[], nationId: string): number {
   return regimentsOf(regiments, nationId).length * REGIMENT_SALARY;
+}
+
+// A country's garrisons: how many of its regiments stand ready in each
+// province (drilled, and not on the march).
+export function getGarrisons(regiments: Regiment[], nationId: string): Record<string, number> {
+  const garrisons: Record<string, number> = {};
+  for (const r of regiments) if (r.nationId === nationId && isReady(r)) garrisons[r.provinceId] = (garrisons[r.provinceId] ?? 0) + 1;
+  return garrisons;
+}
+
+// The local order a garrison brings.
+export function getGarrisonOrder(regiments: number): number {
+  return Math.min(GARRISON_ORDER_CAP, regiments) * GARRISON_ORDER;
 }
 
 export function newRegiment(nationId: string, provinceId: string): Regiment {

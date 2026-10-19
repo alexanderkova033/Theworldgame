@@ -15,6 +15,8 @@ import { answerDemand, canAnswerDemand } from "../../src/application/actions/dem
 import { acceptOffer, canAcceptOffer, declineOffer } from "../../src/application/actions/tradeActions";
 import { buyBackIsland, canBuyBackIsland, canSignAccord, signIslandAccord } from "../../src/application/actions/treatyActions";
 import { getBuyBackPrice } from "../../src/domain/neighbours/treatyRules";
+import { canRaiseRegiment, marchRegiments, raiseRegiment } from "../../src/application/actions/armyActions";
+import { getGarrisons } from "../../src/domain/military/militaryRules";
 import { BUY_BACK_MIN_RELATIONS } from "../../src/domain/constants";
 import { canPressureGovernment, pressureGovernment } from "../../src/application/actions/pressureGovernment";
 import { dayNumber } from "../../src/domain/country/calendar";
@@ -102,9 +104,10 @@ export interface PlayOptions {
   settle?: boolean; // also scouts the empty islands, settles them and links them with harbours
   trade?: boolean; // also takes the neighbours' good trade offers
   treaties?: boolean; // also signs island accords, and buys back the islands neighbours hold, when it can spare the money
+  army?: boolean; // also raises regiments and stands them in the most troubled provinces
 }
 
-export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty, skill = "careful", mode, settle = false, trade = false, treaties = false }: PlayOptions): GameState {
+export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty, skill = "careful", mode, settle = false, trade = false, treaties = false, army = false }: PlayOptions): GameState {
   const sloppy = skill === "sloppy";
   let s = takeLoan(startNewGame(nation, party, difficulty, mode));
   if (!sloppy) s = setTaxRate(s, 0.12);
@@ -180,6 +183,7 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
 
     if (settle) s = settleIslands(s);
     if (treaties) s = signTreaties(s);
+    if (army) s = keepGarrisons(s);
     s = simulateDay({ ...s, isPaused: false });
     onDay?.(s);
   }
@@ -222,6 +226,26 @@ function settleIslands(state: GameState): GameState {
 export function playIdle(nation: string, party: string, days: number): GameState {
   let s = startNewGame(nation, party);
   for (let day = 0; day < days && !s.isGameOver; day++) s = simulateDay({ ...s, isPaused: false });
+  return s;
+}
+
+// Raise regiments while there's money to spare, and stand each ready one
+// in the most troubled province without one: risen first, then the
+// lowest local order.
+function keepGarrisons(state: GameState): GameState {
+  let s = state;
+  if (s.stats.treasury > 3000 && canRaiseRegiment(s)) s = raiseRegiment(s);
+  const garrisons = getGarrisons(s.regiments, s.nationId);
+  const unguarded = getOwnedProvinceIds(s)
+    .filter((id) => !garrisons[id] && s.provinces[id])
+    .sort((a, b) => (s.provinces[b].uprising ? 1 : 0) - (s.provinces[a].uprising ? 1 : 0) || s.provinces[a].stability - s.provinces[b].stability);
+  // Spare regiments: where two or more stand, or in a calm place.
+  for (const to of unguarded) {
+    const from = Object.keys(garrisons).find((id) => garrisons[id] > 1 || (s.provinces[id]?.stability ?? 0) > s.provinces[to].stability + 15);
+    if (!from) break;
+    s = marchRegiments(s, from, to);
+    garrisons[from] -= 1;
+  }
   return s;
 }
 

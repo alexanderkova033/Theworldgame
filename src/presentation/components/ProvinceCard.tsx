@@ -9,7 +9,8 @@ import { useEffect, type ReactNode } from "react";
 import { buyAndBuild, repairBuilding } from "../../application/actions";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
 import { getProvinceSuggestions, type Suggestion } from "../../application/getProvinceSuggestions";
-import { CURRENCY_SYMBOL, SUPPLY_FEE_PER_DAY } from "../../domain/constants";
+import { CURRENCY_SYMBOL, GARRISON_ORDER, GARRISON_ORDER_CAP, GARRISON_SUPPRESSION_PER_DAY, SUPPLY_FEE_PER_DAY } from "../../domain/constants";
+import { getGarrisonOrder } from "../../domain/military/militaryRules";
 import { getLinkedIslands, isIsland } from "../../domain/islands/islandRules";
 import { getRepairCost } from "../../domain/maintenance/maintenanceRules";
 import { getModifiers } from "../../domain/policy/policyRules";
@@ -291,6 +292,19 @@ export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }
             </span>
           )}
         </Fact>
+
+        {province.garrison > 0 && (
+          <Fact icon={<StatIcon type="regiment" size={16} />} label="Garrison">
+            <span
+              title={`Each regiment standing here adds ${GARRISON_ORDER} to local order (counting ${GARRISON_ORDER_CAP} at most), keeps rioting from becoming an uprising, and wears ${GARRISON_SUPPRESSION_PER_DAY} a day off rebels here.`}
+            >
+              {province.garrison === 1 ? "A regiment" : `${province.garrison} regiments`} ·{" "}
+              {province.uprising
+                ? `rebels −${formatAmount(province.garrison * GARRISON_SUPPRESSION_PER_DAY)}/d`
+                : `local order +${getGarrisonOrder(province.garrison)}, no uprising while they stand`}
+            </span>
+          </Fact>
+        )}
 
         {(province.payRiseUntil || province.disputeUntil || province.taxReliefUntil) && (
           <Fact icon={<StatIcon type="treasury" size={16} />} label="Terms" alert={province.disputeUntil !== null}>

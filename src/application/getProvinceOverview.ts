@@ -17,6 +17,7 @@ import { getNation } from "../domain/nations/nationRules";
 import { planMigration } from "../domain/provinces/provinceMigration";
 import { getProvinceName } from "../domain/provinces/provinceRules";
 import type { UnrestStage } from "../domain/unrest/types";
+import { getGarrisons } from "../domain/military/militaryRules";
 import { getBreakawayDaysLeft, getRebelStrengthChange, getRiotDaysToRise, getSpreadUnrest, type RebelStrengthChange } from "../domain/uprising/uprisingRules";
 import { getDifficulty } from "../domain/difficulty/difficultyData";
 import { getOwnedProvinceIds } from "../domain/provinces/provinceRules";
@@ -41,6 +42,7 @@ export interface ProvinceOverview {
   riotDaysToRise: number; // ...and how many it takes to rise (see domain/uprising)
   uprising: { strength: number; change: RebelStrengthChange; militia: number; breaksAwayIn: number | null } | null; // risen: rebel strength, its daily change, and days left at full strength before it breaks away
   stirred: boolean; // a strong uprising next door sets its mood lower
+  garrison: number; // your regiments standing ready there (see domain/military)
   // Answers to its letters still in force, each with the day it runs out
   // (see domain/uprising/demandRules.ts); null when not in force.
   payRiseUntil: GameDate | null;
@@ -62,6 +64,7 @@ export function getProvinceOverview(state: GameState): ProvinceOverview[] {
   const capacity = getHousingCapacityByProvince(state);
   const labour = getLabourSituation(state);
   const migration = planMigration(state.provinces, capacity, labour.provinces, getLinkedIslands(state));
+  const garrisons = getGarrisons(state.regiments, state.nationId);
   return getOwnedProvinceIds(state).map((id) => {
     const p = state.provinces[id];
     const l = labour.provinces[id];
@@ -87,12 +90,19 @@ export function getProvinceOverview(state: GameState): ProvinceOverview[] {
       uprising: p?.uprising
         ? {
             strength: p.uprising.strength,
-            change: getRebelStrengthChange(p.uprising, population > 0 ? Math.max(0, population - (capacity[id] ?? 0)) / population : 0, state.stats.stability, state.workforce.police),
+            change: getRebelStrengthChange(
+              p.uprising,
+              population > 0 ? Math.max(0, population - (capacity[id] ?? 0)) / population : 0,
+              state.stats.stability,
+              state.workforce.police,
+              garrisons[id] ?? 0,
+            ),
             militia: p.uprising.militia,
             breaksAwayIn: getBreakawayDaysLeft(p.uprising, state.date),
           }
         : null,
       stirred: getSpreadUnrest(state.provinces, id) > 0,
+      garrison: garrisons[id] ?? 0,
       payRiseUntil: p && isInForce(p.payRiseUntil, state.date) ? p.payRiseUntil : null,
       disputeUntil: p && isInForce(p.disputeUntil, state.date) ? p.disputeUntil : null,
       taxReliefUntil: p && isInForce(p.taxReliefUntil, state.date) ? p.taxReliefUntil : null,

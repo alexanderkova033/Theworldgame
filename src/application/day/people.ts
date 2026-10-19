@@ -14,6 +14,7 @@ import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { isWorseStage } from "../../domain/unrest/unrestRules";
 import { isInForce } from "../../domain/uprising/demandRules";
 import { getSpreadUnrest } from "../../domain/uprising/uprisingRules";
+import { getGarrisons } from "../../domain/military/militaryRules";
 import { getLinkedIslands, isIsland } from "../../domain/islands/islandRules";
 import type { UnrestStage } from "../../domain/unrest/types";
 import { log, type Day } from "./dayContext";
@@ -58,7 +59,8 @@ export function movePeople(
 
   // A province striking or rioting worse than the rest is announced.
   const linked = getLinkedIslands(working);
-  const order = updateProvinceOrder(migrated, today.stability, today.capacityByProvince, today.labour.provinces, date, linked);
+  const garrisons = getGarrisons(working.regiments, working.nationId);
+  const order = updateProvinceOrder(migrated, today.stability, today.capacityByProvince, today.labour.provinces, date, linked, garrisons);
   for (const change of order.changes) {
     const name = getProvinceName(change.provinceId);
     if (isLocalTrouble(change.to, today.unrestStage) && isWorseStage(change.to, change.from)) {

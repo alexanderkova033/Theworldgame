@@ -15,6 +15,7 @@
 // restless. Held at full strength for a month, it breaks away for good.
 import {
   MILITIA_SUPPRESSION_PER_DAY,
+  GARRISON_SUPPRESSION_PER_DAY,
   UNREST_EASE_MARGIN,
   UPRISING_BREAKAWAY_DAYS,
   UPRISING_SPREAD_STRENGTH,
@@ -62,17 +63,19 @@ export interface RebelStrengthChange {
   calm: number; // a calm country starving it (negative)
   police: number; // police holding it down (negative)
   militia: number; // companies sent in wearing it down (negative)
+  garrison: number; // regiments standing there wearing it down (negative)
   total: number;
 }
 
 // How rebel strength moves in a day, part by part, so the interface can say
 // what is feeding it and what is wearing it down.
-export function getRebelStrengthChange(uprising: Uprising, homelessShare: number, nationalStability: number, police: number): RebelStrengthChange {
+export function getRebelStrengthChange(uprising: Uprising, homelessShare: number, nationalStability: number, police: number, regiments = 0): RebelStrengthChange {
   const growth = UPRISING_GROWTH_PER_DAY + homelessShare * UPRISING_HOMELESS_GROWTH;
   const calm = nationalStability >= UPRISING_CALM_STABILITY ? -UPRISING_CALM_FADE : 0;
   const policeHold = -Math.min(UPRISING_POLICE_DAMPING_CAP, police * UPRISING_POLICE_DAMPING);
   const militia = -uprising.militia * MILITIA_SUPPRESSION_PER_DAY;
-  return { growth, calm, police: policeHold, militia, total: growth + calm + policeHold + militia };
+  const garrison = -regiments * GARRISON_SUPPRESSION_PER_DAY;
+  return { growth, calm, police: policeHold, militia, garrison, total: growth + calm + policeHold + militia + garrison };
 }
 
 export function getRisenProvinceIds(provinces: Record<string, ProvinceState>): string[] {

@@ -162,7 +162,7 @@ Falling stability brings stages before collapse: discontent slows industry, stri
 
 **The neighbours' armies.** Each neighbour keeps a share of the regiments its people could support, by temper (Caldenreich three quarters, Veldoria three fifths, Astravia two fifths), raising one a month while it has fewer and the money beyond its reserve, and spreading them along its provinces. Measured over five years: two to four regiments each, and the race for the islands is unchanged.
 
-Regiments do nothing yet but stand and march; garrisons come next (see ROADMAP step 5).
+**Garrisons.** A regiment that has drilled and stands still in a province of yours keeps order there. Each adds 6 to the province's local order (two count, so +12 at most), and while one stands there, rioting doesn't count down towards an uprising. In a province that has already risen, each wears 1.5 a day off rebel strength; an uprising ended while regiments stand there counts as put down by force, and the province bears a grievance. The province card shows the garrison, and the Unrest page counts it in rebel strength. Measured over nine five-year games: no province with a garrison ever rose; a careful player who keeps about five regiments pays about 22,000 Cr for them and needs them little, while a sloppy one can afford two and still sees as many risings, in the provinces without one.
 
 ## Time
 

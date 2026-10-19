@@ -761,6 +761,7 @@ function UprisingRow({ state, dispatch, province }: { state: GameState; dispatch
     change.calm < 0 ? `A calm country starves it: ${formatRate(change.calm, true)}` : `The country is too unsettled to starve it (stability under ${UPRISING_CALM_STABILITY})`,
     change.police < 0 && `Police hold it down: ${formatRate(change.police, true)}`,
     change.militia < 0 && `Militia wear it down: ${formatRate(change.militia, true)}`,
+    change.garrison < 0 && `Regiments standing there wear it down: ${formatRate(change.garrison, true)}`,
   ].filter(Boolean);
   const trend =
     change.total < 0

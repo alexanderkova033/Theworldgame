@@ -110,7 +110,7 @@ export const CHAPTERS: ChapterData[] = [
     title: "A Standing Army",
     opens: ["army"],
     briefing:
-      "The neighbours keep regiments, and their colours can be seen drilling along the borders. You may now raise regiments of your own: trained soldiers, paid by the day, who march anywhere in the country and sail to its islands. Tap a regiment on the map, then a province, to send it there.",
+      "The neighbours keep regiments, and their colours can be seen drilling along the borders. You may now raise regiments of your own: trained soldiers, paid by the day, who march anywhere in the country and sail to its islands. A regiment standing in a province keeps order there: no uprising starts while it stands, and one already burning is worn down. Tap a regiment on the map, then a province, to send it there.",
     objectives: ["Raise a regiment"],
     until: "Opens when the neighbours' armies are noticed, in the second year",
     by: 24,

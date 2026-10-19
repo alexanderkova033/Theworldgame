@@ -152,16 +152,12 @@ function renderShape(type: StatIconType) {
         </g>
       );
     case "regiment":
-      // Crossed sabres, steel blades and brass hilts: a regiment of the line.
+      // The old mark for foot soldiers, a crossed box, as on the map counters.
       return (
-        <g strokeLinecap="round">
-          <path d="M-6.8,6.8 C-3,2.6 1.6,-2.6 6.6,-7.6" fill="none" stroke="#2f343b" strokeWidth={2.9} />
-          <path d="M-6.8,6.8 C-3,2.6 1.6,-2.6 6.6,-7.6" fill="none" stroke="#d7dade" strokeWidth={1.3} />
-          <path d="M6.8,6.8 C3,2.6 -1.6,-2.6 -6.6,-7.6" fill="none" stroke="#2f343b" strokeWidth={2.9} />
-          <path d="M6.8,6.8 C3,2.6 -1.6,-2.6 -6.6,-7.6" fill="none" stroke="#aeb4bd" strokeWidth={1.3} />
-          <path d="M-7.6,4.4 L-4.4,7.6 M7.6,4.4 L4.4,7.6" stroke="#c9a24a" strokeWidth={1.7} />
-          <circle cx={-7.4} cy={7.4} r={1.2} fill="#93731f" />
-          <circle cx={7.4} cy={7.4} r={1.2} fill="#93731f" />
+        <g>
+          <rect x={-8.6} y={-6.4} width={17.2} height={12.8} rx={1.6} fill="#8e2323" stroke="#3a0f0f" strokeWidth={0.8} />
+          <rect x={-6} y={-4} width={12} height={8} fill="#f4ead0" stroke="#3a0f0f" strokeWidth={0.6} />
+          <path d="M-6,-4 L6,4 M6,-4 L-6,4" stroke="#8e2323" strokeWidth={1.3} />
         </g>
       );
     case "uprising":
