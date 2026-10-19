@@ -12,6 +12,7 @@ import { getFactionWeights } from "../../src/domain/parties/factionRules";
 import { repairBuilding } from "../../src/application/actions/repairBuilding";
 import { canRaiseMilitia, canSendMilitia, raiseMilitia, sendMilitia } from "../../src/application/actions/militiaActions";
 import { answerDemand, canAnswerDemand } from "../../src/application/actions/demandActions";
+import { acceptOffer, canAcceptOffer, declineOffer } from "../../src/application/actions/tradeActions";
 import { dayNumber } from "../../src/domain/country/calendar";
 import { getFreeMilitia } from "../../src/domain/uprising/uprisingRules";
 import { buildHarbour } from "../../src/application/actions/buildHarbour";
@@ -95,9 +96,10 @@ export interface PlayOptions {
   skill?: "careful" | "sloppy";
   mode?: GameMode; // Three Terms by default; a Long Reign plays on past the third election
   settle?: boolean; // also scouts the empty islands, settles them and links them with harbours
+  trade?: boolean; // also takes the neighbours' good trade offers
 }
 
-export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty, skill = "careful", mode, settle = false }: PlayOptions): GameState {
+export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty, skill = "careful", mode, settle = false, trade = false }: PlayOptions): GameState {
   const sloppy = skill === "sloppy";
   let s = takeLoan(startNewGame(nation, party, difficulty, mode));
   if (!sloppy) s = setTaxRate(s, 0.12);
@@ -131,6 +133,13 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
       if (s.factionApproval[biggest] < 70) s = courtGroup(s, biggest);
     }
     if (!sloppy && (s.unrestStage === "strikes" || s.unrestStage === "riots") && canCrackDown(s)) s = crackDown(s);
+    // A neighbour's trade offer: put aside (it costs nothing), or with the
+    // trade habit, taken when it is a good deal for a country in its place.
+    if (s.pendingOffer) {
+      const offer = s.pendingOffer;
+      const wanted = offer.kind === "sell" ? s.stats.food < 200000 : offer.good !== "food" && s.resources[offer.good] >= offer.amount * 2;
+      s = trade && wanted && canAcceptOffer(s) ? acceptOffer(s) : declineOffer(s);
+    }
     // A letter from a province. A careful player grants a pay rise it can
     // afford and ends an uprising on terms; a sloppy one refuses the pay
     // rise, and takes the cheapest way out of an uprising.

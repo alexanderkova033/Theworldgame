@@ -9,6 +9,9 @@ import { addDays } from "../src/domain/country/calendar";
 import type { GameState } from "../src/domain/country/types";
 import { chooseBuilding, chooseVoyage, createNeighbour, liveMonth, neighbourDice } from "../src/domain/neighbours/neighbourRules";
 import { fadeFeelings } from "../src/domain/neighbours/relationsRules";
+import { draftOffer } from "../src/domain/neighbours/tradeRules";
+import { acceptOffer, declineOffer } from "../src/application/actions/tradeActions";
+import { getBuyCost, getSellRevenue } from "../src/domain/market/marketRules";
 import { pressureGovernment } from "../src/application/actions/pressureGovernment";
 import { rollForeignMeddling } from "../src/domain/diplomacy/diplomacyRules";
 import { allChaptersOpen } from "../src/domain/chapters/chapterData";
@@ -21,6 +24,8 @@ import {
   RELATIONS_HOSTILE,
   RELATIONS_HOSTILE_MEDDLING,
   RELATIONS_WARM,
+  RELATIONS_TRADE,
+  TRADE_OFFER_CHANCE,
 } from "../src/domain/constants";
 import type { Neighbour } from "../src/domain/neighbours/types";
 import { hydrateGameState } from "../src/presentation/hooks/gameSave";
@@ -116,5 +121,50 @@ describe("how a neighbour feels about you", () => {
     const loaded = hydrateGameState(old);
     expect(loaded.neighbours.veldoria.relations).toBe(0);
     expect(loaded.neighbours.veldoria.feelings).toEqual([]);
+  });
+});
+
+describe("trade with a neighbour", () => {
+  const start = startNewGame("astravia", "astravia-harvest-union");
+  const state: GameState = { ...start, chapters: allChaptersOpen(), stats: { ...start.stats, treasury: 20000 }, resources: { ...start.resources, ore: 500 } };
+  // The first month from the third year in which Veldoria's dice say "write".
+  const month = Array.from({ length: 240 }, (_, i) => i + 1).find((m) => neighbourDice("veldoria", m, "trade") < TRADE_OFFER_CHANCE)!;
+  const veldoria = state.neighbours.veldoria;
+
+  it("offers food from a store bigger than it needs, under the market's price", () => {
+    const offer = draftOffer({ ...veldoria, food: 1e8 }, "veldoria", month, state.market, false, state.resources)!;
+    expect(offer.kind).toBe("sell");
+    expect(offer.price).toBeLessThan(getBuyCost(state.market, "food", offer.amount, false));
+  });
+
+  it("otherwise offers to buy what its temper wants, over what the market pays", () => {
+    const offer = draftOffer({ ...veldoria, food: 0, treasury: 1e6 }, "veldoria", month, state.market, false, state.resources)!;
+    expect(offer).toMatchObject({ kind: "buy", good: "ore" });
+    expect(offer.price).toBeGreaterThan(getSellRevenue(state.market, "ore", offer.amount));
+  });
+
+  it("deals better the warmer it is, and not at all when hostile", () => {
+    const rich = { ...veldoria, food: 1e8 };
+    const cool = draftOffer(rich, "veldoria", month, state.market, false, state.resources)!;
+    const warm = draftOffer({ ...rich, relations: 50 }, "veldoria", month, state.market, false, state.resources)!;
+    expect(warm.price).toBeLessThan(cool.price);
+    expect(draftOffer({ ...rich, relations: RELATIONS_HOSTILE }, "veldoria", month, state.market, false, state.resources)).toBeNull();
+  });
+
+  it("accepted: the goods and Crowns change hands, and they think better of you", () => {
+    const offered: GameState = { ...state, pendingOffer: { nationId: "veldoria", kind: "buy", good: "ore", amount: 40, price: 900 } };
+    const done = acceptOffer(offered);
+    expect(done.pendingOffer).toBeNull();
+    expect(done.resources.ore).toBe(state.resources.ore - 40);
+    expect(done.stats.treasury).toBe(state.stats.treasury + 900);
+    expect(done.neighbours.veldoria.treasury).toBe(veldoria.treasury - 900);
+    expect(done.neighbours.veldoria.relations).toBe(veldoria.relations + RELATIONS_TRADE);
+  });
+
+  it("declined: nothing changes but the letter is gone", () => {
+    const offered: GameState = { ...state, pendingOffer: { nationId: "veldoria", kind: "sell", good: "food", amount: 1000, price: 100 } };
+    const declined = declineOffer(offered);
+    expect(declined.pendingOffer).toBeNull();
+    expect(declined.stats).toEqual(offered.stats);
   });
 });

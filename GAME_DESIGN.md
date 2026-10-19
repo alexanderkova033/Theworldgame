@@ -124,6 +124,8 @@ The two nations you don't play are run by the computer, each by its own temper: 
 
 **How they feel about you** runs from -100 to 100, shown on each card in a word (Warm, Cordial, Indifferent, Cool, Hostile) with the reasons in its tooltip. Backing a neighbour's opposition costs 6, backing its rulers gains 3, beating it to an island costs 15, and driving an island's people out costs 4 with both. Feelings fade by a point a month toward neutral, or toward +20 while the party you backed rules them. From +30 a neighbour campaigns for you in your elections whoever rules it; at -30 or worse it funds your opposition half as hard again and races you for the islands half as keenly again.
 
+**Trade** comes by letter once the market is open. Now and then a neighbour offers to sell you food from a store bigger than it needs, 15% under the market's price, or to buy the good its temper wants (Astravia wood, Caldenreich coal, Veldoria ore) at 20% over what the market would pay you, if you have it. Warmer neighbours deal a little better; a hostile one doesn't deal at all. An accepted deal warms them by 5. Declining costs nothing, so the letter can simply be closed. About five offers come in five years.
+
 ## Politics
 
 - **Taxes** are a lever: more money, less support above the rate people accept.

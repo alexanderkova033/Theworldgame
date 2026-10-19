@@ -137,6 +137,7 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     foreignVoyages: [],
     foreignIslands: {},
     neighbours: createNeighbours(nationId),
+    pendingOffer: null,
     workforce: emptyWorkforce(),
     foreignPolitics: createForeignPolitics(nationId),
     market: createMarket(getSeason(STARTING_DATE)),

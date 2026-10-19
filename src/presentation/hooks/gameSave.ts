@@ -119,6 +119,7 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     lastDayLedger: raw.lastDayLedger ?? emptyLedger(),
     pendingDecisionId: raw.pendingDecisionId ?? null,
     pendingDemand: raw.pendingDemand ?? null,
+    pendingOffer: raw.pendingOffer ?? null,
     lostProvinceIds: raw.lostProvinceIds ?? [],
     settlements: raw.settlements ?? [],
     settledIslandIds: raw.settledIslandIds ?? [],

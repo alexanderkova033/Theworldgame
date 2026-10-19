@@ -9,7 +9,8 @@ import { NATIONS } from "./domain/nations/nationData";
 import type { GameSpeed } from "./domain/country/types";
 import { getElectionThreshold } from "./domain/parties/electionRules";
 import { getPartiesForNation, getParty } from "./domain/parties/partyRules";
-import { answerDemand, dismissDecision, resolveDecision } from "./application/actions";
+import { acceptOffer, answerDemand, declineOffer, dismissDecision, resolveDecision } from "./application/actions";
+import { OfferLetter } from "./presentation/components/OfferLetter";
 import { getAdvisorOutlook } from "./application/getAdvisorOutlook";
 import { getDailyProductionSummary } from "./application/getDailyProductionSummary";
 import { getForecasts } from "./application/getForecasts";
@@ -263,6 +264,14 @@ function App() {
     setOpenModal(null);
   }, [state?.pendingDecisionId]);
 
+  // A neighbour's trade offer, the same way (see OfferLetter).
+  const offerKey = state?.pendingOffer ? `${state.pendingOffer.nationId}:${state.pendingOffer.good}:${state.date.year}-${state.date.month}` : null;
+  useEffect(() => {
+    if (!offerKey) return;
+    playLetter();
+    setOpenModal(null);
+  }, [offerKey]);
+
   // A province's letter, the same way (see DemandLetter).
   const demandKey = state?.pendingDemand ? `${state.pendingDemand.kind}:${state.pendingDemand.provinceId}` : null;
   useEffect(() => {
@@ -510,6 +519,20 @@ function App() {
           resume();
         }}
       />
+      )}
+      {/* A neighbour's trade offer waits behind every other letter. */}
+      {state.chapters.unread.length === 0 && !state.burdenOffer && !state.pendingDecisionId && !state.pendingDemand && (
+        <OfferLetter
+          state={state}
+          onAccept={() => {
+            dispatch(acceptOffer);
+            resume();
+          }}
+          onDecline={() => {
+            dispatch(declineOffer);
+            resume();
+          }}
+        />
       )}
       {/* A province's letter waits behind any decision; it must be answered. */}
       {state.chapters.unread.length === 0 && !state.burdenOffer && !state.pendingDecisionId && (

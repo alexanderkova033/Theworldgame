@@ -15,6 +15,7 @@ import type { UnrestStage } from "../unrest/types";
 import type { Demand } from "../uprising/types";
 import type { ForeignVoyage, Settlement } from "../islands/types";
 import type { Neighbour } from "../neighbours/types";
+import type { TradeOffer } from "../neighbours/tradeRules";
 import type { Workforce } from "../workforce/types";
 import type { ChapterProgress } from "../chapters/chapterData";
 import type { BurdenId, GameMode } from "../reign/reignData";
@@ -150,6 +151,7 @@ export interface GameState {
   foreignVoyages: ForeignVoyage[]; // neighbours' settlers on their way to islands (see domain/islands)
   foreignIslands: Record<string, string>; // islands a neighbour has claimed: island id to nation id
   neighbours: Record<string, Neighbour>; // every nation but the player's, run by the computer (see domain/neighbours)
+  pendingOffer: TradeOffer | null; // a neighbour's trade offer waiting for an answer (see domain/neighbours/tradeRules.ts)
   workforce: Workforce; // salaried scientists and police — see domain/workforce
   foreignPolitics: Record<string, ForeignGovernment>; // every nation but the player's — see domain/diplomacy
   market: MarketState; // the continental market's stock of every good — see domain/market

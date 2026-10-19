@@ -197,11 +197,15 @@ export function simulateDay(state: GameState): GameState {
     ];
   }
 
+  // The neighbours' month (and any trade offer they write) comes before
+  // the clock decides whether to stop for a letter.
+  const neighbourMonth = runNeighbours(day, working, date);
+
   return advanceChapters({
     ...working,
     date,
     // A choice of burdens stops the clock until one is taken.
-    isPaused: isGameOver || pendingDecisionId || working.pendingDemand || election.burdenOffer ? true : working.isPaused,
+    isPaused: isGameOver || pendingDecisionId || working.pendingDemand || neighbourMonth.pendingOffer || election.burdenOffer ? true : working.isPaused,
     isGameOver,
     outcome,
     gameOverReason,
@@ -216,7 +220,7 @@ export function simulateDay(state: GameState): GameState {
     factionApproval: month.factionApproval,
     workforce: takings.workforce,
     foreignPolitics: month.foreignPolitics,
-    ...runNeighbours(day, working, date),
+    ...neighbourMonth,
     debt: goods.debt,
     events: day.events.slice(0, MAX_EVENT_LOG_LENGTH),
     history: finalHistory,

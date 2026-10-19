@@ -54,7 +54,8 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 ## Relations: notes for trade and treaties
 
 - **Relations are a mood, not a grudge.** Measured 2026-10-19: careful players who settle and win races end five years at neutral with both neighbours, because the -15 for a lost race fades within about 15 months. Trade (phase C) and treaties (phase D) are the natural things to gate on relations, and to move them upward; today almost nothing raises them except backing a neighbour's rulers.
-- **The scripted player never presses elections**, so the balance games never see a warm or hostile neighbour. If trade or treaties come to matter, give the careful player a habit for them, as for settling.
+- **The scripted player never presses elections**, so the balance games never see a warm or hostile neighbour. It declines every trade offer unless given `trade: true` (tests/support/carefulPlayer.ts).
+- **Trade is modest.** Measured 2026-10-19: about 4.7 offers in five years; a scripted trader takes 1.6 of them. Buy offers need the good in your store, and a careful player keeps very little ore, wood or coal, so most offers are food. Real players with fuller stores will see more. If trade should matter more, the neighbours need goods of their own to sell (their economy has only food and Crowns today).
 
 ## Process reminders
 

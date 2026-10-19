@@ -12,15 +12,21 @@ import { chooseBuilding, chooseVoyage, liveMonth } from "../../domain/neighbours
 import { getNation } from "../../domain/nations/nationRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { fadeFeelings } from "../../domain/neighbours/relationsRules";
+import { draftOffer } from "../../domain/neighbours/tradeRules";
+import { nationHasPort } from "../../domain/market/marketRules";
 import { isFriendly } from "../../domain/diplomacy/diplomacyRules";
 import { monthNumber } from "../chapters";
 import { log, type Day } from "./dayContext";
 
-export function runNeighbours(day: Day, working: GameState, date: GameDate): Pick<GameState, "neighbours" | "foreignVoyages"> {
-  if (!isFirstDayOfMonth(date)) return { neighbours: working.neighbours, foreignVoyages: working.foreignVoyages };
+export function runNeighbours(day: Day, working: GameState, date: GameDate): Pick<GameState, "neighbours" | "foreignVoyages" | "pendingOffer"> {
+  if (!isFirstDayOfMonth(date)) return { neighbours: working.neighbours, foreignVoyages: working.foreignVoyages, pendingOffer: working.pendingOffer };
   const month = monthNumber(date);
   let foreignVoyages = working.foreignVoyages;
+  let pendingOffer = working.pendingOffer;
   const neighbours: GameState["neighbours"] = {};
+  // A trade offer waits until no other letter does, and the market is open.
+  const canOffer = isFeatureOpen(working, "market") && !working.pendingDecisionId && !working.pendingDemand;
+  const hasPort = nationHasPort(getNation(working.nationId));
 
   for (const [nationId, before] of Object.entries(working.neighbours)) {
     // Feelings fade, toward warm while the party you backed rules them.
@@ -41,6 +47,7 @@ export function runNeighbours(day: Day, working: GameState, date: GameDate): Pic
     } else {
       neighbours[nationId] = { ...neighbour, lastDeed: deed };
     }
+    if (canOffer && !pendingOffer) pendingOffer = draftOffer(neighbours[nationId], nationId, month, working.market, hasPort, working.resources);
   }
-  return { neighbours, foreignVoyages };
+  return { neighbours, foreignVoyages, pendingOffer };
 }

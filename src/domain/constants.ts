@@ -401,6 +401,13 @@ export const RELATIONS_WARM = 30; // from here they campaign for you, whoever ru
 export const RELATIONS_HOSTILE = -30; // from here down they fund your opposition harder, and race you for islands
 export const RELATIONS_HOSTILE_MEDDLING = 1.5; // how much harder
 export const RELATIONS_HOSTILE_APPETITE = 1.5; // how much keener on islands
+export const RELATIONS_TRADE = 5; // a trade with them, accepted
+
+// Trade by letter (see domain/neighbours/tradeRules.ts).
+export const TRADE_OFFER_CHANCE = 0.15; // a month, for each neighbour, once the market is open
+export const TRADE_SELL_DISCOUNT = 0.15; // their food, under the market's price...
+export const TRADE_BUY_PREMIUM = 0.2; // ...and what they want, over what the market pays you
+export const TRADE_PRICE_PER_RELATION = 0.001; // and each point of relations moves the price this share in your favour
 export const RACE_VOYAGE_DAYS = 90; // their voyage out
 export const RACE_TURNED_BACK_REFUND = 0.5; // share of your settling price refunded when they beat you to it
 export const COLONY_DISTANCE_UNREST = 8; // a colony's mood sits this far below the nation's...
