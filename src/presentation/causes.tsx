@@ -64,6 +64,7 @@ export const CAUSES: Record<LedgerMetric, Record<string, CauseInfo>> = {
     settling: { label: "Settling", hint: "Opinion easing back toward 50% when nothing pushes it", icon: (size) => <SettlingIcon size={size} /> },
     debt: DEBT,
     rival: { label: "Rival", hint: "The rival party's campaign", icon: (size) => <NavIcon type="politics" size={size} /> },
+    war: { label: "War", hint: "Declaring war, and every month it lasts", icon: (size) => <StatIcon type="regiment" size={size} /> },
     foreign: { label: "Neighbours", hint: "Neighbouring governments campaigning for you or against you", icon: (size) => <NeighboursIcon size={size} /> },
     oneOffs: ONE_OFFS,
   },

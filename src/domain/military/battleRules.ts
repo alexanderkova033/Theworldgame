@@ -7,10 +7,13 @@
 // worn, and two do it in half the time with far less hurt. At zero the
 // province is yours again. Nothing here is chance.
 import {
+  DEFENDER_BONUS,
   FREE_REBEL_REGROWTH_PER_DAY,
   REBEL_FIGHT_PER_DAY,
   REGIMENT_ASSAULT_PER_DAY,
   REGIMENT_RECOVERY_PER_DAY,
+  SIEGE_DAYS,
+  SIEGE_PEOPLE_PER_DAY,
 } from "../constants";
 import type { Regiment } from "./types";
 
@@ -39,6 +42,43 @@ export function fightRebels(regiments: Regiment[], rebels: number): Fight {
     regiments: regiments.map((r) => ({ ...r, strength: Math.max(0, r.strength - losses) })),
     strength: Math.max(0, rebels - assault),
   };
+}
+
+// A day's battle between two countries' regiments in one place: each side
+// wears the other down by its own strength, spread over the other's
+// regiments. Defenders standing on their own ground hit harder.
+export function fightBattle(attackers: Regiment[], defenders: Regiment[]): { attackers: Regiment[]; defenders: Regiment[] } {
+  if (attackers.length === 0 || defenders.length === 0) return { attackers, defenders };
+  const blow = (side: Regiment[]) => side.reduce((sum, r) => sum + r.strength, 0) / 100 * REGIMENT_ASSAULT_PER_DAY;
+  const toDefenders = blow(attackers) / defenders.length;
+  const toAttackers = (blow(defenders) * DEFENDER_BONUS) / attackers.length;
+  return {
+    attackers: attackers.map((r) => ({ ...r, strength: Math.max(0, r.strength - toAttackers) })),
+    defenders: defenders.map((r) => ({ ...r, strength: Math.max(0, r.strength - toDefenders) })),
+  };
+}
+
+// How a landing would go, played forward without changing anything: the
+// battle with whoever holds the island, then the siege. For the march
+// preview.
+export function forecastLanding(attackers: number[], defenders: number[], siegeDays = SIEGE_DAYS, maxDays = 365): { days: number; won: boolean } {
+  const side = (strengths: number[], tag: string) => strengths.map((strength, i) => ({ id: `${tag}${i}`, nationId: tag, provinceId: "", strength, trainingDays: 0, march: null }) as Regiment);
+  let a = side(attackers, "a");
+  let d = side(defenders, "d");
+  for (let day = 1; day <= maxDays && d.length > 0; day++) {
+    const battle = fightBattle(a, d);
+    a = battle.attackers.filter((r) => r.strength > 0);
+    d = battle.defenders.filter((r) => r.strength > 0);
+    if (a.length === 0) return { days: day, won: false };
+    if (d.length === 0) return { days: day + siegeDays, won: true };
+  }
+  return d.length === 0 ? { days: siegeDays, won: a.length > 0 } : { days: maxDays, won: false };
+}
+
+// How long an island with no defenders left holds out: longer the more
+// people live there.
+export function getSiegeDays(people: number): number {
+  return SIEGE_DAYS + Math.round(people / SIEGE_PEOPLE_PER_DAY);
 }
 
 // Left alone, rebels gather strength again.

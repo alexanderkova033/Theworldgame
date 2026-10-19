@@ -42,10 +42,11 @@ export function disbandRegiment(state: GameState, regimentId: string): GameState
   return { ...state, regiments: state.regiments.filter((x) => x.id !== regimentId) };
 }
 
-// Where your regiments may go: anywhere that is yours, and the provinces
-// that broke away, to take them back.
+// Where your regiments may go: anywhere that is yours, the provinces that
+// broke away, to take them back, and in war the enemy's islands.
 export function canEnterAsYou(state: GameState): (provinceId: string) => boolean {
-  const open = new Set([...getOwnedProvinceIds(state), ...Object.keys(state.freeProvinces)]);
+  const enemyIslands = Object.keys(state.foreignIslands).filter((id) => state.wars[state.foreignIslands[id]]);
+  const open = new Set([...getOwnedProvinceIds(state), ...Object.keys(state.freeProvinces), ...enemyIslands]);
   return (id) => open.has(id);
 }
 

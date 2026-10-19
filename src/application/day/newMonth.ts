@@ -2,7 +2,7 @@
 // a new month. A world event every few months, the rival's campaign, the
 // neighbours' own politics and their meddling in yours, and the season.
 // These land in the new month's ledger.
-import { RANDOM_EVENT_INTERVAL_MONTHS, RIVAL_CAMPAIGN_CHANCE_PER_MONTH } from "../../domain/constants";
+import { RANDOM_EVENT_INTERVAL_MONTHS, RIVAL_CAMPAIGN_CHANCE_PER_MONTH, WAR_WEARINESS_PER_MONTH } from "../../domain/constants";
 import { isEveryNMonths, isFirstDayOfMonth } from "../../domain/country/calendar";
 import type { CountryStats, GameDate, GameEvent, GameState } from "../../domain/country/types";
 import { isFriendly, rollForeignMeddling, updateForeignPolitics } from "../../domain/diplomacy/diplomacyRules";
@@ -99,6 +99,17 @@ export function turnOfTheMonth(
         severity: move.supportDelta > 0 ? "info" : "warning",
         topic: "elections",
       });
+    }
+  }
+
+  // Every month at war wears on the country (see domain/military/warRules.ts).
+  if (!today.isGameOver && isFirstDayOfMonth(date)) {
+    for (const nationId of Object.keys(working.wars)) {
+      const applied = applyUniformDelta(factionApproval, today.factionWeights, WAR_WEARINESS_PER_MONTH);
+      factionApproval = applied.factionApproval;
+      book(day, "late", "support", { war: applied.popularity - stats.popularity });
+      stats = { ...stats, popularity: applied.popularity };
+      log(day, { date, message: `The war with ${getNation(nationId).name} wears on the country: support ${WAR_WEARINESS_PER_MONTH} with everyone.`, severity: "warning", topic: "army" });
     }
   }
 

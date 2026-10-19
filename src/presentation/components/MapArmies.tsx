@@ -8,6 +8,8 @@ import "./MapArmies.css";
 import { memo, type ReactNode } from "react";
 import type { Regiment } from "../../domain/military/types";
 import type { FreeProvince } from "../../domain/military/battleRules";
+import { getSiegeDays } from "../../domain/military/battleRules";
+import { getIslandPeople } from "../../domain/neighbours/treatyRules";
 import { getNation } from "../../domain/nations/nationRules";
 import { getPlace, getProvinceName } from "../../domain/provinces/provinceRules";
 import { StatIcon } from "./StatIcon";
@@ -174,6 +176,7 @@ interface ArmyLayerProps {
   onPick: (provinceId: string) => void;
   preview: MarchPreview | null; // the way to the province pointed at, while picked up
   freeProvinces: Record<string, FreeProvince>; // provinces that broke away, held by rebels
+  sieges: Record<string, number>; // islands your regiments besiege: days so far
 }
 
 export interface MarchPreview {
@@ -182,7 +185,7 @@ export interface MarchPreview {
   fight: { days: number; won: boolean } | null; // at a province held by rebels: how the fight would go
 }
 
-export const ArmyLayer = memo(function ArmyLayer({ regiments, playerNationId, marchFrom, onPick, preview, freeProvinces }: ArmyLayerProps) {
+export const ArmyLayer = memo(function ArmyLayer({ regiments, playerNationId, marchFrom, onPick, preview, freeProvinces, sieges }: ArmyLayerProps) {
   const stacks = stacksOf(regiments, new Set(Object.keys(freeProvinces)));
   const lines: ReactNode[] = [];
   for (const stack of stacks) {
@@ -202,7 +205,7 @@ export const ArmyLayer = memo(function ArmyLayer({ regiments, playerNationId, ma
     const end = points[points.length - 1];
     const text = preview.fight
       ? preview.fight.won
-        ? `${preview.days} d, then ${preview.fight.days} d fighting`
+        ? `${preview.days} d, then ${preview.fight.days} d to take it`
         : `${preview.days} d: too few to win`
       : `${preview.days} d`;
     const width = text.length * 7 + 14;
@@ -222,6 +225,17 @@ export const ArmyLayer = memo(function ArmyLayer({ regiments, playerNationId, ma
         {lines}
         {previewLine}
       </g>
+      {Object.entries(sieges).map(([id, days]) => {
+        const at = placePoint(id);
+        return (
+          <g key={`siege-${id}`} className="map-armies__siege" pointerEvents="none">
+            <rect x={at.x - 44} y={at.y + 22} width={88} height={18} rx={4} className="map-armies__days-plate" />
+            <text x={at.x} y={at.y + 35} className="map-armies__days">
+              Siege {days} of {getSiegeDays(getIslandPeople(id))} days
+            </text>
+          </g>
+        );
+      })}
       {Object.entries(freeProvinces).map(([id, free]) => (
         <RebelCounter key={`rebels-${id}`} provinceId={id} free={free} beside={stacks.filter((s) => !s.marching && s.provinceId === id).length} />
       ))}

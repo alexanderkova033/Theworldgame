@@ -11,6 +11,10 @@ import { startNewGame } from "../src/application/startNewGame";
 import { allChaptersOpen } from "../src/domain/chapters/chapterData";
 import {
   GARRISON_ORDER,
+  SIEGE_DAYS,
+  WAR_ISLAND_GARRISON,
+  WAR_POLITICAL_POWER,
+  WAR_RELATIONS,
   GARRISON_ORDER_CAP,
   POPULATION_PER_REGIMENT,
   REGIMENT_MARCH_DAYS,
@@ -21,12 +25,14 @@ import {
 } from "../src/domain/constants";
 import type { GameState } from "../src/domain/country/types";
 import { isHarbourSite, isIsland } from "../src/domain/islands/islandRules";
-import { advanceRegiment, findRoute, getGarrisonOrder, getGarrisons, getRegimentCap, isReady, newRegiment, routeDays, startMarch } from "../src/domain/military/militaryRules";
+import { advanceRegiment, findRoute, garrisonIslands, getGarrisonOrder, getGarrisons, getRegimentCap, isReady, newRegiment, routeDays, startMarch } from "../src/domain/military/militaryRules";
 import { getNation } from "../src/domain/nations/nationRules";
 import { getNeighbours } from "../src/domain/provinces/provinceNeighbours";
 import { hydrateGameState } from "../src/presentation/hooks/gameSave";
 import { loseProvince } from "../src/application/loseProvince";
-import { forecastFight } from "../src/domain/military/battleRules";
+import { forecastFight, forecastLanding } from "../src/domain/military/battleRules";
+import { canDeclareWar, declareWar, makePeace } from "../src/application/actions/warActions";
+import { addDays } from "../src/domain/country/calendar";
 
 const start = startNewGame("astravia", "astravia-harvest-union");
 const base: GameState = { ...start, chapters: allChaptersOpen(), stats: { ...start.stats, treasury: 20000 }, isPaused: false };
@@ -249,5 +255,89 @@ describe("taking back a province that broke away", () => {
     const old = JSON.parse(JSON.stringify(lost));
     delete old.freeProvinces;
     expect(hydrateGameState(old).freeProvinces).toEqual({ [lostId]: { people: 0, strength: 100 } });
+  });
+});
+
+describe("war over the islands", () => {
+  const kestrel = "island-1";
+  const warm: GameState = {
+    ...base,
+    stats: { ...base.stats, politicalPower: 200 },
+    foreignIslands: { [kestrel]: "veldoria" },
+    neighbours: { ...base.neighbours, veldoria: { ...base.neighbours.veldoria, relations: 20, accordUntil: addDays(base.date, 100) } },
+  };
+  const day = (s: GameState) => simulateDay({ ...s, isPaused: false, pendingDecisionId: null, pendingOffer: null, pendingDemand: null });
+  const ready = (nationId: string, provinceId: string, strength = 100) => ({ ...newRegiment(nationId, provinceId), trainingDays: 0, strength });
+
+  it("is declared on a neighbour holding an island, for political power, and turns them hostile", () => {
+    expect(canDeclareWar(base, "veldoria")).toBe(false); // they hold no island
+    expect(canDeclareWar({ ...warm, stats: { ...warm.stats, politicalPower: WAR_POLITICAL_POWER - 1 } }, "veldoria")).toBe(false);
+    const war = declareWar(warm, "veldoria");
+    expect(war.wars.veldoria).toBeDefined();
+    expect(war.stats.politicalPower).toBe(200 - WAR_POLITICAL_POWER);
+    expect(war.stats.popularity).toBeLessThan(warm.stats.popularity);
+    expect(war.neighbours.veldoria.relations).toBeLessThanOrEqual(WAR_RELATIONS);
+    expect(war.neighbours.veldoria.accordUntil).toBeNull();
+    expect(canDeclareWar(war, "veldoria")).toBe(false); // already
+  });
+
+  it("opens their islands to your regiments, and only then", () => {
+    const s = { ...warm, regiments: [ready(warm.nationId, capital)] };
+    expect(getMarchRoute(s, capital, kestrel)).toBeNull();
+    expect(getMarchRoute(declareWar(s, "veldoria"), capital, kestrel)).not.toBeNull();
+  });
+
+  it("garrisons their islands: one regiment in peace, more in war", () => {
+    const home = getNation("veldoria").provinceIds;
+    const theirs = [ready("veldoria", home[0]), ready("veldoria", home[0]), ready("veldoria", home[1])];
+    const bound = (rs: typeof theirs) => rs.filter((r) => r.march?.route.at(-1) === kestrel).length;
+    expect(bound(garrisonIslands("veldoria", theirs, [kestrel], 1))).toBe(1);
+    expect(bound(garrisonIslands("veldoria", theirs, [kestrel], WAR_ISLAND_GARRISON))).toBe(2);
+    expect(garrisonIslands("veldoria", theirs.slice(0, 1), [kestrel], 1)).toEqual(theirs.slice(0, 1)); // keeps one at home
+  });
+
+  it("is fought on the island: the garrison first, then a siege, and the island falls", () => {
+    let s: GameState = { ...declareWar(warm, "veldoria"), regiments: [ready(warm.nationId, kestrel), ready(warm.nationId, kestrel), ready("veldoria", kestrel)] };
+    for (let d = 0; d < 120 && s.foreignIslands[kestrel]; d++) s = day(s);
+    expect(s.foreignIslands[kestrel]).toBeUndefined();
+    expect(s.settledIslandIds).toContain(kestrel);
+    expect(s.provinces[kestrel].population).toBeGreaterThan(0);
+    expect(s.regiments.filter((r) => r.nationId === "veldoria" && r.provinceId === kestrel)).toHaveLength(0);
+    expect(s.events.some((e) => e.message.includes("is under siege"))).toBe(true);
+    expect(s.events.some((e) => e.message.includes("falls to your regiments"))).toBe(true);
+  });
+
+  it("is lost by too few: one regiment can't beat a garrison of one, which defends harder", () => {
+    expect(forecastLanding([100], [100]).won).toBe(false);
+    expect(forecastLanding([100, 100], [100]).won).toBe(true);
+    expect(forecastLanding([100], []).days).toBe(SIEGE_DAYS);
+  });
+
+  it("wears on support every month, and stops their trade offers", () => {
+    const war = { ...declareWar(warm, "veldoria"), date: { year: 1, month: 1, day: 30 } };
+    const next = day(war);
+    expect(next.lastDayLedger.support.war).toBeLessThan(0);
+    expect(next.pendingOffer).toBeNull();
+  });
+
+  it("ends in peace: each keeps what it holds, your regiments come home, and a truce follows", () => {
+    const war = { ...declareWar(warm, "veldoria"), regiments: [ready(warm.nationId, kestrel)] };
+    const peace = makePeace(war, "veldoria");
+    expect(peace.wars.veldoria).toBeUndefined();
+    expect(peace.foreignIslands[kestrel]).toBe("veldoria");
+    expect(peace.regiments[0].provinceId).toBe(capital);
+    expect(canDeclareWar({ ...peace, stats: { ...peace.stats, politicalPower: 200 } }, "veldoria")).toBe(false);
+  });
+
+  it("is remembered by saves; older saves are at peace", () => {
+    const old = JSON.parse(JSON.stringify(declareWar(warm, "veldoria")));
+    expect(hydrateGameState(old).wars.veldoria).toBeDefined();
+    delete old.wars;
+    delete old.sieges;
+    for (const n of Object.values(old.neighbours) as Array<Record<string, unknown>>) delete n.truceUntil;
+    const loaded = hydrateGameState(old);
+    expect(loaded.wars).toEqual({});
+    expect(loaded.sieges).toEqual({});
+    expect(loaded.neighbours.veldoria.truceUntil).toBeNull();
   });
 });

@@ -92,3 +92,32 @@
 .army-panel__lost .army-panel__status {
   flex: 1;
 }
+
+/* War or peace, at the end of a neighbour's row. */
+.army-panel__war {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.army-panel__war-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.army-panel__at-war {
+  color: #8e2323;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.army-panel__truce {
+  font-size: 0.85rem;
+  font-style: italic;
+}

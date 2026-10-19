@@ -436,6 +436,19 @@ export const REGIMENT_ASSAULT_PER_DAY = 2; // rebel strength a regiment at full 
 export const REBEL_FIGHT_PER_DAY = 1.5; // ...and regiment strength rebels at full strength wear down, spread over the regiments there
 export const FREE_REBEL_REGROWTH_PER_DAY = 0.5; // rebels left alone in a free province gather strength again
 export const REGIMENT_RECOVERY_PER_DAY = 1; // a worn regiment standing in a province of yours gets its men back
+export const DEFENDER_BONUS = 1.25; // regiments holding an island hit back this much harder than those landing
+export const SIEGE_DAYS = 10; // days an island with no defenders holds out before it falls...
+export const SIEGE_PEOPLE_PER_DAY = 100; // ...and a day more for every this many people living there
+
+// War (see domain/military/warRules.ts). Only over the islands.
+export const WAR_POLITICAL_POWER = 40; // declaring war...
+export const WAR_DECLARE_SUPPORT = -3; // ...and every group likes it less
+export const RELATIONS_WAR_ALARM = -15; // the other neighbours, alarmed, think worse of you
+export const WAR_WEARINESS_PER_MONTH = -1.5; // support with every group, each month at war
+export const WAR_RELATIONS = -60; // how they feel about you, at most, once you declare
+export const TRUCE_DAYS = 360; // after peace, no war with them for a year
+export const RELATIONS_ISLAND_TAKEN = -20; // an island of theirs taken in war
+export const WAR_ISLAND_GARRISON = 2; // regiments a neighbour wants on each of its islands while at war (one in peace)
 export const RACE_VOYAGE_DAYS = 90; // their voyage out
 export const RACE_TURNED_BACK_REFUND = 0.5; // share of your settling price refunded when they beat you to it
 export const COLONY_DISTANCE_UNREST = 8; // a colony's mood sits this far below the nation's...

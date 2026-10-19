@@ -16,6 +16,7 @@ import { acceptOffer, canAcceptOffer, declineOffer } from "../../src/application
 import { buyBackIsland, canBuyBackIsland, canSignAccord, signIslandAccord } from "../../src/application/actions/treatyActions";
 import { getBuyBackPrice } from "../../src/domain/neighbours/treatyRules";
 import { canRaiseRegiment, marchRegiments, raiseRegiment } from "../../src/application/actions/armyActions";
+import { canDeclareWar, declareWar, makePeace } from "../../src/application/actions/warActions";
 import { getGarrisons } from "../../src/domain/military/militaryRules";
 import { BUY_BACK_MIN_RELATIONS } from "../../src/domain/constants";
 import { canPressureGovernment, pressureGovernment } from "../../src/application/actions/pressureGovernment";
@@ -105,9 +106,10 @@ export interface PlayOptions {
   trade?: boolean; // also takes the neighbours' good trade offers
   treaties?: boolean; // also signs island accords, and buys back the islands neighbours hold, when it can spare the money
   army?: boolean; // also raises regiments and stands them in the most troubled provinces
+  war?: boolean; // also goes to war for the islands the neighbours hold, once it has three regiments
 }
 
-export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty, skill = "careful", mode, settle = false, trade = false, treaties = false, army = false }: PlayOptions): GameState {
+export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty, skill = "careful", mode, settle = false, trade = false, treaties = false, army = false, war = false }: PlayOptions): GameState {
   const sloppy = skill === "sloppy";
   let s = takeLoan(startNewGame(nation, party, difficulty, mode));
   if (!sloppy) s = setTaxRate(s, 0.12);
@@ -184,6 +186,7 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
     if (settle) s = settleIslands(s);
     if (treaties) s = signTreaties(s);
     if (army) s = keepGarrisons(s);
+    if (war) s = wageWar(s);
     s = simulateDay({ ...s, isPaused: false });
     onDay?.(s);
   }
@@ -232,6 +235,32 @@ export function playIdle(nation: string, party: string, days: number): GameState
 // Raise regiments while there's money to spare, and stand each ready one
 // in the most troubled province without one: risen first, then the
 // lowest local order.
+// With three regiments, declare war on the neighbour holding most islands,
+// march every ready regiment to the nearest of its islands, and make peace
+// once they're all taken, or after a year.
+function wageWar(state: GameState): GameState {
+  let s = state;
+  if (!isFeatureOpen(s, "army")) return s;
+  if (s.stats.treasury > 2000 && canRaiseRegiment(s)) s = raiseRegiment(s);
+  const yours = s.regiments.filter((r) => r.nationId === s.nationId);
+  const enemy = Object.keys(s.wars)[0];
+  if (!enemy) {
+    const counts = new Map<string, number>();
+    for (const holder of Object.values(s.foreignIslands)) counts.set(holder, (counts.get(holder) ?? 0) + 1);
+    const target = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+    if (target && yours.filter((r) => r.trainingDays <= 0).length >= 3 && canDeclareWar(s, target)) s = declareWar(s, target);
+    return s;
+  }
+  const islands = Object.keys(s.foreignIslands).filter((id) => s.foreignIslands[id] === enemy);
+  if (islands.length === 0 || dayNumber(s.date) - dayNumber(s.wars[enemy].since) > 360) return makePeace(s, enemy);
+  // Everyone ready and not already on an island of theirs goes to the first.
+  const target = islands[0];
+  for (const from of new Set(yours.filter((r) => r.trainingDays <= 0 && !r.march && !islands.includes(r.provinceId)).map((r) => r.provinceId))) {
+    s = marchRegiments(s, from, target);
+  }
+  return s;
+}
+
 function keepGarrisons(state: GameState): GameState {
   let s = state;
   if (s.stats.treasury > 3000 && canRaiseRegiment(s)) s = raiseRegiment(s);

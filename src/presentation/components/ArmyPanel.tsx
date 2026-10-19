@@ -6,6 +6,13 @@ import "./WorkforcePanel.css";
 import "./ArmyPanel.css";
 import type { CSSProperties } from "react";
 import { disbandRegiment, getMarchRoute, getYourRegiments, haltRegiments, raiseRegiment, canRaiseRegiment } from "../../application/actions/armyActions";
+import { canDeclareWar, declareWar, makePeace, whyNoWarWith } from "../../application/actions/warActions";
+import { isInTruce } from "../../domain/military/warRules";
+import { formatDate } from "../../domain/country/calendar";
+import { playDrum, playSeal } from "../audio/sound";
+import { getSiegeDays } from "../../domain/military/battleRules";
+import { getIslandPeople } from "../../domain/neighbours/treatyRules";
+import { SIEGE_DAYS, SIEGE_PEOPLE_PER_DAY, WAR_DECLARE_SUPPORT, WAR_POLITICAL_POWER, WAR_WEARINESS_PER_MONTH } from "../../domain/constants";
 import { CURRENCY_SYMBOL, GARRISON_ORDER, GARRISON_ORDER_CAP, POPULATION_PER_REGIMENT, REGIMENT_RAISE_COST, REGIMENT_SALARY, REGIMENT_TRAINING_DAYS } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { getRegimentCap, regimentsOf, routeDays } from "../../domain/military/militaryRules";
@@ -19,12 +26,68 @@ import { HireTerms, Seats, StaffStepper } from "./WorkforcePanel";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
 
+// War or peace with one neighbour: the button, and what it costs or why not.
+function WarButton({ state, nationId, dispatch }: { state: GameState; nationId: string; dispatch: Dispatch }) {
+  const n = state.neighbours[nationId];
+  const name = getNation(nationId).name;
+  const war = state.wars[nationId];
+  if (war) {
+    return (
+      <span className="army-panel__war">
+        <span className="army-panel__at-war">At war since {formatDate(war.since)}</span>
+        <button
+          type="button"
+          className="army-panel__war-button"
+          title={`Make peace with ${name}: each side keeps what it holds, your regiments on its islands come home, and no war between you for a year.`}
+          onClick={() => {
+            playSeal();
+            dispatch((s) => makePeace(s, nationId));
+          }}
+        >
+          Make peace
+        </button>
+      </span>
+    );
+  }
+  const why = whyNoWarWith(state, nationId);
+  return (
+    <span className="army-panel__war">
+      {n && isInTruce(n, state.date) && <span className="army-panel__truce">Truce until {formatDate(n.truceUntil!)}</span>}
+      {/* On a wrapper, so the tooltip shows when the button can't be pressed. */}
+      <span
+        title={`Declare war on ${name}, over the islands it holds: ${WAR_POLITICAL_POWER} political power, support ${WAR_DECLARE_SUPPORT} with everyone now and ${WAR_WEARINESS_PER_MONTH} every month it lasts. It ends any accord, and turns them hostile.${why ? ` ${why}` : ""}`}
+      >
+        <button
+          type="button"
+          className="army-panel__war-button"
+          disabled={!canDeclareWar(state, nationId)}
+          onClick={() => {
+            playDrum();
+            dispatch((s) => declareWar(s, nationId));
+          }}
+        >
+          Declare war
+          <StatIcon type="politicalPower" size={14} />
+          {WAR_POLITICAL_POWER}
+        </button>
+      </span>
+    </span>
+  );
+}
+
 // Where a regiment is and what it's doing, in a few words.
 function regimentStatus(state: GameState, r: Regiment): string {
   if (r.trainingDays > 0) return `At drill in ${getProvinceName(r.provinceId)}, ${r.trainingDays} days left`;
   if (!r.march) {
     const free = state.freeProvinces[r.provinceId];
     if (free) return `Fighting the rebels in ${getProvinceName(r.provinceId)} (rebels at ${Math.round(free.strength)})`;
+    const holder = state.foreignIslands[r.provinceId];
+    if (holder) {
+      const siege = state.sieges[r.provinceId];
+      return siege
+        ? `Besieging ${getProvinceName(r.provinceId)}: ${siege} of ${getSiegeDays(getIslandPeople(r.provinceId))} days`
+        : `Fighting ${getNation(holder).name}'s garrison on ${getProvinceName(r.provinceId)}`;
+    }
     return `Keeping order in ${getProvinceName(r.provinceId)}`;
   }
   const to = r.march.route[r.march.route.length - 1];
@@ -135,10 +198,15 @@ export function ArmyPanel({ state, dispatch }: { state: GameState; dispatch: Dis
                 <StatIcon type="regiment" size={16} />
                 {theirs.length}
               </span>
+              <WarButton state={state} nationId={nationId} dispatch={dispatch} />
             </li>
           );
         })}
       </ul>
+      <p className="army-panel__how">
+        War is fought only over the islands. At war, your regiments may sail to an island the enemy holds: they fight its garrison, which defends a quarter harder, then
+        besiege it until it falls: {SIEGE_DAYS} days, and a day more for every {SIEGE_PEOPLE_PER_DAY} people living there. Every month of war costs support. Peace keeps what each side holds.
+      </p>
     </section>
   );
 }

@@ -73,6 +73,7 @@ interface MapPanelProps {
   onPickArmy: (provinceId: string) => void; // a counter of yours tapped
   planMarch: (to: string) => MarchPreview | null; // the way there, for the preview
   freeProvinces: Record<string, FreeProvince>; // provinces that broke away, held by rebels
+  sieges: Record<string, number>; // islands your regiments besiege: days so far
 }
 
 // Every terrain gets a decorative texture, drawn on top of the province's
@@ -637,7 +638,7 @@ const MapLayers = memo(function MapLayers({
               venturesOpen ? "map-panel__unclaimed-land--clickable" : "",
               isSelected ? "is-selected" : "",
             ].join(" ")}
-            onClick={venturesOpen || lostProvinceIds.includes(land.id) ? () => onIslandClick(land.id) : undefined}
+            onClick={venturesOpen || lostProvinceIds.includes(land.id) || holder ? () => onIslandClick(land.id) : undefined}
           >
             <title>
               {land.name} ({status})
@@ -1025,6 +1026,7 @@ export const MapPanel = memo(function MapPanel({
   onPickArmy,
   planMarch,
   freeProvinces,
+  sieges,
 }: MapPanelProps) {
   const { provinces } = MAP_GEOMETRY;
 
@@ -1425,7 +1427,7 @@ export const MapPanel = memo(function MapPanel({
             settledIslandIds={settledIslandIds}
             foreignIslands={foreignIslands}
           />
-          {regiments && <ArmyLayer regiments={regiments} playerNationId={nation.id} marchFrom={marchFrom} onPick={handlePickArmy} preview={preview} freeProvinces={freeProvinces} />}
+          {regiments && <ArmyLayer regiments={regiments} playerNationId={nation.id} marchFrom={marchFrom} onPick={handlePickArmy} preview={preview} freeProvinces={freeProvinces} sieges={sieges} />}
         </svg>
 
         <div className="map-panel__zoom-controls">

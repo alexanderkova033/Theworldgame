@@ -304,6 +304,16 @@
   cursor: help;
 }
 
+.foreign-card__at-war {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  color: #8e2323;
+  font-weight: 700;
+  cursor: help;
+}
+
 .foreign-card__feeling {
   margin: 0;
   cursor: help;

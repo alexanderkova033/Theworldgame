@@ -44,6 +44,11 @@ import { tendUprisings } from "./day/uprisings";
 import { runNeighbours } from "./day/neighbours";
 import { drillTheArmy } from "./day/army";
 import { retakeProvince } from "./retakeProvince";
+import { conquer, takeIsland } from "./takeIsland";
+import { getIslandPeople } from "../domain/neighbours/treatyRules";
+import { feel } from "../domain/neighbours/relationsRules";
+import { getProvinceName } from "../domain/provinces/provinceRules";
+import { RELATIONS_ISLAND_TAKEN } from "../domain/constants";
 import { loseProvince } from "./loseProvince";
 import { getNation } from "../domain/nations/nationRules";
 import { moveSupport } from "./day/support";
@@ -206,9 +211,16 @@ export function simulateDay(state: GameState): GameState {
   // province whose rebels are beaten comes back, with its people.
   const army = drillTheArmy(day, working, takings.treasury);
   const retakenPeople = army.retaken.reduce((sum, id) => sum + (working.freeProvinces[id]?.people ?? 0), 0);
+  const capturedPeople = army.captured.reduce((sum, id) => sum + getIslandPeople(id), 0);
   working = army.retaken.reduce((s, id) => retakeProvince(s, id), { ...working, regiments: army.regiments });
-  working = { ...working, freeProvinces: army.freeProvinces };
-  const endStats: CountryStats = { ...finalStats, population: finalStats.population + retakenPeople };
+  working = { ...working, freeProvinces: army.freeProvinces, sieges: army.sieges };
+  // An island taken in war: theirs no longer, and they won't forget it.
+  for (const id of army.captured) {
+    const holder = working.foreignIslands[id];
+    working = conquer(takeIsland(working, id), id);
+    working = { ...working, neighbours: { ...working.neighbours, [holder]: feel(working.neighbours[holder], RELATIONS_ISLAND_TAKEN, `You took ${getProvinceName(id)} from them`) } };
+  }
+  const endStats: CountryStats = { ...finalStats, population: finalStats.population + retakenPeople + capturedPeople };
   const neighbourMonth = runNeighbours(day, working, date);
 
   return advanceChapters({

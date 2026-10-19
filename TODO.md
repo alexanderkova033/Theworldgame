@@ -67,7 +67,8 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **Fighting is deterministic** (domain/military/battleRules.ts: `fightRebels`, and `forecastFight` for the preview). Phase C can reuse it against a neighbour's garrison, with their regiments' strength in place of the rebels'.
 - **Scripted players never lose a province**, so no balance game retakes one; tests/army.test.ts plays the fight directly.
 - **A sea leg is drawn as a straight line**, and can cross a neighbour's land on the map. A ship's way round the coast would read better.
-- **The neighbours' regiments stand where they were raised.** They need orders of their own (to their coast before a voyage, to an island they hold) once islands can be fought over.
+- **War is too easy until phase D.** Measured 2026-10-19: the scripted player with `war: true` (declares once it has three regiments, lands on the enemy's islands one by one, makes peace when they're all taken or after a year) fought 30 wars in nine games, took 33 islands, lost no regiment and won every game. The neighbours only defend: they garrison their islands (one regiment, two at war) and arm fully at war, but a war is over in two or three months, before new regiments have drilled. Phase D's counterattacks (landing on your islands, retaking theirs) are the missing cost; after it, measure again and consider raising WAR_POLITICAL_POWER or the weariness.
+- **The neighbours' regiments garrison their islands** (garrisonIslands in domain/military/militaryRules.ts) but never attack. Phase D gives them a reason and a target: a hostile neighbour clearly stronger than your nearest island's garrison.
 - **The browser check:** run tests/support scripts or the iPad driver from PowerShell (Start-Process), not from Git Bash in the background: from Git Bash the driver hung and looked like a frozen page.
 
 ## Process reminders

@@ -20,6 +20,7 @@ export type SupportCause =
   | "debt"
   | "rival"
   | "foreign"
+  | "war"
   | "oneOffs";
 
 export type StabilityCause = "food" | "support" | "debt" | "homes" | "cold" | "provinces" | "police" | "crackdown" | "election" | "oneOffs" | "events";

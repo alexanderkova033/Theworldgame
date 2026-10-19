@@ -4,7 +4,7 @@
 // people. Building is quiet (the Neighbours page shows it); a voyage is
 // news, and the country is told at once, since it is a race.
 import { isFeatureOpen } from "../../domain/chapters/chapterData";
-import { DAYS_PER_MONTH, RACE_VOYAGE_DAYS, SETTLE_COST } from "../../domain/constants";
+import { DAYS_PER_MONTH, RACE_VOYAGE_DAYS, SETTLE_COST, WAR_ISLAND_GARRISON } from "../../domain/constants";
 import { isFirstDayOfMonth } from "../../domain/country/calendar";
 import type { GameDate, GameState } from "../../domain/country/types";
 import { pickRaceTarget } from "../../domain/islands/islandRules";
@@ -14,7 +14,7 @@ import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { fadeFeelings } from "../../domain/neighbours/relationsRules";
 import { draftOffer } from "../../domain/neighbours/tradeRules";
 import { hasAccord } from "../../domain/neighbours/treatyRules";
-import { chooseRecruit, getArmyPay } from "../../domain/military/militaryRules";
+import { chooseRecruit, garrisonIslands, getArmyPay } from "../../domain/military/militaryRules";
 import { nationHasPort } from "../../domain/market/marketRules";
 import { isFriendly } from "../../domain/diplomacy/diplomacyRules";
 import { monthNumber } from "../chapters";
@@ -32,9 +32,11 @@ export function runNeighbours(day: Day, working: GameState, date: GameDate): Pic
   const hasPort = nationHasPort(getNation(working.nationId));
 
   for (const [nationId, before] of Object.entries(working.neighbours)) {
-    // Feelings fade, toward warm while the party you backed rules them.
+    // Feelings fade, toward warm while the party you backed rules them; not
+    // while you're at war with them.
     const gov = working.foreignPolitics[nationId];
-    const faded = fadeFeelings(before, gov ? isFriendly(gov) : false);
+    const atWar = !!working.wars[nationId];
+    const faded = atWar ? before : fadeFeelings(before, gov ? isFriendly(gov) : false);
     const { neighbour, deed } = chooseBuilding(liveMonth(faded, nationId, date), nationId);
     // The islands are only raced for once the player can answer (ventures open).
     const target = isFeatureOpen(working, "ventures") ? pickRaceTarget({ ...working, foreignVoyages }) : null;
@@ -51,7 +53,7 @@ export function runNeighbours(day: Day, working: GameState, date: GameDate): Pic
     } else {
       neighbours[nationId] = { ...neighbour, lastDeed: deed };
     }
-    if (canOffer && !pendingOffer) pendingOffer = draftOffer(neighbours[nationId], nationId, month, working.market, hasPort, working.resources);
+    if (canOffer && !atWar && !pendingOffer) pendingOffer = draftOffer(neighbours[nationId], nationId, month, working.market, hasPort, working.resources);
     // Its army: a month's pay, and perhaps a new regiment (militaryRules.ts).
     // Unpaid, its newest goes home.
     const paid = { ...neighbours[nationId], treasury: neighbours[nationId].treasury - getArmyPay(regiments, nationId) * DAYS_PER_MONTH };
@@ -60,10 +62,13 @@ export function runNeighbours(day: Day, working: GameState, date: GameDate): Pic
       regiments = regiments.filter((r) => r !== own[own.length - 1]);
       neighbours[nationId] = paid;
     } else {
-      const { neighbour: after, recruit } = chooseRecruit(paid, nationId, regiments);
+      const { neighbour: after, recruit } = chooseRecruit(paid, nationId, regiments, atWar);
       neighbours[nationId] = after;
       if (recruit) regiments = [...regiments, recruit];
     }
+    // A garrison on each island it holds, more of one while at war with you.
+    const islands = Object.keys(working.foreignIslands).filter((id) => working.foreignIslands[id] === nationId);
+    regiments = garrisonIslands(nationId, regiments, islands, atWar ? WAR_ISLAND_GARRISON : 1);
   }
   return { neighbours, foreignVoyages, pendingOffer, regiments };
 }

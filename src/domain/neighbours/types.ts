@@ -15,6 +15,7 @@ export interface Neighbour {
   lastDeed: string | null; // what it did last month, in plain words, for the Neighbours page
   relations: number; // -100 to 100: how it feels about you (see relationsRules.ts)
   accordUntil: GameDate | null; // an island accord with you holds until this day (see treatyRules.ts)
+  truceUntil: GameDate | null; // after a war with you, no war again until this day (see military/warRules.ts)
   feelings: Feeling[]; // why, the latest first: the few things it remembers you for
 }
 

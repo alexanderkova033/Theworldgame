@@ -15,7 +15,8 @@ import { ArmyPanel } from "./presentation/components/ArmyPanel";
 import { MarchBanner } from "./presentation/components/MapArmies";
 import { getMarchRoute, getReadyRegimentsIn, marchRegiments } from "./application/actions/armyActions";
 import { routeDays } from "./domain/military/militaryRules";
-import { forecastFight } from "./domain/military/battleRules";
+import { forecastFight, forecastLanding, getSiegeDays } from "./domain/military/battleRules";
+import { getIslandPeople } from "./domain/neighbours/treatyRules";
 import { FREE_REBEL_REGROWTH_PER_DAY } from "./domain/constants";
 import { getAdvisorOutlook } from "./application/getAdvisorOutlook";
 import { getDailyProductionSummary } from "./application/getDailyProductionSummary";
@@ -116,12 +117,17 @@ function App() {
       const days = routeDays(route);
       // Rebels gather strength while the regiments are on the way.
       const free = s.freeProvinces[to];
+      const mine = getReadyRegimentsIn(s, marchFrom).map((r) => r.strength);
+      const holder = s.foreignIslands[to];
       const fight = free
-        ? forecastFight(
-            getReadyRegimentsIn(s, marchFrom).map((r) => r.strength),
-            Math.min(100, free.strength + days * FREE_REBEL_REGROWTH_PER_DAY),
-          )
-        : null;
+        ? forecastFight(mine, Math.min(100, free.strength + days * FREE_REBEL_REGROWTH_PER_DAY))
+        : holder
+          ? forecastLanding(
+              mine,
+              s.regiments.filter((r) => r.nationId === holder && r.trainingDays <= 0 && (r.march ? r.march.route.at(-1) : r.provinceId) === to).map((r) => r.strength),
+              getSiegeDays(getIslandPeople(to)),
+            )
+          : null;
       return { route: route.map((leg) => leg.provinceId), days, fight };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -474,6 +480,7 @@ function App() {
             onPickArmy={pickArmy}
             planMarch={planMarch}
             freeProvinces={isFeatureOpen(state, "army") ? state.freeProvinces : {}}
+            sieges={state.sieges}
           />
           {marchFrom && (
             <MarchBanner

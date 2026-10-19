@@ -127,14 +127,42 @@ export function advanceRegiment(r: Regiment, linkedIslands: ReadonlySet<string>)
   return { ...r, provinceId: reached, march: { route: rest, legDays: days, daysLeft: days } };
 }
 
+// A neighbour's ruler keeps a garrison on each island it holds: one
+// regiment in peace, more in war. It sends ready regiments from its own
+// land by the quickest way, keeping one at home. Returns its regiments,
+// with any new marches begun.
+export function garrisonIslands(nationId: string, regiments: Regiment[], islands: string[], wanted: number): Regiment[] {
+  if (islands.length === 0) return regiments;
+  const own = regimentsOf(regiments, nationId);
+  const home = new Set(getNation(nationId).provinceIds);
+  const canEnter = (id: string) => home.has(id) || islands.includes(id);
+  const bound = (r: Regiment) => (r.march ? r.march.route[r.march.route.length - 1] : r.provinceId);
+  const spare = own.filter((r) => isReady(r) && home.has(r.provinceId));
+  const moving = new Map<string, Regiment>();
+  for (const island of islands) {
+    let there = own.filter((r) => bound(r) === island).length;
+    while (there < wanted && spare.length > 1) {
+      const r = spare.shift()!;
+      const route = findRoute(r.provinceId, island, canEnter);
+      if (!route) continue;
+      moving.set(r.id, startMarch(r, route));
+      there++;
+    }
+  }
+  return moving.size === 0 ? regiments : regiments.map((r) => moving.get(r.id) ?? r);
+}
+
 // A neighbour's ruler keeps a share of the regiments its people could
 // support, by temper, and raises one a month while it has fewer and the
 // money beyond its reserve. Each new one drills in whichever of its
 // provinces has fewest, so they spread along its land.
-export function chooseRecruit(n: Neighbour, nationId: string, regiments: Regiment[]): { neighbour: Neighbour; recruit: Regiment | null } {
+// At war it keeps all it can, and spends its reserve to.
+export function chooseRecruit(n: Neighbour, nationId: string, regiments: Regiment[], atWar = false): { neighbour: Neighbour; recruit: Regiment | null } {
   const own = regimentsOf(regiments, nationId);
-  const wanted = Math.floor(getRegimentCap(n.population) * getPersonality(nationId).martial);
-  if (own.length >= wanted || n.treasury - REGIMENT_RAISE_COST < getPersonality(nationId).reserve) return { neighbour: n, recruit: null };
+  const cap = getRegimentCap(n.population);
+  const wanted = atWar ? cap : Math.floor(cap * getPersonality(nationId).martial);
+  const reserve = atWar ? 0 : getPersonality(nationId).reserve;
+  if (own.length >= wanted || n.treasury - REGIMENT_RAISE_COST < reserve) return { neighbour: n, recruit: null };
   const provinces = getNation(nationId).provinceIds;
   const where = provinces.reduce((a, b) => (own.filter((r) => r.provinceId === b).length < own.filter((r) => r.provinceId === a).length ? b : a));
   return { neighbour: { ...n, treasury: n.treasury - REGIMENT_RAISE_COST }, recruit: newRegiment(nationId, where) };

@@ -140,6 +140,11 @@ function NeighbourState({ state, nationId }: { state: GameState; nationId: strin
           </li>
         )}
       </ul>
+      {state.wars[nationId] && (
+        <p className="foreign-card__at-war" title="See the Army window: war is fought over the islands, and every month of it costs support.">
+          <StatIcon type="regiment" size={15} /> At war with you since {formatDate(state.wars[nationId].since)}
+        </p>
+      )}
       {islands.length > 0 && <p className="foreign-card__islands">Holds {islands.map(([, name]) => name).join(" and ")}.</p>}
       {n.lastDeed && <p className="foreign-card__deed">Last month: {n.lastDeed.toLowerCase()}.</p>}
     </div>
