@@ -34,7 +34,8 @@ import { isWorking } from "../maintenance/maintenanceRules";
 import { MAP_GEOMETRY } from "../provinces/provinceData";
 import { getOwnedProvinceIds, getPlace } from "../provinces/provinceRules";
 import type { Terrain } from "../provinces/types";
-import { getIslandData, type IslandTrait } from "./islandData";
+import { getIslandData, ISLANDS, type IslandTrait } from "./islandData";
+import { getNation } from "../nations/nationRules";
 
 const ISLAND_IDS = new Set(MAP_GEOMETRY.islands.map((i) => i.id));
 
@@ -49,6 +50,7 @@ export function whyNotSettle(state: GameState, islandId: string): string | null 
   if (state.settledIslandIds.includes(islandId)) return "Already settled.";
   if (state.settlements.some((s) => s.islandId === islandId)) return "Settlers are already on their way.";
   if (state.lostProvinceIds.includes(islandId)) return "It broke away.";
+  if (state.foreignIslands[islandId]) return `Claimed by ${getNation(state.foreignIslands[islandId]).name}.`;
   if (!state.scoutedIslandIds.includes(islandId)) return "Scout it with a venture first.";
   return null;
 }
@@ -114,6 +116,25 @@ export function getProducingTerrains(state: GameState): Terrain[] {
     const trait = getIslandData(id)?.trait;
     return trait && DOUBLES[trait] === terrain ? [terrain, terrain] : [terrain];
   });
+}
+
+// The race (see constants): whose ships are bound where, and which island a
+// neighbour goes for next. An island is open to them while nobody holds it,
+// it hasn't broken away, and no neighbour's ship is already bound there.
+export function isOpenToNeighbours(state: GameState, islandId: string): boolean {
+  return (
+    !state.settledIslandIds.includes(islandId) &&
+    !state.lostProvinceIds.includes(islandId) &&
+    !state.foreignIslands[islandId] &&
+    !state.foreignVoyages.some((v) => v.islandId === islandId)
+  );
+}
+
+// The prize first: the island with the most people of its own, then any.
+export function pickRaceTarget(state: GameState): string | null {
+  const open = ISLANDS.filter((i) => isOpenToNeighbours(state, i.id));
+  if (open.length === 0) return null;
+  return open.reduce((best, i) => ((i.locals?.people ?? 0) > (best.locals?.people ?? 0) ? i : best)).id;
 }
 
 // Where the settlers come from: the province with most people sleeping

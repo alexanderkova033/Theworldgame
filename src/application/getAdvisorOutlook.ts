@@ -26,6 +26,7 @@ import { isLocalTrouble } from "../domain/provinces/provinceOrder";
 import { getDifficulty } from "../domain/difficulty/difficultyData";
 import { getBreakawayDaysLeft, getRiotDaysToRise } from "../domain/uprising/uprisingRules";
 import { getProvinceName } from "../domain/provinces/provinceRules";
+import { getNation } from "../domain/nations/nationRules";
 import { getResearchNodeStatus } from "../domain/research/researchRules";
 import { RESEARCH_NODES } from "../domain/research/researchData";
 import { RESEARCH_CATEGORIES } from "../domain/workforce/workforceRules";
@@ -48,7 +49,8 @@ export type AdvisorAlertKind =
   | "debt"
   | "election"
   | "stalled"
-  | "research";
+  | "research"
+  | "race";
 
 export interface AdvisorAlert {
   kind: AdvisorAlertKind;
@@ -64,7 +66,7 @@ export interface AdvisorOutlook {
 
 // Most urgent first when equally critical — the order the problems are
 // checked in below.
-const ALERT_ORDER: AdvisorAlertKind[] = ["uprising", "unrest", "provinceUnrest", "coal", "food", "money", "farmWorkers", "factoryWorkers", "homeless", "broken", "debt", "election", "stalled", "research"];
+const ALERT_ORDER: AdvisorAlertKind[] = ["uprising", "unrest", "provinceUnrest", "coal", "food", "money", "farmWorkers", "factoryWorkers", "homeless", "broken", "race", "debt", "election", "stalled", "research"];
 
 const UNREST_NAMES: Record<GameState["unrestStage"], string> = { calm: "Calm", discontent: "Discontent", strikes: "Strikes", riots: "Riots" };
 
@@ -129,6 +131,18 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       text: `${UNREST_NAMES[worst.unrestStage]}: ${getProvinceName(id)}${others}`,
       detail: `${getProvinceName(id)} is ${worst.unrestStage === "riots" ? "rioting, wrecking its buildings and dragging national stability down" : "on strike"}. Too many there have no home or no work: build homes or jobs there${streets ? ", or crack down" : ""}.${rising}`,
       critical: worst.unrestStage === "riots",
+    });
+  }
+
+  // A neighbour's settlers bound for an island: settle it first to keep it.
+  const voyage = state.foreignVoyages[0];
+  if (voyage) {
+    const days = Math.ceil(voyage.daysRemaining);
+    alerts.push({
+      kind: "race",
+      text: `${getNation(voyage.nationId).name} → ${getProvinceName(voyage.islandId)}: ${days}d`,
+      detail: `${getNation(voyage.nationId).name}'s settlers land on ${getProvinceName(voyage.islandId)} in ${days} days, and it will be theirs. Settle it first to keep it.`,
+      critical: false,
     });
   }
 

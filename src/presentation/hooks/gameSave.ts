@@ -121,6 +121,8 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     lostProvinceIds: raw.lostProvinceIds ?? [],
     settlements: raw.settlements ?? [],
     settledIslandIds: raw.settledIslandIds ?? [],
+    foreignVoyages: raw.foreignVoyages ?? [],
+    foreignIslands: raw.foreignIslands ?? {},
     dangerPauses: raw.dangerPauses ?? [],
     decisionHistory: raw.decisionHistory ?? [],
     // Saves from before uprisings: no province has rioted for long, or risen.

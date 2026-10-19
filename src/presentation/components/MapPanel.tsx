@@ -4,7 +4,7 @@ import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useStat
 import type { ProjectType } from "../../domain/construction/types";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import { NATIONS } from "../../domain/nations/nationData";
-import { getNationForProvince } from "../../domain/nations/nationRules";
+import { getNation, getNationForProvince } from "../../domain/nations/nationRules";
 import type { Nation } from "../../domain/nations/types";
 import { getParty } from "../../domain/parties/partyRules";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
@@ -64,6 +64,7 @@ interface MapPanelProps {
   onNextProblem: () => void; // select the next of them and open its card
   lostProvinceIds: string[]; // broke away after an uprising: drawn as free land (see domain/uprising)
   settledIslandIds: string[]; // islands settled: drawn and picked like your provinces (see domain/islands)
+  foreignIslands: Record<string, string>; // islands a neighbour claimed: drawn in their colour
 }
 
 // Every terrain gets a decorative texture, drawn on top of the province's
@@ -333,6 +334,7 @@ interface MapLayersProps {
   onHoverProvince: Dispatch<SetStateAction<string | null>>;
   lostProvinceIds: string[];
   settledIslandIds: string[];
+  foreignIslands: Record<string, string>;
 }
 
 // A homes or jobs flag in a province's info bar: amber when it's tight,
@@ -466,6 +468,7 @@ const MapLayers = memo(function MapLayers({
   onHoverProvince,
   lostProvinceIds,
   settledIslandIds,
+  foreignIslands,
 }: MapLayersProps) {
   const { coastPath, provinces, islands } = MAP_GEOMETRY;
   // Yours: your nation's provinces and the islands you settled, unless
@@ -605,7 +608,10 @@ const MapLayers = memo(function MapLayers({
         const isScouted = scoutedIslandIds.includes(land.id);
         const isExpeditionActive = expeditionIslandIds.includes(land.id);
         const isSelected = land.id === selectedIslandId;
-        const status = lostProvinceIds.includes(land.id)
+        const holder = foreignIslands[land.id] ? getNation(foreignIslands[land.id]) : undefined;
+        const status = holder
+          ? `${holder.name}'s`
+          : lostProvinceIds.includes(land.id)
           ? "broke away: free"
           : isScouted
             ? "charted"
@@ -631,6 +637,19 @@ const MapLayers = memo(function MapLayers({
           </path>
         );
       })}
+      {/* A neighbour's island: their colour washed over the paper, as their
+          provinces are on the continent. */}
+      {islands.map((land) =>
+        foreignIslands[land.id] ? (
+          <path
+            key={`${land.id}-holder`}
+            d={land.path}
+            fill={washColor(getNation(foreignIslands[land.id]).color)}
+            fillOpacity={0.3}
+            pointerEvents="none"
+          />
+        ) : null,
+      )}
       {/* A hint of vegetation so unclaimed islands read as actual
           islands, not flat brown blobs. */}
       {islands.map((land) =>
@@ -992,6 +1011,7 @@ export const MapPanel = memo(function MapPanel({
   onNextProblem,
   lostProvinceIds,
   settledIslandIds,
+  foreignIslands,
 }: MapPanelProps) {
   const { provinces } = MAP_GEOMETRY;
 
@@ -1374,6 +1394,7 @@ export const MapPanel = memo(function MapPanel({
             onHoverProvince={hoverProvince}
             lostProvinceIds={lostProvinceIds}
             settledIslandIds={settledIslandIds}
+            foreignIslands={foreignIslands}
           />
         </svg>
 

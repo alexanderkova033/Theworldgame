@@ -44,6 +44,13 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **Settled islands use the province systems unchanged** (homes, jobs, unrest, uprisings, breaking away), except commuting, which stops at the shore, and migration, which crosses only between harbours. Phase D only needs to tune them (distance), not build them.
 - **Locals are data only so far** (domain/islands/islandData.ts): a name and a number on three islands. Phase C decides what settling among them means, through the letter system (domain/uprising/demandRules.ts is the pattern).
 
+## The race: what step 4 needs from the neighbours
+
+- **A claimed island does nothing for its holder yet.** The neighbours have no economy (only elections), so an island they take is a flag on the map and a loss to you. Step 4 should give it a value to them: its people and yield in their economy.
+- **The race runs on a fixed schedule** (month 27, then every eight; src/domain/constants.ts), the neighbours taking turns. Steady on purpose: it draws no dice, so it never shifts the luck of the balance games, and a player can see it coming. Once neighbours have economies, the schedule could become their own choice (when they can afford a voyage), but keep it free of the shared dice or the balance tests will wobble (a random roll here flipped one Hard game).
+- **There is no way to take a claimed island back** (or to buy, trade or contest it). That is step 4 (treaties, trade) and step 5 (the military).
+- **Measured 2026-10-19 over five years:** a careful player who never settles loses 4 islands to the neighbours; one who settles holds about 5.4 and loses about 0.6, ending about 10,000 Cr richer and 24% bigger than one who doesn't.
+
 ## Process reminders
 
 - Domain rules live in `src/domain/<concept>/`, cross-domain use cases in `src/application/`, and React only in `src/presentation/`.

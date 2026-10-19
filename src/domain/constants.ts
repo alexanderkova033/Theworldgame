@@ -378,6 +378,13 @@ export const HARBOUR_WOOD_COST = 30;
 export const HARBOUR_BUILD_DAYS = 60;
 export const MAX_HARBOURS_PER_PROVINCE = 1;
 export const SUPPLY_FEE_PER_DAY = 4; // Crowns a day for each colony not linked by harbours
+// The race: from the third year, on a steady schedule, a neighbour sends
+// settlers to an island nobody holds; whoever lands first keeps it. Steady
+// rather than by chance, so a player can see it coming.
+export const RACE_FROM_MONTH = 27; // months since the start: the first neighbour sails...
+export const RACE_EVERY_MONTHS = 8; // ...and another this many months later, and so on
+export const RACE_VOYAGE_DAYS = 90; // their voyage out
+export const RACE_TURNED_BACK_REFUND = 0.5; // share of your settling price refunded when they beat you to it
 export const COLONY_DISTANCE_UNREST = 8; // a colony's mood sits this far below the nation's...
 export const COLONY_DISTANCE_UNREST_LINKED = 4; // ...or this far, once harbours link it to the mainland
 // Island traits (see domain/islands/islandData.ts).

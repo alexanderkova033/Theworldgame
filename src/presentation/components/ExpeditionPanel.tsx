@@ -16,6 +16,7 @@ import {
 import { getIslandData } from "../../domain/islands/islandData";
 import { getLinkedIslands, whyNotSettle } from "../../domain/islands/islandRules";
 import type { LocalsTerms } from "../../domain/islands/types";
+import { getNation } from "../../domain/nations/nationRules";
 import { getSettleCost } from "../../application/actions/settlementActions";
 import { formatAmount } from "../formatNumber";
 import type { GameState } from "../../domain/country/types";
@@ -62,6 +63,20 @@ function RewardIcon({ reward }: { reward: ExpeditionReward }) {
     );
   }
   return <StatIcon type={reward.stabilityDelta !== undefined ? "stability" : "treasury"} size={34} />;
+}
+
+// The race for the islands: a neighbour's settlers bound here, or a
+// neighbour holding it already.
+function RaceNote({ state, islandId }: { state: GameState; islandId: string }) {
+  const voyage = state.foreignVoyages.find((v) => v.islandId === islandId);
+  const holder = state.foreignIslands[islandId];
+  if (holder) return <p className="expedition-panel__hint">Claimed by {getNation(holder).name}.</p>;
+  if (!voyage) return null;
+  return (
+    <p className="note is-warning ventures-race">
+      {getNation(voyage.nationId).name}'s settlers land here in {Math.ceil(voyage.daysRemaining)} days, and it will be theirs. Settle it first to keep it.
+    </p>
+  );
 }
 
 // Settling among people who already live there: three ways, each with its
@@ -192,6 +207,7 @@ export function ExpeditionPanel({ state, selectedIslandId, dispatch }: Expeditio
             </div>
             <div className="expedition-panel__body">
               <h3 className="expedition-panel__island">{island.name}</h3>
+              <RaceNote state={state} islandId={island.id} />
 
               {isScouted && data && <p className="expedition-panel__result">{data.reward.flavor}</p>}
               {isScouted && <SettleSection state={state} islandId={island.id} dispatch={dispatch} />}

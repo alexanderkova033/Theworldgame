@@ -13,7 +13,7 @@ import type { ResearchCategory, ResearchOutcomeTier } from "../research/types";
 import type { ResourceBundle } from "../resources/types";
 import type { UnrestStage } from "../unrest/types";
 import type { Demand } from "../uprising/types";
-import type { Settlement } from "../islands/types";
+import type { ForeignVoyage, Settlement } from "../islands/types";
 import type { Workforce } from "../workforce/types";
 import type { ChapterProgress } from "../chapters/chapterData";
 import type { BurdenId, GameMode } from "../reign/reignData";
@@ -141,11 +141,13 @@ export interface GameState {
   activeLaw: PolicyInProgress | null; // a passed law still being drafted into force — see domain/laws
   researchFocus: Record<ResearchCategory, string | null>; // the node each research area is working toward — see domain/research
   researchProgress: Record<string, number>; // work put into each node so far; kept if you switch direction and come back
-  researchPathsFinished: Record<string, GameDate>;
-  pendingDemand: Demand | null;
-  lostProvinceIds: string[];
+  researchPathsFinished: Record<string, GameDate>; // a research path's key: the day its capstone was finished (see researchRules.ts)
+  pendingDemand: Demand | null; // a province's letter waiting for an answer (see domain/uprising/demandRules.ts)
+  lostProvinceIds: string[]; // provinces that broke away after an uprising: no longer the country's (see domain/uprising)
   settlements: Settlement[]; // settler ships on their way to islands (see domain/islands)
-  settledIslandIds: string[]; // islands settled: held and governed like provinces // provinces that broke away after an uprising: no longer the country's (see domain/uprising) // a province's letter waiting for an answer (see domain/uprising/demandRules.ts) // a research path's key: the day its capstone was finished (see researchRules.ts)
+  settledIslandIds: string[]; // islands settled: held and governed like provinces
+  foreignVoyages: ForeignVoyage[]; // neighbours' settlers on their way to islands (see domain/islands)
+  foreignIslands: Record<string, string>; // islands a neighbour has claimed: island id to nation id
   workforce: Workforce; // salaried scientists and police — see domain/workforce
   foreignPolitics: Record<string, ForeignGovernment>; // every nation but the player's — see domain/diplomacy
   market: MarketState; // the continental market's stock of every good — see domain/market

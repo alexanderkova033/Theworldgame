@@ -82,6 +82,7 @@ const ALERTS: Record<AdvisorAlertKind, Destination> = {
   election: SUPPORT,
   stalled: BUILDINGS,
   research: { panel: "research" },
+  race: { panel: "ventures" },
 };
 
 const WINDOW_NAMES: Record<PanelKey, string> = {

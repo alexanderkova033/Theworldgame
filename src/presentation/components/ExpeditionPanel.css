@@ -92,3 +92,7 @@
   flex-wrap: wrap;
   gap: 0.4rem;
 }
+
+.ventures-race {
+  margin: 0.3rem 0;
+}

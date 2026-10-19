@@ -385,6 +385,7 @@ function App() {
             nation={nation}
             lostProvinceIds={state.lostProvinceIds}
             settledIslandIds={state.settledIslandIds}
+            foreignIslands={state.foreignIslands}
             placedBuildings={state.placedBuildings}
             selectedProvinceId={currentProvinceId}
             onSelectProvince={selectProvinceOnMap}

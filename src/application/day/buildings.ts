@@ -15,6 +15,7 @@ import { ONE_OFF } from "../actions/recordAction";
 import { advancePolicies } from "../advancePolicies";
 import { applyExpeditionCompletion } from "../applyExpeditionCompletion";
 import { applySettlementArrival } from "../applySettlementArrival";
+import { runTheRace } from "./race";
 import { applyProjectCompletion } from "../applyProjectCompletion";
 import { book, bookChange, log, type Day } from "./dayContext";
 
@@ -106,6 +107,9 @@ export function advanceBuildings(day: Day): GameState {
       topic: "venture",
     });
   }
+
+  // 1b''. The race for the islands: a neighbour's ship may land, or set out.
+  working = runTheRace(day, working);
 
   // 1c. A law being drafted and a research step in the lab each move one day
   // closer to taking effect (see advancePolicies.ts). Completion logs its

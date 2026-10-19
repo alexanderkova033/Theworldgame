@@ -27,6 +27,9 @@ import { ANCHORAGE_HARBOUR_COST_SHARE, GRAZING_FOOD_PER_DAY, SUPPLY_FEE_PER_DAY 
 import { getGrazingFood, getLinkedIslands, getProducingTerrains } from "../src/domain/islands/islandRules";
 import { COLONY_DISTANCE_UNREST, COLONY_DISTANCE_UNREST_LINKED } from "../src/domain/constants";
 import { updateProvinceOrder } from "../src/domain/provinces/provinceOrder";
+import { runTheRace } from "../src/application/day/race";
+import { beginDay } from "../src/application/day/dayContext";
+import { RACE_EVERY_MONTHS, RACE_FROM_MONTH, RACE_TURNED_BACK_REFUND, RACE_VOYAGE_DAYS } from "../src/domain/constants";
 
 function bounds(path: string) {
   const points = (path.match(/-?\d+(\.\d+)?,-?\d+(\.\d+)?/g) ?? []).map((p) => p.split(",").map(Number));
@@ -274,5 +277,58 @@ describe("a colony far from the capital", () => {
     const linked = settle(new Set([solmere]));
     expect(apart[mainland].stability - apart[solmere].stability).toBeCloseTo(COLONY_DISTANCE_UNREST, 0);
     expect(linked[mainland].stability - linked[solmere].stability).toBeCloseTo(COLONY_DISTANCE_UNREST_LINKED, 0);
+  });
+});
+
+describe("the race for the islands", () => {
+  const start = startNewGame("astravia", "astravia-harvest-union");
+  const base: GameState = { ...start, chapters: allChaptersOpen(), stats: { ...start.stats, treasury: 20000 }, resources: { ...start.resources, wood: 100 } };
+  const kestrel = "island-1"; // the most people of its own: the prize
+  const race = (state: GameState) => runTheRace(beginDay(state), state);
+  const firstOf = (month: number) => ({ year: Math.floor((month - 1) / 12) + 1, month: ((month - 1) % 12) + 1, day: 1 });
+
+  it("doesn't start before the third year", () => {
+    seedRandom(1);
+    for (let m = 1; m < RACE_FROM_MONTH; m++) expect(race({ ...base, date: firstOf(m) }).foreignVoyages).toEqual([]);
+  });
+
+  it("sends a neighbour after the island with the most people, on schedule", () => {
+    const sailed = race({ ...base, date: firstOf(RACE_FROM_MONTH) });
+    expect(sailed.foreignVoyages).toHaveLength(1);
+    expect(sailed.foreignVoyages[0].islandId).toBe(kestrel);
+    expect(sailed.foreignVoyages[0].nationId).not.toBe(base.nationId);
+    expect(race({ ...base, date: firstOf(RACE_FROM_MONTH + 1) }).foreignVoyages).toEqual([]);
+    // The other neighbour takes the next turn.
+    const next = race({ ...base, date: firstOf(RACE_FROM_MONTH + RACE_EVERY_MONTHS) });
+    expect(next.foreignVoyages[0].nationId).not.toBe(sailed.foreignVoyages[0].nationId);
+  });
+
+  const landing: GameState = {
+    ...base,
+    scoutedIslandIds: [kestrel],
+    foreignVoyages: [{ nationId: "caldenreich", islandId: kestrel, daysRemaining: 1, totalDays: RACE_VOYAGE_DAYS }],
+  };
+
+  it("lets the neighbour claim it if they land first, turning yours back with half the price", () => {
+    const mine = foundSettlement(landing, kestrel, "buy");
+    const claimed = race(mine);
+    expect(claimed.foreignIslands[kestrel]).toBe("caldenreich");
+    expect(claimed.settlements).toEqual([]);
+    expect(claimed.stats.treasury).toBe(mine.stats.treasury + getSettleCost("buy") * RACE_TURNED_BACK_REFUND);
+    expect(canFoundSettlement(claimed, kestrel, "buy")).toBe(false);
+  });
+
+  it("turns them back if your settlers landed first", () => {
+    const yours = applySettlementArrival(landing, kestrel, "buy");
+    const after = race(yours);
+    expect(after.foreignIslands[kestrel]).toBeUndefined();
+    expect(after.foreignVoyages).toEqual([]);
+  });
+
+  it("is remembered by saves, and older saves have no claims", () => {
+    const { foreignVoyages: _v, foreignIslands: _i, ...old } = base;
+    const loaded = hydrateGameState(JSON.parse(JSON.stringify(old)));
+    expect(loaded.foreignVoyages).toEqual([]);
+    expect(loaded.foreignIslands).toEqual({});
   });
 });

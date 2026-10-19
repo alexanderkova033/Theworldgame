@@ -43,6 +43,7 @@ const ALERT_ICONS: Record<AdvisorAlertKind, () => ReactNode> = {
   election: () => <NavIcon type="politics" size={ICON_SIZE} />,
   stalled: () => <NavIcon type="build" size={ICON_SIZE} />,
   research: () => <StatIcon type="research" size={ICON_SIZE} />,
+  race: () => <NavIcon type="ventures" size={ICON_SIZE} />,
 };
 
 // The same pictures, for anywhere else a problem is pointed out (the
