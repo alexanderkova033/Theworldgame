@@ -96,7 +96,7 @@ export function advanceBuildings(day: Day): GameState {
   for (const landed of sailing.filter((s) => s.daysRemaining <= 0)) {
     // A ship to a colony already held only brings more people.
     const first = !working.settledIslandIds.includes(landed.islandId);
-    working = applySettlementArrival(working, landed.islandId);
+    working = applySettlementArrival(working, landed.islandId, landed.terms);
     log(day, {
       date: state.date,
       message: first

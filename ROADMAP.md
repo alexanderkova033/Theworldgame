@@ -41,7 +41,7 @@ The game is about both governing a country and power across the map. Each step l
    - [x] Groundwork: six islands, each with a terrain, a trait, and locals or nobody; provinces and islands read as one kind of place.
    - [x] A. Settling an empty island: scout, found a settlement, and it becomes a province.
    - [x] B. The sea: harbours, a supply fee, settler ships, and each island's trait.
-   - [ ] C. Islands with people: settling one is a choice about its locals.
+   - [x] C. Islands with people: settling one is a choice about its locals (buy land, live alongside, or drive them out).
    - [ ] D. Colony politics: distance unrest; colonies can rise and break away like provinces.
    - [ ] E. The race: a neighbour can claim an unsettled island first (the bridge into step 4).
 4. **Neighbours with economies of their own.**

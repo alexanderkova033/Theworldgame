@@ -361,6 +361,10 @@ export const SETTLE_COST = 1500; // Crowns to found a settlement on a scouted is
 export const SETTLE_WOOD = 20; // ...and wood for the settlers' first homes and farm
 export const SETTLE_DAYS = 60; // the voyage out and the first season ashore
 export const SETTLE_PEOPLE = 300; // settlers, taken from the mainland when they land
+// An island with people of its own is settled on terms (domain/islands):
+export const LOCALS_LAND_PRICE = 1500; // buying land from them, on top of the settling price
+export const LOCALS_SHARE_DAYS = 360; // living alongside them: a year of their keeping to their own ways
+export const LOCALS_DRIVE_SUPPORT = -5; // driving them out: every group thinks less of you
 export const SETTLE_HOMES = 1; // homes standing when they arrive...
 export const SETTLE_FARMS = 1; // ...and a farm, so they have work from the first day
 export const MORE_SETTLERS_COST = 400; // another shipload to a settled island...

@@ -38,8 +38,9 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 
 ## Islands: notes for the next phase
 
-- **Colonies are an investment, not a profit, within five years.** Measured 2026-10-19: settling and linking all three empty islands leaves a careful player about 3,800 Cr poorer after five years (ventures included) and about 4% bigger. Phase C's peopled islands start with people, so they should pay back faster; keep an eye that they don't make the empty ones pointless.
-- **The scripted player settles only with `settle: true`** (tests/support/carefulPlayer.ts), so the balance tests measure a country that never settles. Phase C should extend that habit to peopled islands, and phase E (the race) will want it on by default.
+- **The peopled islands are the prize.** Measured 2026-10-19 over five years: settling only the three empty islands leaves a careful player about 3,800 Cr poorer and 4% bigger; settling all six (buying land where it can) leaves it about 8,500 Cr richer and 28% bigger. Buying Kestrel's land pays back in a little over two years. Empty islands are the slow, cheap option. That makes the peopled islands what a neighbour should race for in phase E.
+- **The scripted player settles only with `settle: true`** (tests/support/carefulPlayer.ts), so the balance tests measure a country that never settles. Phase E (the race) will want it on in its own tests, to see how often a neighbour beats a careful player to an island.
+- **Living alongside is a year's dispute** (the step 2 mechanic, reused): in a shaky country that can mean riots and an uprising on the island. Phase D should check that a colony's distance doesn't stack with this into a near-certain uprising.
 - **Settled islands use the province systems unchanged** (homes, jobs, unrest, uprisings, breaking away), except commuting, which stops at the shore, and migration, which crosses only between harbours. Phase D only needs to tune them (distance), not build them.
 - **Locals are data only so far** (domain/islands/islandData.ts): a name and a number on three islands. Phase C decides what settling among them means, through the letter system (domain/uprising/demandRules.ts is the pattern).
 

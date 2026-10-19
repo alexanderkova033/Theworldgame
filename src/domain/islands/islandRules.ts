@@ -12,8 +12,11 @@
 // Each island has a trait (islandData.ts): some double what their terrain
 // yields, one makes a harbour cheap, one has flocks, one salt.
 //
-// For now only an empty island can be settled; one with people of its own
-// waits for a choice about them (phase C).
+// An island with people of its own is settled on terms: buy land from them
+// (it costs more, and they join you), live alongside them (they join you
+// but keep to their own ways for a year, so the island's mood sits low), or
+// drive them out (every group thinks less of you, and only your settlers
+// remain).
 import { ANCHORAGE_HARBOUR_COST_SHARE, GRAZING_FOOD_PER_DAY, SALT_TRADE_PER_DAY, SUPPLY_FEE_PER_DAY } from "../constants";
 import type { GameState } from "../country/types";
 import { isWorking } from "../maintenance/maintenanceRules";
@@ -36,7 +39,6 @@ export function whyNotSettle(state: GameState, islandId: string): string | null 
   if (state.settlements.some((s) => s.islandId === islandId)) return "Settlers are already on their way.";
   if (state.lostProvinceIds.includes(islandId)) return "It broke away.";
   if (!state.scoutedIslandIds.includes(islandId)) return "Scout it with a venture first.";
-  if (getIslandData(islandId)?.locals) return "People live here already. Settling among them comes later.";
   return null;
 }
 

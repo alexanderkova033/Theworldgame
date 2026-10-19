@@ -3,6 +3,7 @@ import { canFoundSettlement, canSendExpedition, canSendMoreSettlers, foundSettle
 import {
   CURRENCY_SYMBOL,
   EXPEDITION_COST,
+  LOCALS_DRIVE_SUPPORT,
   EXPEDITION_DAYS,
   MORE_SETTLERS_COST,
   MORE_SETTLERS_DAYS,
@@ -14,6 +15,8 @@ import {
 } from "../../domain/constants";
 import { getIslandData } from "../../domain/islands/islandData";
 import { getLinkedIslands, whyNotSettle } from "../../domain/islands/islandRules";
+import type { LocalsTerms } from "../../domain/islands/types";
+import { getSettleCost } from "../../application/actions/settlementActions";
 import { formatAmount } from "../formatNumber";
 import type { GameState } from "../../domain/country/types";
 import { getIslandExpeditionData } from "../../domain/expeditions/expeditionData";
@@ -60,6 +63,22 @@ function RewardIcon({ reward }: { reward: ExpeditionReward }) {
   }
   return <StatIcon type={reward.stabilityDelta !== undefined ? "stability" : "treasury"} size={34} />;
 }
+
+// Settling among people who already live there: three ways, each with its
+// price, said in full in the tooltip.
+const TERMS: Array<{ terms: LocalsTerms; label: string; says: (locals: string) => string }> = [
+  { terms: "buy", label: "Buy Land", says: (locals) => `Pay ${locals} for land. They join you in peace, and their people become yours.` },
+  {
+    terms: "share",
+    label: "Live Alongside",
+    says: (locals) => `Settle alongside ${locals}. They join you, but keep to their own ways: for a year the island's mood sits well below the nation's.`,
+  },
+  {
+    terms: "drive",
+    label: "Drive Them Out",
+    says: (locals) => `Drive ${locals} from their homes. Every group thinks less of you (support ${LOCALS_DRIVE_SUPPORT}), and only your settlers remain.`,
+  },
+];
 
 // A scouted island: what makes it worth settling, who lives there, and the
 // next step: found a settlement, the ship on its way, or settled.
@@ -112,7 +131,25 @@ function SettleSection({ state, islandId, dispatch }: { state: GameState; island
           </div>
         </>
       )}
-      {!why && (
+      {!why && island?.locals && (
+        <div className="expedition-panel__terms">
+          {TERMS.map(({ terms, label, says }) => (
+            <button
+              key={terms}
+              className={terms === "buy" ? "btn-primary" : undefined}
+              disabled={!canFoundSettlement(state, islandId, terms)}
+              title={says(island.locals!.name)}
+              onClick={() => {
+                playShipBell();
+                dispatch((s) => foundSettlement(s, islandId, terms));
+              }}
+            >
+              {label} ({formatAmount(getSettleCost(terms))} {CURRENCY_SYMBOL} + {SETTLE_WOOD} wood)
+            </button>
+          ))}
+        </div>
+      )}
+      {!why && !island?.locals && (
         <button
           className="btn-primary"
           disabled={!canFoundSettlement(state, islandId)}
@@ -125,7 +162,7 @@ function SettleSection({ state, islandId, dispatch }: { state: GameState; island
           Found a Settlement ({formatAmount(SETTLE_COST)} {CURRENCY_SYMBOL} + {SETTLE_WOOD} wood)
         </button>
       )}
-      {why && island?.locals && !state.settledIslandIds.includes(islandId) && <p className="expedition-panel__hint">{why}</p>}
+
     </div>
   );
 }

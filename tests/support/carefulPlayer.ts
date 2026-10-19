@@ -171,18 +171,24 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
   return s;
 }
 
-// Scout the empty islands one by one, settle each once there's money to
-// spare, and link every colony with a harbour there and one on the coast.
+// Scout the islands one by one, settle each once there's money to spare
+// (buying land where people live, if it can, else living alongside them),
+// and link every colony with a harbour there and one on the coast.
 function settleIslands(state: GameState): GameState {
   let s = state;
   if (!isFeatureOpen(s, "ventures")) return s;
-  const empty = ISLANDS.filter((i) => !i.locals).map((i) => i.id);
-  const unscouted = empty.find((id) => !s.scoutedIslandIds.includes(id));
+  const all = ISLANDS.map((i) => i.id);
+  const unscouted = all.find((id) => !s.scoutedIslandIds.includes(id));
   if (unscouted && s.expeditions.length === 0 && s.stats.treasury > 2500 && canSendExpedition(s, unscouted)) s = sendExpedition(s, unscouted);
   if (s.settlements.length === 0 && s.stats.treasury > 5000) {
     const stocked = ensure(s, "wood", SETTLE_WOOD + 5);
-    const ready = empty.find((id) => canFoundSettlement(stocked, id));
-    if (ready) s = foundSettlement(stocked, ready);
+    for (const island of ISLANDS) {
+      const terms = island.locals ? (s.stats.treasury > 7000 ? "buy" : "share") : undefined;
+      if (canFoundSettlement(stocked, island.id, terms)) {
+        s = foundSettlement(stocked, island.id, terms);
+        break;
+      }
+    }
   }
   const held = getOwnedProvinceIds(s);
   const colonies = held.filter(isIsland);

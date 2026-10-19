@@ -20,7 +20,7 @@ import { planMigration } from "../src/domain/provinces/provinceMigration";
 import { hydrateGameState } from "../src/presentation/hooks/gameSave";
 import { buildHarbour } from "../src/application/actions/buildHarbour";
 import { getBuildCostIn } from "../src/application/actions/createBuildAction";
-import { canSendMoreSettlers } from "../src/application/actions/settlementActions";
+import { canSendMoreSettlers, getSettleCost } from "../src/application/actions/settlementActions";
 import { applySettlementArrival } from "../src/application/applySettlementArrival";
 import { getDailyProductionSummary } from "../src/application/getDailyProductionSummary";
 import { ANCHORAGE_HARBOUR_COST_SHARE, GRAZING_FOOD_PER_DAY, SUPPLY_FEE_PER_DAY } from "../src/domain/constants";
@@ -208,5 +208,46 @@ describe("a careful player who settles", { timeout: 60000 }, () => {
     expect(settler.outcome).toBe("victory");
     expect(settler.settledIslandIds.length).toBeGreaterThan(0);
     expect(settler.stats.population).toBeGreaterThan(plain.stats.population);
+  });
+});
+
+describe("settling among people already there", () => {
+  const start = startNewGame("astravia", "astravia-harvest-union");
+  const kestrel = "island-1";
+  const locals = ISLANDS.find((i) => i.id === kestrel)!.locals!.people;
+  const scouted: GameState = {
+    ...start,
+    chapters: allChaptersOpen(),
+    stats: { ...start.stats, treasury: 20000 },
+    resources: { ...start.resources, wood: 100 },
+    scoutedIslandIds: [kestrel],
+  };
+
+  it("needs terms, and buying land costs more", () => {
+    expect(canFoundSettlement(scouted, kestrel)).toBe(false);
+    expect(canFoundSettlement(scouted, kestrel, "share")).toBe(true);
+    expect(foundSettlement(scouted, kestrel, "buy").stats.treasury).toBe(scouted.stats.treasury - getSettleCost("buy"));
+    expect(getSettleCost("buy")).toBeGreaterThan(getSettleCost("share"));
+  });
+
+  it("bought or shared: the locals join the country", () => {
+    for (const terms of ["buy", "share"] as const) {
+      const landed = applySettlementArrival(scouted, kestrel, terms);
+      expect(landed.provinces[kestrel].population).toBeGreaterThan(locals);
+      expect(landed.stats.population).toBe(scouted.stats.population + locals);
+    }
+  });
+
+  it("shared: they keep to their own ways for a year", () => {
+    expect(applySettlementArrival(scouted, kestrel, "share").provinces[kestrel].disputeUntil).not.toBeNull();
+    expect(applySettlementArrival(scouted, kestrel, "buy").provinces[kestrel].disputeUntil).toBeNull();
+  });
+
+  it("driven out: support falls at once, and only settlers remain", () => {
+    const ordered = foundSettlement(scouted, kestrel, "drive");
+    expect(ordered.stats.popularity).toBeLessThan(scouted.stats.popularity);
+    const landed = applySettlementArrival(scouted, kestrel, "drive");
+    expect(landed.provinces[kestrel].population).toBeLessThan(locals);
+    expect(landed.stats.population).toBe(scouted.stats.population);
   });
 });

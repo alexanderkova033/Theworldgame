@@ -5,4 +5,9 @@ export interface Settlement {
   islandId: string;
   daysRemaining: number;
   totalDays: number;
+  terms?: LocalsTerms; // on an island with people of its own: how you settle among them
 }
+
+// Settling where people already live (see islandRules.ts): buy land from
+// them, live alongside them, or drive them out.
+export type LocalsTerms = "buy" | "share" | "drive";

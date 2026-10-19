@@ -85,3 +85,10 @@
 .expedition-panel__trait {
   font-weight: 600;
 }
+
+/* Settling among people already there: three ways, side by side. */
+.expedition-panel__terms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
