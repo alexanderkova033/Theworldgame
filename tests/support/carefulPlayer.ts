@@ -1,6 +1,7 @@
 // A careful player, for the balance tests: borrows once, keeps people fed,
 // housed and warm, repairs what breaks, pays the loan back, rallies when
 // support slips toward the line to win and takes whichever option of a decision keeps support up.
+// In a Long Reign it takes the burden that hurts it least.
 // Optionally it also follows one path of the Laws or Research tree.
 import { buildFarm } from "../../src/application/actions/buildFarm";
 import { buildHousing } from "../../src/application/actions/buildHousing";
@@ -19,6 +20,8 @@ import { canRaiseRegiment, marchRegiments, raiseRegiment } from "../../src/appli
 import { canDeclareWar, declareWar, makePeace } from "../../src/application/actions/warActions";
 import { canPayTribute, payTribute, standFirm } from "../../src/application/actions/ultimatumActions";
 import { getGarrisons } from "../../src/domain/military/militaryRules";
+import { forecastLanding, getSiegeDays } from "../../src/domain/military/battleRules";
+import { getIslandPeople } from "../../src/domain/neighbours/treatyRules";
 import { BUY_BACK_MIN_RELATIONS } from "../../src/domain/constants";
 import { canPressureGovernment, pressureGovernment } from "../../src/application/actions/pressureGovernment";
 import { dayNumber } from "../../src/domain/country/calendar";
@@ -106,18 +109,44 @@ export interface PlayOptions {
   settle?: boolean; // also scouts the empty islands, settles them and links them with harbours
   trade?: boolean; // also takes the neighbours' good trade offers
   treaties?: boolean; // also signs island accords, and buys back the islands neighbours hold, when it can spare the money
-  army?: boolean; // also raises regiments and stands them in the most troubled provinces
-  war?: boolean; // also goes to war for the islands the neighbours hold, once it has three regiments
+  army?: boolean; // also raises regiments, stands them in the most troubled provinces, and marches them in to win back a province that broke away
+  war?: boolean; // also goes to war for the islands the neighbours hold, once it has three regiments, keeping a garrison on its own islands
+  neglect?: boolean; // leaves uprisings alone: sends no militia and refuses the rebels' terms, so a province can break away
 }
 
-export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty, skill = "careful", mode, settle = false, trade = false, treaties = false, army = false, war = false }: PlayOptions): GameState {
+// The burdens of office, least harmful first for a country that lives on
+// its support: costs in money and goods before costs in support.
+const BURDEN_PREFERENCE = [
+  "dear-markets",
+  "crowded-cities",
+  "dear-builders",
+  "ageing-works",
+  "lean-years",
+  "growing-appetites",
+  "hard-winters",
+  "stubborn-assembly",
+  "bitter-hardship",
+  "short-tempers",
+  "hollow-rallies",
+  "rival-machine",
+  "weary-voters",
+];
+
+// A careful player takes the burden that hurts it least; a sloppy one the first offered.
+function chooseBurden(offer: string[], sloppy: boolean): string {
+  if (sloppy) return offer[0];
+  const rank = (id: string) => (BURDEN_PREFERENCE.includes(id) ? BURDEN_PREFERENCE.indexOf(id) : BURDEN_PREFERENCE.length);
+  return [...offer].sort((a, b) => rank(a) - rank(b))[0];
+}
+
+export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty, skill = "careful", mode, settle = false, trade = false, treaties = false, army = false, war = false, neglect = false }: PlayOptions): GameState {
   const sloppy = skill === "sloppy";
   let s = takeLoan(startNewGame(nation, party, difficulty, mode));
   if (!sloppy) s = setTaxRate(s, 0.12);
   const route = follow ? pathRoute(follow.tree, follow.pathKey) : [];
   const area = follow?.tree === "research" ? (RESEARCH_NODES.find((n) => n.id === route[1])!.category as ResearchCategory) : null;
   for (let day = 0; day < days && !s.isGameOver; day++) {
-    if (s.burdenOffer) s = takeBurden(s, s.burdenOffer[0]);
+    if (s.burdenOffer) s = takeBurden(s, chooseBurden(s.burdenOffer, sloppy));
     const production = getDailyProductionSummary(s);
     const nextLaw = follow?.tree === "law" ? getLawNode(route.find((id) => !s.enactedLawIds.includes(id)) ?? "") : undefined;
     const keep = (good: Good) => (good === nextLaw?.enactCost.resourceType ? (nextLaw.enactCost.resourceAmount ?? 0) : 0);
@@ -160,13 +189,14 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
       const answer =
         s.pendingDemand.kind === "payRise"
           ? !sloppy && s.stats.treasury > 1500 ? "grant" : "refuse"
-          : !sloppy && canAnswerDemand(s, "amnesty") ? "amnesty" : "taxRelief";
+          : neglect ? "refuse" : !sloppy && canAnswerDemand(s, "amnesty") ? "amnesty" : "taxRelief";
       s = answerDemand(s, answer);
     }
     // A province that has risen: raise companies and send them in. A sloppy
-    // player only gets round to it after two months of losing it.
+    // player only gets round to it after two months of losing it; a
+    // neglectful one never does.
     for (const [id, province] of Object.entries(s.provinces)) {
-      if (!province.uprising || (sloppy && dayNumber(s.date) - dayNumber(province.uprising.since) < 60)) continue;
+      if (neglect || !province.uprising || (sloppy && dayNumber(s.date) - dayNumber(province.uprising.since) < 60)) continue;
       while (province.uprising.militia + getFreeMilitia(s.workforce, s.provinces) < 2 && canRaiseMilitia(s)) s = raiseMilitia(s);
       while ((s.provinces[id].uprising?.militia ?? 2) < 2 && canSendMilitia(s, id)) s = sendMilitia(s, id);
     }
@@ -238,28 +268,44 @@ export function playIdle(nation: string, party: string, days: number): GameState
 // Raise regiments while there's money to spare, and stand each ready one
 // in the most troubled province without one: risen first, then the
 // lowest local order.
-// With three regiments, declare war on the neighbour holding most islands,
-// march every ready regiment to the nearest of its islands, and make peace
-// once they're all taken, or after a year.
+// Declare war on the neighbour holding most islands once every island of
+// yours has a garrison and three ready regiments stand on the mainland,
+// and make peace once its islands are all taken, or after a year. The
+// regiments on an island of yours stay as its garrison, and an island of
+// yours with none gets the next ready regiments first. The rest, on the
+// mainland, land on an enemy island only where the march's forecast says
+// they would win. (A stack moves as one, as it does for a player.)
 function wageWar(state: GameState): GameState {
   let s = state;
   if (!isFeatureOpen(s, "army")) return s;
   if (s.stats.treasury > 2000 && canRaiseRegiment(s)) s = raiseRegiment(s);
   const yours = s.regiments.filter((r) => r.nationId === s.nationId);
+  const held = new Set(getOwnedProvinceIds(s));
+  const readyOnMainland = yours.filter((r) => r.trainingDays <= 0 && !r.march && held.has(r.provinceId) && !isIsland(r.provinceId));
+  const guarded = (id: string) => yours.some((r) => r.provinceId === id || r.march?.route.at(-1) === id);
+  const bare = [...held].filter((id) => isIsland(id) && !guarded(id));
+  // Garrisons first, war or no war.
+  for (const from of new Set(readyOnMainland.map((r) => r.provinceId))) {
+    const island = bare.shift();
+    if (island) s = marchRegiments(s, from, island);
+  }
+  const free = s.regiments.filter((r) => r.nationId === s.nationId && r.trainingDays <= 0 && !r.march && held.has(r.provinceId) && !isIsland(r.provinceId));
   const enemy = Object.keys(s.wars)[0];
   if (!enemy) {
     const counts = new Map<string, number>();
     for (const holder of Object.values(s.foreignIslands)) counts.set(holder, (counts.get(holder) ?? 0) + 1);
     const target = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
-    if (target && yours.filter((r) => r.trainingDays <= 0).length >= 3 && canDeclareWar(s, target)) s = declareWar(s, target);
+    if (target && bare.length === 0 && free.length >= 3 && canDeclareWar(s, target)) s = declareWar(s, target);
     return s;
   }
   const islands = Object.keys(s.foreignIslands).filter((id) => s.foreignIslands[id] === enemy);
   if (islands.length === 0 || dayNumber(s.date) - dayNumber(s.wars[enemy].since) > 360) return makePeace(s, enemy);
-  // Everyone ready and not already on an island of theirs goes to the first.
-  const target = islands[0];
-  for (const from of new Set(yours.filter((r) => r.trainingDays <= 0 && !r.march && !islands.includes(r.provinceId)).map((r) => r.provinceId))) {
-    s = marchRegiments(s, from, target);
+  const defenders = (id: string) =>
+    s.regiments.filter((r) => r.nationId === enemy && r.trainingDays <= 0 && (r.march ? r.march.route.at(-1) : r.provinceId) === id).map((r) => r.strength);
+  for (const from of new Set(free.map((r) => r.provinceId))) {
+    const mine = free.filter((r) => r.provinceId === from).map((r) => r.strength);
+    const target = islands.find((id) => forecastLanding(mine, defenders(id), getSiegeDays(getIslandPeople(id))).won);
+    if (target) s = marchRegiments(s, from, target);
   }
   return s;
 }
@@ -267,6 +313,14 @@ function wageWar(state: GameState): GameState {
 function keepGarrisons(state: GameState): GameState {
   let s = state;
   if (s.stats.treasury > 3000 && canRaiseRegiment(s)) s = raiseRegiment(s);
+  // A province that broke away: with two regiments ready in one place,
+  // march them in to win it back.
+  const lost = s.lostProvinceIds.find((id) => s.freeProvinces[id]);
+  if (lost && !s.regiments.some((r) => r.nationId === s.nationId && r.march?.route.at(-1) === lost)) {
+    const ready = getGarrisons(s.regiments, s.nationId);
+    const from = Object.keys(ready).find((id) => ready[id] >= 2);
+    if (from) return marchRegiments(s, from, lost);
+  }
   const garrisons = getGarrisons(s.regiments, s.nationId);
   const unguarded = getOwnedProvinceIds(s)
     .filter((id) => !garrisons[id] && s.provinces[id])

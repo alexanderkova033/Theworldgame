@@ -39,6 +39,8 @@ import { payTribute, standFirm } from "../src/application/actions/ultimatumActio
 import { chooseThreat } from "../src/domain/military/threatRules";
 import { neighbourDice } from "../src/domain/neighbours/neighbourRules";
 import { addDays } from "../src/domain/country/calendar";
+import { playCarefully } from "./support/carefulPlayer";
+import { seedRandom } from "./support/seededRandom";
 
 const start = startNewGame("astravia", "astravia-harvest-union");
 const base: GameState = { ...start, chapters: allChaptersOpen(), stats: { ...start.stats, treasury: 20000 }, isPaused: false };
@@ -262,6 +264,30 @@ describe("taking back a province that broke away", () => {
     delete old.freeProvinces;
     expect(hydrateGameState(old).freeProvinces).toEqual({ [lostId]: { people: 0, strength: 100 } });
   });
+
+  // Played, not set up: a sloppy player who leaves uprisings alone loses a
+  // province, and its regiments win it back.
+  it("happens in a played game, lost to neglect and won back by the army", () => {
+    seedRandom(33);
+    let lostOn = -1;
+    let backOn = -1;
+    let day = 0;
+    let before: string[] = [];
+    playCarefully("astravia", "astravia-harvest-union", {
+      days: 600,
+      skill: "sloppy",
+      neglect: true,
+      army: true,
+      onDay: (s) => {
+        day += 1;
+        if (lostOn < 0 && s.lostProvinceIds.length > before.length) lostOn = day;
+        if (lostOn >= 0 && backOn < 0 && before.some((id) => !s.lostProvinceIds.includes(id))) backOn = day;
+        before = s.lostProvinceIds;
+      },
+    });
+    expect(lostOn).toBeGreaterThan(0);
+    expect(backOn).toBeGreaterThan(lostOn);
+  }, 30000);
 });
 
 describe("war over the islands", () => {

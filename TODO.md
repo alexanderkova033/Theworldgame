@@ -26,7 +26,7 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **Hints on the trees** only mark nodes that can be chosen right now; a path's name is marked if anything on it would help.
 - **Small screens.** Below 1050px the tree details drop under the tree (picking a node scrolls to them); below about 700px the tree scrolls sideways.
 - **Chapters are the same for every nation.** Nation-specific chapters (Veldoria meeting the streets first, say) would suit their stories better, but would need their own balance pass.
-- **Long Reign burdens are drawn at random.** The scripted player takes the first one offered, so the tests measure an average reign, not a player choosing well.
+- **Long Reign burdens are drawn at random, and chosen well.** The careful scripted player takes the burden that hurts it least (money and goods before support; `BURDEN_PREFERENCE` in tests/support/carefulPlayer.ts), the sloppy one the first offered. Measured 2026-10-20, one seed, three nations: choosing lasts 14.6 years on Normal and 9.6 on Hard, against 12.1 and 6.1 taking the first. Every reign still ends inside twenty years.
 - **TECHNICAL_DESIGN.md** may still describe the early MVP in places. README and GAME_DESIGN were brought up to date on 2026-10-16.
 
 ## Uprisings
@@ -40,7 +40,7 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
   - Badges kept, as nothing else shows them: Build's "N underway", Research's progress per branch, Laws' drafting, Reports' unread count.
   - The nation's label must stay short: at iPad width (landscape) the seven tabs fit with about 30 px to spare, and a longer label pushes Reports onto a second row.
 - **A lost province can't be won back yet.** Retaking it belongs to the military (roadmap step 5).
-- **Scripted players never lose a province.** Even the sloppy one sends militia within two months, long before a month at full strength. The tests cover breaking away directly (tests/breakaway.test.ts), not through a played game.
+- **A neglectful scripted player loses provinces** (`neglect: true`: no militia, the rebels' terms refused). Measured 2026-10-20 over nine games: a sloppy one loses 11 provinces in its two-odd years and, with `army: true`, wins 9 back; a careful one never lets an uprising grow, neglect or not. tests/army.test.ts plays one such game.
 
 ## Islands: notes for the next phase
 
@@ -71,9 +71,8 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **A careful player gains little from garrisons today**: it rarely riots. Their real use comes with war (phases C and D), when regiments on an island are what a landing must beat.
 - **A march goes through your own land and lost provinces only** (`canEnterAsYou` in application/actions/armyActions.ts), so a sea leg can't be blocked and a land march never enters a neighbour. Phase C opens a neighbour's island to it.
 - **Fighting is deterministic** (domain/military/battleRules.ts: `fightRebels`, and `forecastFight` for the preview). Phase C can reuse it against a neighbour's garrison, with their regiments' strength in place of the rebels'.
-- **Scripted players never lose a province**, so no balance game retakes one; tests/army.test.ts plays the fight directly.
 - **Sea legs go round the coast** (step 6, phase B; presentation/seaRoutes.ts): a way through waypoints set 20 map units off every coast corner and island hull, worked out once per pair of places, and the counter moves along it by distance. Drawing only: the days at sea are unchanged, so a way that goes the long way round still takes the days a straight crossing would. The leg in and out of an island is drawn to the island's name, across its own land.
-- **War has a cost now, but no regiment is ever lost.** Measured 2026-10-19 with phase D: the scripted player with `war: true` took 36 islands and lost 22 back to counterattacks (it sends every regiment to one island at a time), ending with 14; with `settle: true` as well it met 3 ultimatums and 2 wars against it and lost nothing. No game lost a regiment: battles are always fought with the odds, since both the scripted player and the neighbours only attack when stronger. A smarter scripted war (keep garrisons) would show whether war is still too cheap; WAR_POLITICAL_POWER and the weariness are the levers.
+- **War is still cheap.** Measured 2026-10-20 (step 6, phase D) with the smarter scripted war: it keeps a garrison on each island it holds, declares only with three regiments free on the mainland, and lands only where `forecastLanding` says it wins. Over nine five-year games it fought 9 wars, took 9 islands, lost none and lost 1 regiment; with `settle: true` as well, it took 5, lost none and 8 regiments, and met 3 wars started against it. All games won. An island a year for 40 political power and a little support is a good price: WAR_POLITICAL_POWER, the weariness, or garrisons that defend harder are the levers, if war should cost more. Phase E looks at the island buy-back, which is the other way to the same islands.
 - **The neighbours never fight each other**, and never take a province on the mainland: both are out of scope (ROADMAP step 5).
 - **The browser check:** run tests/support scripts or the iPad driver from PowerShell (Start-Process), not from Git Bash in the background: from Git Bash the driver hung and looked like a frozen page.
 
