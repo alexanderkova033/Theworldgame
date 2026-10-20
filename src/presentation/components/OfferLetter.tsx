@@ -40,7 +40,7 @@ export function OfferLetter({ state, onAccept, onDecline }: { state: GameState; 
         </div>
         <p className="decision-modal__prompt">
           {selling
-            ? `${nation.name} has food to spare, and offers you ${formatAmount(offer.amount)} for ${formatAmount(offer.price)} Cr. The market would ask ${formatAmount(market)} Cr.`
+            ? `${nation.name} has ${what} to spare, and offers you ${formatAmount(offer.amount)} for ${formatAmount(offer.price)} Cr. The market would ask ${formatAmount(market)} Cr.`
             : `${nation.name} wants ${what}, and offers ${formatAmount(offer.price)} Cr for ${formatAmount(offer.amount)}. The market would pay you ${formatAmount(market)} Cr.`}{" "}
           They are {feeling} towards you; a deal would warm them.
         </p>
@@ -60,7 +60,7 @@ export function OfferLetter({ state, onAccept, onDecline }: { state: GameState; 
               <span className="decision-modal__option-icons">
                 <StatIcon type="treasury" size={16} />
               </span>
-              {selling ? `−${formatAmount(offer.price)} Cr · +${formatAmount(offer.amount)} food` : `+${formatAmount(offer.price)} Cr · −${formatAmount(offer.amount)} ${what}`}
+              {selling ? `−${formatAmount(offer.price)} Cr · +${formatAmount(offer.amount)} ${what}` : `+${formatAmount(offer.price)} Cr · −${formatAmount(offer.amount)} ${what}`}
             </span>
           </button>
           <button type="button" className="decision-modal__option" onClick={onDecline}>

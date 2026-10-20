@@ -177,7 +177,8 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
     // trade habit, taken when it is a good deal for a country in its place.
     if (s.pendingOffer) {
       const offer = s.pendingOffer;
-      const wanted = offer.kind === "sell" ? s.stats.food < 200000 : offer.good !== "food" && s.resources[offer.good] >= offer.amount * 2;
+      // (They offer wood, ore or coal only when it runs short, so those it takes.)
+      const wanted = offer.kind === "sell" ? offer.good !== "food" || s.stats.food < 200000 : offer.good !== "food" && s.resources[offer.good] >= offer.amount * 2;
       s = trade && wanted && canAcceptOffer(s) ? acceptOffer(s) : declineOffer(s);
     }
     // A neighbour's ultimatum: paid off with money to spare, else refused.

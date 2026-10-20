@@ -155,6 +155,7 @@ export interface GameState {
   settledIslandIds: string[]; // islands settled: held and governed like provinces
   foreignVoyages: ForeignVoyage[]; // neighbours' settlers on their way to islands (see domain/islands)
   foreignIslands: Record<string, string>; // islands a neighbour has claimed: island id to nation id
+  foreignIslandsSince: Record<string, GameDate>; // when each came to them, settled or taken (none in older saves: long held)
   neighbours: Record<string, Neighbour>; // every nation but the player's, run by the computer (see domain/neighbours)
   pendingOffer: TradeOffer | null; // a neighbour's trade offer waiting for an answer (see domain/neighbours/tradeRules.ts)
   regiments: Regiment[]; // every country's regiments, on the map (see domain/military)

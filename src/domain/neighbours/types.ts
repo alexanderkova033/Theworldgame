@@ -1,5 +1,8 @@
 import type { GameDate } from "../country/types";
 
+// What a neighbour digs and cuts from its own land, and keeps to trade.
+export type StoreGood = "wood" | "ore" | "coal";
+
 // A neighbouring nation as a country of its own, run by the computer (see
 // neighbourRules.ts). Lighter than the player's: whole-country numbers, no
 // provinces, a month at a time.
@@ -11,6 +14,7 @@ export interface Neighbour {
   farms: number;
   factories: number;
   homes: number;
+  stores: Record<StoreGood, number>; // wood, ore and coal from its land (see neighbourRules.ts)
   lastVoyageMonth: number | null; // when it last sent settlers to an island
   lastDeed: string | null; // what it did last month, in plain words, for the Neighbours page
   relations: number; // -100 to 100: how it feels about you (see relationsRules.ts)

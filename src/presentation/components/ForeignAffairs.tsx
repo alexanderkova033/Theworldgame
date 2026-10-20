@@ -183,7 +183,7 @@ function Treaties({ state, nationId, dispatch }: { state: GameState; nationId: s
         </span>
       )}
       {islands.map((islandId) => {
-        const why = whyNoBuyBack(n, islandId, state.stats.treasury);
+        const why = whyNoBuyBack(n, islandId, state.stats.treasury, state.foreignIslandsSince[islandId], state.date);
         return (
           <span
             key={islandId}

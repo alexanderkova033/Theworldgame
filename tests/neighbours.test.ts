@@ -9,7 +9,7 @@ import { addDays } from "../src/domain/country/calendar";
 import type { GameState } from "../src/domain/country/types";
 import { chooseBuilding, chooseVoyage, createNeighbour, liveMonth, neighbourDice } from "../src/domain/neighbours/neighbourRules";
 import { fadeFeelings } from "../src/domain/neighbours/relationsRules";
-import { draftOffer } from "../src/domain/neighbours/tradeRules";
+import { draftOffer, WANTS } from "../src/domain/neighbours/tradeRules";
 import { acceptOffer, declineOffer } from "../src/application/actions/tradeActions";
 import { getBuyCost, getSellRevenue } from "../src/domain/market/marketRules";
 import { pressureGovernment } from "../src/application/actions/pressureGovernment";
@@ -32,7 +32,20 @@ import { hydrateGameState } from "../src/presentation/hooks/gameSave";
 import { buyBackIsland, canBuyBackIsland, canSignAccord, signIslandAccord } from "../src/application/actions/treatyActions";
 import { getBuyBackPrice, getIslandPeople, hasAccord } from "../src/domain/neighbours/treatyRules";
 import { getOwnedProvinceIds } from "../src/domain/provinces/provinceRules";
-import { ACCORD_COST, ACCORD_DAYS, ACCORD_MIN_RELATIONS, BUY_BACK_MIN_RELATIONS, RELATIONS_ACCORD, RELATIONS_ISLAND_SOLD } from "../src/domain/constants";
+import {
+  ACCORD_COST,
+  ACCORD_DAYS,
+  ACCORD_MIN_RELATIONS,
+  BUY_BACK_HELD_DAYS,
+  BUY_BACK_MIN_RELATIONS,
+  NEIGHBOUR_COAL_PER_HILLS,
+  NEIGHBOUR_STORE_CAP,
+  NEIGHBOUR_STORE_PER_PROVINCE,
+  RELATIONS_ACCORD,
+  RELATIONS_ISLAND_SOLD,
+} from "../src/domain/constants";
+import { getNation } from "../src/domain/nations/nationRules";
+import { MAP_GEOMETRY } from "../src/domain/provinces/provinceData";
 
 function tenYears(nationId: string): Neighbour[] {
   let n = createNeighbour(nationId);
@@ -165,6 +178,47 @@ describe("trade with a neighbour", () => {
     expect(done.neighbours.veldoria.relations).toBe(veldoria.relations + RELATIONS_TRADE);
   });
 
+  it("fills its stores from its own land: wood from forests, ore and coal from hills", () => {
+    const terrain = (nationId: string, kind: string) => getNation(nationId).provinceIds.filter((id) => MAP_GEOMETRY.provinces.find((p) => p.id === id)?.terrain === kind).length;
+    const caldenreich = liveMonth(createNeighbour("caldenreich"), "caldenreich", state.date);
+    expect(caldenreich.stores).toEqual({
+      wood: terrain("caldenreich", "forest") * NEIGHBOUR_STORE_PER_PROVINCE,
+      ore: terrain("caldenreich", "hills") * NEIGHBOUR_STORE_PER_PROVINCE,
+      coal: terrain("caldenreich", "hills") * NEIGHBOUR_COAL_PER_HILLS,
+    });
+    expect(caldenreich.stores.ore).toBeGreaterThan(0);
+    // Veldoria's plains and coast give it none, and a full store stays full.
+    expect(liveMonth(createNeighbour("veldoria"), "veldoria", state.date).stores).toEqual({ wood: 0, ore: 0, coal: 0 });
+    const full = { ...createNeighbour("caldenreich"), stores: { wood: 0, ore: NEIGHBOUR_STORE_CAP, coal: NEIGHBOUR_STORE_CAP } };
+    expect(liveMonth(full, "caldenreich", state.date).stores.ore).toBe(NEIGHBOUR_STORE_CAP);
+  });
+
+  it("offers wood, ore or coal you are short of, under the market's price, but never the good it wants", () => {
+    const stocked = { ...state.neighbours.caldenreich, food: 0, treasury: 1e6, stores: { wood: 40, ore: 40, coal: 40 } };
+    const short = { ...state.resources, wood: 0, ore: 0, coal: 0 };
+    const writes = Array.from({ length: 240 }, (_, i) => i + 1).filter((m) => neighbourDice("caldenreich", m, "trade") < TRADE_OFFER_CHANCE);
+    const offers = writes.map((m) => draftOffer(stocked, "caldenreich", m, state.market, false, short)!);
+    expect(new Set(offers.map((o) => o.good))).toEqual(new Set(["ore", "coal"]));
+    expect(offers.some((o) => o.good === WANTS.caldenreich)).toBe(false);
+    for (const o of offers) {
+      expect(o.kind).toBe("sell");
+      expect(o.price).toBeLessThan(getBuyCost(state.market, o.good, o.amount, false));
+    }
+    // Not short of them, it offers none of them.
+    const plenty = { ...state.resources, ore: 500, coal: 500, wood: 500 };
+    expect(writes.map((m) => draftOffer(stocked, "caldenreich", m, state.market, false, plenty)?.kind)).not.toContain("sell");
+  });
+
+  it("sold to you, the goods come out of its stores and into yours", () => {
+    const n = { ...state.neighbours.caldenreich, stores: { wood: 0, ore: 30, coal: 30 } };
+    const offered: GameState = { ...state, neighbours: { ...state.neighbours, caldenreich: n }, pendingOffer: { nationId: "caldenreich", kind: "sell", good: "coal", amount: 10, price: 300 } };
+    const done = acceptOffer(offered);
+    expect(done.resources.coal).toBe(state.resources.coal + 10);
+    expect(done.neighbours.caldenreich.stores.coal).toBe(20);
+    expect(done.stats.treasury).toBe(state.stats.treasury - 300);
+    expect(done.stats.food).toBe(state.stats.food);
+  });
+
   it("declined: nothing changes but the letter is gone", () => {
     const offered: GameState = { ...state, pendingOffer: { nationId: "veldoria", kind: "sell", good: "food", amount: 1000, price: 100 } };
     const declined = declineOffer(offered);
@@ -214,6 +268,13 @@ describe("treaties with a neighbour", () => {
     expect(canBuyBackIsland(base, kestrel)).toBe(false); // nobody holds it
   });
 
+  it("won't sell an island within a year of taking it", () => {
+    const lately = { ...held, foreignIslandsSince: { [kestrel]: base.date } };
+    expect(canBuyBackIsland(lately, kestrel)).toBe(false);
+    expect(canBuyBackIsland({ ...lately, date: addDays(base.date, BUY_BACK_HELD_DAYS - 1) }, kestrel)).toBe(false);
+    expect(canBuyBackIsland({ ...lately, date: addDays(base.date, BUY_BACK_HELD_DAYS) }, kestrel)).toBe(true);
+  });
+
   it("bought back, the island is your province and its people yours, and they cool", () => {
     const bought = buyBackIsland(held, kestrel);
     const people = getIslandPeople(kestrel);
@@ -229,9 +290,16 @@ describe("treaties with a neighbour", () => {
     expect(bought.neighbours.veldoria.relations).toBe(BUY_BACK_MIN_RELATIONS + RELATIONS_ISLAND_SOLD);
   });
 
-  it("is remembered by saves, and older saves have no accord", () => {
+  it("is remembered by saves, and older saves have no accord, no stores, and islands held long since", () => {
     const old = JSON.parse(JSON.stringify(base));
-    for (const n of Object.values(old.neighbours) as Array<Record<string, unknown>>) delete n.accordUntil;
-    expect(hydrateGameState(old).neighbours.veldoria.accordUntil).toBeNull();
+    for (const n of Object.values(old.neighbours) as Array<Record<string, unknown>>) {
+      delete n.accordUntil;
+      delete n.stores;
+    }
+    delete old.foreignIslandsSince;
+    const loaded = hydrateGameState(old);
+    expect(loaded.neighbours.veldoria.accordUntil).toBeNull();
+    expect(loaded.neighbours.veldoria.stores).toEqual({ wood: 0, ore: 0, coal: 0 });
+    expect(loaded.foreignIslandsSince).toEqual({});
   });
 });

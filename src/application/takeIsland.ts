@@ -33,12 +33,15 @@ export function takeIsland(state: GameState, islandId: string): GameState {
     Array.from({ length: count }, () => ({ id: generateId("building"), provinceId: islandId, type }));
   const foreignIslands = { ...state.foreignIslands };
   delete foreignIslands[islandId];
+  const foreignIslandsSince = { ...state.foreignIslandsSince };
+  delete foreignIslandsSince[islandId];
   const sieges = { ...state.sieges };
   delete sieges[islandId];
   return {
     ...state,
     stats: { ...state.stats, population: state.stats.population + people },
     foreignIslands,
+    foreignIslandsSince,
     sieges,
     settledIslandIds: [...state.settledIslandIds, islandId],
     scoutedIslandIds: state.scoutedIslandIds.includes(islandId) ? state.scoutedIslandIds : [...state.scoutedIslandIds, islandId],

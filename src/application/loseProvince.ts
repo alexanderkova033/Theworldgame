@@ -56,6 +56,7 @@ export function loseIsland(state: GameState, islandId: string, nationId: string)
     sieges,
     settledIslandIds: dropped.settledIslandIds.filter((id) => id !== islandId),
     foreignIslands: { ...dropped.foreignIslands, [islandId]: nationId },
+    foreignIslandsSince: { ...dropped.foreignIslandsSince, [islandId]: state.date },
     neighbours: n ? { ...dropped.neighbours, [nationId]: { ...n, population: n.population + people, homes: n.homes + 1 } } : dropped.neighbours,
   };
 }

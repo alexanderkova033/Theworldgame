@@ -3,18 +3,20 @@
 // about you decides what it will sign:
 //   - an island accord (Cordial or better): it sends no settlers to any
 //     island for two years, and thinks better of you for asking;
-//   - buying back an island it holds (Warm or better): at a price set by
-//     the island's people, and the island is yours, its people with it.
+//   - buying back an island it holds (Warm or better), once it has held it
+//     a year: at a price set by the island's people, and the island is
+//     yours, its people with it.
 import {
   ACCORD_COST,
   ACCORD_DAYS,
   ACCORD_MIN_RELATIONS,
   BUY_BACK_BASE_PRICE,
+  BUY_BACK_HELD_DAYS,
   BUY_BACK_MIN_RELATIONS,
   BUY_BACK_PRICE_PER_PERSON,
   SETTLE_PEOPLE,
 } from "../constants";
-import { addDays, dayNumber } from "../country/calendar";
+import { addDays, dayNumber, formatDate } from "../country/calendar";
 import type { GameDate } from "../country/types";
 import { getIslandData } from "../islands/islandData";
 import type { Neighbour } from "./types";
@@ -43,7 +45,14 @@ export function getBuyBackPrice(islandId: string): number {
   return BUY_BACK_BASE_PRICE + getIslandPeople(islandId) * BUY_BACK_PRICE_PER_PERSON;
 }
 
-export function whyNoBuyBack(n: Neighbour, islandId: string, treasury: number): string | null {
+// The first day a neighbour will sell an island it came to hold on `since`.
+export function sellableFrom(since: GameDate): GameDate {
+  return addDays(since, BUY_BACK_HELD_DAYS);
+}
+
+// `heldSince`: when the island came to them; none means long ago.
+export function whyNoBuyBack(n: Neighbour, islandId: string, treasury: number, heldSince: GameDate | undefined, today: GameDate): string | null {
+  if (heldSince && dayNumber(today) < dayNumber(sellableFrom(heldSince))) return `They took it only lately, and won't part with it before ${formatDate(sellableFrom(heldSince))}.`;
   if (n.relations < BUY_BACK_MIN_RELATIONS) return `They must be Warm (+${BUY_BACK_MIN_RELATIONS}) to sell an island.`;
   if (treasury < getBuyBackPrice(islandId)) return `Needs ${getBuyBackPrice(islandId)} Cr.`;
   return null;

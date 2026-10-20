@@ -4,7 +4,9 @@
 // and factories bring in money, homes cap how far people can grow. Then the
 // computer chooses, by the nation's temper (neighbourData.ts): food first,
 // homes next, and with money to spare beyond its reserve, more of what it
-// likes to build.
+// likes to build. Its land fills its stores a month at a time: wood from
+// its forests, ore and coal from its hills, which it offers to sell you by
+// letter (tradeRules.ts).
 //
 // Its dice are its own: drawn from the nation and the month, never from the
 // game's shared ones, so a neighbour's choices never shift the luck of
@@ -22,7 +24,10 @@ import {
   INDUSTRY_PER_FACTORY,
   JOBS_PER_BUILDING,
   LABOUR_SHARE,
+  NEIGHBOUR_COAL_PER_HILLS,
   NEIGHBOUR_GROWTH_PER_MONTH,
+  NEIGHBOUR_STORE_CAP,
+  NEIGHBOUR_STORE_PER_PROVINCE,
   NEIGHBOUR_TAX_RATE,
   NEIGHBOUR_UPKEEP_SHARE,
   NEIGHBOUR_VOYAGE_GAP_MONTHS,
@@ -34,9 +39,10 @@ import {
 import { getSeason } from "../country/calendar";
 import type { GameDate } from "../country/types";
 import { NATIONS } from "../nations/nationData";
+import { MAP_GEOMETRY } from "../provinces/provinceData";
 import { getPersonality } from "./neighbourData";
 import { isHostile } from "./relationsRules";
-import type { Neighbour } from "./types";
+import type { Neighbour, StoreGood } from "./types";
 
 // A number in [0, 1) fixed by the nation, the month and what it is for.
 export function neighbourDice(nationId: string, month: number, purpose: string): number {
@@ -58,6 +64,7 @@ export function createNeighbour(nationId: string): Neighbour {
     farms: nationId === "astravia" ? 4 : 3,
     factories: 1,
     homes: Math.ceil((population * 1.05) / PEOPLE_PER_HOME),
+    stores: { wood: 0, ore: 0, coal: 0 },
     lastVoyageMonth: null,
     lastDeed: null,
     relations: 0,
@@ -95,6 +102,17 @@ export function getNeighbourIncome(n: Neighbour, nationId: string): number {
 
 // A month lived: food grown and eaten, money in, people born into the room
 // there is, or lost to hunger, and order following how they fare.
+// A month's wood, ore and coal from a nation's land.
+export function landYield(nationId: string): Record<StoreGood, number> {
+  const terrains = (NATIONS.find((n) => n.id === nationId)?.provinceIds ?? []).map((id) => MAP_GEOMETRY.provinces.find((p) => p.id === id)?.terrain);
+  const count = (terrain: string) => terrains.filter((t) => t === terrain).length;
+  return {
+    wood: count("forest") * NEIGHBOUR_STORE_PER_PROVINCE,
+    ore: count("hills") * NEIGHBOUR_STORE_PER_PROVINCE,
+    coal: count("hills") * NEIGHBOUR_COAL_PER_HILLS,
+  };
+}
+
 export function liveMonth(n: Neighbour, nationId: string, date: GameDate): Neighbour {
   const { grown, eaten } = dailyFood(n, getSeason(date));
   const food = n.food + (grown - eaten) * DAYS_PER_MONTH;
@@ -102,8 +120,11 @@ export function liveMonth(n: Neighbour, nationId: string, date: GameDate): Neigh
   const room = n.homes * PEOPLE_PER_HOME - n.population;
   const population = hungry ? n.population * 0.98 : n.population + Math.max(0, Math.min(room, n.population * NEIGHBOUR_GROWTH_PER_MONTH));
   const target = (hungry ? 30 : getPersonality(nationId).order) - (room < 0 ? 10 : 0);
+  const dug = landYield(nationId);
+  const stores = Object.fromEntries((Object.keys(dug) as StoreGood[]).map((good) => [good, Math.min(NEIGHBOUR_STORE_CAP, n.stores[good] + dug[good])])) as Neighbour["stores"];
   return {
     ...n,
+    stores,
     food: Math.max(0, food),
     treasury: n.treasury + getNeighbourIncome(n, nationId) * DAYS_PER_MONTH,
     population,

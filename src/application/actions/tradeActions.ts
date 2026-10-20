@@ -24,8 +24,11 @@ export function acceptOffer(state: GameState): GameState {
   const selling = offer.kind === "sell"; // they sell to you
   const good = offer.good;
   const message = selling
-    ? `You buy ${offer.amount} food from ${name} for ${offer.price} Cr.`
+    ? `You buy ${offer.amount} ${good} from ${name} for ${offer.price} Cr.`
     : `You sell ${offer.amount} ${good} to ${name} for ${offer.price} Cr.`;
+  // Goods change hands: food is a stat, the rest are resources; theirs, food or stores.
+  const resources = good === "food" ? state.resources : { ...state.resources, [good]: state.resources[good] + (selling ? offer.amount : -offer.amount) };
+  const stores = selling && good !== "food" && good in n.stores ? { ...n.stores, [good]: n.stores[good as keyof typeof n.stores] - offer.amount } : n.stores;
   return recordAction(
     state,
     {
@@ -36,7 +39,7 @@ export function acceptOffer(state: GameState): GameState {
         treasury: state.stats.treasury + (selling ? -offer.price : offer.price),
         food: state.stats.food + (selling && good === "food" ? offer.amount : 0),
       },
-      resources: !selling && good !== "food" ? { ...state.resources, [good]: state.resources[good] - offer.amount } : state.resources,
+      resources,
       neighbours: {
         ...state.neighbours,
         [offer.nationId]: feel(
@@ -44,9 +47,10 @@ export function acceptOffer(state: GameState): GameState {
             ...n,
             treasury: n.treasury + (selling ? offer.price : -offer.price),
             food: n.food - (selling && good === "food" ? offer.amount : 0),
+            stores,
           },
           RELATIONS_TRADE,
-          selling ? "You bought their food" : `You sold them ${good}`,
+          selling ? `You bought their ${good}` : `You sold them ${good}`,
         ),
       },
       events: [{ id: generateId("event"), date: state.date, message, severity: "info", topic: "politics" }, ...state.events],

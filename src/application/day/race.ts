@@ -45,6 +45,7 @@ export function runTheRace(day: Day, state: GameState): GameState {
       ...working,
       neighbours: holder ? { ...working.neighbours, [landed.nationId]: { ...holder, population: holder.population + locals, homes: holder.homes + 1 } } : working.neighbours,
       foreignIslands: { ...working.foreignIslands, [landed.islandId]: landed.nationId },
+      foreignIslandsSince: { ...working.foreignIslandsSince, [landed.islandId]: date },
       settlements: working.settlements.filter((s) => s.islandId !== landed.islandId),
       stats: { ...working.stats, treasury: working.stats.treasury + refund },
     };

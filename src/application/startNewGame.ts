@@ -136,6 +136,7 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     settledIslandIds: [],
     foreignVoyages: [],
     foreignIslands: {},
+    foreignIslandsSince: {},
     neighbours: createNeighbours(nationId),
     pendingOffer: null,
     regiments: [],

@@ -40,7 +40,7 @@ export function signIslandAccord(state: GameState, nationId: string): GameState 
 export function canBuyBackIsland(state: GameState, islandId: string): boolean {
   const nationId = state.foreignIslands[islandId];
   const n = nationId ? state.neighbours[nationId] : undefined;
-  return !!n && whyNoBuyBack(n, islandId, state.stats.treasury) === null;
+  return !!n && whyNoBuyBack(n, islandId, state.stats.treasury, state.foreignIslandsSince[islandId], state.date) === null;
 }
 
 export function buyBackIsland(state: GameState, islandId: string): GameState {

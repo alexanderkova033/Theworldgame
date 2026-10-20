@@ -1,9 +1,12 @@
 // Trade with the neighbours, by letter (see application/actions/tradeActions.ts).
-// Now and then a neighbour's ruler offers a deal: to sell you food from a
-// store bigger than it needs, under the market's price, or to buy the good
-// its temper wants (Veldoria ore, Astravia wood, Caldenreich coal) over what
-// the market would pay you. Warmer neighbours deal a little better; a
-// hostile one doesn't deal at all. An accepted deal warms them.
+// Now and then a neighbour's ruler offers a deal: to sell you, under the
+// market's price, food from a store bigger than it needs or wood, ore and
+// coal from its own land that you are short of; or to buy, over what the
+// market would pay you, the good its land lacks (Astravia, a farming
+// country with no mines, coal for its winters; Caldenreich, all hills,
+// wood; Veldoria, plains and coast, ore for its foundries). It never sells
+// the good it wants. Warmer neighbours deal a little better; a hostile one
+// doesn't deal at all. An accepted deal warms them.
 //
 // Prices are fixed when the letter is written, against the market as it
 // stands. When to write is the neighbour's own dice (neighbourDice).
@@ -19,7 +22,7 @@ import type { MarketGood, MarketState } from "../market/types";
 import { getBatchSize, getBuyCost, getSellRevenue } from "../market/marketRules";
 import type { ResourceType } from "../resources/types";
 import { neighbourDice } from "./neighbourRules";
-import type { Neighbour } from "./types";
+import type { Neighbour, StoreGood } from "./types";
 
 export interface TradeOffer {
   nationId: string;
@@ -30,7 +33,9 @@ export interface TradeOffer {
 }
 
 // What each neighbour's temper wants from you.
-export const WANTS: Record<string, ResourceType> = { astravia: "wood", caldenreich: "coal", veldoria: "ore" };
+export const WANTS: Record<string, ResourceType> = { astravia: "coal", caldenreich: "wood", veldoria: "ore" };
+
+const STORE_GOODS: StoreGood[] = ["wood", "ore", "coal"];
 
 // How far relations move the price: better the warmer they are.
 function warmth(relations: number): number {
@@ -48,12 +53,24 @@ export function draftOffer(
 ): TradeOffer | null {
   if (n.relations <= RELATIONS_HOSTILE) return null;
   if (neighbourDice(nationId, month, "trade") >= TRADE_OFFER_CHANCE) return null;
+  const sale = (good: MarketGood, amount: number): TradeOffer => ({
+    nationId,
+    kind: "sell",
+    good,
+    amount,
+    price: Math.round(getBuyCost(market, good, amount, hasPort) * (1 - TRADE_SELL_DISCOUNT - warmth(n.relations))),
+  });
   const food = getBatchSize("food", 2);
-  // Food to spare: more than three months' eating, and the lot on top.
-  if (n.food > n.population * FOOD_PER_POP_CONSUMPTION * 90 + food) {
-    const price = Math.round(getBuyCost(market, "food", food, hasPort) * (1 - TRADE_SELL_DISCOUNT - warmth(n.relations)));
-    return { nationId, kind: "sell", good: "food", amount: food, price };
-  }
+  const sales: TradeOffer[] = [
+    // Food to spare: more than three months' eating, and the lot on top.
+    ...(n.food > n.population * FOOD_PER_POP_CONSUMPTION * 90 + food ? [sale("food", food)] : []),
+    // Wood, ore or coal from its stores, when you hold less than the lot.
+    ...STORE_GOODS.filter((good) => good !== WANTS[nationId] && n.stores[good] >= getBatchSize(good, 2) && yourStock[good] < getBatchSize(good, 2)).map((good) =>
+      sale(good, getBatchSize(good, 2)),
+    ),
+  ];
+  // Several to offer: which one takes turns, month by month.
+  if (sales.length > 0) return sales[month % sales.length];
   // Otherwise what it wants, if you have it and it can pay.
   const good = WANTS[nationId];
   if (!good) return null;
