@@ -4,7 +4,19 @@
 // objectives are all met is marked done. Chance triggers (a petition, a
 // captain's offer) are rolled once a month, and every chapter opens by its
 // date at the latest.
-import { CHAPTERS, getChapter, type ChapterId } from "../domain/chapters/chapterData";
+//
+// A nation's story chapters (STORY_CHAPTERS) open by their own rules
+// (STORY_RULES, filled campaign by campaign), each only once the chapter
+// it follows is done. Reading a story chapter's briefing sends its letter.
+import {
+  chaptersFor,
+  choiceDeed,
+  getChapter,
+  isStoryChapter,
+  type ChapterId,
+  type StoryChapterId,
+  type SystemChapterId,
+} from "../domain/chapters/chapterData";
 import { isFirstDayOfMonth } from "../domain/country/calendar";
 import { generateId } from "../domain/country/id";
 import type { GameDate, GameState } from "../domain/country/types";
@@ -21,8 +33,19 @@ const LAW_FIRST_COST = 20; // political power for a first-row law
 const builtByYou = (s: GameState, type: string) =>
   s.placedBuildings.some((b) => b.type === type && !b.id.startsWith("starting-")) || s.projects.some((p) => p.type === type);
 
+type Trigger = (s: GameState, month: number, monthStart: boolean) => boolean;
+type Check = (s: GameState) => boolean;
+
+// A story chapter's rules: what sets it off besides its date, and its
+// objectives' checks, in the order of its words.
+export interface StoryRules {
+  opens: Trigger;
+  checks: Check[];
+}
+export const STORY_RULES: Record<StoryChapterId, StoryRules> = {};
+
 // What sets each chapter off, besides its date.
-const TRIGGERS: Record<ChapterId, (s: GameState, month: number, monthStart: boolean) => boolean> = {
+const TRIGGERS: Record<SystemChapterId, Trigger> = {
   "first-winter": () => true,
   exchange: () => false, // the exchange opens on its date
   assembly: (s, month) => month >= 4 && s.stats.politicalPower >= LAW_FIRST_COST,
@@ -39,7 +62,7 @@ const TRIGGERS: Record<ChapterId, (s: GameState, month: number, monthStart: bool
 };
 
 // Each chapter's objectives, in the order of its words (chapterData.ts).
-export const OBJECTIVE_CHECKS: Record<ChapterId, Array<(s: GameState) => boolean>> = {
+export const OBJECTIVE_CHECKS: Record<SystemChapterId, Check[]> = {
   "first-winter": [(s) => builtByYou(s, "farm"), (s) => builtByYou(s, "housing"), (s) => monthNumber(s.date) >= 3],
   exchange: [(s) => s.chapters.deeds.includes("traded")],
   assembly: [(s) => s.enactedLawIds.length > 0 || s.activeLaw !== null],
@@ -51,8 +74,18 @@ export const OBJECTIVE_CHECKS: Record<ChapterId, Array<(s: GameState) => boolean
   army: [(s) => s.regiments.some((r) => r.nationId === s.nationId)],
 };
 
+function checksFor(id: ChapterId): Check[] {
+  return isStoryChapter(id) ? (STORY_RULES[id]?.checks ?? []) : OBJECTIVE_CHECKS[id];
+}
+
 export function objectivesMet(state: GameState, id: ChapterId): boolean[] {
-  return OBJECTIVE_CHECKS[id].map((check) => check(state));
+  return checksFor(id).map((check) => check(state));
+}
+
+// Whether a chapter's moment has come today, besides its date.
+function isDue(state: GameState, id: ChapterId, month: number, monthStart: boolean): boolean {
+  if (!isStoryChapter(id)) return TRIGGERS[id](state, month, monthStart);
+  return STORY_RULES[id]?.opens(state, month, monthStart) ?? false;
 }
 
 export function advanceChapters(state: GameState): GameState {
@@ -63,10 +96,12 @@ export function advanceChapters(state: GameState): GameState {
   const events = [...state.events];
   let opened = false;
 
-  for (const chapter of CHAPTERS) {
+  for (const chapter of chaptersFor(state.nationId)) {
     if (chapters.opened.includes(chapter.id)) continue;
+    // A story's next chapter waits for the one before it.
+    if (chapter.after && !chapters.done.includes(chapter.after)) continue;
     const due = chapter.by !== undefined && month >= chapter.by;
-    if (!due && !TRIGGERS[chapter.id](state, month, monthStart)) continue;
+    if (!due && !isDue(state, chapter.id, month, monthStart)) continue;
     chapters = { ...chapters, opened: [...chapters.opened, chapter.id], unread: [...chapters.unread, chapter.id] };
     events.unshift({ id: generateId("event"), date: state.date, message: `A new chapter: ${chapter.title}.`, severity: "info", topic: "chapter" });
     opened = true;
@@ -84,7 +119,31 @@ export function advanceChapters(state: GameState): GameState {
   return { ...state, chapters, events, isPaused: opened ? true : state.isPaused };
 }
 
-// The player has read a briefing.
+// The player has read a briefing. A story chapter's letter comes next: at
+// once if no other letter waits, else as soon as the way is clear.
 export function readBriefing(state: GameState, id: ChapterId): GameState {
-  return { ...state, chapters: { ...state.chapters, unread: state.chapters.unread.filter((c) => c !== id) } };
+  const chapters = { ...state.chapters, unread: state.chapters.unread.filter((c) => c !== id) };
+  const letter = state.chapters.unread.includes(id) ? getChapter(id).letter : undefined;
+  if (!letter) return { ...state, chapters };
+  if (!state.pendingDecisionId) return { ...state, chapters, pendingDecisionId: letter, isPaused: true };
+  return { ...state, chapters: { ...chapters, letters: [...chapters.letters, letter] } };
 }
+
+// The next story letter waiting, sent once no other letter is open.
+export function sendStoryLetter(state: GameState): GameState {
+  const [next, ...rest] = state.chapters.letters;
+  if (!next || state.pendingDecisionId || state.isGameOver) return state;
+  return { ...state, pendingDecisionId: next, isPaused: true, chapters: { ...state.chapters, letters: rest } };
+}
+
+// The story's last word, for the ending screen: a line for each choice made
+// on a story letter that has one.
+export function storyEnding(state: GameState): string[] {
+  return chaptersFor(state.nationId).flatMap((chapter) =>
+    Object.entries(chapter.ending ?? {})
+      .filter(([deed]) => state.chapters.deeds.includes(deed))
+      .map(([, line]) => line),
+  );
+}
+
+export { choiceDeed };

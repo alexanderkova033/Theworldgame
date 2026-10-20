@@ -7,7 +7,7 @@ import { objectivesMet } from "../../application/chapters";
 import { getChapter } from "../../domain/chapters/chapterData";
 import type { GameState } from "../../domain/country/types";
 import { describeBurden, getBurden } from "../../domain/reign/reignRules";
-import { destinationName, OBJECTIVE_DESTINATIONS, type OpenPanel } from "../navigation";
+import { destinationName, objectiveDestination, type OpenPanel } from "../navigation";
 
 const SHOWN = 2; // chapters at once: the most recent first
 
@@ -32,7 +32,7 @@ export function Objectives({ state, onOpenPanel }: { state: GameState; onOpenPan
                     {met[i] ? "✓" : ""}
                   </span>
                 );
-                const to = met[i] ? null : OBJECTIVE_DESTINATIONS[id][i];
+                const to = met[i] ? null : objectiveDestination(id, i);
                 return (
                   <li key={objective} className={met[i] ? "is-done" : ""}>
                     {to ? (

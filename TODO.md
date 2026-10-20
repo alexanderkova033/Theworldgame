@@ -76,6 +76,14 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **The neighbours never fight each other**, and never take a province on the mainland: both are out of scope (ROADMAP step 5).
 - **The browser check:** run tests/support scripts or the iPad driver from PowerShell (Start-Process), not from Git Bash in the background: from Git Bash the driver hung and looked like a frozen page.
 
+## The campaigns: how a story is written (step 6, F onwards)
+
+- **A story chapter is four entries:** its words in `STORY_CHAPTERS` (domain/chapters/chapterData.ts: `nation`, `after` for the chapter it follows, `by` for the month it opens at the latest, `letter`, `partyLines`, `ending`), its rules in `STORY_RULES` (application/chapters.ts: what opens it besides its date, and a check for each objective), where each objective is done in `STORY_DESTINATIONS` (presentation/navigation.ts), and its letter in `DECISIONS` with `story: true`, so it is never drawn at random.
+- **Ids are "<nation>:<beat>"** for chapters; a choice is remembered as the deed "<letter>:<option>", which later chapters' rules and the `ending` lines read.
+- **A story chapter opens nothing**, so the systems' dates and the difficulty ladder stand; but its letter's effects move the numbers, and the scripted player takes the option that raises support most. Each campaign needs its balance pass (tests/balance.test.ts), and its letters agreed before they are built.
+- **Old saves see no story**: `allChaptersOpen` counts every story chapter done. A save from before F loads with no letters waiting.
+- **tests/story.test.ts** tells a two-chapter story of its own to test the mechanism; it adds and removes its entries itself.
+
 ## Process reminders
 
 - Domain rules live in `src/domain/<concept>/`, cross-domain use cases in `src/application/`, and React only in `src/presentation/`.

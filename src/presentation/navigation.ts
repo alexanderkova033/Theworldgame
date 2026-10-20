@@ -10,7 +10,7 @@
 //   Army      regiments: raising them, where they stand and march (moved on the map)
 //   Laws, Research, Reports, and Ventures (opened from an island on the map)
 import type { AdvisorAlert, AdvisorAlertKind } from "../application/getAdvisorOutlook";
-import { chapterFor, isFeatureOpen, type ChapterId, type Feature } from "../domain/chapters/chapterData";
+import { chapterFor, isFeatureOpen, isStoryChapter, type ChapterId, type Feature, type StoryChapterId, type SystemChapterId } from "../domain/chapters/chapterData";
 import type { GameState } from "../domain/country/types";
 
 export type PanelKey = "build" | "money" | "politics" | "laws" | "research" | "reports" | "ventures" | "army";
@@ -115,7 +115,7 @@ export function destinationName({ panel, section }: Destination): string {
 
 // Where each chapter's objectives are done, in the order the chapter
 // lists them. null: there is nowhere to go, it comes with time.
-export const OBJECTIVE_DESTINATIONS: Record<ChapterId, Array<Destination | null>> = {
+export const OBJECTIVE_DESTINATIONS: Record<SystemChapterId, Array<Destination | null>> = {
   "first-winter": [BUILDINGS, BUILDINGS, null],
   exchange: [MARKET],
   assembly: [{ panel: "laws" }],
@@ -126,6 +126,14 @@ export const OBJECTIVE_DESTINATIONS: Record<ChapterId, Array<Destination | null>
   captain: [{ panel: "ventures" }],
   army: [{ panel: "army" }],
 };
+
+// The same for a nation's story chapters, filled campaign by campaign.
+export const STORY_DESTINATIONS: Record<StoryChapterId, Array<Destination | null>> = {};
+
+// Where a chapter's objective (the i-th) is done, if anywhere.
+export function objectiveDestination(id: ChapterId, i: number): Destination | null {
+  return (isStoryChapter(id) ? STORY_DESTINATIONS[id]?.[i] : OBJECTIVE_DESTINATIONS[id][i]) ?? null;
+}
 
 export function alertDestination(alert: AdvisorAlert, state: GameState): Destination {
   // Food about to run out can't wait for a farm: buy some.

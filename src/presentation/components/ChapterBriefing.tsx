@@ -39,7 +39,10 @@ export function ChapterBriefing({ state, onRead }: ChapterBriefingProps) {
   return (
     <Modal title={chapter.title} icon={<NavIcon type="reports" size={22} />} onClose={read}>
       <div className="briefing">
-        <p className="briefing__letter">{chapter.briefing}</p>
+        <p className="briefing__letter">
+          {chapter.briefing}
+          {chapter.partyLines?.[state.partyId] && <> {chapter.partyLines[state.partyId]}</>}
+        </p>
 
         {chapter.opens.length > 0 && (
           <p className="briefing__opens">

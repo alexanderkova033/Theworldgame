@@ -1,6 +1,7 @@
 import { generateId } from "../../domain/country/id";
 import type { GameState } from "../../domain/country/types";
 import { MAX_DECISION_HISTORY } from "../../domain/constants";
+import { choiceDeed, recordDeed } from "../../domain/chapters/chapterData";
 import { getDecision } from "../../domain/decisions/decisionRules";
 import { applyFactionEffects, getFactionWeights } from "../../domain/parties/factionRules";
 import { syncProvinces } from "../../domain/provinces/provincePopulation";
@@ -23,9 +24,11 @@ export function resolveDecision(state: GameState, decisionId: string, optionId: 
     effects,
     effects.popularityDelta ?? 0,
   );
+  // A story letter's choice is remembered, for the chapters after it and the ending.
+  const remembered = decision.story ? recordDeed(state, choiceDeed(decisionId, optionId)) : state;
   // A decision that moves people (an epidemic, cleared camps) moves them in every province.
   return syncProvinces(recordAction(state, {
-    ...state,
+    ...remembered,
     pendingDecisionId: null,
     decisionHistory: [
       { id: generateId("decision"), decisionId, optionId, date: state.date },

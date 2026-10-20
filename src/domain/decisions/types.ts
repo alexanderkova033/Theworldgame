@@ -33,6 +33,9 @@ export interface DecisionDefinition {
   // A letter about a system that arrives in a later chapter (see
   // domain/chapters) waits until that chapter has opened.
   needs?: Feature;
+  // A story letter is sent only by its story chapter, never drawn at
+  // random, and the choice made on it is remembered (domain/chapters).
+  story?: boolean;
 }
 
 export interface DecisionHistoryEntry {

@@ -8,12 +8,23 @@
 //
 // What sets each chapter off, and when its objectives are met, is worked
 // out in application/chapters.ts; this file is the words and the order.
+//
+// Besides the chapters that open the game's systems, each nation has a
+// story of its own (STORY_CHAPTERS, filled campaign by campaign): chapters
+// told only in that nation, one leading to the next, that open nothing, so
+// every system still opens when it would. A story chapter may bring a
+// letter with a choice, sent once its briefing is read; the choice is
+// remembered, for later chapters and for the ending.
 
 // The systems a chapter can open. Building, people, the budget, taxes,
 // loans and rallies are open from the first day.
 export type Feature = "market" | "laws" | "research" | "unrest" | "voters" | "neighbours" | "ventures" | "army";
 
-export type ChapterId = "first-winter" | "exchange" | "assembly" | "society" | "streets" | "voters" | "envoys" | "captain" | "army";
+// The chapters that open the game's systems.
+export type SystemChapterId = "first-winter" | "exchange" | "assembly" | "society" | "streets" | "voters" | "envoys" | "captain" | "army";
+// A nation's story chapter: "<nation>:<beat>".
+export type StoryChapterId = `${string}:${string}`;
+export type ChapterId = SystemChapterId | StoryChapterId;
 
 export interface ChapterData {
   id: ChapterId;
@@ -23,6 +34,12 @@ export interface ChapterData {
   objectives: string[]; // in order; their checks are in application/chapters.ts
   until: string; // while it's shut: when it opens, for the locked tab's tooltip
   by?: number; // the month (counted from the start) by which it opens whatever happens
+  // A story chapter only:
+  nation?: string; // the nation whose story it is
+  after?: ChapterId; // it opens only once this chapter is done
+  letter?: string; // a story letter (a decision marked story) sent once the briefing is read
+  partyLines?: Record<string, string>; // a line added to the briefing, by the party you lead
+  ending?: Record<string, string>; // a line for the ending screen, by the choice made on its letter ("<letter>:<option>")
 }
 
 export const CHAPTERS: ChapterData[] = [
@@ -117,8 +134,20 @@ export const CHAPTERS: ChapterData[] = [
   },
 ];
 
+// Each nation's story, in the order it is told. Empty until its campaign is written (ROADMAP step 6).
+export const STORY_CHAPTERS: ChapterData[] = [];
+
 export function getChapter(id: ChapterId): ChapterData {
-  return CHAPTERS.find((c) => c.id === id)!;
+  return (CHAPTERS.find((c) => c.id === id) ?? STORY_CHAPTERS.find((c) => c.id === id))!;
+}
+
+// The chapters a game of this nation is told: the systems', then its story.
+export function chaptersFor(nationId: string): ChapterData[] {
+  return [...CHAPTERS, ...STORY_CHAPTERS.filter((c) => c.nation === nationId)];
+}
+
+export function isStoryChapter(id: ChapterId): id is StoryChapterId {
+  return id.includes(":");
 }
 
 // The chapter that opens a system.
@@ -130,22 +159,29 @@ export interface ChapterProgress {
   opened: ChapterId[];
   done: ChapterId[]; // every objective met
   unread: ChapterId[]; // briefings the player hasn't read yet
-  deeds: string[]; // one-off things done once, for objectives the country's numbers can't show ("traded", "courted"...)
+  deeds: string[]; // one-off things done once, for objectives the country's numbers can't show ("traded", "courted"...), and the choices made on story letters ("<letter>:<option>")
+  letters: string[]; // story letters waiting to be sent, the first next
 }
 
 export function newChapterProgress(): ChapterProgress {
-  return { opened: ["first-winter"], done: [], unread: ["first-winter"], deeds: [] };
+  return { opened: ["first-winter"], done: [], unread: ["first-winter"], deeds: [], letters: [] };
 }
 
-// Saves from before chapters existed: everything is already open.
+// Saves from before chapters existed: everything is already open, and no
+// story is told (its chapters count as done).
 export function allChaptersOpen(): ChapterProgress {
-  const ids = CHAPTERS.map((c) => c.id);
-  return { opened: ids, done: ids, unread: [], deeds: [] };
+  const ids = [...CHAPTERS, ...STORY_CHAPTERS].map((c) => c.id);
+  return { opened: ids, done: ids, unread: [], deeds: [], letters: [] };
 }
 
 export function isFeatureOpen(state: { chapters?: ChapterProgress }, feature: Feature): boolean {
   if (!state.chapters) return true;
   return state.chapters.opened.includes(chapterFor(feature).id);
+}
+
+// The choice made on a story letter, as a deed.
+export function choiceDeed(letterId: string, optionId: string): string {
+  return `${letterId}:${optionId}`;
 }
 
 export function recordDeed<S extends { chapters: ChapterProgress }>(state: S, deed: string): S {

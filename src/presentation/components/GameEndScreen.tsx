@@ -6,6 +6,7 @@ import type { GameOutcome, GameState } from "../../domain/country/types";
 import { getNation } from "../../domain/nations/nationRules";
 import { getParty } from "../../domain/parties/partyRules";
 import { explainDefeat } from "../../domain/ledger/defeatRules";
+import { storyEnding } from "../../application/chapters";
 import { DefeatStory } from "./DefeatStory";
 import { StatIcon } from "./StatIcon";
 import { formatAmount, formatReign } from "../formatNumber";
@@ -60,6 +61,8 @@ export function GameEndScreen({ state, onNewGame, retry, onRetry, reign }: GameE
   const outcome = state.outcome ?? "collapsed";
   const copy = OUTCOME_COPY[outcome];
   const story = explainDefeat(state);
+  // How the nation's own story ended, by the choices made on its letters.
+  const ending = storyEnding(state);
 
   return (
     <div className={`game-end-screen ${copy.className}`}>
@@ -73,6 +76,14 @@ export function GameEndScreen({ state, onNewGame, retry, onRetry, reign }: GameE
         </span>
 
         <p className="game-end-screen__reason">{state.gameOverReason}</p>
+
+        {ending.length > 0 && (
+          <div className="game-end-screen__ending">
+            {ending.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
+          </div>
+        )}
 
         {story && <DefeatStory story={story} />}
 

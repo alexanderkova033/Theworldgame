@@ -21,7 +21,7 @@ function recentlyAnswered(state: GameState): string[] {
 // The situational decisions whose trouble the country is in right now.
 export function getApplicableSituationalDecisions(state: GameState): DecisionDefinition[] {
   const recent = recentlyAnswered(state);
-  return DECISIONS.filter((d) => d.condition !== undefined && isOpen(state, d) && !recent.includes(d.id) && d.condition(state));
+  return DECISIONS.filter((d) => !d.story && d.condition !== undefined && isOpen(state, d) && !recent.includes(d.id) && d.condition(state));
 }
 
 // Trouble at home makes a decision likelier this month.
@@ -37,7 +37,7 @@ export function pickDecision(state: GameState): DecisionDefinition {
     return situational[Math.floor(Math.random() * situational.length)];
   }
   const recent = recentlyAnswered(state);
-  const generic = DECISIONS.filter((d) => d.condition === undefined && isOpen(state, d) && !recent.includes(d.id));
+  const generic = DECISIONS.filter((d) => !d.story && d.condition === undefined && isOpen(state, d) && !recent.includes(d.id));
   return generic[Math.floor(Math.random() * generic.length)];
 }
 

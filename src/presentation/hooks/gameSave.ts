@@ -155,7 +155,7 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
       ]),
     ),
     // Games saved before chapters existed keep every system open.
-    chapters: raw.chapters ?? allChaptersOpen(),
+    chapters: raw.chapters ? { ...raw.chapters, letters: raw.chapters.letters ?? [] } : allChaptersOpen(),
     retriesUsed: raw.retriesUsed ?? 0,
     mode: raw.mode ?? "terms",
     burdens: raw.burdens ?? [],

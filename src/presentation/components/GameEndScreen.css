@@ -89,6 +89,19 @@
   line-height: 1.6;
 }
 
+/* The nation's story, as it ended: a few lines in italic, like the last
+   paragraph of a chronicle. */
+.game-end-screen__ending {
+  max-width: 30rem;
+  margin: -1rem auto 2rem;
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.game-end-screen__ending p {
+  margin: 0 0 0.5rem;
+}
+
 .game-end-screen__stats {
   display: flex;
   flex-direction: column;
