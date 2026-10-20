@@ -1,13 +1,18 @@
-// Each nation's outer frontier as plain line segments, worked out once from
-// the static map geometry. An edge of a nation's province is "frontier"
-// unless another province of the same nation lies along it — sampled at a
-// few points with a small tolerance, so T-junctions and nearly-coincident
-// borders still count as internal.
+// Each nation's outer frontier as plain line segments, worked out from the
+// map geometry and the provinces each nation holds. An edge of a nation's
+// province is "frontier" unless another province of the same nation lies
+// along it — sampled at a few points with a small tolerance, so
+// T-junctions and nearly-coincident borders still count as internal.
+//
+// A province that broke away (lostProvinceIds) is no longer the nation's,
+// so the frontier runs round it and the nation's name moves onto the land
+// it still holds. Each set of lost provinces is worked out once and kept.
 //
 // The map used to find these with SVG erode filters at draw time, which the
 // browser re-ran on every frame of every pan and zoom. As geometry, the
 // frontier is just a stroked path — about as cheap as drawing gets.
 import { NATIONS } from "../domain/nations/nationData";
+import type { Nation } from "../domain/nations/types";
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
 
 type Point = [number, number];
@@ -81,7 +86,10 @@ const NAME_HALF_HEIGHT = 14;
 const NAME_MAX_WIDTH = 220;
 
 // A province's own marks on the map, as boxes: its name, and the slip of
-// icons pinned under it (see the province info bar in MapPanel.tsx).
+// icons pinned under it (see the province info bar in MapPanel.tsx). The
+// name is set at 17px in a bold display face, about 9.5 map units a letter.
+const PROVINCE_LETTER_WIDTH = 9.5;
+const INFO_BAR_HALF_WIDTH = 43; // a slip of four icons
 export interface MapMark {
   x: number;
   y: number;
@@ -118,15 +126,16 @@ function labelPlacement(polygons: Point[][], frontier: Segment[], marks: MapMark
       const covered = marks.filter((m) => Math.abs(m.x - mid) < half + m.halfWidth && Math.abs(m.y - y) < NAME_HALF_HEIGHT + m.halfHeight).length;
       // Room for the name matters most, then keeping off the province
       // marks; being near the centre breaks ties.
-      const score = Math.min(width, NAME_MAX_WIDTH) - covered * 80 - Math.abs(y - cy) * 1.2 - Math.abs(mid - cx) * 0.5;
+      const score = Math.min(width, NAME_MAX_WIDTH) - covered * 160 - Math.abs(y - cy) * 1.2 - Math.abs(mid - cx) * 0.5;
       if (width > 0 && score > best.score) best = { x: mid, y, width, score };
     }
   }
   return best.width > 0 ? best : { x: cx, y: cy, width: 200 };
 }
 
-export const NATION_SHAPES: NationShape[] = NATIONS.map((nation) => {
-  const owned = MAP_GEOMETRY.provinces.filter((p) => nation.provinceIds.includes(p.id));
+function nationShape(nation: Nation, lostProvinceIds: string[]): NationShape | null {
+  const owned = MAP_GEOMETRY.provinces.filter((p) => nation.provinceIds.includes(p.id) && !lostProvinceIds.includes(p.id));
+  if (owned.length === 0) return null;
   const polygons = owned.map((p) => ({ id: p.id, segments: edges(parsePolygon(p.path)) }));
 
   const frontier: Segment[] = [];
@@ -143,8 +152,8 @@ export const NATION_SHAPES: NationShape[] = NATIONS.map((nation) => {
     owned.map((p) => parsePolygon(p.path)),
     frontier,
     owned.flatMap((p): MapMark[] => [
-      { x: p.labelX, y: p.labelY - 5, halfWidth: 40, halfHeight: 8 },
-      { x: p.labelX, y: p.labelY + 21, halfWidth: 22, halfHeight: 11 },
+      { x: p.labelX, y: p.labelY - 5, halfWidth: (p.name.length * PROVINCE_LETTER_WIDTH) / 2, halfHeight: 8 },
+      { x: p.labelX, y: p.labelY + 21, halfWidth: INFO_BAR_HALF_WIDTH, halfHeight: 11 },
     ]),
   );
 
@@ -158,4 +167,17 @@ export const NATION_SHAPES: NationShape[] = NATIONS.map((nation) => {
     labelY: label.y,
     labelWidth: label.width,
   };
-});
+}
+
+const shapesByLoss = new Map<string, NationShape[]>();
+
+// Every nation as it stands, given the provinces that broke away.
+export function nationShapes(lostProvinceIds: string[]): NationShape[] {
+  const key = [...lostProvinceIds].sort().join(",");
+  let shapes = shapesByLoss.get(key);
+  if (!shapes) {
+    shapes = NATIONS.map((nation) => nationShape(nation, lostProvinceIds)).filter((s): s is NationShape => s !== null);
+    shapesByLoss.set(key, shapes);
+  }
+  return shapes;
+}

@@ -9,9 +9,8 @@ import type { DailyProductionSummary } from "../../application/getDailyProductio
 import { buyGood, canBuyGood, canSellGood, getMarketBuyCost, getMarketSellRevenue, sellGood } from "../../application/actions";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
-import { GOOD_SPECS, MARKET_GOODS, getBatchSize, getMidPrice, getPriceRatio, nationHasPort } from "../../domain/market/marketRules";
+import { GOOD_SPECS, MARKET_GOODS, getBatchSize, getMidPrice, getPriceRatio, holdsPort } from "../../domain/market/marketRules";
 import type { MarketGood } from "../../domain/market/types";
-import { getNation } from "../../domain/nations/nationRules";
 import { formatAmount } from "../formatNumber";
 import { playCoins } from "../audio/sound";
 import { ResourceIcon } from "./ResourceIcon";
@@ -130,7 +129,7 @@ function MarketRow({ state, good, perDay, quantity, dispatch }: RowProps) {
 
 export function MarketPanel({ state, production, dispatch }: MarketPanelProps) {
   const [quantity, setQuantity] = useState(1);
-  const hasPort = nationHasPort(getNation(state.nationId));
+  const hasPort = holdsPort(state);
 
   return (
     <div className="market">

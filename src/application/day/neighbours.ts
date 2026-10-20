@@ -18,7 +18,7 @@ import { chooseRecruit, garrisonIslands, getArmyPay, isReady, sendStrikingForce 
 import { chooseThreat, getStrikingStrength } from "../../domain/military/threatRules";
 import { getOwnedProvinceIds } from "../../domain/provinces/provinceRules";
 import { isIsland } from "../../domain/islands/islandRules";
-import { nationHasPort } from "../../domain/market/marketRules";
+import { holdsPort } from "../../domain/market/marketRules";
 import { isFriendly } from "../../domain/diplomacy/diplomacyRules";
 import { monthNumber } from "../chapters";
 import { log, type Day } from "./dayContext";
@@ -48,7 +48,7 @@ export function runNeighbours(
   const neighbours: GameState["neighbours"] = {};
   // A trade offer waits until no other letter does, and the market is open.
   const canOffer = isFeatureOpen(working, "market") && !working.pendingDecisionId && !working.pendingDemand;
-  const hasPort = nationHasPort(getNation(working.nationId));
+  const hasPort = holdsPort(working);
 
   for (const [nationId, before] of Object.entries(working.neighbours)) {
     // Feelings fade, toward warm while the party you backed rules them; not

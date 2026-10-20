@@ -31,8 +31,8 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 
 ## Uprisings
 
-- **Borders don't redraw.** A province that broke away is drawn as free land, but the national frontier band is precomputed from the nations' fixed provinces (src/presentation/nationFrontiers.ts), so it still runs around it. Worth fixing when borders can change for other reasons (step 4 or 5 of the roadmap).
-- **A lost coast still counts as a port.** `nationHasPort` reads the nation's fixed provinces, so losing its only coastal province keeps the cheaper market. Rare; fix with the frontier.
+- **Borders and ports follow the land held** (step 6, phase A): the frontier and the nation's name are worked out from the provinces held today (`nationShapes` in src/presentation/nationFrontiers.ts, one set per list of lost provinces), and `holdsPort` (domain/market/marketRules.ts) asks whether a mainland coast is still held. Only the player's provinces can be lost, so the neighbours' frontiers never move. A settled island's coast doesn't make a port: it trades through its harbour.
+- **For phase B (sea routes):** the map geometry has no sea waypoints yet. A march's route is a list of places, drawn through the middle of each (`placePoint` and `pathThrough` in presentation/components/MapArmies.tsx), so the step from a coastal province to an island is one straight line.
 - **A lost province can't be won back yet.** Retaking it belongs to the military (roadmap step 5).
 - **Scripted players never lose a province.** Even the sloppy one sends militia within two months, long before a month at full strength. The tests cover breaking away directly (tests/breakaway.test.ts), not through a played game.
 

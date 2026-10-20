@@ -12,7 +12,7 @@ import type { PlacedBuilding, Terrain } from "../../domain/provinces/types";
 import { RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
 import { RESOURCE_TYPES } from "../../domain/resources/types";
 import { BUILDING_COLORS, BuildingIcon } from "./BuildingIcon";
-import { NATION_SHAPES } from "../nationFrontiers";
+import { nationShapes } from "../nationFrontiers";
 import { starPoints } from "./iconShapes";
 import type { ProvinceOverview, ProvinceStatus } from "../../application/getProvinceOverview";
 import { formatAmount } from "../formatNumber";
@@ -488,13 +488,15 @@ const MapLayers = memo(function MapLayers({
   // Everywhere a province of yours can be: the mainland and held islands.
   const places = [...provinces, ...islands.filter((island) => owns(island.id))];
   const capital = provinces.find((p) => p.id === nation.capitalProvinceId);
+  // Frontiers and nation names follow the land each nation holds today.
+  const shapes = nationShapes(lostProvinceIds);
 
   return (
     <>
     <defs>
       {/* Each nation's shape, to keep its border band on its own side
           of the frontier. */}
-      {NATION_SHAPES.map((shape) => (
+      {shapes.map((shape) => (
         <clipPath id={`nation-clip-${shape.nationId}`} key={shape.nationId}>
           <path d={shape.outline} />
         </clipPath>
@@ -783,7 +785,7 @@ const MapLayers = memo(function MapLayers({
         inside its edge, as a colourist ran the brush along a border, and a
         dash-and-dot ink line on the frontier itself. */}
     <g pointerEvents="none">
-      {NATION_SHAPES.map((shape) => (
+      {shapes.map((shape) => (
         <path
           key={`${shape.nationId}-border`}
           d={shape.frontier}
@@ -793,7 +795,7 @@ const MapLayers = memo(function MapLayers({
           className="map-panel__nation-border"
         />
       ))}
-      {NATION_SHAPES.map((shape) => (
+      {shapes.map((shape) => (
         <path key={`${shape.nationId}-frontier`} d={shape.frontier} className="map-panel__nation-frontier" />
       ))}
     </g>
@@ -864,7 +866,7 @@ const MapLayers = memo(function MapLayers({
         give way to the per-province labels once zoomed in. */}
     {!zoomedIn && (
       <g pointerEvents="none">
-        {NATION_SHAPES.map((shape) => {
+        {shapes.map((shape) => {
           const isYou = shape.nationId === nation.id;
           const rulerId = foreignRulers[shape.nationId];
           const ruler = rulerId ? getParty(rulerId) : null;

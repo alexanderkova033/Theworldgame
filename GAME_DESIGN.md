@@ -101,7 +101,7 @@ Construction pays part of the price when ordered and the rest during the build. 
 
 Each province's terrain produces a raw resource daily: forest gives **wood**, hills **ore**, plains **grain**, coast **fish**. **Coal** heats homes in winter. No nation has every terrain, so you trade.
 
-The market holds a stock of every good, and prices follow how scarce it is. Buying pays a markup over the mid price (less with a coastal port); selling gets a little over half of it. Daily taxes and industry are meant to be your living; the market fills gaps.
+The market holds a stock of every good, and prices follow how scarce it is. Buying pays a markup over the mid price (less while you hold a coastal province on the mainland); selling gets a little over half of it. Daily taxes and industry are meant to be your living; the market fills gaps.
 
 You can also take loans in batches. Interest compounds daily, and heavy debt costs stability and support.
 

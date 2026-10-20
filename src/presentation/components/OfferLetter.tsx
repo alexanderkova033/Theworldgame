@@ -5,7 +5,7 @@
 import "./DecisionModal.css";
 import { canAcceptOffer } from "../../application/actions";
 import type { GameState } from "../../domain/country/types";
-import { getBuyCost, getSellRevenue, nationHasPort } from "../../domain/market/marketRules";
+import { getBuyCost, getSellRevenue, holdsPort } from "../../domain/market/marketRules";
 import { getNation } from "../../domain/nations/nationRules";
 import { relationsWord } from "../../domain/neighbours/relationsRules";
 import { playSeal } from "../audio/sound";
@@ -21,7 +21,7 @@ export function OfferLetter({ state, onAccept, onDecline }: { state: GameState; 
   const selling = offer.kind === "sell";
   // What the market would ask, or pay, for the same lot: the deal beside it.
   const market = selling
-    ? getBuyCost(state.market, offer.good, offer.amount, nationHasPort(getNation(state.nationId)))
+    ? getBuyCost(state.market, offer.good, offer.amount, holdsPort(state))
     : getSellRevenue(state.market, offer.good, offer.amount);
   const what = offer.good === "food" ? "food" : offer.good;
   const feeling = relationsWord(state.neighbours[offer.nationId]?.relations ?? 0).toLowerCase();

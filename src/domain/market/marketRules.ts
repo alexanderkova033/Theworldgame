@@ -22,7 +22,7 @@ import {
   MARKET_SELL_FACTOR,
 } from "../constants";
 import type { Season } from "../country/calendar";
-import type { Nation } from "../nations/types";
+import { getNation } from "../nations/nationRules";
 import { MAP_GEOMETRY } from "../provinces/provinceData";
 import type { MarketGood, MarketState } from "./types";
 
@@ -57,8 +57,13 @@ const SEASONAL_SUPPLY: Record<Season, Partial<Record<MarketGood, number>>> = {
   autumn: { food: 1.4, grain: 1.4 },
 };
 
-export function nationHasPort(nation: Nation): boolean {
-  return nation.provinceIds.some((provinceId) => MAP_GEOMETRY.provinces.find((p) => p.id === provinceId)?.terrain === "coast");
+// Whether the country holds a coast on the mainland today, for the cheaper
+// market a port brings. A coastal province that broke away no longer
+// counts; a settled island trades through its harbour instead.
+export function holdsPort(state: { nationId: string; lostProvinceIds: string[] }): boolean {
+  return getNation(state.nationId).provinceIds.some(
+    (provinceId) => !state.lostProvinceIds.includes(provinceId) && MAP_GEOMETRY.provinces.find((p) => p.id === provinceId)?.terrain === "coast",
+  );
 }
 
 // Where the market's stock is heading today.

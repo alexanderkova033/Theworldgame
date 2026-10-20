@@ -1,9 +1,11 @@
 // Left alone, an uprising spreads to the provinces next door, and one held
 // at full strength for a month breaks away: its people, homes and works are
-// lost, and losing the capital brings the government down. See
-// domain/uprising and application/loseProvince.ts.
+// lost, and losing the capital brings the government down. The frontier on
+// the map runs round it, and a coast that goes no longer counts as a port.
+// See domain/uprising and application/loseProvince.ts.
 import { beforeEach, describe, expect, it } from "vitest";
 import { buildFarm } from "../src/application/actions/buildFarm";
+import { getMarketBuyCost } from "../src/application/actions/marketActions";
 import { simulateDay } from "../src/application/simulateDay";
 import { startNewGame } from "../src/application/startNewGame";
 import { allChaptersOpen } from "../src/domain/chapters/chapterData";
@@ -11,6 +13,7 @@ import { UPRISING_BREAKAWAY_DAYS, UPRISING_SPREAD_UNREST } from "../src/domain/c
 import { addDays } from "../src/domain/country/calendar";
 import type { GameState } from "../src/domain/country/types";
 import { getWorkingCounts } from "../src/domain/maintenance/maintenanceRules";
+import { holdsPort } from "../src/domain/market/marketRules";
 import { getNation } from "../src/domain/nations/nationRules";
 import { MAP_GEOMETRY } from "../src/domain/provinces/provinceData";
 import { getNeighbours } from "../src/domain/provinces/provinceNeighbours";
@@ -18,6 +21,7 @@ import { getOwnedProvinceIds } from "../src/domain/provinces/provinceRules";
 import type { ProvinceState } from "../src/domain/provinces/types";
 import { getSpreadUnrest } from "../src/domain/uprising/uprisingRules";
 import { hydrateGameState } from "../src/presentation/hooks/gameSave";
+import { nationShapes } from "../src/presentation/nationFrontiers";
 import { seedRandom } from "./support/seededRandom";
 
 beforeEach(() => seedRandom(20261019));
@@ -107,5 +111,35 @@ describe("a province that breaks away", () => {
     expect(hydrateGameState(JSON.parse(JSON.stringify(gone))).lostProvinceIds).toEqual([rebel]);
     const { lostProvinceIds: _lost, ...old } = base;
     expect(hydrateGameState(JSON.parse(JSON.stringify(old))).lostProvinceIds).toEqual([]);
+  });
+
+  it("moves the frontier on the map, and only that nation's", () => {
+    const shapeOf = (lost: string[], nationId: string) => nationShapes(lost).find((s) => s.nationId === nationId)!;
+    const path = MAP_GEOMETRY.provinces.find((p) => p.id === rebel)!.path;
+    const before = shapeOf([], "astravia");
+    const after = shapeOf([rebel], "astravia");
+    expect(before.outline).toContain(path);
+    expect(after.outline).not.toContain(path);
+    expect(after.frontier).not.toBe(before.frontier);
+    expect(shapeOf([rebel], "veldoria")).toEqual(shapeOf([], "veldoria"));
+    // Won back, the frontier is as it was.
+    expect(shapeOf([], "astravia")).toEqual(before);
+  });
+});
+
+describe("a coast that breaks away", () => {
+  const coasts = getNation("astravia").provinceIds.filter((id) => MAP_GEOMETRY.provinces.find((p) => p.id === id)?.terrain === "coast");
+  const lose = (ids: string[]): GameState => ({ ...base, lostProvinceIds: ids });
+
+  it("leaves the port while any coast is still held", () => {
+    expect(coasts.length).toBeGreaterThan(1);
+    expect(holdsPort(base)).toBe(true);
+    expect(holdsPort(lose(coasts.slice(1)))).toBe(true);
+  });
+
+  it("takes the port with the last of them, and the market costs more", () => {
+    const landlocked = lose(coasts);
+    expect(holdsPort(landlocked)).toBe(false);
+    expect(getMarketBuyCost(landlocked, "coal")).toBeGreaterThan(getMarketBuyCost(base, "coal"));
   });
 });
