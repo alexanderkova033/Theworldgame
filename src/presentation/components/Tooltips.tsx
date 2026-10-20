@@ -1,10 +1,16 @@
 // One tooltip for the whole game, in paper and ink. Much of the game
 // explains itself on hover, through plain `title` attributes; the
-// browser's own tooltip for those takes about a second to appear and looks
-// like the operating system, not the ledger. This takes over any `title`
-// while its element is pointed at or focused: the attribute is set aside
-// (so the browser's tooltip doesn't also show), the text appears in a
-// styled box after a short delay, and the attribute comes back after.
+// browser's own tooltip for those looks like the operating system, not the
+// ledger. This takes over any `title` while its element is pointed at or
+// focused: the attribute is set aside (so the browser's tooltip doesn't
+// also show), the text appears in a styled box, and the attribute comes
+// back after.
+//
+// A tip is asked for, not thrown at the player: it appears only once the
+// mouse has come to rest on something (tipPreference.ts), so moving across
+// the screen to get somewhere shows nothing, and a click puts it away
+// until the pointer leaves. Holding Shift shows it at once, and is the
+// only way to ask when the player has turned resting tips off.
 //
 // SVG <title> children (the map, the chamber's seats) keep the browser's
 // tooltip: React owns those nodes, and taking them out of the page would
@@ -16,9 +22,10 @@
 // is not also a tap on the button underneath.
 import "./Tooltips.css";
 import { useEffect, useRef, useState } from "react";
+import { areTipsOn, TIP_REST_MS, TIP_REST_SLOP, TIP_REST_WARM_MS } from "../tipPreference";
 
-const SHOW_DELAY_MS = 200;
-const WARM_MS = 300; // moving straight on to another tip shows it at once
+const FOCUS_DELAY_MS = 200; // a keyboard focus is already deliberate
+const WARM_MS = 800; // a tip shown this recently makes the next rest shorter
 const GAP = 8; // px between the element and the tip
 const HOLD_MS = 450; // a finger resting this long asks for the tip
 const HOLD_SLOP = 10; // px a resting finger may wander before it counts as a drag
@@ -51,6 +58,10 @@ export function Tooltips() {
   const lastHidden = useRef(0);
   const hold = useRef<{ timer: ReturnType<typeof setTimeout>; x: number; y: number; id: number } | null>(null);
   const swallowClick = useRef(false);
+  const shown = useRef(false);
+  const rest = useRef({ x: 0, y: 0 }); // where the mouse last came to rest
+  const shift = useRef(false);
+  const dismissed = useRef<Element | null>(null); // clicked: no tip until the pointer leaves
 
   useEffect(() => {
     // Put the title back, unless the page has set a new one meanwhile.
@@ -64,20 +75,41 @@ export function Tooltips() {
       if (h.describedBy === null) h.el.removeAttribute("aria-describedby");
       else h.el.setAttribute("aria-describedby", h.describedBy);
       setTip(null);
-      lastHidden.current = Date.now();
+      if (shown.current) lastHidden.current = Date.now();
+      shown.current = false;
     }
 
-    function take(el: Element, now = false) {
-      if (held.current?.el === el) return;
+    function show() {
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = null;
+      const h = held.current;
+      if (!h || shown.current || !h.el.isConnected) return;
+      shown.current = true;
+      setTip(placeFor(h.el, h.title));
+    }
+
+    // Hold on to an element's title (so the browser's own tip stays away)
+    // without showing anything yet.
+    function take(el: Element): boolean {
+      if (held.current?.el === el) return true;
       release();
       const title = el.getAttribute("title");
-      if (!title) return;
+      if (!title) return false;
       held.current = { el, title, describedBy: el.getAttribute("aria-describedby") };
       el.removeAttribute("title");
       el.setAttribute("aria-describedby", TOOLTIP_ID);
-      const show = () => held.current?.el === el && setTip(placeFor(el, title));
-      if (now || Date.now() - lastHidden.current < WARM_MS) show();
-      else timer.current = setTimeout(show, SHOW_DELAY_MS);
+      return true;
+    }
+
+    // (Re)start the wait for the mouse to settle.
+    function awaitRest() {
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = null;
+      if (!held.current || shown.current) return;
+      if (shift.current) return show();
+      if (!areTipsOn()) return;
+      const warm = Date.now() - lastHidden.current < WARM_MS;
+      timer.current = setTimeout(show, warm ? TIP_REST_WARM_MS : TIP_REST_MS);
     }
 
     const titled = (target: EventTarget | null) => (target instanceof Element ? target.closest("[title]") : null);
@@ -90,23 +122,37 @@ export function Tooltips() {
     function onOver(e: PointerEvent) {
       // A tap's pretend hover would pop a tip on every touch.
       if (e.pointerType !== "mouse") return;
-      const el = titled(e.target);
-      if (el) take(el);
-      else if (held.current && !(e.target instanceof Node && held.current.el.contains(e.target))) release();
+      // Within the element already held (its title set aside), stay with it.
+      const h = held.current;
+      const el = h && e.target instanceof Node && h.el.contains(e.target) ? h.el : titled(e.target);
+      if (el && el === dismissed.current) return;
+      if (el && held.current?.el !== el) {
+        if (take(el)) {
+          rest.current = { x: e.clientX, y: e.clientY };
+          awaitRest();
+        }
+      } else if (!el && held.current && !(e.target instanceof Node && held.current.el.contains(e.target))) release();
     }
     function onOut(e: PointerEvent) {
       // A tip a finger asked for stays once the finger lifts.
       if (e.pointerType !== "mouse") return;
+      const stillIn = (el: Element) => e.relatedTarget instanceof Node && el.contains(e.relatedTarget);
+      if (dismissed.current && !stillIn(dismissed.current)) dismissed.current = null;
       const h = held.current;
-      if (h && !(e.relatedTarget instanceof Node && h.el.contains(e.relatedTarget))) release();
+      if (h && !stillIn(h.el)) release();
     }
     function onFocus(e: FocusEvent) {
       const el = titled(e.target);
       // Keyboard focus only: a tap focuses a button too, and a tip on every
       // tap is what the hold is there to avoid.
-      if (el && el === e.target && el.matches(":focus-visible")) take(el);
+      if (el && el === e.target && el.matches(":focus-visible") && take(el)) {
+        timer.current = setTimeout(show, FOCUS_DELAY_MS);
+      }
     }
     function onDown(e: PointerEvent) {
+      const h = held.current;
+      const onHeld = h && e.target instanceof Node && h.el.contains(e.target);
+      dismissed.current = e.pointerType !== "mouse" ? null : onHeld ? h.el : titled(e.target);
       release();
       cancelHold();
       swallowClick.current = false;
@@ -115,8 +161,8 @@ export function Tooltips() {
       if (!el) return;
       const timer = setTimeout(() => {
         hold.current = null;
-        if (!el.isConnected) return;
-        take(el, true);
+        if (!el.isConnected || !take(el)) return;
+        show();
         swallowClick.current = true;
       }, HOLD_MS);
       hold.current = { timer, x: e.clientX, y: e.clientY, id: e.pointerId };
@@ -124,6 +170,13 @@ export function Tooltips() {
     function onMove(e: PointerEvent) {
       const h = hold.current;
       if (h && h.id === e.pointerId && Math.hypot(e.clientX - h.x, e.clientY - h.y) > HOLD_SLOP) cancelHold();
+      // Still travelling: the wait starts over from here.
+      if (e.pointerType === "mouse" && held.current && !shown.current) {
+        if (Math.hypot(e.clientX - rest.current.x, e.clientY - rest.current.y) > TIP_REST_SLOP) {
+          rest.current = { x: e.clientX, y: e.clientY };
+          awaitRest();
+        }
+      }
     }
     function onUp(e: PointerEvent) {
       if (hold.current?.id === e.pointerId) cancelHold();
@@ -142,6 +195,16 @@ export function Tooltips() {
     }
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") release();
+      if (e.key === "Shift") {
+        shift.current = true;
+        if (held.current) show();
+      }
+    }
+    function onKeyUp(e: KeyboardEvent) {
+      if (e.key === "Shift") shift.current = false;
+    }
+    function onBlur() {
+      shift.current = false;
     }
 
     document.addEventListener("pointerover", onOver);
@@ -155,6 +218,8 @@ export function Tooltips() {
     document.addEventListener("click", onClick, true);
     window.addEventListener("scroll", release, true);
     window.addEventListener("keydown", onKey);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
     return () => {
       release();
       cancelHold();
@@ -169,6 +234,8 @@ export function Tooltips() {
       document.removeEventListener("click", onClick, true);
       window.removeEventListener("scroll", release, true);
       window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onBlur);
     };
   }, []);
 

@@ -21,6 +21,7 @@ import { JobsIcon, UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 import { ArmyLayer, type MarchPreview } from "./MapArmies";
+import { areTipsOn, TIP_REST_MS, TIP_REST_SLOP } from "../tipPreference";
 import type { FreeProvince } from "../../domain/military/battleRules";
 import type { Regiment } from "../../domain/military/types";
 
@@ -1056,6 +1057,21 @@ export const MapPanel = memo(function MapPanel({
   // mouse move — keeping it in state re-rendered the whole map each time.
   const tooltipPos = useRef({ x: 0, y: 0 });
   const tooltipRef = useRef<HTMLDivElement>(null);
+  // The card waits for the mouse to rest on a province, as every tip does
+  // (tipPreference.ts): crossing the map to get somewhere shows nothing.
+  // The province itself still lights at once.
+  const [cardShown, setCardShown] = useState(false);
+  const cardTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cardRest = useRef({ x: 0, y: 0 });
+  const awaitCardRest = useCallback((shiftKey: boolean) => {
+    if (cardTimer.current) clearTimeout(cardTimer.current);
+    cardTimer.current = null;
+    if (shiftKey) setCardShown(true);
+    else if (areTipsOn()) cardTimer.current = setTimeout(() => setCardShown(true), TIP_REST_MS);
+  }, []);
+  useEffect(() => () => {
+    if (cardTimer.current) clearTimeout(cardTimer.current);
+  }, []);
 
   // The legend is a lot of content (every nation, building type, and raw
   // resource) — collapsed by default so it doesn't sit permanently on top of
@@ -1074,6 +1090,10 @@ export const MapPanel = memo(function MapPanel({
     const rect = stageRef.current?.getBoundingClientRect();
     if (!rect) return;
     tooltipPos.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    if (!cardShown && Math.hypot(e.clientX - cardRest.current.x, e.clientY - cardRest.current.y) > TIP_REST_SLOP) {
+      cardRest.current = { x: e.clientX, y: e.clientY };
+      awaitCardRest(e.shiftKey);
+    }
     if (tooltipRef.current) {
       tooltipRef.current.style.left = `${tooltipPos.current.x + 18}px`;
       tooltipRef.current.style.top = `${tooltipPos.current.y + 18}px`;
@@ -1322,8 +1342,16 @@ export const MapPanel = memo(function MapPanel({
   // card stuck on the map. A mouse or trackpad still shows it.
   const hoverProvince = useCallback((next: React.SetStateAction<string | null>) => {
     if (lastPointerType.current === "touch") return;
-    setHoveredProvinceId(next);
-  }, []);
+    setHoveredProvinceId((prev) => {
+      const id = typeof next === "function" ? next(prev) : next;
+      // A new province starts its own wait (repeating this is harmless).
+      if (id !== prev) {
+        setCardShown(false);
+        awaitCardRest(false);
+      }
+      return id;
+    });
+  }, [awaitCardRest]);
 
   const handleProvinceClick = useCallback(
     (provinceId: string) => {
@@ -1447,6 +1475,7 @@ export const MapPanel = memo(function MapPanel({
         </div>
 
         {hoveredProvinceId &&
+          cardShown &&
           !isPanning &&
           (() => {
             const province = provinces.find((p) => p.id === hoveredProvinceId) ?? MAP_GEOMETRY.islands.find((i) => i.id === hoveredProvinceId);

@@ -287,6 +287,7 @@
   white-space: nowrap;
   color: var(--text);
   font-variant-numeric: tabular-nums;
+  margin-right: auto;
 }
 
 /* Winter tints the date cold, so the season is noticed at a glance. */
@@ -310,8 +311,8 @@
   padding: 0.3rem 0.8rem 0.3rem 0.65rem;
 }
 
-/* A quiet icon button, beside the date. */
-.top-bar .top-bar__mute-button {
+/* Quiet icon buttons (sound, hover tips), beside the date. */
+.top-bar .top-bar__icon-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -325,13 +326,13 @@
 }
 
 @media (hover: hover) {
-  .top-bar .top-bar__mute-button:hover:not(:disabled) {
+  .top-bar .top-bar__icon-button:hover:not(:disabled) {
     border-color: var(--bar-rule);
     color: var(--text);
   }
 }
 
-.top-bar__mute-button svg {
+.top-bar__icon-button svg {
   display: block;
 }
 
@@ -377,7 +378,7 @@
 }
 
 .top-bar__pause-button,
-.top-bar .top-bar__mute-button {
+.top-bar .top-bar__icon-button {
   border-radius: 4px;
 }
 
@@ -563,7 +564,7 @@
     min-width: 2.75rem;
   }
 
-  .top-bar .top-bar__mute-button {
+  .top-bar .top-bar__icon-button {
     width: 2.5rem;
     height: 2.5rem;
   }

@@ -12,6 +12,7 @@ import type { Ledger } from "../../domain/ledger/types";
 import type { ResourceBundle } from "../../domain/resources/types";
 import type { UnrestStage } from "../../domain/unrest/types";
 import { isMuted, setMuted } from "../audio/sound";
+import { areTipsOn, setTipsOn } from "../tipPreference";
 import { NavIcon } from "./NavIcon";
 import { StatIcon } from "./StatIcon";
 import { ResourceTicker } from "./ResourceTicker";
@@ -131,6 +132,20 @@ function SpeakerIcon({ muted }: { muted: boolean }) {
   );
 }
 
+// A slip of paper with writing on it: the hover tips. Struck through when off.
+function TipsIcon({ off }: { off: boolean }) {
+  return (
+    <svg width={16} height={16} viewBox="-10 -10 20 20">
+      <path d="M-8,-7 H8 V4 H-1 L-5,8 V4 H-8 Z" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" />
+      <g stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" opacity={off ? 0.5 : 1}>
+        <line x1={-4.5} y1={-3.2} x2={4.5} y2={-3.2} />
+        <line x1={-4.5} y1={0.3} x2={2} y2={0.3} />
+      </g>
+      {off && <line x1={-9} y1={8.5} x2={9} y2={-8.5} stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" />}
+    </svg>
+  );
+}
+
 interface TopBarProps {
   locked: Partial<Record<PanelKey, string>>; // tabs still shut, and when they open (see domain/chapters)
   electionThreshold: number; // support needed to win the next election
@@ -187,6 +202,7 @@ export function TopBar({
   onOpenPanel,
 }: TopBarProps) {
   const [muted, setMutedState] = useState(() => isMuted());
+  const [tipsOn, setTipsOnState] = useState(() => areTipsOn());
   const supportPercent = Math.round(stats.popularity);
   const electionMonths = monthsUntilNextElection(date);
 
@@ -280,7 +296,7 @@ export function TopBar({
               {formatDate(date)}
             </span>
             <button
-              className="top-bar__mute-button"
+              className="top-bar__icon-button"
               onClick={() => {
                 const next = !muted;
                 setMuted(next);
@@ -290,6 +306,18 @@ export function TopBar({
               aria-pressed={muted}
             >
               <SpeakerIcon muted={muted} />
+            </button>
+            <button
+              className="top-bar__icon-button"
+              onClick={() => {
+                setTipsOn(!tipsOn);
+                setTipsOnState(!tipsOn);
+              }}
+              aria-label={tipsOn ? "Turn off hover tips" : "Turn on hover tips"}
+              aria-pressed={!tipsOn}
+              title={tipsOn ? "Hover tips are on. Rest the pointer on something to have it explained. Hold Shift to see a tip at once." : "Hover tips are off. Hold Shift over something to have it explained."}
+            >
+              <TipsIcon off={!tipsOn} />
             </button>
           </div>
 
