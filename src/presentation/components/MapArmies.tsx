@@ -2,7 +2,9 @@
 // regiments in a province, in its colour, with how many stand there. Yours
 // can be picked up and sent somewhere: tap the counter, then a province of
 // yours. A march under way is drawn as a dashed line along the way still to
-// go, and its counter moves along it day by day. While a counter is picked
+// go, and its counter moves along it day by day. Over land the way runs
+// straight from one place to the next; at sea it goes round the coasts
+// (presentation/seaRoutes.ts). While a counter is picked
 // up, pointing at a province shows the way there, and how many days it takes.
 import "./MapArmies.css";
 import { memo, type ReactNode } from "react";
@@ -13,6 +15,7 @@ import { getIslandPeople } from "../../domain/neighbours/treatyRules";
 import { getNation } from "../../domain/nations/nationRules";
 import { getPlace, getProvinceName } from "../../domain/provinces/provinceRules";
 import { StatIcon } from "./StatIcon";
+import { seaWay } from "../seaRoutes";
 
 type Point = { x: number; y: number };
 
@@ -23,6 +26,38 @@ function placePoint(provinceId: string): Point {
   const place = getPlace(provinceId);
   return { x: place?.labelX ?? 0, y: (place?.labelY ?? 0) - COUNTER_RISE };
 }
+
+// The drawn way of one step of a march, from one place to the next.
+function stepPoints(fromId: string, toId: string): Point[] {
+  return [placePoint(fromId), ...(seaWay(fromId, toId) ?? []), placePoint(toId)];
+}
+
+// The point a share t (0 to 1) of the way along, and the way still to go from it.
+function splitAt(points: Point[], t: number): { at: Point; rest: Point[] } {
+  const lengths = points.slice(1).map((p, i) => Math.hypot(p.x - points[i].x, p.y - points[i].y));
+  let left = Math.max(0, Math.min(1, t)) * lengths.reduce((sum, l) => sum + l, 0);
+  for (let i = 0; i < lengths.length; i++) {
+    if (left <= lengths[i] || i === lengths.length - 1) {
+      const f = lengths[i] > 0 ? Math.min(1, left / lengths[i]) : 1;
+      const [a, b] = [points[i], points[i + 1]];
+      const at = { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
+      return { at, rest: [at, ...points.slice(i + 1)] };
+    }
+    left -= lengths[i];
+  }
+  return { at: points[0], rest: points };
+}
+
+// The whole way of a march still to go: from where it is on the step under
+// way (a share t along it) to the end of its route.
+function marchPoints(fromId: string, route: string[], t: number): Point[] {
+  if (route.length === 0) return [placePoint(fromId)];
+  const points = splitAt(stepPoints(fromId, route[0]), t).rest;
+  for (let i = 1; i < route.length; i++) points.push(...stepPoints(route[i - 1], route[i]).slice(1));
+  return points;
+}
+
+const shareDone = (march: NonNullable<Regiment["march"]>) => 1 - march.daysLeft / march.legDays;
 
 interface Stack {
   key: string;
@@ -47,12 +82,7 @@ function stacksOf(regiments: Regiment[], free: ReadonlySet<string>): Stack[] {
       stack.drilling += r.trainingDays > 0 ? 1 : 0;
       continue;
     }
-    let at = placePoint(r.provinceId);
-    if (r.march) {
-      const next = placePoint(r.march.route[0]);
-      const t = 1 - r.march.daysLeft / r.march.legDays;
-      at = { x: at.x + (next.x - at.x) * t, y: at.y + (next.y - at.y) * t };
-    }
+    const at = r.march ? splitAt(stepPoints(r.provinceId, r.march.route[0]), shareDone(r.march)).at : placePoint(r.provinceId);
     stacks.set(key, { key, nationId: r.nationId, provinceId: r.provinceId, at, count: 1, drilling: r.trainingDays > 0 ? 1 : 0, marching: r.march, strength: r.strength });
   }
   // Two countries' counters in one province stand side by side, and beside
@@ -190,7 +220,7 @@ export const ArmyLayer = memo(function ArmyLayer({ regiments, playerNationId, ma
   const lines: ReactNode[] = [];
   for (const stack of stacks) {
     if (!stack.marching || stack.nationId !== playerNationId) continue;
-    const points = [stack.at, ...stack.marching.route.map(placePoint)];
+    const points = marchPoints(stack.provinceId, stack.marching.route, shareDone(stack.marching));
     const end = points[points.length - 1];
     lines.push(
       <g key={`${stack.key}-way`}>
@@ -201,7 +231,7 @@ export const ArmyLayer = memo(function ArmyLayer({ regiments, playerNationId, ma
   }
   let previewLine: ReactNode = null;
   if (marchFrom && preview) {
-    const points = [placePoint(marchFrom), ...preview.route.map(placePoint)];
+    const points = marchPoints(marchFrom, preview.route, 0);
     const end = points[points.length - 1];
     const text = preview.fight
       ? preview.fight.won
