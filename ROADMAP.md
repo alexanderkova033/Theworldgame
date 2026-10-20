@@ -27,7 +27,7 @@ Removed on purpose: the army and recruitment. It had no reachable UI and was dea
 
 ## The road ahead
 
-The game is about both governing a country and power across the map. Each step leaves a better game on its own and sets up the next; the military comes last, once there is something real to fight over.
+The game is about both governing a country and power across the map. Each step leaves a better game on its own and sets up the next; the military came last of the systems, once there was something real to fight over, and the campaigns follow it.
 
 1. **Rough edges in what is there.**
    - [ ] A use for political power when a player only researches (see TODO.md).
@@ -56,6 +56,23 @@ The game is about both governing a country and power across the map. Each step l
    - [x] B. Taking back a lost province: march in, and fight its rebels day by day.
    - [x] C. War over the islands: declare war, sail to an island a neighbour holds, besiege it; war weariness; peace by letter.
    - [x] D. The neighbours make war: a hostile, stronger neighbour may attack your islands, after a warning letter.
+6. **A story for each country, and a calmer screen.** Each nation gets a campaign of its own, told through the chapters the game already has, and the rough edges left by steps 2 to 5 are closed first. One rule runs through the whole step: each thing is shown in one place. A campaign adds no window and no tab. Its story arrives as chapter letters and lives in the objectives box on the map. Built in this order, each phase leaving a note in TODO.md for the next:
+   - [ ] A. Borders that move. The frontier band is worked out from each nation's starting provinces (src/presentation/nationFrontiers.ts), so it still runs round a province that broke away. Work it out from the provinces the country holds now, `lostProvinceIds` taken out, and redraw when that list changes. The same fix covers ports: `nationHasPort` (domain/market/marketRules.ts) asks whether the country still holds a coast, not whether it started with one.
+   - [ ] B. Sea routes round the coast. A sea leg is drawn as a straight line (presentation/components/MapArmies.tsx) and can cross a neighbour's land. Route it through a few sea waypoints off each coast instead, so a ship's way reads as a ship's way. Drawing only: the days at sea stay as they are.
+   - [ ] C. One place for each thing. Things shown twice or three times today, each kept in the one place it belongs:
+     - Support and the months to the vote appear on the nation's label, as the star in the top bar, on the Politics › Support tab, and in the chamber. Keep the top bar and the chamber; the tab drops its badge.
+     - The daily balance appears in the top bar, on the Money › Budget tab and at the head of the budget. Keep the top bar and the budget; the tab drops its badge.
+     - "What needs you" is spread over the advisor row, the map's Next problem button, the "!" on Legend, the "!" on tabs and the objectives box. The advisor row becomes the one list of problems; Next problem walks the map's provinces only; the Legend "!" goes; a tab's "!" stays only for something the advisor row isn't showing.
+     - A full pass over every window for anything else said twice, written down in TODO.md before it is changed. Nothing is removed without a place it can still be found.
+   - [ ] D. Smarter scripted players (tests/support/carefulPlayer.ts), so the measurements behind E and F are worth trusting: one that keeps a garrison on its islands at war, one that chooses Long Reign burdens instead of taking the first offered, and a careless one that really does lose a province (and wins it back).
+   - [ ] E. Losing an island stings, and trade matters. Measure with D, then: buying back an island costs more, and a neighbour won't sell one it settled within the last year (BUY_BACK_BASE_PRICE and treatyRules.ts). The neighbours keep stores of wood, ore and coal from their own land and offer them by letter, so trade is about more than food. Each change is measured and written up in TODO.md like the rest.
+   - [ ] F. Campaign groundwork. A chapter can belong to one nation. Story chapters sit between the chapters that open the game's systems and open nothing themselves, so every system still opens by the month it does today and the difficulty ladder holds. A story chapter can bring a letter with a choice (the decisions system, domain/decisions), a few objectives, and a line for the ending screen. A story beat can lead to the next one (the first event chains from "Alongside the road"). A party gets its own lines where the two parties of a nation would see things differently. No new window: the briefing letter and the objectives box carry it all.
+   - [ ] G. Astravia: the Harvest Republic. A young republic that promised land to the families who farm it. Outline: the founders' land promise falls due in the first spring; a bad harvest year tests the granaries; the Marrow Coast's fishing towns ask for a harbour and a say; a rich island over the water tempts the country to look outward; at the end, the republic's founding day, and whether the promise was kept. The Harvest Union and the Merchants' Assembly answer the land question differently.
+   - [ ] H. Caldenreich: the Chancellor's Kingdom. An old kingdom proud of its schools and its order, with a king growing old. Outline: the king's speech sets out what the crown expects of your government; the academy asks for its share of a growing budget; the Duskhaven coal pits strike; the question of who comes after the king; at the end, a coronation, and what the new reign inherits. The Crown Loyalists and the Reform Circle want different things from the succession.
+   - [ ] I. Veldoria: Smoke and Iron. A small country that industrialised first and meets its troubles first. Outline: the streets come early (its unrest chapter opens sooner, with a balance pass); the foundries want ore the country can't dig; Brindlewood's forests are cut faster than they grow; with so little land, the islands matter more to it than to anyone; at the end, the great exhibition of Veldoria's industry, and what it cost. The Ironworkers' Guild and the National Vanguard read the strikes differently.
+   - [ ] J. Bring TECHNICAL_DESIGN.md up to date with everything above.
+
+   The three outlines are a starting point: each campaign's letters are written and agreed before they are built. Each nation's campaign is its own phase with its own balance pass, so the three can be played and judged one at a time.
 
 Alongside the road, whenever they fit:
 
