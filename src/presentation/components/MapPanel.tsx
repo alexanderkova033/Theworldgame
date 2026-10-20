@@ -1080,13 +1080,9 @@ export const MapPanel = memo(function MapPanel({
   // the map, and toggled from a small corner button instead, HOI4-outliner
   // style.
   const [showLegend, setShowLegend] = useState(false);
-  // Until the legend has been opened once this session, the button points
-  // at it with a "!" whenever a province flag is on the map.
-  const [legendSeen, setLegendSeen] = useState(false);
   // Which map mode is showing — a view choice, not simulation truth.
   const [mapMode, setMapMode] = useState<MapMode>("political");
   const flagCounts = useMemo(() => countFlags(provinceStatus), [provinceStatus]);
-  const anyFlags = Object.values(flagCounts).some((n) => n > 0);
 
   function handleStageMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     const rect = stageRef.current?.getBoundingClientRect();
@@ -1572,19 +1568,11 @@ export const MapPanel = memo(function MapPanel({
         <button
           type="button"
           className={`map-panel__legend-toggle ${showLegend ? "is-active" : ""}`}
-          onClick={() => {
-            setShowLegend((v) => !v);
-            setLegendSeen(true);
-          }}
+          onClick={() => setShowLegend((v) => !v)}
           aria-expanded={showLegend}
-          title={anyFlags && !legendSeen ? "Some provinces are flagged. The legend explains the marks." : undefined}
+          title="What the colours and marks on the map mean"
         >
           Legend
-          {anyFlags && !legendSeen && (
-            <span className="map-panel__legend-badge" aria-label="Provinces flagged">
-              !
-            </span>
-          )}
         </button>
 
         {/* The next province that needs you, worst first: its card opens. */}

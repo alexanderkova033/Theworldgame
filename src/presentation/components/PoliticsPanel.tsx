@@ -840,7 +840,6 @@ export function PoliticsPanel({ state, dispatch, onOpenPanel, section, onSection
             label: "Support",
             icon: <StatIcon type="popularity" size={22} />,
             alert: popularity < getElectionThreshold(state) || getPopularityOutlook(state).target < getElectionThreshold(state),
-            badge: `${popularity}% · ${months} mo`,
             hint: `Election in ${months} months: ${popularity >= getElectionThreshold(state) ? "you'd win today" : "you'd lose today"}`,
           },
           {
@@ -856,7 +855,6 @@ export function PoliticsPanel({ state, dispatch, onOpenPanel, section, onSection
             locked: lockedReason(state, "politics", "unrest") ?? undefined,
             icon: <UnrestStageIcon stage={state.unrestStage} size={22} />,
             alert: state.unrestStage === "strikes" || state.unrestStage === "riots" || Object.values(state.provinces).some((p) => p.uprising),
-            badge: stage.name,
             hint: `${stage.name}: ${stage.effect}`,
           },
           {

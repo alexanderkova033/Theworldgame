@@ -240,7 +240,7 @@ export function TopBar({
           <span className="top-bar__party">{partyName}</span>
           <span className={`top-bar__nation-politics ${supportPercent < electionThreshold ? "is-losing" : ""}`}>
             <NavIcon type="politics" size={15} />
-            {supportPercent}% of {electionThreshold}% · {electionMonths} mo
+            Needs {electionThreshold}% in {electionMonths} mo
           </span>
         </button>
 

@@ -37,7 +37,6 @@ export function MoneyPanel({ state, production, dispatch, onOpenPanel, section, 
             label: "Budget",
             icon: <StatIcon type="treasury" size={22} />,
             alert: production.netTreasury < 0 || isDebtDangerous(state.debt),
-            badge: `${formatSigned(production.netTreasury)}/d`,
             hint: `Net ${formatSigned(production.netTreasury)} ${CURRENCY_SYMBOL} a day after wages and building`,
           },
           {

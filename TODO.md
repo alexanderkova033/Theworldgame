@@ -32,7 +32,13 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 ## Uprisings
 
 - **Borders and ports follow the land held** (step 6, phase A): the frontier and the nation's name are worked out from the provinces held today (`nationShapes` in src/presentation/nationFrontiers.ts, one set per list of lost provinces), and `holdsPort` (domain/market/marketRules.ts) asks whether a mainland coast is still held. Only the player's provinces can be lost, so the neighbours' frontiers never move. A settled island's coast doesn't make a port: it trades through its harbour.
-- **For phase C (one place for each thing):** the repeats found so far are listed in ROADMAP.md step 6, C. The sub-tab badges are set in each window's panel (`badge:` in BuildPanel, MoneyPanel, PoliticsPanel, LawsPanel, ResearchPanel); the advisor row is AdvisorStrip.tsx, fed by getAdvisorOutlook; Next problem walks getTroubledProvinces; the Legend "!" is in MapPanel.tsx.
+- **One place for each thing** (step 6, phase C, 2026-10-20). Cut: the Budget, Support and Unrest tabs' badges (each repeated the top bar), support on the nation's label (the star has it; the label now says what the election needs and when), and the Legend "!". Looked at and left, each for a reason:
+  - Food, people and homes, heating, the treasury and support each appear in the top bar and again at the head of their window (People's cards, the budget, the chamber). That is the figure and its detail, not a repeat.
+  - A province's state (homes full, jobless) shows on the map, on Build's province picker and in People's province table: the map to see, the picker to choose where to build, the table to compare.
+  - The advisor row's "Research idle: 4" and the "!" on each idle Research branch: the row says how many, the tabs say which.
+  - Losing support shows three ways: the star's "!", the red nation label and the Support tab's "!". Each is small; if it still feels loud, the red label is the one to drop.
+  - Badges kept, as nothing else shows them: Build's "N underway", Research's progress per branch, Laws' drafting, Reports' unread count.
+  - The nation's label must stay short: at iPad width (landscape) the seven tabs fit with about 30 px to spare, and a longer label pushes Reports onto a second row.
 - **A lost province can't be won back yet.** Retaking it belongs to the military (roadmap step 5).
 - **Scripted players never lose a province.** Even the sloppy one sends militia within two months, long before a month at full strength. The tests cover breaking away directly (tests/breakaway.test.ts), not through a played game.
 
