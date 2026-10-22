@@ -34,17 +34,8 @@ import { Gauge } from "./Gauge";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 import type { OpenPanel } from "../navigation";
+import { BUILDING_NAMES } from "../names";
 
-const BUILDING_NAMES: Record<ProjectType, [string, string]> = {
-  housing: ["Home", "Homes"],
-  farm: ["Farm", "Farms"],
-  factory: ["Factory", "Factories"],
-  road: ["Road", "Roads"],
-  education: ["School", "Schools"],
-  granary: ["Granary", "Granaries"],
-  cannery: ["Cannery", "Canneries"],
-  harbour: ["Harbour", "Harbours"],
-};
 
 const SECTOR_LABELS: Array<[Sector, string]> = [
   ["food", "Farms & food"],

@@ -8,6 +8,7 @@ import { Modal } from "./Modal";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import { formatSigned } from "../formatNumber";
+import { describeOutcome } from "../storyText";
 
 interface DecisionModalProps {
   state: GameState;
@@ -58,7 +59,8 @@ export function DecisionModal({ state, onResolve, onDismiss }: DecisionModalProp
   if (!decision) return null;
 
   return (
-    <Modal title={decision.title} onClose={onDismiss}>
+    // A story letter must be answered: its choice is the story (domain/chapters).
+    <Modal title={decision.title} onClose={decision.story ? undefined : onDismiss}>
       <div className="decision-modal">
         <div className="decision-modal__icon">
           <DecisionIcon icon={decision.icon} size={36} />
@@ -68,7 +70,7 @@ export function DecisionModal({ state, onResolve, onDismiss }: DecisionModalProp
           {decision.options.map((option) => (
             <button
               key={option.id}
-              className="decision-modal__option"
+              className={`decision-modal__option ${decision.story ? "decision-modal__option--stacked" : ""}`}
               onClick={() => {
                 playSeal();
                 onResolve(decision.id, option.id);
@@ -81,7 +83,7 @@ export function DecisionModal({ state, onResolve, onDismiss }: DecisionModalProp
                     <StatIcon type={icon} size={16} key={`${icon}-${i}`} />
                   ))}
                 </span>
-                {formatEffects(option.effects)}
+                {[formatEffects(option.effects), ...describeOutcome(option.outcome)].filter(Boolean).join(" · ")}
               </span>
             </button>
           ))}

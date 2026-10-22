@@ -2,7 +2,8 @@
 // technologies (scaled by how well each turned out), laws, the governing
 // party's creed, the nation's own character, and law+technology pairs.
 // Every rule that a modifier changes reads it from here.
-import type { GameState } from "../country/types";
+import type { GameDate, GameState, LastingEffect } from "../country/types";
+import { dayNumber } from "../country/calendar";
 import { LAW_NODES } from "../laws/lawData";
 import { getNationEffects } from "../nations/nationEffects";
 import { getParty } from "../parties/partyRules";
@@ -15,7 +16,11 @@ import type { BurdenId } from "../reign/reignData";
 import { getBurdenEffects } from "../reign/reignRules";
 
 export function getModifiers(
-  state: Pick<GameState, "enactedLawIds" | "enactedResearchIds" | "researchOutcomes" | "partyId" | "nationId" | "difficulty"> & { burdens?: BurdenId[] },
+  state: Pick<GameState, "enactedLawIds" | "enactedResearchIds" | "researchOutcomes" | "partyId" | "nationId" | "difficulty"> & {
+    burdens?: BurdenId[];
+    lasting?: LastingEffect[];
+    date?: GameDate;
+  },
 ): Modifiers {
   let mods = neutralModifiers();
   for (const node of RESEARCH_NODES) {
@@ -29,6 +34,9 @@ export function getModifiers(
   for (const synergy of getActiveSynergies(state.enactedLawIds, state.enactedResearchIds)) mods = addModifiers(mods, synergy.effects);
   // A Long Reign's burdens of office (domain/reign).
   if (state.burdens?.length) mods = addModifiers(mods, getBurdenEffects(state.burdens));
+  // A story's choices, for as long as they last (application/storyOutcome.ts).
+  const date = state.date;
+  if (date) for (const l of state.lasting ?? []) if (dayNumber(date) < dayNumber(l.until)) mods = addModifiers(mods, l.effects);
   // The difficulty level sets how fast political power comes (domain/difficulty).
   mods = { ...mods, politicalPowerMultiplier: mods.politicalPowerMultiplier * getDifficulty(state.difficulty).politicalPowerMultiplier };
   return mods;

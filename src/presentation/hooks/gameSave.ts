@@ -121,6 +121,7 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     pendingDecisionId: raw.pendingDecisionId ?? null,
     pendingDemand: raw.pendingDemand ?? null,
     pendingCrisis: raw.pendingCrisis ?? null,
+    lasting: raw.lasting ?? [],
     pendingOffer: raw.pendingOffer ?? null,
     regiments: raw.regiments ?? [],
     wars: raw.wars ?? {},

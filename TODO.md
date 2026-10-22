@@ -91,6 +91,9 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **A story chapter opens nothing**, so the systems' dates and the difficulty ladder stand; but its letter's effects move the numbers, and the scripted player takes the option that raises support most. Each campaign needs its balance pass (tests/balance.test.ts), and its letters agreed before they are built.
 - **Old saves see no story**: `allChaptersOpen` counts every story chapter done. A save from before F loads with no letters waiting.
 - **tests/story.test.ts** tells a two-chapter story of its own to test the mechanism; it adds and removes its entries itself.
+- **An answer's outcome** (F3): `outcome` on a story letter's option (StoryOutcome in domain/decisions/types.ts), applied by application/storyOutcome.ts after its numbers: `groups` (points to a group's backing), `politicalPower`, `build` and `pullDown` (in a named province, free and at once), `order` (a province's local order now), `lasting` (modifiers on the whole country for some days; GameState.lasting, read by getModifiers), `taxRelief`, `rises` (an uprising now), and `crisis` (strikeCrisis, letter and all). The letter lists every one of them in words (presentation/storyText.ts), and a story letter can't be closed unanswered.
+- **A story branches** by giving two chapters the same `after` and opening each on a different choice (their STORY_RULES read the deed), and joins again with `after: [one, other]`.
+- **The scripted player** takes the answer that raises support most, counting the groups it moves by their share of the vote. A campaign's balance pass should also try the other answers (a careful player won't always take the popular one).
 
 ## Process reminders
 

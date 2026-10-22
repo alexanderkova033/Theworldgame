@@ -36,7 +36,7 @@ export interface ChapterData {
   by?: number; // the month (counted from the start) by which it opens whatever happens
   // A story chapter only:
   nation?: string; // the nation whose story it is
-  after?: ChapterId; // it opens only once this chapter is done
+  after?: ChapterId | ChapterId[]; // it opens only once this chapter is done (one of these, when several)
   letter?: string; // a story letter (a decision marked story) sent once the briefing is read
   partyLines?: Record<string, string>; // a line added to the briefing, by the party you lead
   ending?: Record<string, string>; // a line for the ending screen, by the choice made on its letter ("<letter>:<option>")

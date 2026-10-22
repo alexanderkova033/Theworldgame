@@ -47,6 +47,7 @@ import { getElectionThreshold, monthsUntilNextElection } from "../../domain/part
 import { FACTIONS, getFactionWeights } from "../../domain/parties/factionData";
 import { getParty, getRivalParty } from "../../domain/parties/partyRules";
 import type { Ideology, Party } from "../../domain/parties/types";
+import { GROUP_NAMES } from "../names";
 import type { PopularityDriver } from "../../domain/politics/politicsRules";
 import { getDailyPoliticalPower } from "../../domain/politics/politicsRules";
 import { getCrackdownStability } from "../../domain/unrest/unrestRules";
@@ -97,15 +98,6 @@ function DriverIcon({ driver }: { driver: PopularityDriver["key"] }) {
   }
 }
 
-// The groups as people, not "wings".
-const IDEOLOGY_GROUPS: Record<Ideology, string> = {
-  Agrarian: "Farmers",
-  Commercial: "Merchants",
-  Traditionalist: "Traditionalists",
-  Progressive: "Progressives",
-  Labor: "Workers",
-  Nationalist: "Nationalists",
-};
 
 function CheckIcon() {
   return (
@@ -262,7 +254,7 @@ function Chamber({
           onMouseEnter={() => onFocus(seat.ideology)}
         >
           <title>
-            {IDEOLOGY_GROUPS[seat.ideology]}: {seat.yours ? party.name : rival.name}
+            {GROUP_NAMES[seat.ideology]}: {seat.yours ? party.name : rival.name}
           </title>
         </circle>
       ))}
@@ -518,7 +510,7 @@ function VotersView({ state, dispatch }: { state: GameState; dispatch: Dispatch 
             return (
               <div className="politics-group" key={ideology}>
                 <span className="politics-group__name">
-                  {IDEOLOGY_GROUPS[ideology]}
+                  {GROUP_NAMES[ideology]}
                   {isYours && (
                     <span className="politics-group__tag" style={{ borderColor: party.color, color: inked(party.color) }}>
                       your base
@@ -536,13 +528,13 @@ function VotersView({ state, dispatch }: { state: GameState; dispatch: Dispatch 
                     max={100}
                     segments={withPreview(approval, approval >= getElectionThreshold(state) ? "good" : approval >= 40 ? "warn" : "bad", gain, 100)}
                     markers={[{ at: getElectionThreshold(state) }]}
-                    label={`${IDEOLOGY_GROUPS[ideology]}: ${approval}% back you`}
+                    label={`${GROUP_NAMES[ideology]}: ${approval}% back you`}
                   />
                 </span>
                 <span className="politics-group__approval">
                   {approval}%{gain ? <span className="politics-group__gain">+{gain}</span> : null}
                 </span>
-                <Previewing onPreview={(on) => setCourting(on ? ideology : null)} title={`Court the ${IDEOLOGY_GROUPS[ideology]}: their support +${COURT_SUPPORT}`}>
+                <Previewing onPreview={(on) => setCourting(on ? ideology : null)} title={`Court the ${GROUP_NAMES[ideology]}: their support +${COURT_SUPPORT}`}>
                   <button
                     type="button"
                     className="politics-group__court"

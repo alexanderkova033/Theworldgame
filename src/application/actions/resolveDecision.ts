@@ -6,6 +6,7 @@ import { getDecision } from "../../domain/decisions/decisionRules";
 import { applyFactionEffects, getFactionWeights } from "../../domain/parties/factionRules";
 import { syncProvinces } from "../../domain/provinces/provincePopulation";
 import { ONE_OFF, recordAction } from "./recordAction";
+import { applyStoryOutcome } from "../storyOutcome";
 
 // Picking an option resolves the popup: applies that option's one-time
 // deltas, logs it to history (for the Politics panel) and the event log,
@@ -26,8 +27,7 @@ export function resolveDecision(state: GameState, decisionId: string, optionId: 
   );
   // A story letter's choice is remembered, for the chapters after it and the ending.
   const remembered = decision.story ? recordDeed(state, choiceDeed(decisionId, optionId)) : state;
-  // A decision that moves people (an epidemic, cleared camps) moves them in every province.
-  return syncProvinces(recordAction(state, {
+  const resolved: GameState = {
     ...remembered,
     pendingDecisionId: null,
     decisionHistory: [
@@ -53,7 +53,11 @@ export function resolveDecision(state: GameState, decisionId: string, optionId: 
       },
       ...state.events,
     ],
-  }, ONE_OFF));
+  };
+  // A story letter's answer may change much more (application/storyOutcome.ts).
+  const after = option.outcome ? applyStoryOutcome(resolved, option.outcome) : resolved;
+  // A decision that moves people (an epidemic, cleared camps) moves them in every province.
+  return syncProvinces(recordAction(state, after, ONE_OFF));
 }
 
 // Closing the popup without picking either option — the decision passes

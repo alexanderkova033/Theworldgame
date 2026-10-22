@@ -99,7 +99,7 @@ export function advanceChapters(state: GameState): GameState {
   for (const chapter of chaptersFor(state.nationId)) {
     if (chapters.opened.includes(chapter.id)) continue;
     // A story's next chapter waits for the one before it.
-    if (chapter.after && !chapters.done.includes(chapter.after)) continue;
+    if (chapter.after && ![chapter.after].flat().some((id) => chapters.done.includes(id))) continue;
     const due = chapter.by !== undefined && month >= chapter.by;
     if (!due && !isDue(state, chapter.id, month, monthStart)) continue;
     chapters = { ...chapters, opened: [...chapters.opened, chapter.id], unread: [...chapters.unread, chapter.id] };

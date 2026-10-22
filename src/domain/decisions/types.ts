@@ -1,5 +1,9 @@
 import type { Feature } from "../chapters/chapterData";
+import type { ProjectType } from "../construction/types";
 import type { GameDate, GameState } from "../country/types";
+import type { CrisisKind } from "../crises/types";
+import type { Ideology } from "../parties/types";
+import type { ModifierEffects } from "../policy/modifiers";
 
 // Political decisions: unlike laws (deliberate, tree-gated) or random world
 // events (automatic, no choice), a decision pops up unpredictably and
@@ -13,10 +17,25 @@ export interface DecisionEffects {
   popularityDelta?: number;
 }
 
+// What a story letter's answer does beyond the numbers above (see
+// application/storyOutcome.ts): enough to change the country, not just nudge it.
+export interface StoryOutcome {
+  groups?: Partial<Record<Ideology, number>>; // a group's backing moves by this many points
+  politicalPower?: number;
+  build?: Array<{ provinceId: string; type: ProjectType; count: number }>; // raised at once, free
+  pullDown?: Array<{ provinceId: string; type: ProjectType; count: number }>;
+  order?: Array<{ provinceId: string; change: number }>; // its local order, now
+  lasting?: { effects: ModifierEffects; days: number; why: string }; // on the whole country, for a while
+  rises?: string; // this province rises against the government
+  crisis?: { provinceId: string; kind: CrisisKind }; // a crisis strikes there, letter and all
+  taxRelief?: { provinceId: string; days: number }; // it pays no taxes for a while
+}
+
 export interface DecisionOption {
   id: string;
   label: string;
   effects: DecisionEffects;
+  outcome?: StoryOutcome;
 }
 
 export interface DecisionDefinition {

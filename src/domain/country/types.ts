@@ -8,6 +8,7 @@ import type { Expedition } from "../expeditions/types";
 import type { Difficulty } from "../difficulty/difficultyData";
 import type { Ledger } from "../ledger/types";
 import type { Ideology } from "../parties/types";
+import type { ModifierEffects } from "../policy/modifiers";
 import type { PlacedBuilding, ProvinceState } from "../provinces/types";
 import type { ResearchCategory, ResearchOutcomeTier } from "../research/types";
 import type { ResourceBundle } from "../resources/types";
@@ -86,6 +87,13 @@ export type EventTopic =
   | "chapter" // a chapter opening or completed (see domain/chapters)
   | "crisis"; // a flood, a worked-out seam... striking a province, or ending (see domain/crises)
 
+// An effect a choice lays on the whole country, until a day.
+export interface LastingEffect {
+  why: string; // what it came from, in a few words
+  effects: ModifierEffects;
+  until: GameDate;
+}
+
 export interface GameEvent {
   id: string;
   date: GameDate;
@@ -152,6 +160,7 @@ export interface GameState {
   researchPathsFinished: Record<string, GameDate>; // a research path's key: the day its capstone was finished (see researchRules.ts)
   pendingDemand: Demand | null; // a province's letter waiting for an answer (see domain/uprising/demandRules.ts)
   pendingCrisis: string | null; // the province whose crisis letter waits for an answer (see domain/crises)
+  lasting: LastingEffect[]; // effects a story's choices lay on the country for a while (see application/storyOutcome.ts)
   lostProvinceIds: string[]; // provinces that broke away after an uprising: no longer the country's (see domain/uprising)
   settlements: Settlement[]; // settler ships on their way to islands (see domain/islands)
   settledIslandIds: string[]; // islands settled: held and governed like provinces

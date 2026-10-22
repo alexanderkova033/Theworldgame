@@ -213,7 +213,11 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
     }
     if (s.pendingDecisionId) {
       const decision = getDecision(s.pendingDecisionId)!;
-      const best = [...decision.options].sort((a, b) => (b.effects.popularityDelta ?? 0) - (a.effects.popularityDelta ?? 0))[0];
+      // What an answer does to support: its own, and through the groups it moves.
+      const weights = getFactionWeights(s.nationId);
+      const support = (o: (typeof decision.options)[number]) =>
+        (o.effects.popularityDelta ?? 0) + Object.entries(o.outcome?.groups ?? {}).reduce((sum, [g, d]) => sum + d * weights[g as keyof typeof weights], 0);
+      const best = [...decision.options].sort((a, b) => support(b) - support(a))[0];
       s = resolveDecision(s, decision.id, best.id);
     }
 
