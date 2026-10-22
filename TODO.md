@@ -76,6 +76,14 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **The neighbours never fight each other**, and never take a province on the mainland: both are out of scope (ROADMAP step 5).
 - **The browser check:** run tests/support scripts or the iPad driver from PowerShell (Start-Process), not from Git Bash in the background: from Git Bash the driver hung and looked like a frozen page.
 
+## Province crises (step 6, F2)
+
+- **Rules in domain/crises, run in application/day/crises.ts** (the last step of the day: crises end, an untended fever spreads, and on the 1st one may strike), answered in application/actions/crisisActions.ts. A crisis lives on its province (`crisis`); what outlasts it does too (`diked`, `seamYield`). A flood's farms are `condition: "ruined"`: out of use and not repairable, like "seized", until the flood ends.
+- **Production** goes through `getLandProduction` (crisisRules.ts), the land's goods less what crises take; the province card uses `getProvinceYield`.
+- **The scripted player reads its briefings now** (it never did, so the chapter letters piled up unread). That alone changed the dice of every balance game; the crisis roll waits until no letter is open.
+- **Fever is rare** (one or two in nine careful games): only a province with 5% of its people homeless can catch it, and a careful player keeps homes ahead. The campaigns can strike one on purpose.
+- **For F3 and the campaigns:** `strikeCrisis(state, provinceId, kind)` (application/day/crises.ts) starts one on purpose, letter and all.
+
 ## The campaigns: how a story is written (step 6, F onwards)
 
 - **A story chapter is four entries:** its words in `STORY_CHAPTERS` (domain/chapters/chapterData.ts: `nation`, `after` for the chapter it follows, `by` for the month it opens at the latest, `letter`, `partyLines`, `ending`), its rules in `STORY_RULES` (application/chapters.ts: what opens it besides its date, and a check for each objective), where each objective is done in `STORY_DESTINATIONS` (presentation/navigation.ts), and its letter in `DECISIONS` with `story: true`, so it is never drawn at random.

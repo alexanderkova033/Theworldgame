@@ -6,6 +6,7 @@ import type { ProjectType } from "../construction/types";
 import type { GameDate } from "../country/types";
 import type { UnrestStage } from "../unrest/types";
 import type { Uprising } from "../uprising/types";
+import type { Crisis } from "../crises/types";
 
 // Cosmetic only — drives which decorative texture the map draws over a
 // province. Has no effect on the simulation.
@@ -54,6 +55,9 @@ export interface ProvinceState {
   disputeUntil: GameDate | null; // a refused demand: until this day its mood sits well below the nation's
   payRiseUntil: GameDate | null; // a pay rise granted: until this day the country pays its workers more
   taxReliefUntil: GameDate | null; // rebels' terms met: until this day it pays no taxes
+  crisis: Crisis | null; // a flood, a worked-out seam... striking it now (see domain/crises)
+  diked: boolean; // a dike stands: it floods no more
+  seamYield: number; // the share of its ore and coal its hills still give (1 until a seam runs out)
 }
 
 // A completed building, remembered so the map can show where it is.
@@ -63,6 +67,6 @@ export interface PlacedBuilding {
   id: string;
   provinceId: string;
   type: ProjectType;
-  condition?: "broken" | "repairing" | "seized"; // seized: held by a province that has risen (see domain/uprising)
+  condition?: "broken" | "repairing" | "seized" | "ruined"; // seized: held by a province that has risen (see domain/uprising); ruined: by a crisis, until it is put right (domain/crises)
   repairDaysRemaining?: number;
 }

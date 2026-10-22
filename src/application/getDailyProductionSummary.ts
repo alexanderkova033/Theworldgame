@@ -17,12 +17,12 @@ import { getModifiers } from "../domain/policy/policyRules";
 import { calculateDailyPoliticalPower } from "../domain/politics/politicsRules";
 import { getResearchRates } from "../domain/research/researchRules";
 import type { ResearchCategory } from "../domain/research/types";
-import { calculateDailyProduction } from "../domain/resources/resourceRules";
+import { getLandProduction } from "../domain/crises/crisisRules";
 import type { ResourceBundle } from "../domain/resources/types";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
 import { getDailySalaries } from "../domain/workforce/workforceRules";
 import { getArmyPay } from "../domain/military/militaryRules";
-import { getColonyAccounts, getGrazingFood, getProducingTerrains } from "../domain/islands/islandRules";
+import { getColonyAccounts, getGrazingFood } from "../domain/islands/islandRules";
 
 export interface DailyProductionSummary {
   taxIncome: number;
@@ -67,7 +67,7 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const foodProduced = farmFood + processedFood;
   const foodConsumed = consumeFood(state.stats, mods);
 
-  const rawProduction = calculateDailyProduction(getProducingTerrains(state), season);
+  const rawProduction = getLandProduction(state, season);
   const colonies = getColonyAccounts(state);
   const colonyIncome = colonies.supply + colonies.salt;
   const armyPay = getArmyPay(state.regiments, state.nationId);

@@ -34,6 +34,9 @@ export function newProvinceState(population: number, stability: number): Provinc
     disputeUntil: null,
     payRiseUntil: null,
     taxReliefUntil: null,
+    crisis: null,
+    diked: false,
+    seamYield: 1,
   };
 }
 

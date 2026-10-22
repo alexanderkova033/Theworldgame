@@ -56,6 +56,7 @@ import { getNation } from "../domain/nations/nationRules";
 import { moveSupport } from "./day/support";
 import { generateMonthlyReport } from "./generateMonthlyReport";
 import { advanceChapters, sendStoryLetter } from "./chapters";
+import { runCrises } from "./day/crises";
 import { getOwnedProvinceIds } from "../domain/provinces/provinceRules";
 
 export function simulateDay(state: GameState): GameState {
@@ -236,8 +237,9 @@ export function simulateDay(state: GameState): GameState {
   const endStats: CountryStats = { ...finalStats, population: Math.max(0, finalStats.population + retakenPeople + islandPeople) };
   const neighbourMonth = runNeighbours(day, working, date);
 
-  // A story letter waiting goes out once no other letter is open.
-  return advanceChapters(sendStoryLetter({
+  // A story letter waiting goes out once no other letter is open; then
+  // crises end, spread, or strike (see day/crises.ts).
+  return advanceChapters(sendStoryLetter(runCrises({
     ...working,
     date,
     // A choice of burdens stops the clock until one is taken.
@@ -274,5 +276,5 @@ export function simulateDay(state: GameState): GameState {
     pendingLedger: emptyLedger(),
     lastDayLedger: mergeLedgers(delta.ledger ?? emptyLedger(), day.late),
     monthlyReports,
-  }));
+  })));
 }

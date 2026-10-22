@@ -412,6 +412,40 @@ export const NEIGHBOUR_STORE_PER_PROVINCE = 3; // a month, of wood from each for
 export const NEIGHBOUR_COAL_PER_HILLS = 2; // ...and of coal from the pits in each of its hills
 export const NEIGHBOUR_STORE_CAP = 40; // the most of each it keeps
 
+// Province crises (see domain/crises).
+export const CRISIS_FROM_MONTH = 6; // none before the first summer
+export const CRISIS_CHANCE_PER_MONTH = 0.22; // a month, while no other letter waits: about one a year
+export const CRISIS_WEIGHTS = { flood: 3, seam: 2, felling: 2, fever: 3, fishing: 1 }; // how likely each kind is, among those a country is open to
+export const CRISIS_UNREST = 8; // how far below the nation's a province's mood sits while a crisis lasts
+export const CROWDED_SHARE = 0.05; // a province with this share of its people homeless is crowded: fever finds it
+export const FLOOD_HOMES_SHARE = 0.5; // of a flooded province's homes washed away...
+export const FLOOD_FOOD_SHARE = 0.05; // ...and of the country's food spoiled
+export const FLOOD_DIKE_COST = 1200; // a dike: never floods again...
+export const FLOOD_DIKE_WOOD = 30;
+export const FLOOD_DIKE_DAYS = 90; // ...and its farms and homes back when it stands
+export const FLOOD_REBUILD_COST = 500; // rebuilt as it was, sooner, and it can flood again
+export const FLOOD_REBUILD_DAYS = 30;
+export const FLOOD_LEFT_DAYS = 150; // left to its people: the farms come back by themselves, the homes don't...
+export const FLOOD_LEFT_UNREST = 20; // ...and its mood sinks while they do
+export const SEAM_SHAFT_COST = 2000; // a deeper shaft...
+export const SEAM_SHAFT_DAYS = 120;
+export const SEAM_SHAFT_YIELD = 0.5; // ...brings back this share of its ore and coal
+export const SEAM_RETOOL_COST = 1000; // keeps its works open; closing the pits shuts one
+export const FELLING_DAYS = 720; // a forest felled bare grows back by itself in two years...
+export const FELLING_REPLANT_COST = 800;
+export const FELLING_REPLANT_DAYS = 360; // ...or in one, replanted
+export const FEVER_FIRST_DEATHS = 0.03; // of a province's people, as a fever strikes...
+export const FEVER_DEATHS_PER_MONTH = 0.02; // ...and each month it is left alone
+export const FEVER_QUARANTINE_DAYS = 60;
+export const FEVER_QUARANTINE_UNREST = 15;
+export const FEVER_DOCTORS_COST = 900;
+export const FEVER_DOCTORS_DAYS = 30;
+export const FEVER_LEFT_DAYS = 90; // left alone, it lasts this long...
+export const FEVER_SPREAD_DAYS = 30; // ...and after this, reaches a province next door
+export const FISHING_DAYS = 360; // fishing grounds failed come back in a year
+export const FISHING_BOATS_COST = 600; // boats sent further out...
+export const FISHING_BOATS_YIELD = 0.5; // ...bring back this share of the catch meanwhile
+
 // Treaties (see domain/neighbours/treatyRules.ts).
 export const ACCORD_COST = 1500; // an island accord: they send no settlers...
 export const ACCORD_DAYS = 720; // ...for two years

@@ -21,6 +21,11 @@ import { JobsIcon, UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 import { ArmyLayer, type MarchPreview } from "./MapArmies";
+import { CrisisIcon } from "./CrisisIcon";
+import { CRISIS_HINTS, CRISIS_NAMES } from "../crisisText";
+import type { CrisisKind } from "../../domain/crises/types";
+
+const CRISIS_KINDS: CrisisKind[] = ["flood", "seam", "felling", "fever", "fishing"];
 import { areTipsOn, TIP_REST_MS, TIP_REST_SLOP } from "../tipPreference";
 import type { FreeProvince } from "../../domain/military/battleRules";
 import type { Regiment } from "../../domain/military/types";
@@ -416,7 +421,7 @@ function ModeSwatch({ level }: { level: ModeLevel }) {
   );
 }
 
-type FlagKey = "homesFull" | "homesOver" | "jobsShort" | "jobsJobless" | "discontent" | "strikes" | "riots" | "risen";
+type FlagKey = "homesFull" | "homesOver" | "jobsShort" | "jobsJobless" | "discontent" | "strikes" | "riots" | "risen" | CrisisKind;
 
 // The legend's key to the province flags — drawn with the very glyphs the
 // info bars use.
@@ -439,11 +444,13 @@ const FLAG_LEGEND: Array<{ key: FlagKey; label: string; hint: string; glyph: Rea
     hint: "Risen against the government: rebels hold its farms and works, and it pays no taxes. Send in the militia from Politics, Unrest.",
     glyph: <StatIcon type="uprising" size={22} />,
   },
+  ...CRISIS_KINDS.map((kind) => ({ key: kind, label: CRISIS_NAMES[kind], hint: CRISIS_HINTS[kind], glyph: <CrisisIcon kind={kind} size={22} /> })),
 ];
 
 function countFlags(status: Record<string, ProvinceStatus>): Record<FlagKey, number> {
-  const counts: Record<FlagKey, number> = { homesFull: 0, homesOver: 0, jobsShort: 0, jobsJobless: 0, discontent: 0, strikes: 0, riots: 0, risen: 0 };
+  const counts: Record<FlagKey, number> = { homesFull: 0, homesOver: 0, jobsShort: 0, jobsJobless: 0, discontent: 0, strikes: 0, riots: 0, risen: 0, flood: 0, seam: 0, felling: 0, fever: 0, fishing: 0 };
   for (const s of Object.values(status)) {
+    if (s.crisis) counts[s.crisis]++;
     if (s.homes === "over") counts.homesOver++;
     if (s.homes === "full") counts.homesFull++;
     if (s.jobs === "jobless") counts.jobsJobless++;
@@ -928,11 +935,12 @@ const MapLayers = memo(function MapLayers({
       }
       const buildingTypes = [...counts.keys()];
       // Held by rebels is not broken: the banner says why they stand idle.
-      const brokenCount = buildings.filter((b) => !isWorking(b) && b.condition !== "seized").length;
+      const brokenCount = buildings.filter((b) => !isWorking(b) && b.condition !== "seized" && b.condition !== "ruined").length;
       // Only what's wrong gets a flag: tight or overflowing homes, short
       // or idle hands, unrest. A quiet province shows none.
       const status = provinceStatus[province.id];
-      const flags: Array<"homes" | "jobs" | "stage"> = [];
+      const flags: Array<"crisis" | "homes" | "jobs" | "stage"> = [];
+      if (status?.crisis) flags.push("crisis");
       if (status && status.homes !== "ok") flags.push("homes");
       if (status && status.jobs !== "ok") flags.push("jobs");
       if (status && status.stage !== "calm") flags.push("stage");
@@ -984,6 +992,7 @@ const MapLayers = memo(function MapLayers({
           )}
           {flags.map((flag, index) => {
             const cx = barX + itemWidth * (lead + shownTypes.length + (brokenCount > 0 ? 1 : 0) + index) + itemWidth / 2 + 3;
+            if (flag === "crisis") return <CrisisIcon key={flag} kind={status.crisis!} size={15} x={cx} y={itemCenterY} />;
             if (flag === "stage") {
               return (
                 <g key={flag} transform={`translate(${cx - 7} ${itemCenterY - 7})`}>

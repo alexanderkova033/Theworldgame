@@ -47,7 +47,7 @@ Four levels, chosen before the nation. Each changes only what its card says, and
 | Hard (Chancellor) | 52, 56, 60% | more | −15% | nothing extra | stronger | 1.5× | 1 |
 | Ruthless (Iron Chancellor) | 54, 58, 62% | much more | −30% | half the food | much stronger | 2× | 0 |
 
-"Bad luck" scales the losses from random events and how often buildings break down.
+"Bad luck" scales the losses from random events and how often buildings break down. Crises strike half as often on Easy, a quarter more on Hard and half as often again on Ruthless.
 
 ## Chapters
 
@@ -155,6 +155,20 @@ Falling stability brings stages before collapse: discontent slows industry, stri
 **Demands.** Unrest isn't only want. Now and then the workers of a province with factories write asking for a pay rise, however well it is doing. Granted, the country pays them 3 Cr a day more for a year and the province calms. Refused, they down tools: for four months the province's mood sits 35 points below the nation's, which means strikes in a steady country and riots, perhaps an uprising, in a shaky one. Two weeks after rising, and two months after each refusal, rebels send their terms: a pardon (30 political power, 3 support with every group) or a year without taxes from the province. Either ends the uprising in peace, with no grievance; refusing hardens it by 10 strength. A letter must be answered.
 
 **Left alone, it spreads, and can be lost.** From rebel strength 70, the provinces next door grow restless: their mood sits 15 points below the nation's. Held at full strength (100) for a month, a province breaks away and declares itself free: its people, homes and works are lost to you, and the map shows it as free land. If the capital breaks away, the government falls. The countdown is shown on the Unrest page, the province card and the advisor from the day it starts. Once the army is open, a lost province can be taken back (see The army).
+
+## Province crises
+
+From the sixth month, about once a year, trouble strikes one province, chosen by its land and its state. A letter names the province and must be answered (every crisis has a free answer); meanwhile its mood sits 8 below the nation's. It shows as a mark on the province's strip on the map, a line on its card, and in the legend, and Next problem goes to it.
+
+| Crisis | Where | What it does | Answers |
+|---|---|---|---|
+| **The river floods** | plains and coast, spring or autumn | its farms under water, half its homes washed away, 5% of the food spoiled | a **dike** (1,200 Cr and 30 wood: back in 90 days, and it floods no more), **rebuild** (500 Cr: back in 30 days), or **leave it** (free: farms back in 150 days, the homes never, and its mood 20 lower meanwhile) |
+| **The seam runs out** | hills | no ore or coal from it | a **deeper shaft** (2,000 Cr: half back in 120 days), **retool** the works (1,000 Cr: the works stay, the pits stay empty), or **close the pits** (free: a works closes, its workers look elsewhere) |
+| **A forest felled bare** | forest | no wood from it | **replant** (800 Cr: back in a year), or let it **grow back** (free: two years) |
+| **Fever** | a province with 5% of its people homeless | 3% of them die | **doctors** (900 Cr: over in 30 days), **quarantine** (free: 60 days, its mood 15 lower), or **let it run** (free: 2% more die each month for 90 days, and it spreads next door after 30) |
+| **The fishing grounds fail** | coast | no fish from it for a year | send the **boats** further out (600 Cr: half the catch), or **wait** |
+
+The kind is drawn by weight (floods and fever likeliest, failed fishing least), so a coast doesn't only ever lose its fish. Measured 2026-10-22 over nine five-year games: about 1.1 crises a year; a careful player, who pays for the lasting answer when it can spare the money, wins every game; a sloppy one, who takes the free answer, wins 1 in 9 on Normal.
 
 ## The army
 

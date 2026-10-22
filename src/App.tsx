@@ -9,7 +9,7 @@ import { NATIONS } from "./domain/nations/nationData";
 import type { GameSpeed } from "./domain/country/types";
 import { getElectionThreshold } from "./domain/parties/electionRules";
 import { getPartiesForNation, getParty } from "./domain/parties/partyRules";
-import { acceptOffer, answerDemand, declineOffer, dismissDecision, resolveDecision } from "./application/actions";
+import { acceptOffer, answerCrisis, answerDemand, declineOffer, dismissDecision, resolveDecision } from "./application/actions";
 import { OfferLetter } from "./presentation/components/OfferLetter";
 import { ArmyPanel } from "./presentation/components/ArmyPanel";
 import { UltimatumLetter } from "./presentation/components/UltimatumLetter";
@@ -31,6 +31,7 @@ import { playBreakthrough, playDanger, playGameOver, playLetter, playSeal } from
 import { AdvisorStrip } from "./presentation/components/AdvisorStrip";
 import { DecisionModal } from "./presentation/components/DecisionModal";
 import { DemandLetter } from "./presentation/components/DemandLetter";
+import { CrisisLetter } from "./presentation/components/CrisisLetter";
 import { BuildPanel } from "./presentation/components/BuildPanel";
 import { EventLog } from "./presentation/components/EventLog";
 import { ExpeditionPanel } from "./presentation/components/ExpeditionPanel";
@@ -196,13 +197,13 @@ function App() {
   // from it, through a string key so they only change identity when a
   // province actually tips (keeps the memoized map from redrawing daily).
   const provinceOverview = useMemo(() => (state ? getProvinceOverview(state) : []), [state]);
-  const provinceStatusKey = provinceOverview.map((o) => { const s = getProvinceStatus(o); return `${o.id}:${s.homes}:${s.jobs}:${s.stage}:${s.risen}`; }).join(",");
+  const provinceStatusKey = provinceOverview.map((o) => { const s = getProvinceStatus(o); return `${o.id}:${s.homes}:${s.jobs}:${s.stage}:${s.risen}:${s.crisis ?? ""}`; }).join(",");
   const provinceStatus = useMemo(
     () =>
       Object.fromEntries(
         (provinceStatusKey ? provinceStatusKey.split(",") : []).map((entry) => {
-          const [id, homes, jobs, stage, risen] = entry.split(":");
-          return [id, { homes, jobs, stage, risen: risen === "true" } as ProvinceStatus];
+          const [id, homes, jobs, stage, risen, crisis] = entry.split(":");
+          return [id, { homes, jobs, stage, risen: risen === "true", crisis: crisis || null } as ProvinceStatus];
         }),
       ),
     [provinceStatusKey],
@@ -356,6 +357,14 @@ function App() {
     playLetter();
     setOpenModal(null);
   }, [demandKey]);
+
+  // A province's crisis letter, the same way (see CrisisLetter).
+  const crisisKey = state?.pendingCrisis ? `${state.pendingCrisis}:${state.provinces[state.pendingCrisis]?.crisis?.kind}` : null;
+  useEffect(() => {
+    if (!crisisKey) return;
+    playLetter();
+    setOpenModal(null);
+  }, [crisisKey]);
 
   // No game yet: pick a save slot, then a nation, then a party, then the
   // game itself starts. Nation/party are permanent — there is no
@@ -631,7 +640,7 @@ function App() {
         />
       )}
       {/* A neighbour's trade offer waits behind every other letter. */}
-      {state.chapters.unread.length === 0 && !state.burdenOffer && !state.pendingDecisionId && !state.pendingDemand && !(state.ultimatum && !state.ultimatum.answered) && (
+      {state.chapters.unread.length === 0 && !state.burdenOffer && !state.pendingDecisionId && !state.pendingDemand && !state.pendingCrisis && !(state.ultimatum && !state.ultimatum.answered) && (
         <OfferLetter
           state={state}
           onAccept={() => {
@@ -650,6 +659,16 @@ function App() {
           state={state}
           onAnswer={(choice) => {
             dispatch((s) => answerDemand(s, choice));
+            resume();
+          }}
+        />
+      )}
+      {/* A province's crisis waits behind its other letters; it must be answered. */}
+      {state.chapters.unread.length === 0 && !state.burdenOffer && !state.pendingDecisionId && !state.pendingDemand && (
+        <CrisisLetter
+          state={state}
+          onAnswer={(answer) => {
+            dispatch((s) => answerCrisis(s, answer));
             resume();
           }}
         />

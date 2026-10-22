@@ -4,7 +4,7 @@ import "./RepairsPanel.css";
 import { canRepairBuilding, repairBuilding } from "../../application/actions";
 import { REPAIR_DAYS } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
-import { getRepairCost, isWorking } from "../../domain/maintenance/maintenanceRules";
+import { getRepairCost } from "../../domain/maintenance/maintenanceRules";
 import { getModifiers } from "../../domain/policy/policyRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { playRepair } from "../audio/sound";
@@ -23,7 +23,8 @@ export function WrenchIcon({ size = 14 }: { size?: number }) {
 }
 
 export function RepairsPanel({ state, dispatch }: { state: GameState; dispatch: (action: (state: GameState) => GameState) => void }) {
-  const damaged = state.placedBuildings.filter((b) => !isWorking(b));
+  // Broken or under repair; not held by rebels or ruined by a crisis, which come back by themselves.
+  const damaged = state.placedBuildings.filter((b) => b.condition === "broken" || b.condition === "repairing");
   if (damaged.length === 0) return null;
   const repairCostMultiplier = getModifiers(state).repairCostMultiplier;
 

@@ -24,3 +24,4 @@ export { canFoundSettlement, canSendMoreSettlers, foundSettlement, sendMoreSettl
 export { buildHarbour } from "./buildHarbour";
 export { acceptOffer, canAcceptOffer, declineOffer } from "./tradeActions";
 export { buyBackIsland, canBuyBackIsland, canSignAccord, signIslandAccord } from "./treatyActions";
+export { answerCrisis, canAnswerCrisis, getCrisisAnswers } from "./crisisActions";

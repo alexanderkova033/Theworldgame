@@ -13,6 +13,9 @@ import { getFactionWeights } from "../../src/domain/parties/factionRules";
 import { repairBuilding } from "../../src/application/actions/repairBuilding";
 import { canRaiseMilitia, canSendMilitia, raiseMilitia, sendMilitia } from "../../src/application/actions/militiaActions";
 import { answerDemand, canAnswerDemand } from "../../src/application/actions/demandActions";
+import { answerCrisis, canAnswerCrisis, getCrisisAnswers } from "../../src/application/actions/crisisActions";
+import { getAnswerCost } from "../../src/domain/crises/crisisRules";
+import type { CrisisAnswer } from "../../src/domain/crises/types";
 import { acceptOffer, canAcceptOffer, declineOffer } from "../../src/application/actions/tradeActions";
 import { buyBackIsland, canBuyBackIsland, canSignAccord, signIslandAccord } from "../../src/application/actions/treatyActions";
 import { getBuyBackPrice } from "../../src/domain/neighbours/treatyRules";
@@ -53,6 +56,7 @@ import { RESEARCH_NODES } from "../../src/domain/research/researchData";
 import { getResearchNodeStatus } from "../../src/domain/research/researchRules";
 import type { ResearchCategory } from "../../src/domain/research/types";
 import { takeBurden } from "../../src/application/actions/burdenActions";
+import { readBriefing } from "../../src/application/chapters";
 
 export const NATIONS: Array<[nation: string, party: string]> = [
   ["astravia", "astravia-harvest-union"],
@@ -146,6 +150,8 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
   const route = follow ? pathRoute(follow.tree, follow.pathKey) : [];
   const area = follow?.tree === "research" ? (RESEARCH_NODES.find((n) => n.id === route[1])!.category as ResearchCategory) : null;
   for (let day = 0; day < days && !s.isGameOver; day++) {
+    // A chapter's letter is read as it comes (and a story letter follows it).
+    for (const id of s.chapters.unread) s = readBriefing(s, id);
     if (s.burdenOffer) s = takeBurden(s, chooseBurden(s.burdenOffer, sloppy));
     const production = getDailyProductionSummary(s);
     const nextLaw = follow?.tree === "law" ? getLawNode(route.find((id) => !s.enactedLawIds.includes(id)) ?? "") : undefined;
@@ -193,6 +199,10 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
           : neglect ? "refuse" : !sloppy && canAnswerDemand(s, "amnesty") ? "amnesty" : "taxRelief";
       s = answerDemand(s, answer);
     }
+    // A crisis in a province. A careful player pays for the lasting answer
+    // when it has money to spare (buying wood for a dike), else the cheaper
+    // one; a sloppy one takes whatever costs nothing.
+    if (s.pendingCrisis) s = answerCrisisAs(s, sloppy);
     // A province that has risen: raise companies and send them in. A sloppy
     // player only gets round to it after two months of losing it; a
     // neglectful one never does.
@@ -258,6 +268,21 @@ function settleIslands(state: GameState): GameState {
     }
   }
   return s;
+}
+
+const CAREFUL_ANSWERS: CrisisAnswer[] = ["dike", "rebuild", "shaft", "retool", "replant", "doctors", "quarantine", "boats"];
+
+function answerCrisisAs(state: GameState, sloppy: boolean): GameState {
+  const answers = getCrisisAnswers(state);
+  const free = answers.find((a) => getAnswerCost(a).treasury === 0 && getAnswerCost(a).wood === 0) ?? answers[answers.length - 1];
+  if (sloppy) return answerCrisis(state, free);
+  for (const answer of CAREFUL_ANSWERS.filter((a) => answers.includes(a))) {
+    const cost = getAnswerCost(answer);
+    if (state.stats.treasury < cost.treasury + 1500) continue;
+    const stocked = ensure(state, "wood", cost.wood);
+    if (canAnswerCrisis(stocked, answer)) return answerCrisis(stocked, answer);
+  }
+  return answerCrisis(state, free);
 }
 
 export function playIdle(nation: string, party: string, days: number): GameState {

@@ -21,7 +21,10 @@ import type { GameState } from "../../domain/country/types";
 import type { Sector } from "../../domain/labour/labourRules";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import { getPlace } from "../../domain/provinces/provinceRules";
-import { calculateDailyProduction, RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
+import { RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
+import { getProvinceYield } from "../../domain/crises/crisisRules";
+import { CRISIS_NAMES } from "../crisisText";
+import { CrisisIcon } from "./CrisisIcon";
 import { RESOURCE_TYPES, type ResourceType } from "../../domain/resources/types";
 import { formatAmount, formatRate } from "../formatNumber";
 import { UNREST_INFO } from "../unrestStages";
@@ -169,7 +172,8 @@ export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }
   const need = getNeed(province);
   const suggestions = getProvinceSuggestions(state, province);
   const terrain = getPlace(province.id)?.terrain;
-  const yields = terrain ? calculateDailyProduction([terrain], getSeason(state.date)) : null;
+  // What its land gives today, less what a crisis there takes (domain/crises).
+  const yields = terrain ? getProvinceYield(state.provinces[province.id], terrain, getSeason(state.date)) : null;
   const yieldTypes = yields ? RESOURCE_TYPES.filter((type) => yields[type] > 0) : [];
 
   const buildings = state.placedBuildings.filter((b) => b.provinceId === province.id);
@@ -306,6 +310,18 @@ export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }
           </Fact>
         )}
 
+        {province.crisis && (
+          <Fact icon={<CrisisIcon kind={province.crisis.kind} size={16} />} label="Crisis" alert>
+            <strong>{CRISIS_NAMES[province.crisis.kind]}</strong>
+            {province.crisis.until ? ` · until ${formatDate(province.crisis.until)}` : " · waiting for your answer"}
+          </Fact>
+        )}
+        {!province.crisis && (province.diked || province.seamYield < 1) && (
+          <Fact icon={province.seamYield < 1 ? <CrisisIcon kind="seam" size={16} /> : <CrisisIcon kind="flood" size={16} />} label="Land">
+            {[province.diked && "A dike stands: it floods no more", province.seamYield < 1 && (province.seamYield > 0 ? "Its seam gives half what it did" : "Its seam is worked out")].filter(Boolean).join(" · ")}
+          </Fact>
+        )}
+
         {(province.payRiseUntil || province.disputeUntil || province.taxReliefUntil) && (
           <Fact icon={<StatIcon type="treasury" size={16} />} label="Terms" alert={province.disputeUntil !== null}>
             {[
@@ -330,13 +346,15 @@ export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }
             : builtTypes.map((type, i) => {
                 const ofType = buildings.filter((b) => b.type === type);
                 const seized = ofType.filter((b) => b.condition === "seized").length;
-                const broken = ofType.filter((b) => !isWorking(b)).length - seized;
+                const ruined = ofType.filter((b) => b.condition === "ruined").length;
+                const broken = ofType.filter((b) => !isWorking(b)).length - seized - ruined;
                 return (
                   <span key={type}>
                     {i > 0 && " · "}
                     {plural(ofType.length, type)}
                     {broken > 0 && <span className="province-card__bad"> ({broken} broken)</span>}
                     {seized > 0 && <span className="province-card__bad"> (held by rebels)</span>}
+                    {ruined > 0 && <span className="province-card__bad"> (under water)</span>}
                   </span>
                 );
               })}

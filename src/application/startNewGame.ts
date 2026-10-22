@@ -131,6 +131,7 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     researchProgress: {},
     researchPathsFinished: {},
     pendingDemand: null,
+    pendingCrisis: null,
     lostProvinceIds: [],
     settlements: [],
     settledIslandIds: [],

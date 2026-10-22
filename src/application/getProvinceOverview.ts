@@ -21,6 +21,7 @@ import { getGarrisons } from "../domain/military/militaryRules";
 import { getBreakawayDaysLeft, getRebelStrengthChange, getRiotDaysToRise, getSpreadUnrest, type RebelStrengthChange } from "../domain/uprising/uprisingRules";
 import { getDifficulty } from "../domain/difficulty/difficultyData";
 import { getOwnedProvinceIds } from "../domain/provinces/provinceRules";
+import type { Crisis, CrisisKind } from "../domain/crises/types";
 
 export interface ProvinceOverview {
   id: string;
@@ -48,6 +49,9 @@ export interface ProvinceOverview {
   payRiseUntil: GameDate | null;
   disputeUntil: GameDate | null;
   taxReliefUntil: GameDate | null;
+  crisis: Crisis | null; // a crisis striking it now (see domain/crises)
+  diked: boolean;
+  seamYield: number; // share of its ore and coal its hills still give
 }
 
 // What the map flags, coarse on purpose: it only changes when a province
@@ -57,6 +61,7 @@ export interface ProvinceStatus {
   jobs: "ok" | "short" | "jobless";
   stage: UnrestStage;
   risen: boolean;
+  crisis: CrisisKind | null;
 }
 
 export function getProvinceOverview(state: GameState): ProvinceOverview[] {
@@ -106,6 +111,9 @@ export function getProvinceOverview(state: GameState): ProvinceOverview[] {
       payRiseUntil: p && isInForce(p.payRiseUntil, state.date) ? p.payRiseUntil : null,
       disputeUntil: p && isInForce(p.disputeUntil, state.date) ? p.disputeUntil : null,
       taxReliefUntil: p && isInForce(p.taxReliefUntil, state.date) ? p.taxReliefUntil : null,
+      crisis: p?.crisis ?? null,
+      diked: p?.diked ?? false,
+      seamYield: p?.seamYield ?? 1,
     };
   });
 }
@@ -123,5 +131,5 @@ export function getProvinceStatus(o: ProvinceOverview): ProvinceStatus {
       : o.jobs > 0 && o.openJobs / o.jobs >= PROVINCE_FLAG_SHORT_SHARE
         ? "short"
         : "ok";
-  return { homes, jobs, stage: o.unrestStage, risen: o.uprising !== null };
+  return { homes, jobs, stage: o.unrestStage, risen: o.uprising !== null, crisis: o.crisis?.kind ?? null };
 }

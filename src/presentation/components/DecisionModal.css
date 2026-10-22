@@ -78,6 +78,33 @@
   white-space: nowrap;
 }
 
+/* Longer answers (a crisis): the label, and under it what it does. */
+.decision-modal__option--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.decision-modal__option--stacked .decision-modal__option-effect {
+  display: block;
+  white-space: normal;
+  padding-left: 1.1rem;
+}
+
+/* Not open to you: muted, and it says why. */
+.decision-modal__option:disabled .decision-modal__option-label {
+  color: var(--text-muted);
+}
+
+.decision-modal__option:disabled .decision-modal__option-label::before {
+  background: var(--rule);
+}
+
+.decision-modal__option-short {
+  color: var(--danger);
+  font-weight: 700;
+}
+
 .decision-modal__option-icons {
   display: inline-flex;
   align-items: center;

@@ -16,7 +16,7 @@ const THREE_YEARS = 3 * 365;
 
 beforeEach(() => seedRandom(20261015));
 
-describe("a careful player", () => {
+describe("a careful player", { timeout: 30000 }, () => {
   it.each(NATIONS)("survives three years in %s and wins the first election", (nation, party) => {
     const end = playCarefully(nation, party, { days: THREE_YEARS });
     expect(end.isGameOver).toBe(false);

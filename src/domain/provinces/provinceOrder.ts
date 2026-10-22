@@ -15,6 +15,7 @@ import {
 import type { GameDate } from "../country/types";
 import type { ProvinceLabour } from "../labour/labourRules";
 import { getDisputeUnrest } from "../uprising/demandRules";
+import { getCrisisUnrest } from "../crises/crisisRules";
 import { getSpreadUnrest } from "../uprising/uprisingRules";
 import { getDistanceUnrest } from "../islands/islandRules";
 import { getGarrisonOrder } from "../military/militaryRules";
@@ -54,7 +55,8 @@ export function updateProvinceOrder(
     const homelessShare = p.population > 0 ? Math.max(0, p.population - (capacityByProvince[id] ?? 0)) / p.population : 0;
     const l = labour[id];
     const unemploymentShare = l && l.workers > 0 ? l.unemployed / l.workers : 0;
-    // A refused demand keeps it well below the nation for a while (domain/uprising).
+    // A refused demand keeps it well below the nation for a while (domain/uprising),
+    // and so does a crisis there (domain/crises).
     // So does a strong uprising next door, and a little, being a colony far
     // from the capital (domain/islands). Regiments standing there steady
     // it (domain/military).
@@ -64,6 +66,7 @@ export function updateProvinceOrder(
         0,
         getProvinceStabilityTarget(nationalStability, homelessShare, unemploymentShare) -
           getDisputeUnrest(p, today) -
+          getCrisisUnrest(p) -
           getSpreadUnrest(provinces, id) -
           getDistanceUnrest(id, linkedIslands),
       ) + getGarrisonOrder(garrisons[id] ?? 0),

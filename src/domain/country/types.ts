@@ -83,7 +83,8 @@ export type EventTopic =
   | "army" // regiments fighting, a province taken back, a regiment lost (see domain/military)
   | "season"
   | "world"
-  | "chapter"; // a chapter opening or completed (see domain/chapters)
+  | "chapter" // a chapter opening or completed (see domain/chapters)
+  | "crisis"; // a flood, a worked-out seam... striking a province, or ending (see domain/crises)
 
 export interface GameEvent {
   id: string;
@@ -150,6 +151,7 @@ export interface GameState {
   researchProgress: Record<string, number>; // work put into each node so far; kept if you switch direction and come back
   researchPathsFinished: Record<string, GameDate>; // a research path's key: the day its capstone was finished (see researchRules.ts)
   pendingDemand: Demand | null; // a province's letter waiting for an answer (see domain/uprising/demandRules.ts)
+  pendingCrisis: string | null; // the province whose crisis letter waits for an answer (see domain/crises)
   lostProvinceIds: string[]; // provinces that broke away after an uprising: no longer the country's (see domain/uprising)
   settlements: Settlement[]; // settler ships on their way to islands (see domain/islands)
   settledIslandIds: string[]; // islands settled: held and governed like provinces
