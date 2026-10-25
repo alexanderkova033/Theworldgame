@@ -13,6 +13,7 @@ import { getHeatingDemand, getNationalHomelessShare } from "../housing/housingRu
 import { getLabourSituation } from "../labour/labourRules";
 import { isDebtDangerous } from "../loans/loanRules";
 import type { DecisionDefinition } from "./types";
+import { ASTRAVIA_LETTERS } from "../chapters/stories/astravia";
 
 // What the situational decisions below react to.
 function coalRunningOut(state: GameState): boolean {
@@ -295,4 +296,6 @@ export const DECISIONS: DecisionDefinition[] = [
       { id: "curfew", label: "Declare a curfew", effects: { stabilityDelta: 7, popularityDelta: -7 } },
     ],
   },
+  // The nations' story letters, sent only by their chapters (domain/chapters/stories).
+  ...ASTRAVIA_LETTERS,
 ];

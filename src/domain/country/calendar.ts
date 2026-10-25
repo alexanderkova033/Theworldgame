@@ -35,6 +35,11 @@ export function addDays(date: GameDate, days: number): GameDate {
   };
 }
 
+// Months since the game began: 1 in the first month, 2 in the second...
+export function monthNumber(date: GameDate): number {
+  return (date.year - 1) * 12 + date.month;
+}
+
 export function isFirstDayOfMonth(date: GameDate): boolean {
   return date.day === 1;
 }

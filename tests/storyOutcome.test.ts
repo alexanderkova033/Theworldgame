@@ -4,7 +4,7 @@
 // province off its taxes, raise a province against you, or start a crisis.
 // See application/storyOutcome.ts.
 import { describe, expect, it } from "vitest";
-import { advanceChapters, STORY_RULES } from "../src/application/chapters";
+import { advanceChapters, readBriefing, STORY_RULES } from "../src/application/chapters";
 import { resolveDecision } from "../src/application/actions/resolveDecision";
 import { applyStoryOutcome } from "../src/application/storyOutcome";
 import { startNewGame } from "../src/application/startNewGame";
@@ -100,11 +100,13 @@ describe("a story that branches", () => {
     try {
       let s = advanceChapters(start);
       expect(s.chapters.opened).toContain(root.id);
-      s = resolveDecision({ ...s, pendingDecisionId: LETTER }, LETTER, "break");
+      s = readBriefing(s, root.id);
+      expect(s.pendingDecisionId).toBe(LETTER);
+      s = resolveDecision(s, LETTER, "break");
       s = advanceChapters(s);
       expect(s.chapters.opened).toContain(broken.id);
       expect(s.chapters.opened).not.toContain(kept.id);
-      s = advanceChapters(s);
+      s = advanceChapters(readBriefing(s, broken.id));
       expect(s.chapters.opened).toContain(joined.id);
     } finally {
       STORY_CHAPTERS.splice(STORY_CHAPTERS.indexOf(root), 4);

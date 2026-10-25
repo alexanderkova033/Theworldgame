@@ -16,6 +16,9 @@
 // letter with a choice, sent once its briefing is read; the choice is
 // remembered, for later chapters and for the ending.
 
+import type { CrisisKind } from "../crises/types";
+import { ASTRAVIA_CHAPTERS } from "./stories/astravia";
+
 // The systems a chapter can open. Building, people, the budget, taxes,
 // loans and rallies are open from the first day.
 export type Feature = "market" | "laws" | "research" | "unrest" | "voters" | "neighbours" | "ventures" | "army";
@@ -36,8 +39,9 @@ export interface ChapterData {
   by?: number; // the month (counted from the start) by which it opens whatever happens
   // A story chapter only:
   nation?: string; // the nation whose story it is
-  after?: ChapterId | ChapterId[]; // it opens only once this chapter is done (one of these, when several)
+  after?: ChapterId | ChapterId[]; // it opens only once this chapter has been told (one of these, when several): see isTold
   letter?: string; // a story letter (a decision marked story) sent once the briefing is read
+  crisis?: { provinceId: string; kind: CrisisKind }; // a crisis that strikes there once the briefing is read (domain/crises)
   partyLines?: Record<string, string>; // a line added to the briefing, by the party you lead
   ending?: Record<string, string>; // a line for the ending screen, by the choice made on its letter ("<letter>:<option>")
 }
@@ -134,8 +138,8 @@ export const CHAPTERS: ChapterData[] = [
   },
 ];
 
-// Each nation's story, in the order it is told. Empty until its campaign is written (ROADMAP step 6).
-export const STORY_CHAPTERS: ChapterData[] = [];
+// Each nation's story, in the order it is told (ROADMAP step 6).
+export const STORY_CHAPTERS: ChapterData[] = [...ASTRAVIA_CHAPTERS];
 
 export function getChapter(id: ChapterId): ChapterData {
   return (CHAPTERS.find((c) => c.id === id) ?? STORY_CHAPTERS.find((c) => c.id === id))!;

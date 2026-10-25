@@ -82,12 +82,16 @@ describe("a nation's story", () => {
     for (const feature of ["laws", "research", "army"] as const) expect(isFeatureOpen(opened, feature)).toBe(isFeatureOpen(inMonth(astravia(), 3), feature));
   });
 
-  it("tells its chapters in order: the next waits for the one before, whatever its date", () => {
+  it("tells its chapters in order: the next waits until the one before is told, whatever its date", () => {
     const opened = advanceChapters(inMonth(astravia(), 3));
     expect(opened.chapters.opened).not.toContain(SEQUEL);
-    const done = advanceChapters({ ...opened, chapters: { ...opened.chapters, deeds: [`${LETTER}:wait`] } });
-    expect(done.chapters.done).toContain(PROLOGUE);
-    expect(advanceChapters(done).chapters.opened).toContain(SEQUEL);
+    // Read, but its letter not yet answered: still waiting.
+    const read = advanceChapters({ ...opened, chapters: { ...opened.chapters, unread: [] } });
+    expect(read.chapters.opened).not.toContain(SEQUEL);
+    // Answered: told, and the next one opens, objectives met or not.
+    const told = advanceChapters({ ...read, chapters: { ...read.chapters, deeds: [`${LETTER}:wait`] } });
+    expect(told.chapters.done).toContain(PROLOGUE);
+    expect(advanceChapters(told).chapters.opened).toContain(SEQUEL);
   });
 
   it("sends its letter once the briefing is read, or as soon as no other letter is open", () => {

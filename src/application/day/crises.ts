@@ -3,7 +3,7 @@
 // reaches a province next door; and on the first of the month, with no
 // other letter waiting, one may strike.
 import { CRISIS_CHANCE_PER_MONTH, CRISIS_FROM_MONTH, CRISIS_WEIGHTS, FEVER_DEATHS_PER_MONTH, FEVER_FIRST_DEATHS, FEVER_SPREAD_DAYS, FLOOD_FOOD_SHARE, FLOOD_HOMES_SHARE, SEAM_SHAFT_YIELD } from "../../domain/constants";
-import { dayNumber, getSeason, isFirstDayOfMonth } from "../../domain/country/calendar";
+import { dayNumber, getSeason, isFirstDayOfMonth, monthNumber } from "../../domain/country/calendar";
 import { generateId } from "../../domain/country/id";
 import type { GameEvent, GameState } from "../../domain/country/types";
 import { crisesFor } from "../../domain/crises/crisisRules";
@@ -13,7 +13,6 @@ import { getNeighbours } from "../../domain/provinces/provinceNeighbours";
 import { getOwnedProvinceIds, getPlace, getProvinceName } from "../../domain/provinces/provinceRules";
 import type { PlacedBuilding } from "../../domain/provinces/types";
 import { getDifficulty } from "../../domain/difficulty/difficultyData";
-import { monthNumber } from "../chapters";
 
 const STRIKE_MESSAGES: Record<CrisisKind, (name: string) => string> = {
   flood: (name) => `The river has burst its banks in ${name}: its farms are under water and many homes are gone.`,

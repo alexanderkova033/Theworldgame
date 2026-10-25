@@ -19,7 +19,7 @@ import { allChaptersOpen } from "../src/domain/chapters/chapterData";
 import { DECISIONS } from "../src/domain/decisions/decisionData";
 import { pickDecision } from "../src/domain/decisions/decisionRules";
 import { startNewGame } from "../src/application/startNewGame";
-import { CHAPTERS, isFeatureOpen, type Feature } from "../src/domain/chapters/chapterData";
+import { CHAPTERS, isFeatureOpen, isStoryChapter, type Feature } from "../src/domain/chapters/chapterData";
 import { LAW_NODES } from "../src/domain/laws/lawData";
 import { getNation } from "../src/domain/nations/nationRules";
 import { RESEARCH_NODES } from "../src/domain/research/researchData";
@@ -63,7 +63,8 @@ describe("chapters", () => {
     const latest = Math.max(...CHAPTERS.map((c) => c.by ?? 0));
     const end = playCarefully(nation, party, { days: latest * 30 + 1 });
     expect(monthNumber(end.date)).toBeGreaterThan(latest);
-    expect([...end.chapters.opened].sort()).toEqual(CHAPTERS.map((c) => c.id).sort());
+    // The systems' chapters, all of them (the nation's story opens alongside: tests/astraviaStory.test.ts).
+    expect(end.chapters.opened.filter((id) => !isStoryChapter(id)).sort()).toEqual(CHAPTERS.map((c) => c.id).sort());
     expect(end.events.some((e) => e.topic === "chapter" && e.message.startsWith("A new chapter"))).toBe(true);
   });
 

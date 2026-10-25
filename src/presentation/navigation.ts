@@ -128,7 +128,17 @@ export const OBJECTIVE_DESTINATIONS: Record<SystemChapterId, Array<Destination |
 };
 
 // The same for a nation's story chapters, filled campaign by campaign.
-export const STORY_DESTINATIONS: Record<StoryChapterId, Array<Destination | null>> = {};
+export const STORY_DESTINATIONS: Record<StoryChapterId, Array<Destination | null>> = {
+  "astravia:promise": [null, BUILDINGS],
+  "astravia:flood": [null],
+  "astravia:lean-year": [null, MARKET],
+  "astravia:coast": [null, BUILDINGS],
+  "astravia:island": [{ panel: "ventures" }, { panel: "ventures" }],
+  "astravia:new-farmers": [null],
+  "astravia:thornwick-rises": [null],
+  "astravia:felling": [null],
+  "astravia:founding-day": [null, SUPPORT],
+};
 
 // Where a chapter's objective (the i-th) is done, if anywhere.
 export function objectiveDestination(id: ChapterId, i: number): Destination | null {

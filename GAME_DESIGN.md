@@ -67,6 +67,25 @@ Systems arrive as they matter, and not before. A game opens with only building, 
 
 Open chapters and their objectives sit in a slip at the top right of the map; an objective still to do opens the window where it is done. Letters about a later system (a border incident, a general strike) wait for its chapter, and the advisor only suggests what is open.
 
+## A story for each nation
+
+Alongside the systems' chapters, a nation has a story of its own, told in chapters that open nothing: a briefing (with a line for the party you lead), often a letter whose answer must be chosen, and sometimes a crisis struck on purpose. Each beat follows the one before once that one has been told (opened, read, its letter answered), whatever became of its objectives, so the story always moves on. A letter's answer can move a group of voters hard, raise or pull down buildings in a named province, set its order, lay an effect on the country for a year or two, let a province off its taxes, raise it against you, or start a crisis there; the letter says each in plain words. The choices are remembered, change later beats, and close the ending screen with a line each.
+
+**Astravia: the Harvest Republic.** A young republic that promised land to the families who farm it.
+
+| Beat | About when | The choice |
+|---|---|---|
+| The Founders' Promise | month 4 | break up the Thornwick estates (Farmers +15, Merchants −15, two farms in North Thornwick, 12% less income for a year) or let the promise wait (Merchants +10, Farmers −15) |
+| The Marrow in Flood | first summer | a flood in West Marrow Coast, answered as any flood |
+| A Lean Year | spring of the second year | open the granaries (−120,000 food, Farmers and Workers +6), sell abroad (+2,000 Cr, every group −3, stability −3), or ration the bread (support −3, people eat 10% less for four months) |
+| The Coast Asks for a Say | from month 20, after the captain's offer | a charter (−500 Cr, the coast's order +15, a harbour in East Marrow Coast, Merchants +5) or refuse (its order −10, West Marrow Coast pays no taxes for six months, Merchants −5) |
+| The Island over the Water | month 30 | live among the Kestrel folk (Progressives +8, Nationalists −5) or buy their fishing rights (−1,000 Cr, +30,000 food, Nationalists +5) |
+| The New Farmers, or Thornwick Rises | month 38, by the first choice | kept: celebrate (farms grow 10% more for two years) or tax them (+1,500 Cr, Farmers −10). Waited: grant the land now (−2,000 Cr, two farms) or put it down (Thornwick rises) |
+| The Great Felling | month 44 | South Thornwick's forest felled bare, answered as any felling |
+| Founding Day | month 48 | a festival (−2,500 Cr, every group +3) or a school for the capital |
+
+Measured 2026-10-25 over nine games: a careful player wins every one whichever answers it takes. A sloppy one, taking the answers that please most, survives three years in 6 of 9 (3 of 9 without the story); taking those that please least, in 2 of 9.
+
 ## Main stats
 
 | Stat | Meaning |

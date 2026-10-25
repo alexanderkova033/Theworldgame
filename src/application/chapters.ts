@@ -17,16 +17,15 @@ import {
   type StoryChapterId,
   type SystemChapterId,
 } from "../domain/chapters/chapterData";
-import { isFirstDayOfMonth } from "../domain/country/calendar";
+import { isFirstDayOfMonth, monthNumber } from "../domain/country/calendar";
+import { strikeCrisis } from "./day/crises";
+import { ASTRAVIA_RULES } from "./stories/astravia";
 import { generateId } from "../domain/country/id";
-import type { GameDate, GameState } from "../domain/country/types";
+import type { GameState } from "../domain/country/types";
 import { getElectionThreshold } from "../domain/parties/electionRules";
 import { RELATIONS_HOSTILE } from "../domain/constants";
 
-// Months since the game began: 1 in the first month, 2 in the second...
-export function monthNumber(date: GameDate): number {
-  return (date.year - 1) * 12 + date.month;
-}
+export { monthNumber };
 
 const LAW_FIRST_COST = 20; // political power for a first-row law
 
@@ -42,7 +41,7 @@ export interface StoryRules {
   opens: Trigger;
   checks: Check[];
 }
-export const STORY_RULES: Record<StoryChapterId, StoryRules> = {};
+export const STORY_RULES: Record<StoryChapterId, StoryRules> = { ...ASTRAVIA_RULES };
 
 // What sets each chapter off, besides its date.
 const TRIGGERS: Record<SystemChapterId, Trigger> = {
@@ -82,6 +81,15 @@ export function objectivesMet(state: GameState, id: ChapterId): boolean[] {
   return checksFor(id).map((check) => check(state));
 }
 
+// A chapter has been told once it has opened, its briefing has been read,
+// and its letter (if it has one) answered. A story moves on from there,
+// whether or not its objectives were met: they are goals, not gates.
+export function isTold(chapters: GameState["chapters"], id: ChapterId): boolean {
+  if (!chapters.opened.includes(id) || chapters.unread.includes(id)) return false;
+  const letter = getChapter(id)?.letter;
+  return !letter || chapters.deeds.some((d) => d.startsWith(`${letter}:`));
+}
+
 // Whether a chapter's moment has come today, besides its date.
 function isDue(state: GameState, id: ChapterId, month: number, monthStart: boolean): boolean {
   if (!isStoryChapter(id)) return TRIGGERS[id](state, month, monthStart);
@@ -99,7 +107,7 @@ export function advanceChapters(state: GameState): GameState {
   for (const chapter of chaptersFor(state.nationId)) {
     if (chapters.opened.includes(chapter.id)) continue;
     // A story's next chapter waits for the one before it.
-    if (chapter.after && ![chapter.after].flat().some((id) => chapters.done.includes(id))) continue;
+    if (chapter.after && ![chapter.after].flat().some((id) => isTold(chapters, id))) continue;
     const due = chapter.by !== undefined && month >= chapter.by;
     if (!due && !isDue(state, chapter.id, month, monthStart)) continue;
     chapters = { ...chapters, opened: [...chapters.opened, chapter.id], unread: [...chapters.unread, chapter.id] };
@@ -123,7 +131,11 @@ export function advanceChapters(state: GameState): GameState {
 // once if no other letter waits, else as soon as the way is clear.
 export function readBriefing(state: GameState, id: ChapterId): GameState {
   const chapters = { ...state.chapters, unread: state.chapters.unread.filter((c) => c !== id) };
-  const letter = state.chapters.unread.includes(id) ? getChapter(id).letter : undefined;
+  const unread = state.chapters.unread.includes(id);
+  // Its crisis strikes as it is read, if the province is still held and free of one.
+  const crisis = unread ? getChapter(id).crisis : undefined;
+  if (crisis && state.provinces[crisis.provinceId] && !state.provinces[crisis.provinceId].crisis) state = strikeCrisis(state, crisis.provinceId, crisis.kind);
+  const letter = unread ? getChapter(id).letter : undefined;
   if (!letter) return { ...state, chapters };
   if (!state.pendingDecisionId) return { ...state, chapters, pendingDecisionId: letter, isPaused: true };
   return { ...state, chapters: { ...chapters, letters: [...chapters.letters, letter] } };

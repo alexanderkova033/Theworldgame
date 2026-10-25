@@ -43,7 +43,7 @@ export interface DecisionDefinition {
   title: string;
   prompt: string; // one short sentence — the popup leads with icons, not paragraphs
   icon: string; // a StatIconType name (or "coal"/"housing") — kept as a plain string so domain/ doesn't depend on presentation/
-  options: DecisionOption[]; // always exactly two
+  options: DecisionOption[]; // two; a story letter may have three
   // Situational decisions come out of how the country is doing (a coal
   // shortage, a housing protest...) and can only fire while this holds —
   // and are picked well ahead of the generic ones when they can (see

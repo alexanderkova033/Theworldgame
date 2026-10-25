@@ -95,6 +95,14 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **A story branches** by giving two chapters the same `after` and opening each on a different choice (their STORY_RULES read the deed), and joins again with `after: [one, other]`.
 - **The scripted player** takes the answer that raises support most, counting the groups it moves by their share of the vote. A campaign's balance pass should also try the other answers (a careful player won't always take the popular one).
 
+## Astravia's story (step 6, G)
+
+- **Written in two files:** the words and letters in src/domain/chapters/stories/astravia.ts, the rules in src/application/stories/astravia.ts (wired into STORY_CHAPTERS, DECISIONS, STORY_RULES and STORY_DESTINATIONS). tests/astraviaStory.test.ts checks the data and plays it.
+- **`after` means told, not done** (changed in G): a beat follows the one before once it has opened, been read and had its letter answered (`isTold` in application/chapters.ts). With "done", a player who never took an island would never have seen the rest of the story.
+- **Reading a briefing no longer starts the clock while another letter waits** (`isLetterWaiting` in presentation/hooks/useGameClock.ts). It always had restarted it, even with a second briefing open; with story letters and crises sent by briefings it would have let days pass behind them.
+- **The popular answers help a sloppy player a lot** (6 of 9 surviving three years, against 3 of 9 without the story), mostly through breaking up the estates: Farmers are 30% of Astravia's voters. Toned down once already (the granaries, the festival, the estate owners' flight). If Astravia should stay as hard as the others for a careless player, the next lever is the two free farms.
+- **For H and I (Caldenreich, Veldoria):** write their outlines into letters and agree them first, as for Astravia. Caldenreich's Duskhaven pits (province-6-west and -east, hills) suit a seam crisis struck on purpose; Veldoria has no forest or hills, so floods, fever and its foundries' hunger for ore are its troubles.
+
 ## Process reminders
 
 - Domain rules live in `src/domain/<concept>/`, cross-domain use cases in `src/application/`, and React only in `src/presentation/`.

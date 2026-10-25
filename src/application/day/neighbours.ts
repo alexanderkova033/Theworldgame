@@ -20,7 +20,7 @@ import { getOwnedProvinceIds } from "../../domain/provinces/provinceRules";
 import { isIsland } from "../../domain/islands/islandRules";
 import { holdsPort } from "../../domain/market/marketRules";
 import { isFriendly } from "../../domain/diplomacy/diplomacyRules";
-import { monthNumber } from "../chapters";
+import { monthNumber } from "../../domain/country/calendar";
 import { log, type Day } from "./dayContext";
 
 export function runNeighbours(
