@@ -26,6 +26,18 @@ const BASE_TICK_MS = 3000;
 // write instead of up to 5/sec.
 const AUTOSAVE_DEBOUNCE_MS = 400;
 
+function isLetterWaiting(s: GameState): boolean {
+  return (
+    s.chapters.unread.length > 0 ||
+    !!s.burdenOffer ||
+    !!s.pendingDecisionId ||
+    !!s.pendingDemand ||
+    !!s.pendingCrisis ||
+    !!s.pendingOffer ||
+    (!!s.ultimatum && !s.ultimatum.answered)
+  );
+}
+
 export function useGameClock() {
   const [state, setState] = useState<GameState | null>(null);
 
@@ -134,7 +146,10 @@ export function useGameClock() {
   const pause = useCallback(() => setState((s) => (s ? { ...s, isPaused: true } : s)), []);
   // Not while a burden of office waits to be chosen (see BurdenLetter).
   // A burden to choose or a province's letter to answer holds the clock.
-  const resume = useCallback(() => setState((s) => (s && !s.burdenOffer && !s.pendingDemand ? { ...s, isPaused: false } : s)), []);
+  // The clock stays stopped while any letter waits to be read or answered:
+  // answering one that leads to another (a briefing and its story letter,
+  // a story letter and its crisis) mustn't let days pass behind the next.
+  const resume = useCallback(() => setState((s) => (s && !isLetterWaiting(s) ? { ...s, isPaused: false } : s)), []);
   const setSpeed = useCallback((speed: GameSpeed) => setState((s) => (s ? { ...s, speed } : s)), []);
 
   // Lets components trigger a player action (e.g. buildFarm) without knowing
