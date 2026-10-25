@@ -147,6 +147,15 @@ export const STORY_DESTINATIONS: Record<StoryChapterId, Array<Destination | null
   "caldenreich:ashford": [null],
   "caldenreich:konrad": [null, SUPPORT],
   "caldenreich:elisabet": [null, SUPPORT],
+  "veldoria:whistle": [null],
+  "veldoria:smoke": [null],
+  "veldoria:ore": [null],
+  "veldoria:commons": [null],
+  "veldoria:islands": [null, { panel: "ventures" }],
+  "veldoria:congress": [null],
+  "veldoria:strike": [null],
+  "veldoria:flood": [null],
+  "veldoria:exhibition": [null, SUPPORT],
 };
 
 // Where a chapter's objective (the i-th) is done, if anywhere.

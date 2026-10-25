@@ -414,6 +414,7 @@ export const NEIGHBOUR_STORE_CAP = 40; // the most of each it keeps
 
 // Province crises (see domain/crises).
 export const CRISIS_FROM_MONTH = 6; // none before the first summer
+export const CRISIS_QUIET_DAYS = 120; // after one ends, none strikes at random for this long
 export const CRISIS_CHANCE_PER_MONTH = 0.22; // a month, while no other letter waits: about one a year
 export const CRISIS_WEIGHTS = { flood: 3, seam: 2, felling: 2, fever: 3, fishing: 1 }; // how likely each kind is, among those a country is open to
 export const CRISIS_UNREST = 8; // how far below the nation's a province's mood sits while a crisis lasts

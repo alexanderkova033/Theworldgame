@@ -160,6 +160,7 @@ export interface GameState {
   researchPathsFinished: Record<string, GameDate>; // a research path's key: the day its capstone was finished (see researchRules.ts)
   pendingDemand: Demand | null; // a province's letter waiting for an answer (see domain/uprising/demandRules.ts)
   pendingCrisis: string | null; // the province whose crisis letter waits for an answer (see domain/crises)
+  crisisQuietUntil: GameDate | null; // after a crisis ends, none strikes at random before this day
   lasting: LastingEffect[]; // effects a story's choices lay on the country for a while (see application/storyOutcome.ts)
   lostProvinceIds: string[]; // provinces that broke away after an uprising: no longer the country's (see domain/uprising)
   settlements: Settlement[]; // settler ships on their way to islands (see domain/islands)

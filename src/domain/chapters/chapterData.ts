@@ -19,6 +19,7 @@
 import type { CrisisKind } from "../crises/types";
 import { ASTRAVIA_CHAPTERS } from "./stories/astravia";
 import { CALDENREICH_CHAPTERS } from "./stories/caldenreich";
+import { VELDORIA_CHAPTERS } from "./stories/veldoria";
 
 // The systems a chapter can open. Building, people, the budget, taxes,
 // loans and rallies are open from the first day.
@@ -140,7 +141,7 @@ export const CHAPTERS: ChapterData[] = [
 ];
 
 // Each nation's story, in the order it is told (ROADMAP step 6).
-export const STORY_CHAPTERS: ChapterData[] = [...ASTRAVIA_CHAPTERS, ...CALDENREICH_CHAPTERS];
+export const STORY_CHAPTERS: ChapterData[] = [...ASTRAVIA_CHAPTERS, ...CALDENREICH_CHAPTERS, ...VELDORIA_CHAPTERS];
 
 export function getChapter(id: ChapterId): ChapterData {
   return (CHAPTERS.find((c) => c.id === id) ?? STORY_CHAPTERS.find((c) => c.id === id))!;

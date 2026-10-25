@@ -85,6 +85,13 @@ export function crisesFor(p: ProvinceState, terrain: Terrain, capacity: number, 
   return kinds;
 }
 
+// One crisis at a time: while one is under way anywhere in the country, no
+// other strikes at random (a fever left alone still spreads: it is the same
+// one; a story's crisis comes when the story calls for it).
+export function isCrisisUnderWay(provinces: Record<string, ProvinceState>): boolean {
+  return Object.values(provinces).some((p) => p.crisis);
+}
+
 // How far below the nation's a province's mood sits for its crisis.
 export function getCrisisUnrest(p: ProvinceState): number {
   const c = p.crisis;

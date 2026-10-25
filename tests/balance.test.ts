@@ -100,14 +100,16 @@ describe("a law coming into force", () => {
   });
 });
 
-// The difficulty levels, measured: 9 five-year games each (3 seeds, every
+// The difficulty levels, measured: 27 five-year games each (9 seeds, every
 // nation), by a sloppy player (late, never ahead of trouble) and a careful
-// one. Each level should mean what its name says. Up to 18 games a test,
-// so they get longer than the default to finish.
-describe("difficulty", { timeout: 30000 }, () => {
+// one. Each level should mean what its name says. Nine games were too few:
+// one game either way, chance alone, could pass or fail a level (measured
+// 2026-10-25, when crises and the stories reshuffled every game). Up to 54
+// games a test, so they get much longer than the default to finish.
+describe("difficulty", { timeout: 180000 }, () => {
   const wins = (difficulty: Difficulty, skill: "sloppy" | "careful") => {
     let won = 0;
-    for (const seed of [20261015, 7, 99]) {
+    for (const seed of [20261015, 7, 99, 1, 2, 3, 4, 5, 6]) {
       for (const [nation, party] of NATIONS) {
         seedRandom(seed);
         if (playCarefully(nation, party, { days: 5 * 365, difficulty, skill }).outcome === "victory") won++;
@@ -117,23 +119,23 @@ describe("difficulty", { timeout: 30000 }, () => {
   };
 
   it("Easy lets even a sloppy player win most games", () => {
-    expect(wins("easy", "sloppy")).toBeGreaterThanOrEqual(7);
+    expect(wins("easy", "sloppy")).toBeGreaterThanOrEqual(18);
   });
 
   it("Normal isn't a walkover for a sloppy player", () => {
-    expect(wins("normal", "sloppy")).toBeLessThanOrEqual(6);
+    expect(wins("normal", "sloppy")).toBeLessThanOrEqual(18);
   });
 
   it("Hard: a careful player wins most games, but not all", () => {
     const careful = wins("hard", "careful");
-    expect(careful).toBeGreaterThanOrEqual(6);
-    expect(careful).toBeLessThan(9);
-    expect(wins("hard", "sloppy")).toBeLessThanOrEqual(3);
+    expect(careful).toBeGreaterThanOrEqual(18);
+    expect(careful).toBeLessThan(27);
+    expect(wins("hard", "sloppy")).toBeLessThanOrEqual(9);
   });
 
   it("Ruthless: not every country can be saved, but some can", () => {
     const careful = wins("ruthless", "careful");
-    expect(careful).toBeGreaterThanOrEqual(2);
-    expect(careful).toBeLessThanOrEqual(6);
+    expect(careful).toBeGreaterThanOrEqual(6);
+    expect(careful).toBeLessThanOrEqual(18);
   });
 });

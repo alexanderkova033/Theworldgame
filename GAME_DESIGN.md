@@ -44,7 +44,7 @@ Four levels, chosen before the nation. Each changes only what its card says, and
 |---|---|---|---|---|---|---|---|
 | Easy (Steward) | 50, 52, 54% | less | +15% | 2,000 Cr | weaker | halved | 5 |
 | Normal (Minister) | 50, 54, 58% | a little more | as is | nothing extra | as is | as is | 3 |
-| Hard (Chancellor) | 52, 56, 60% | more | −15% | nothing extra | stronger | 1.5× | 1 |
+| Hard (Chancellor) | 52, 56, 60% | more | −15% | a fifth less food | stronger | 1.5× | 1 |
 | Ruthless (Iron Chancellor) | 54, 58, 62% | much more | −30% | half the food | much stronger | 2× | 0 |
 
 "Bad luck" scales the losses from random events and how often buildings break down. Crises strike half as often on Easy, a quarter more on Hard and half as often again on Ruthless.
@@ -100,6 +100,21 @@ Measured 2026-10-25 over nine games: a careful player wins every one whichever a
 | King Konrad's or Queen Elisabet's Coronation | month 46, by the heir backed | Konrad: grand (−2,500 Cr, Traditionalists +10, every other group +2) or modest (−500 Cr, stability +3). Elisabet: a charter of rights (Progressives +10, Traditionalists −8, support settles 2 higher for two years) or the old way (Traditionalists +5) |
 
 Measured 2026-10-25 over nine games: a careful player wins every one either way. A sloppy one survives three years in 3 of 9 with or without the story taking the popular answers, and in 5 of 9 taking the others (the free school, the cheaper winter and the charter help it).
+
+**Veldoria: Smoke and Iron.** A small country that industrialised first, and meets its troubles first.
+
+| Beat | About when | The choice |
+|---|---|---|
+| The Foundry Whistle | month 4 | ten hours by law (Workers +12, Merchants −10, factories produce 5% less for a year) or the foundries set the hours (Merchants +8, Workers −12, North Veldshire's order −10) |
+| Smoke over Veldshire | first summer | fever in North Veldshire, answered as any fever |
+| Ore for the Furnaces | month 11 | a contract for Caldenreich's ore (−1,000 Cr, factories produce 10% more for two years) or make do (Workers −5, Nationalists +5) |
+| The Brindlewood Commons | month 20 | enclose them (a factory in East Brindlewood, Farmers −12, Merchants +8) or protect them (Farmers +10, Merchants −5) |
+| Land Beyond the Sea | month 26, after the captain's offer | charter a colonial company (−800 Cr, Nationalists +10, political power +20) or the homeland first (Workers +5, Nationalists −8) |
+| The Guild's Congress, or The General Strike | month 32, by the first choice | ten hours: address the congress (Workers +8, stability +3) or keep away (Nationalists +5). Foundries' hours: grant the ten hours now (−2,000 Cr, Workers +8, factories 5% less for a year) or break the strike (North Veldshire rises) |
+| The Brindlewood Flood | spring of the fourth year | a flood in West Brindlewood, answered as any flood |
+| The Great Exhibition | month 46 | show the world Veldoria's machines (−3,000 Cr, Merchants +8, every other group +3) or a memorial to the foundry dead (−500 Cr, stability +5, Workers +6) |
+
+The foundry town is North Veldshire, not the capital beside it: struck in the capital, the first summer's fever and a broken strike could bring the government down outright.
 
 ## Main stats
 
@@ -192,7 +207,7 @@ Falling stability brings stages before collapse: discontent slows industry, stri
 
 ## Province crises
 
-From the sixth month, about once a year, trouble strikes one province, chosen by its land and its state. A letter names the province and must be answered (every crisis has a free answer); meanwhile its mood sits 8 below the nation's. It shows as a mark on the province's strip on the map, a line on its card, and in the legend, and Next problem goes to it.
+From the sixth month, about once a year, trouble strikes one province, chosen by its land and its state. Only one at a time: none strikes at random while another is under way, nor for four months after one ends (a story's crisis comes when the story calls for it). A letter names the province and must be answered (every crisis has a free answer); meanwhile its mood sits 8 below the nation's. It shows as a mark on the province's strip on the map, a line on its card, and in the legend, and Next problem goes to it.
 
 | Crisis | Where | What it does | Answers |
 |---|---|---|---|

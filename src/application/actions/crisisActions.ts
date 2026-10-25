@@ -2,6 +2,7 @@
 // paid there and then; most set how long the crisis lasts, and a few end it
 // at once (a worked-out seam whose works are retooled, or whose pits close).
 import {
+  CRISIS_QUIET_DAYS,
   FELLING_DAYS,
   FELLING_REPLANT_DAYS,
   FEVER_DOCTORS_DAYS,
@@ -90,6 +91,7 @@ export function answerCrisis(state: GameState, answer: CrisisAnswer): GameState 
       placedBuildings: works ? next.placedBuildings.filter((b) => b !== works) : next.placedBuildings,
       factoryCount: works ? next.factoryCount - 1 : next.factoryCount,
       provinces: { ...next.provinces, [id]: { ...province, crisis: null, seamYield: 0 } },
+      crisisQuietUntil: addDays(state.date, CRISIS_QUIET_DAYS),
     };
   }
 

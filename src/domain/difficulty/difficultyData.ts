@@ -2,10 +2,10 @@
 // pressure on the player and nothing hidden: every change is listed on the
 // start screen in plain words (`changes`). The levels are measured by the
 // scripted players in tests/balance.test.ts, so each means something. Out
-// of 9 five-year games, a sloppy player (late, never ahead of trouble) and
-// a careful one win: Easy 9 and 9, Normal 2 and 9, Hard 0 and 8, Ruthless
-// 0 and 2 (measured 2026-10-18; crises since, 2026-10-22, leave Normal at 1
-// and 9). Not every country can be saved on
+// of 27 five-year games, a sloppy player (late, never ahead of trouble) and
+// a careful one win: Easy 19 and 27, Normal 6 and 27, Hard 4 and 24,
+// Ruthless 0 and 10 (measured 2026-10-25, with crises and the nations'
+// stories; Hard starts with a fifth less food since). Not every country can be saved on
 // Ruthless, but some can. A careful player never sees a province rise; a
 // sloppy one does in about half its games, more on the harder levels.
 
@@ -73,12 +73,12 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     name: "Hard",
     title: "Chancellor",
     summary: "A careful player only just wins. Every season counts.",
-    changes: ["Elections need 52%, 56%, 60%", "Voters expect a lot: support settles 6 points below neutral", "15% less political power", "The rival campaigns more, and harder", "Bad years take half as much again", "Buildings break down 1.5 times as often", "A province rises after 25 days of rioting on its own", "Crises strike a quarter more often", "1 retry from a checkpoint"],
+    changes: ["A fifth less of the usual food in store", "Elections need 52%, 56%, 60%", "Voters expect a lot: support settles 6 points below neutral", "15% less political power", "The rival campaigns more, and harder", "Bad years take half as much again", "Buildings break down 1.5 times as often", "A province rises after 25 days of rioting on its own", "Crises strike a quarter more often", "1 retry from a checkpoint"],
     electionThresholds: [52, 56, 60],
     expectations: -6,
     politicalPowerMultiplier: 0.85,
     startingTreasury: 0,
-    startingFoodShare: 1,
+    startingFoodShare: 0.8,
     rivalSwing: 1.3,
     rivalChance: 1.25,
     badEventScale: 1.5,

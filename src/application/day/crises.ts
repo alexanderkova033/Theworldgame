@@ -1,12 +1,13 @@
 // The last step of the day: province crises (see domain/crises). One whose
 // time is up ends; a fever left alone takes more lives each month and
 // reaches a province next door; and on the first of the month, with no
-// other letter waiting, one may strike.
-import { CRISIS_CHANCE_PER_MONTH, CRISIS_FROM_MONTH, CRISIS_WEIGHTS, FEVER_DEATHS_PER_MONTH, FEVER_FIRST_DEATHS, FEVER_SPREAD_DAYS, FLOOD_FOOD_SHARE, FLOOD_HOMES_SHARE, SEAM_SHAFT_YIELD } from "../../domain/constants";
-import { dayNumber, getSeason, isFirstDayOfMonth, monthNumber } from "../../domain/country/calendar";
+// other letter waiting, no other crisis under way and the country's quiet
+// spell after the last one over, one may strike.
+import { CRISIS_CHANCE_PER_MONTH, CRISIS_FROM_MONTH, CRISIS_QUIET_DAYS, CRISIS_WEIGHTS, FEVER_DEATHS_PER_MONTH, FEVER_FIRST_DEATHS, FEVER_SPREAD_DAYS, FLOOD_FOOD_SHARE, FLOOD_HOMES_SHARE, SEAM_SHAFT_YIELD } from "../../domain/constants";
+import { addDays, dayNumber, getSeason, isFirstDayOfMonth, monthNumber } from "../../domain/country/calendar";
 import { generateId } from "../../domain/country/id";
 import type { GameEvent, GameState } from "../../domain/country/types";
-import { crisesFor } from "../../domain/crises/crisisRules";
+import { crisesFor, isCrisisUnderWay } from "../../domain/crises/crisisRules";
 import type { CrisisKind } from "../../domain/crises/types";
 import { getHousingCapacityByProvince } from "../../domain/housing/housingRules";
 import { getNeighbours } from "../../domain/provinces/provinceNeighbours";
@@ -84,7 +85,13 @@ function endCrisis(state: GameState, provinceId: string): GameState {
     fever: `The fever in ${name} has passed.`,
     fishing: `The fish are back off ${name}.`,
   };
-  return { ...state, placedBuildings, provinces: { ...state.provinces, [provinceId]: next }, events: [event(state, ended[c.kind], "info"), ...state.events] };
+  return {
+    ...state,
+    placedBuildings,
+    provinces: { ...state.provinces, [provinceId]: next },
+    crisisQuietUntil: addDays(state.date, CRISIS_QUIET_DAYS),
+    events: [event(state, ended[c.kind], "info"), ...state.events],
+  };
 }
 
 export function runCrises(state: GameState): GameState {
@@ -117,7 +124,10 @@ export function runCrises(state: GameState): GameState {
 // somewhere its land and state lay open to one.
 function rollCrisis(s: GameState): GameState {
   if (!isFirstDayOfMonth(s.date) || monthNumber(s.date) < CRISIS_FROM_MONTH) return s;
-  const busy = s.pendingCrisis || s.pendingDecisionId || s.pendingDemand || s.pendingOffer || (s.ultimatum && !s.ultimatum.answered) || s.burdenOffer || s.chapters.unread.length > 0;
+  const quiet = s.crisisQuietUntil !== null && dayNumber(s.date) < dayNumber(s.crisisQuietUntil);
+  const busy =
+    quiet ||
+    isCrisisUnderWay(s.provinces) || s.pendingDecisionId || s.pendingDemand || s.pendingOffer || (s.ultimatum && !s.ultimatum.answered) || s.burdenOffer || s.chapters.unread.length > 0;
   if (busy || Math.random() >= CRISIS_CHANCE_PER_MONTH * getDifficulty(s.difficulty).crisisChance) return s;
   const capacity = getHousingCapacityByProvince(s);
   const season = getSeason(s.date);
