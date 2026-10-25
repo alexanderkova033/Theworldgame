@@ -3,19 +3,10 @@
 // counted from the start; the elections fall at 18, 36 and 54.
 import { FOOD_PER_POP_CONSUMPTION } from "../../domain/constants";
 import type { StoryChapterId } from "../../domain/chapters/chapterData";
-import type { GameState } from "../../domain/country/types";
 import { isIsland } from "../../domain/islands/islandRules";
 import { getOwnedProvinceIds } from "../../domain/provinces/provinceRules";
 import type { StoryRules } from "../chapters";
-
-const answered = (letter: string) => (s: GameState) => s.chapters.deeds.some((d) => d.startsWith(`${letter}:`));
-const chose = (deed: string) => (s: GameState) => s.chapters.deeds.includes(deed);
-const has = (s: GameState, provinceIds: string[], type: string, ofYours = false) =>
-  s.placedBuildings.some((b) => provinceIds.includes(b.provinceId) && b.type === type && (!ofYours || !b.id.startsWith("starting-"))) ||
-  s.projects.some((p) => provinceIds.includes(p.provinceId) && p.type === type);
-// Its crisis struck as the briefing was read, and is over or answered.
-const crisisDealtWith = (chapter: StoryChapterId, provinceId: string) => (s: GameState) =>
-  !s.chapters.unread.includes(chapter) && (!s.provinces[provinceId]?.crisis || s.provinces[provinceId].crisis!.answer !== null);
+import { answered, chose, crisisDealtWith, has } from "./storyChecks";
 
 const THORNWICK = ["province-8-north", "province-8-south"];
 const MARROW = ["province-2-west", "province-2-east"];

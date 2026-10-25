@@ -86,6 +86,21 @@ Alongside the systems' chapters, a nation has a story of its own, told in chapte
 
 Measured 2026-10-25 over nine games: a careful player wins every one whichever answers it takes. A sloppy one, taking the answers that please most, survives three years in 6 of 9 (3 of 9 without the story); taking those that please least, in 2 of 9.
 
+**Caldenreich: the Chancellor's Kingdom.** An old kingdom proud of its schools and its order, with a king growing old.
+
+| Beat | About when | The choice |
+|---|---|---|
+| The King's Speech | month 4 | order and the old ways (Traditionalists +12, Progressives −10, stability +5) or a school in every town (Progressives +12, Traditionalists −8, a school in West Ashford) |
+| The Academy's Petition | month 10, once research is open | fund it (−1,500 Cr, research 20% faster for two years, Progressives +5) or the treasury first (Progressives −8, Traditionalists +3) |
+| The Duskhaven Seam | spring of the second year | West Duskhaven's seam worked out, answered as any seam |
+| The Miners Organise | month 19 | recognise the guild (Workers +10, Traditionalists −5, 5% less income for a year) or forbid it (Workers −10, Duskhaven's order −15) |
+| The Long Winter | month 25 | open the royal forests (homes burn 15% less for four months, Farmers +5, Traditionalists −5) or coal from the treasury (−1,500 Cr, every group +2) |
+| The King Falls Ill | month 30 | back Prince Konrad (Traditionalists +10, Progressives −5) or Princess Elisabet (Progressives +10, Traditionalists −10) |
+| The Ashford Floods | spring of the fourth year | a flood in East Ashford, answered as any flood (not where a dike stands) |
+| King Konrad's or Queen Elisabet's Coronation | month 46, by the heir backed | Konrad: grand (−2,500 Cr, Traditionalists +10, every other group +2) or modest (−500 Cr, stability +3). Elisabet: a charter of rights (Progressives +10, Traditionalists −8, support settles 2 higher for two years) or the old way (Traditionalists +5) |
+
+Measured 2026-10-25 over nine games: a careful player wins every one either way. A sloppy one survives three years in 3 of 9 with or without the story taking the popular answers, and in 5 of 9 taking the others (the free school, the cheaper winter and the charter help it).
+
 ## Main stats
 
 | Stat | Meaning |

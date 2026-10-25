@@ -138,6 +138,15 @@ export const STORY_DESTINATIONS: Record<StoryChapterId, Array<Destination | null
   "astravia:thornwick-rises": [null],
   "astravia:felling": [null],
   "astravia:founding-day": [null, SUPPORT],
+  "caldenreich:speech": [null],
+  "caldenreich:academy": [null, { panel: "research" }],
+  "caldenreich:seam": [null],
+  "caldenreich:guild": [null],
+  "caldenreich:winter": [null],
+  "caldenreich:heir": [null],
+  "caldenreich:ashford": [null],
+  "caldenreich:konrad": [null, SUPPORT],
+  "caldenreich:elisabet": [null, SUPPORT],
 };
 
 // Where a chapter's objective (the i-th) is done, if anywhere.

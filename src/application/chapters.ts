@@ -20,6 +20,7 @@ import {
 import { isFirstDayOfMonth, monthNumber } from "../domain/country/calendar";
 import { strikeCrisis } from "./day/crises";
 import { ASTRAVIA_RULES } from "./stories/astravia";
+import { CALDENREICH_RULES } from "./stories/caldenreich";
 import { generateId } from "../domain/country/id";
 import type { GameState } from "../domain/country/types";
 import { getElectionThreshold } from "../domain/parties/electionRules";
@@ -41,7 +42,7 @@ export interface StoryRules {
   opens: Trigger;
   checks: Check[];
 }
-export const STORY_RULES: Record<StoryChapterId, StoryRules> = { ...ASTRAVIA_RULES };
+export const STORY_RULES: Record<StoryChapterId, StoryRules> = { ...ASTRAVIA_RULES, ...CALDENREICH_RULES };
 
 // What sets each chapter off, besides its date.
 const TRIGGERS: Record<SystemChapterId, Trigger> = {
@@ -134,7 +135,8 @@ export function readBriefing(state: GameState, id: ChapterId): GameState {
   const unread = state.chapters.unread.includes(id);
   // Its crisis strikes as it is read, if the province is still held and free of one.
   const crisis = unread ? getChapter(id).crisis : undefined;
-  if (crisis && state.provinces[crisis.provinceId] && !state.provinces[crisis.provinceId].crisis) state = strikeCrisis(state, crisis.provinceId, crisis.kind);
+  const there = crisis ? state.provinces[crisis.provinceId] : undefined;
+  if (crisis && there && !there.crisis && !(crisis.kind === "flood" && there.diked)) state = strikeCrisis(state, crisis.provinceId, crisis.kind);
   const letter = unread ? getChapter(id).letter : undefined;
   if (!letter) return { ...state, chapters };
   if (!state.pendingDecisionId) return { ...state, chapters, pendingDecisionId: letter, isPaused: true };

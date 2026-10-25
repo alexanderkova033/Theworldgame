@@ -72,6 +72,9 @@ describe("a story letter's answer", () => {
     });
     expect(words).toEqual(["Farmers +15", `2 farms raised in ${getPlace(plains)!.name}`, "8% less income for a year", `${getPlace(plains)!.name} rises against you`]);
     for (const w of words) expect(w).not.toMatch(/—/);
+    const every = { Agrarian: 2, Commercial: 2, Traditionalist: 2, Progressive: 2, Labor: 2, Nationalist: 2 };
+    expect(describeOutcome({ groups: every })).toEqual(["Every group +2"]);
+    expect(describeOutcome({ groups: { ...every, Traditionalist: 10 } })).toEqual(["Traditionalists +10", "every other group +2"]);
   });
 
   it("is kept by saves; older saves have no lasting effects", () => {

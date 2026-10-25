@@ -25,10 +25,27 @@ function span(days: number): string {
 
 const count = (n: number, type: keyof typeof BUILDING_NAMES) => (n === 1 ? `a ${BUILDING_NAMES[type][0].toLowerCase()}` : `${n} ${BUILDING_NAMES[type][1].toLowerCase()}`);
 
+// Groups' moves: "Every group +2" when all move alike, and "Traditionalists
+// +10 · every other group +2" when all but one do.
+function describeGroups(groups: Partial<Record<Ideology, number>>): string[] {
+  const all = Object.keys(GROUP_NAMES) as Ideology[];
+  const moves = Object.entries(groups) as Array<[Ideology, number]>;
+  const line = (g: Ideology, n: number) => `${GROUP_NAMES[g]} ${formatSigned(n, true)}`;
+  if (moves.length === all.length) {
+    const values = moves.map(([, n]) => n);
+    const common = values.find((v) => values.filter((x) => x === v).length >= all.length - 1);
+    if (common !== undefined) {
+      const odd = moves.filter(([, n]) => n !== common);
+      return odd.length === 0 ? [`Every group ${formatSigned(common, true)}`] : [...odd.map(([g, n]) => line(g, n)), `every other group ${formatSigned(common, true)}`];
+    }
+  }
+  return moves.map(([g, n]) => line(g, n));
+}
+
 export function describeOutcome(outcome: StoryOutcome | undefined): string[] {
   if (!outcome) return [];
   const parts: string[] = [];
-  for (const [group, change] of Object.entries(outcome.groups ?? {}) as Array<[Ideology, number]>) parts.push(`${GROUP_NAMES[group]} ${formatSigned(change, true)}`);
+  parts.push(...describeGroups(outcome.groups ?? {}));
   if (outcome.politicalPower) parts.push(`${formatSigned(outcome.politicalPower, true)} political power`);
   for (const b of outcome.build ?? []) parts.push(`${count(b.count, b.type)} raised in ${getProvinceName(b.provinceId)}`);
   for (const b of outcome.pullDown ?? []) parts.push(`${count(b.count, b.type)} pulled down in ${getProvinceName(b.provinceId)}`);

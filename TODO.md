@@ -101,7 +101,8 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **`after` means told, not done** (changed in G): a beat follows the one before once it has opened, been read and had its letter answered (`isTold` in application/chapters.ts). With "done", a player who never took an island would never have seen the rest of the story.
 - **Reading a briefing no longer starts the clock while another letter waits** (`isLetterWaiting` in presentation/hooks/useGameClock.ts). It always had restarted it, even with a second briefing open; with story letters and crises sent by briefings it would have let days pass behind them.
 - **The popular answers help a sloppy player a lot** (6 of 9 surviving three years, against 3 of 9 without the story), mostly through breaking up the estates: Farmers are 30% of Astravia's voters. Toned down once already (the granaries, the festival, the estate owners' flight). If Astravia should stay as hard as the others for a careless player, the next lever is the two free farms.
-- **For H and I (Caldenreich, Veldoria):** write their outlines into letters and agree them first, as for Astravia. Caldenreich's Duskhaven pits (province-6-west and -east, hills) suit a seam crisis struck on purpose; Veldoria has no forest or hills, so floods, fever and its foundries' hunger for ore are its troubles.
+- **Caldenreich's story (H)** is written the same way (stories/caldenreich.ts in domain and application; tests/caldenreichStory.test.ts); the checks both share are in application/stories/storyChecks.ts. A chapter's flood no longer strikes where a dike stands.
+- **For I (Veldoria):** write its outline into letters and agree them first. It has no forest or hills, so floods, fever and its foundries' hunger for ore are its troubles; Veldoria's own unrest chapter was to come early (ROADMAP), which needs its balance pass.
 
 ## Process reminders
 

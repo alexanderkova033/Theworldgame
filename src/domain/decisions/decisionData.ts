@@ -14,6 +14,7 @@ import { getLabourSituation } from "../labour/labourRules";
 import { isDebtDangerous } from "../loans/loanRules";
 import type { DecisionDefinition } from "./types";
 import { ASTRAVIA_LETTERS } from "../chapters/stories/astravia";
+import { CALDENREICH_LETTERS } from "../chapters/stories/caldenreich";
 
 // What the situational decisions below react to.
 function coalRunningOut(state: GameState): boolean {
@@ -298,4 +299,5 @@ export const DECISIONS: DecisionDefinition[] = [
   },
   // The nations' story letters, sent only by their chapters (domain/chapters/stories).
   ...ASTRAVIA_LETTERS,
+  ...CALDENREICH_LETTERS,
 ];
