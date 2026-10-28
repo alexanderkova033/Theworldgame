@@ -1,153 +1,181 @@
 # Technical Design
 
+How the code is laid out and why. What the game is, as the player sees it, is in GAME_DESIGN.md; what comes next is in ROADMAP.md.
+
 ## Architecture overview
 
-This project uses a **clean architecture** with a **screaming folder structure**:
+The project uses a **clean architecture** with a **screaming folder structure**:
 
-- **Clean architecture** means dependencies only point inward: the UI depends on the application layer, the application layer depends on the domain layer, and the domain layer depends on nothing (no React, no browser APIs, no timers). You could delete `presentation/` entirely and the game logic would still compile and be testable on its own.
-- **Screaming architecture** means the top-level folder names describe *what the software does* (economy, population, construction, politics...) instead of *what kind of file it is* (components, hooks, utils). Opening `src/domain/` should tell you this is a country simulator, not "a React app."
-
-There are three layers:
+- **Clean architecture**: dependencies point inward only. The UI depends on the application layer, the application layer on the domain, and the domain on nothing (no React, no browser APIs, no timers). Delete `presentation/` and the game still compiles and can be tested on its own.
+- **Screaming architecture**: folder names say what the software does (economy, crises, military, chapters) rather than what kind of file sits in them. Opening `src/domain/` should tell you this is a country simulator, not a React app.
 
 ```
 presentation/   →   application/   →   domain/
    (React)          (use cases)         (rules & types)
 ```
 
-- **`domain/`** — The rules of the world, grouped by game concept. Each subfolder (`economy`, `population`, `food`, `industry`, `roads`, `stability`, `politics`, `research`, `construction`, `provinces`, `nations`, `resources`, `country`) exports pure functions and types for that concept only. A function like `applyFoodConsumption(stats, days)` takes data in and returns new data out — no mutation, no side effects, no imports from React or `application/`.
-- **`application/`** — Use cases that orchestrate multiple domain modules to do something meaningful: "simulate one day," "build a farm," "generate this month's report," "start a new game." This is the only layer allowed to call more than one domain module at a time.
-- **`presentation/`** — React components and hooks. This layer calls `application/` functions in response to user input (button clicks) or time passing (the game clock hook), and renders whatever `GameState` it's given. It never contains simulation math itself.
+- **`domain/`** holds the rules of the world, one folder per concept: `chapters`, `construction`, `country`, `crises`, `decisions`, `difficulty`, `diplomacy`, `economy`, `expeditions`, `food`, `housing`, `industry`, `islands`, `labour`, `laws`, `ledger`, `loans`, `maintenance`, `market`, `military`, `nations`, `neighbours`, `parties`, `policy`, `politics`, `population`, `provinces`, `randomEvents`, `reign`, `research`, `resources`, `roads`, `stability`, `synergy`, `unrest`, `uprising` and `workforce`. Each exports pure functions and types: data in, new data out, no mutation and no imports from React or `application/`.
+- **`application/`** holds use cases that combine several domain modules into one meaningful thing: one day of play (`simulateDay.ts` and `day/`), a player action (`actions/`), a chapter opening (`chapters.ts`), or a question the UI asks (`getAdvisorOutlook.ts`, `getForecasts.ts`, `getProvinceOverview.ts`...). It is the only layer allowed to call across domain modules.
+- **`presentation/`** holds React components, the game clock and saves. It calls `application/` in response to clicks and to time passing, and renders the `GameState` it is given. It never does simulation math.
 
-This keeps the simulation logic testable and framework-independent, and makes it obvious where new functionality belongs: a new stat or system gets its own `domain/<name>/` folder; a new player action gets a new file in `application/actions/`; a new way of showing data gets a new component in `presentation/components/`.
+Every number worth tuning lives in `src/domain/constants.ts`, with a comment saying what it does. Difficulty levels change a few of them through `domain/difficulty/difficultyData.ts`.
 
-## Game state structure
+## Game state
 
-The entire simulation is one plain, serializable object: `GameState` (defined in `domain/country/types.ts`).
+The whole game is one plain, serialisable object, `GameState` (`domain/country/types.ts`). The type is the reference; in outline it holds:
 
-```ts
-interface GameState {
-  nationId: string;        // chosen once, at the start screen; fixed for the rest of the game
-  date: GameDate;          // { year, month, day } — see "Daily tick system" below
-  isPaused: boolean;
-  speed: GameSpeed;        // 1 | 2 | 3 | 5
-  stats: CountryStats;     // treasury, population, food, industry, stability, research, popularity
-  resources: ResourceBundle; // { wood, ore, grain, fish } — see "Resources and trade" below
-  taxRate: number;         // 0–1
-  farmCount: number; factoryCount: number; roadCount: number;
-  educationLevel: number; researchLevel: number;
-  projects: Project[];     // active construction/research projects (each has a provinceId)
-  placedBuildings: PlacedBuilding[]; // completed buildings, remembered for the map
-  events: GameEvent[];     // event log, newest first
-  monthlyReports: MonthlyReport[]; // history of past reports
-  history: DailyDelta[];   // rolling buffer of recent daily changes, used to build the next report
-}
-```
+- **The setup, fixed at the start**: `difficulty`, `nationId`, `partyId` and `mode` (Three Terms or the Long Reign).
+- **The clock**: `date`, `isPaused`, `speed`, and `isGameOver`, `outcome` and `gameOverReason`.
+- **The country's figures**: `stats` (treasury, population, food, industry, stability, political power, popularity), `resources` (wood, ore, coal, grain, fish), `taxRate`, `debt`, `unrestStage`, `factionApproval`, and the building counts (`farmCount`, `factoryCount` and the rest).
+- **Places**: `provinces` (each province's own people, order, uprising, crisis, dike and seam), `placedBuildings` (every finished building and where it stands, with its condition: broken, repairing, seized or ruined), `projects` under way, `lostProvinceIds` and `freeProvinces` (provinces that broke away, and their rebels), and the islands (`settlements`, `settledIslandIds`, `expeditions`, `scoutedIslandIds`).
+- **Policy**: enacted laws and research, `activeLaw`, `researchFocus`, `researchProgress`, `researchOutcomes`, `researchPathsFinished`, the `workforce` (scientists and police), and `lasting` effects laid on by a story's choices.
+- **The world**: `neighbours` (each a country run by the computer), `foreignPolitics`, `foreignIslands` and `foreignIslandsSince`, `foreignVoyages`, `market`, `regiments` (every country's), `wars`, `sieges` and `ultimatum`.
+- **Letters waiting**: `pendingDecisionId`, `pendingDemand`, `pendingCrisis`, `pendingOffer`, `ultimatum` (until answered), `burdenOffer`, and unread chapter briefings in `chapters.unread`.
+- **The story so far**: `chapters` (opened, done, unread, the deeds and choices made, and story letters still to send), `decisionHistory`, `burdens`, `electionsWon`, `retriesUsed`, `crisisQuietUntil` and `dangerPauses`.
+- **The record**: `events`, `monthlyReports`, `history` (the days since the last report), `pendingLedger` and `lastDayLedger`.
 
-Because `GameState` is a plain object, saving/loading later (see ROADMAP) is just serializing/deserializing JSON — no special class instances or hidden state.
+Because it is plain data, saving is a JSON round trip. `presentation/hooks/gameSave.ts` keeps three named slots in `localStorage`, plus a checkpoint per slot that a lost game can go back to. A save written before a field existed loads without it, so **every new field needs a default in `hydrateGameState`**; `tests/saves.test.ts` fails if one is missing.
 
-Note what's *not* in `GameState`: which province is currently selected on the map to build in next. That's ephemeral UI selection, not simulation truth, so it lives as local `useState` in `App.tsx` (see "Map and provinces" below) rather than polluting the state the simulation engine reasons about.
+What is not in `GameState`: anything only the screen cares about, such as which province is selected, which window is open, or whether resting tooltips are turned on. That lives in React state or, for preferences, in `localStorage` on its own.
 
-## Simulation engine structure
+## The day
 
-Each `domain/<concept>/` module exposes small pure functions that take relevant pieces of `CountryStats` (or the whole `GameState` when a rule needs cross-cutting data, like stability needing food) and return the updated values. For example:
+`application/simulateDay.ts` exports `simulateDay(state): GameState`, called once per in-game day. It never mutates the state it is given. Each step lives in its own file under `application/day/` and shares a `Day` (`day/dayContext.ts`): the state as the day began, today's modifiers (read once, so a law taking force today counts from tomorrow), the season, road efficiency, the event log being written, and the ledger of why each number moved.
 
-```ts
-// domain/food/foodRules.ts
-export function produceFood(stats: CountryStats): number { ... }
-export function consumeFood(stats: CountryStats): number { ... }
-```
+In order:
 
-```ts
-// domain/stability/stabilityRules.ts
-export function updateStability(stats: CountryStats): number { ... }
-```
+1. **buildings**: projects, ventures, laws and research advance; repairs and breakdowns.
+2. **goods**: resources from the land (less what crises take), the market, processing, heating, debt interest.
+3. **money**: taxes and industry in, wages out.
+4. **food**: farms and processing against what is eaten. Industry and political power follow, one line each.
+5. **order**: stability, unrest, collapse.
+6. **support**: popularity drifts toward its target, group by group.
+7. **people**: births, deaths, migration between provinces, each province's own order. Then **uprisings**: provinces rising, rebel strength, demands, provinces breaking away.
+8. The day is recorded and the calendar turns. On the first of a month the old month gets its report (`generateMonthlyReport.ts`), and **newMonth** rolls world events, the rival's campaign and the season.
+9. **election**, when one is due. A decision may arrive on the first of the month.
+10. **army**: an ultimatum may run out into war; every regiment drills, marches or fights; islands change hands.
+11. **neighbours**: on the first of the month each neighbour lives a month, builds, recruits, may send settlers and may write a trade offer.
+12. **crises** (`day/crises.ts`): one whose time is up ends, a neglected fever spreads, and one may strike.
+13. A waiting story letter goes out (`sendStoryLetter`) and chapters open or complete (`advanceChapters`).
 
-None of these functions know about days, projects, or the UI — they just transform numbers. That composition happens one layer up, in `application/simulateDay.ts`.
+`application/playDay.ts` wraps it: after the day it checks for a danger showing for the first time this season (strikes, a province rioting, cold homes, food running out, dangerous debt) and pauses with a notice, once per danger per season, never at 1x speed.
 
-## Daily tick system
+The calendar is simplified on purpose (`domain/country/calendar.ts`): twelve months of 30 days. Only the calendar helpers know that.
 
-`application/simulateDay.ts` exports `simulateDay(state: GameState): GameState`, which is called once per in-game day. It:
+**The ledger** (`domain/ledger`) is how the game explains itself. Every step books what it changed against a cause; player actions book theirs into `pendingLedger` through `recordAction`, and the next day folds it in. The monthly report and the top bar's "why" popovers read it back. Changes that happen after the calendar turns are booked to `late`, so they belong to the new month.
 
-1. Advances `state.date` by one day (`domain/country` calendar helper).
-2. Applies economy rules (income from tax/industry; active projects have already drawn their daily installment) to `treasury`.
-3. Applies food production/consumption to `food`.
-4. Applies industry, roads, and research accumulation.
-5. Advances any active `projects` by one day; when a project's `daysRemaining` hits 0, applies its completion effect (e.g., "+1 farm" → increases food production rate), records a `PlacedBuilding` at that project's `provinceId` (so the map can show it), and logs an event.
-6. Applies stability and popularity adjustments based on the new food/tax/debt numbers.
-7. Applies slow population growth/decline based on food and stability.
-8. Appends a `DailyDelta` to `state.history` (what changed today), used later for the monthly report.
-9. Every `RANDOM_EVENT_INTERVAL_MONTHS` (6), applies a random world event on top of everything else that day (see below) and logs it.
-10. Returns a **new** `GameState` object (the engine never mutates the state it's given — this keeps React's state updates predictable and makes the engine easy to unit test).
+**Modifiers** (`domain/policy`) are how everything that bends the rules is folded together. Laws, research (scaled by how well each turned out), the party's creed, the nation's character, law and research pairs (`domain/synergy`) and lasting story effects each describe their effect as `ModifierEffects`; `getModifiers(state)` adds them up, and every rule reads its factor from there. A new kind of effect is wired into the rule it changes once.
 
-A simplified calendar is used: every month has 30 days, and every year has 12 months (360 days/year). This avoids leap-year/variable-month-length edge cases that add complexity without adding gameplay value in the MVP. It can be swapped for a real calendar later without touching any other system, since only `domain/country`'s calendar helper knows about day/month/year math.
+## Letters and the clock
 
-**Random events**: `domain/country/calendar.ts` exports `isEveryNMonths(date, n)` (true on the first day of month 7, 13, 19... for `n=6`), and `domain/randomEvents/` holds a flat list of plain-data definitions (`RandomEventDefinition`: a name, flavor message, severity, and an *effect* — multipliers on treasury/food/population/a resource, or a flat stability delta) plus two pure functions: `pickRandomEvent()` (uniform random pick) and `applyRandomEventEffect(stats, resources, effect)`. `simulateDay` calls both only when `isEveryNMonths` is true for the newly-advanced date, folding the result into that day's stats/resources before returning. Multipliers rather than flat deltas were a deliberate choice — treasury and food both grow by orders of magnitude over a long game, so a flat "-500 treasury" would be devastating on day 1 and unnoticeable by year 5, while "-15%" scales with wherever the game currently is.
+The game stops for anything that needs an answer. `presentation/hooks/useGameClock.ts` is the only place with a timer; it runs `playDay` once per tick and refuses to resume while `isLetterWaiting(state)`: an unread briefing, a burden to choose, a decision, a demand, a crisis, a trade offer or an unanswered ultimatum. The simulation sets `isPaused` when one arrives; the clock makes sure Resume can't skip past it.
 
-## Map and provinces
+Letters never stack. A random decision rolls only when none is pending, a random crisis only when no other letter waits, and a story letter waits in `chapters.letters` until the decision slot is free.
 
-`domain/provinces/` holds the map's static geometry (`provinceData.ts` — an SVG coastline path plus sixteen province polygons, hardcoded; no geometry library ships to the browser) and a `PlacedBuilding` type (`{ id, provinceId, type }`).
+## Provinces and people
 
-The sixteen provinces are a later refinement of an original eight, generated by literally cutting each original polygon in half (along a vertical or horizontal line through its centroid, whichever axis was longer) and clipping with `polygon-clipping`. Splitting *inside* an existing shape rather than regenerating the whole map means the coastline, nation borders, and terrain assignments needed zero changes — only the province list and each `Nation.provinceIds` grew. The halves inherit the parent's terrain and a directional name (`West Caldermoor`/`East Caldermoor`, `North Redgate`/`South Redgate`), so the lineage is visible in the UI.
+Sixteen provinces on one continent plus six islands, all in `domain/provinces/provinceData.ts` and `domain/islands/islandData.ts` as hardcoded SVG geometry (no geometry library ships to the browser). Provinces and settled islands read as one kind of place through `getPlace` and `getOwnedProvinceIds` (`provinceRules.ts`).
 
-Every `Project` now carries a `provinceId`, set by whichever province is selected on the map when the player clicks a build action. When `applyProjectCompletion` finishes a project, it appends a `PlacedBuilding` to `state.placedBuildings` in addition to incrementing the usual national count (`farmCount`, etc.) — the map is a second, purely additive view of the same event, not a separate source of truth.
+Each province is a place people live (`ProvinceState`): its population, which sums to the nation's; local stability and unrest stage, drifting toward the nation's minus local troubles; and its uprising, crisis, dike and seam. Homes are counted province by province (`domain/housing`), and jobs are filled from each province's own people first, then by commuters (`domain/labour`). People move toward free homes and work (`provinceMigration.ts`).
 
-Each province also caps how many of a building type it can hold (`MAX_FARMS_PER_PROVINCE`, etc. in `domain/constants.ts`) — see "Build actions and the province cap" below.
+Buildings are built through `application/actions/createBuildAction.ts`. Each build action carries `.canBuild(state, provinceId)` and `.maxPerProvince`, so the UI asks the same question the action answers. The cap counts finished and queued buildings together. A finished project is placed by `placeBuilding` in `applyProjectCompletion.ts`, which also raises the national count; `pullDownBuilding` is its reverse, used by crises and story letters.
 
-Deliberately **not** modeled yet: per-province stats. `treasury`, `food`, `industry`, and the rest remain one national pool regardless of where buildings are placed — `domain/economy`, `domain/food`, and friends are untouched by provinces. Splitting the economy per-province (so a province's own farms feed its own population, etc.) is a real architectural change — probably a `Province` gaining its own `CountryStats`-shaped slice — and is tracked as a ROADMAP item rather than done here, to keep this step additive instead of a rewrite.
+**Uprisings** (`domain/uprising`): a province that riots long enough rises, its workplaces seized. Rebel strength grows or falls by the day; police, militia, a calm country and the rebels' own terms bring it down. Left at full strength for a month it breaks away (`application/loseProvince.ts`): its people leave the country, it joins `lostProvinceIds`, and its rebels hold it in `freeProvinces` until regiments take it back (`retakeProvince.ts`).
 
-`presentation/components/MapPanel.tsx` renders the geometry as an SVG: provinces are clickable `<path>` elements (selection is forwarded up to `App.tsx`, which owns `selectedProvinceId` as local `useState`). Each owned province gets one compact "info bar" — a small translucent strip below its label showing its terrain's resource icon, then one icon per building type present with a "×N" count (not one icon per individual building) — since sixteen smaller provinces leave much less room per province than the original eight did. Provinces the player doesn't own render dimmed and un-clickable but filled with *their actual owning nation's* color (via `getNationForProvince`), not a flat "foreign" grey — `MapPanel` has no special-cased "enemy color," it just looks up whoever owns a province and uses their color at reduced opacity.
+## Resources, the market and trade
 
-`MAP_GEOMETRY` also carries `otherLandmasses`: a few small decorative island coastlines (no provinces, no owner) rendered the same way as the main continent, just to make the world feel bigger than one landmass. They're generated the same offline way as the main coastline (smooth sine-harmonic noise around a circle, not per-vertex random jitter — the latter produces spiky, self-intersecting shapes) and hardcoded like everything else in `provinceData.ts`.
+Each terrain gives a resource (`domain/resources`). `getLandProduction` (`domain/crises/crisisRules.ts`) is the country's day of goods from every province it holds, less what crises take.
 
-**Roads get their own rendering**, not `BuildingIcon`: a road built in the capital grows its hub marker; a road built elsewhere thickens the single line connecting that province to the capital, with a "×N" badge carrying the exact count once there's more than one. The line has a floor and ceiling width so it stays legible whether it's carrying 1 road or the province's max.
+The continental market (`domain/market`) holds a stock of every good, and prices come from that stock against its seasonal equilibrium. Selling into it lowers the price, buying raises it, and buying always costs more than selling. `holdsPort(state)` asks whether the country still holds a mainland coast today, not whether it started with one; a port buys cheaper. A settled island's coast doesn't count: it trades through its harbour.
 
-## Build actions and the province cap
+## Neighbours
 
-`application/actions/createBuildAction.ts` returns a function with two extra properties attached — `.canBuild(state, provinceId)` and `.maxPerProvince` — rather than being a bare function, so `ActionsPanel` can ask "would this succeed?" and show the cap without duplicating the affordability/cap logic. `countBuildingsInProvince(state, type, provinceId)` counts *completed* (`state.placedBuildings`) plus *in-progress* (`state.projects`) buildings of that type in that province; the cap check is `count < maxPerProvince`, so queuing a build that would only complete once already-over-cap is blocked up front rather than wasting treasury/resources on a project. `buildFarm`, `buildFactory`, and `buildRoad` each just supply their numbers (`FARM_COST`, `MAX_FARMS_PER_PROVINCE`, etc.) to the factory — the check-afford → check-resource → check-cap → queue-project sequence lives in exactly one place.
+Each neighbour is a country of its own (`domain/neighbours`), living a month at a time by the same numbers as the player's, and choosing by its ruler's temper (`neighbourData.ts`). Its dice are its own, drawn from the nation and the month (`neighbourDice`), so nothing a neighbour does shifts the luck of anything else; the balance tests rely on that.
 
-**Zoom and pan**: `MapPanel` owns a `ViewBox` (`{ x, y, width, height }`) as local `useState` — the SVG `viewBox` attribute *is* the camera, so zooming/panning never touches map coordinates, only which rectangle of that fixed world is currently visible. Wheel-to-zoom is a native (non-passive) `wheel` listener attached via `useEffect`+`ref` rather than React's `onWheel`, because React attaches its synthetic wheel handler as passive by default and `preventDefault()` silently fails there (needed here to stop the page itself from scrolling while the cursor is over the map). Dragging pans by translating the delta from screen pixels into `viewBox` units (divide by the SVG's rendered size, multiply by `viewBox.width`/`height`). Every camera update goes through `clampViewBox`, which bounds zoom to `[1x, 6x]` and pan to a small overscroll margin around the coastline so you can't scroll away into empty space indefinitely. Drag vs. click is disambiguated with a movement-distance threshold (`DRAG_CLICK_THRESHOLD`): once a pointer session moves far enough, a ref flag suppresses the next province-selection click, since browsers fire `click` on mouseup regardless of how far the pointer traveled in between.
+- **Stores**: a neighbour's land fills its stores of wood, ore and coal each month (`NEIGHBOUR_STORE_PER_PROVINCE`, `NEIGHBOUR_COAL_PER_HILLS`, up to `NEIGHBOUR_STORE_CAP`).
+- **Trade by letter** (`tradeRules.ts`): now and then a neighbour offers to sell, under the market, food it has to spare or goods from its stores that you are short of, or to buy the one good its land lacks (Astravia coal, Caldenreich wood, Veldoria ore). Prices are fixed when the letter is written.
+- **Relations** (`relationsRules.ts`): -100 to 100, moved by what you do and remembered as a few feelings with reasons.
+- **Treaties** (`treatyRules.ts`): an island accord, or buying back an island. `whyNoBuyBack` refuses until the neighbour has held the island for `BUY_BACK_HELD_DAYS`, counted from `foreignIslandsSince`; the price is a base plus so much per person living there.
 
-## Resources and trade
+## Islands
 
-`domain/resources/` defines `ResourceType` (`"wood" | "ore" | "grain" | "fish"`), a `ResourceBundle` (a `Record<ResourceType, number>`), and two rule files:
+`domain/islands` and `domain/expeditions`: a venture scouts an island, then a settler ship founds a settlement, and on landing the island becomes one of the country's provinces. Harbours on both sides link a colony (people cross, no supply fee). An island with people of its own is settled on terms. Neighbours race for the islands with their own voyages: a neighbour's ruler decides when to set out with the rest of its month (`day/neighbours.ts`), and its ships sail and land with the buildings step (`day/race.ts`).
 
-- `resourceRules.ts` — `RESOURCE_BY_TERRAIN` maps each `Terrain` to the resource it produces; `calculateDailyProduction(terrains: Terrain[])` sums one unit per owned province of matching terrain (`RESOURCE_PER_PROVINCE` in `domain/constants.ts`); `canAffordResource`/`deductResource` mirror the `canAfford`/deduct pattern already used for treasury in `domain/economy`.
-- `tradeRules.ts` — `nationHasPort(nation)` checks whether any of `nation.provinceIds` has `terrain === "coast"` (looked up via `MAP_GEOMETRY`); `getTradeRate(nation)` returns `PORT_TRADE_RATE` (2) or `BASE_TRADE_RATE` (4) accordingly.
+## The military
 
-`application/simulateDay.ts` adds resource production as its own step: it resolves the current nation via `getNation(working.nationId)`, maps its `provinceIds` to their `terrain` via `MAP_GEOMETRY`, and adds `calculateDailyProduction(...)` to `working.resources`. `buildFarm`/`buildFactory`/`buildRoad` each gained a resource cost (`FARM_WOOD_COST`, `FACTORY_ORE_COST`, `ROAD_ORE_COST`) checked and deducted the same way treasury already was — two `canAfford`-style guards instead of one. A new `application/actions/tradeResources.ts` implements the bank trade: `canTrade`/`tradeResources(state, give, receive)` deduct `rate * TRADE_BATCH_SIZE` of `give` and add `TRADE_BATCH_SIZE` of `receive`, batched so a useful trade isn't a dozen individual clicks.
+`domain/military`: `regiments` holds every country's regiments as counters on the map.
 
-On the presentation side, `ResourceIcon.tsx` (log/rock/wheat-sheaf/fish glyphs, same basic-shapes approach as `BuildingIcon`/`StatIcon`) backs three consumers: `ResourcesPanel.tsx` (a stat-style readout), a small badge per owned province on `MapPanel.tsx` (positioned at a fixed offset that stays clear of the capital's road hub and building-icon grid), and `TradePanel.tsx` (give/receive icon pickers plus a trade button showing the live rate and whether the nation has a port).
+- `militaryRules.ts`: how many a country can keep, how they march (a few days over land, a few weeks by sea), and how a computer ruler raises its own.
+- `battleRules.ts`: fighting a day at a time, with no chance in it. Regiments in a province that broke away wear its rebels down; landing on a neighbour's island means a battle with its garrison, then a siege. `forecastFight` and `forecastLanding` say how it will go before you commit.
+- `warRules.ts` and `threatRules.ts`: war is fought over islands only, never a neighbour's mainland. You may declare it; a hostile, stronger neighbour may send an ultimatum first and then sail.
 
-## Nations and the start screen
+The militia (`militiaActions.ts`) is separate: a cheap home force for uprisings, not a counter on the map.
 
-`domain/nations/` defines a `Nation` (`{ id, name, color, capitalProvinceId, provinceIds, blurb }`) and a static roster of three (`nationData.ts`), each owning a disjoint subset of the sixteen provinces. `getNationForProvince(provinceId)` answers "who owns this province," used by both the in-game map and the start-screen preview map.
+## Province crises
 
-The game doesn't begin with a `GameState` — `useGameClock`'s state starts as `null`, and `application/startNewGame.ts` now takes a `nationId` argument (it looks up the `Nation`, seeds starting buildings inside that nation's own provinces via its `capitalProvinceId` and `provinceIds`, and stamps `nationId` onto the resulting `GameState`). `App.tsx` renders `StartScreen` whenever `state` is `null`; the moment `onSelectNation` fires, `useGameClock.startGame(nationId)` creates the real `GameState` and the app switches to the normal game view. There is no action anywhere in `presentation/` that can set `nationId` again or return `state` to `null` — "locked in once chosen" is enforced simply by that action not existing, not by a runtime check.
+Trouble that strikes one province (`domain/crises`): a flood, a worked-out seam, a forest felled bare, fever, failing fishing grounds. `crisesFor(province, terrain, capacity, season)` says which a province's land and state lay it open to.
 
-## Monthly report system
+- `day/crises.ts` rolls and runs them. A random crisis strikes on the first of a month, from `CRISIS_FROM_MONTH` on (`CRISIS_CHANCE_PER_MONTH`, times the difficulty's `crisisChance`), weighted by kind (`CRISIS_WEIGHTS`), and only when no other letter waits, no crisis is under way anywhere, and the quiet spell after the last one (`crisisQuietUntil`) is over. A neglected fever spreads next door: it is the same crisis.
+- `actions/crisisActions.ts` answers one. Each answer is paid at once and sets how long the crisis runs and what share of the province's goods comes in meanwhile; retooling or closing a worked-out seam ends it there and then.
+- While it lasts the province's mood sits lower (`getCrisisUnrest`), its goods fall (`getProvinceYield`), and a flood leaves its farms `ruined` until it is over.
+- The player sees it in three places only: a mark on the province, a line on its card, and the letter.
 
-`application/generateMonthlyReport.ts` exports `generateMonthlyReport(state: GameState): MonthlyReport`. It is called by `simulateDay` whenever `state.date.day` wraps back to 1 (i.e., a new month has started). It reduces the `DailyDelta[]` entries accumulated since the last report into a summary: total income, total expenses, net treasury change, population change, stability change, and any notable events. The resulting `MonthlyReport` is pushed onto `state.monthlyReports`, and `state.history` is cleared to start accumulating the next month's deltas.
+## Chapters and stories
 
-## UI/simulation separation
+`domain/chapters/chapterData.ts` holds the words; `application/chapters.ts` decides when each chapter opens and when its objectives are met.
 
-`presentation/` never computes simulation values itself. Its two responsibilities are:
+**System chapters** open the game's systems one by one (the market, the assembly, research, unrest...). Each has a trigger and a date by which it opens anyway (`by`), so bad luck can delay a system but never keep it shut.
 
-1. **Driving time**: `presentation/hooks/useGameClock.ts` is a `useEffect`-based hook that, once per interval (interval length depends on `speed`), calls `application/simulateDay.ts` and stores the resulting `GameState` in React state — but only while a game has started and `isPaused` is false. Before the player picks a nation, `state` is `null` and the effect is a no-op.
-2. **Displaying state and forwarding actions**: components like `StatsPanel` or `ProjectsPanel` receive slices of `GameState` as props and render them. Components like `ActionsPanel` call `application/actions/*` functions (e.g., `buildFarm(state)`) when the player clicks a button, and hand the resulting new `GameState` back up to `App.tsx` to be stored.
+**Story chapters** (`STORY_CHAPTERS`, ids `"<nation>:<beat>"`) belong to one nation and open nothing, so every system still opens when it would and the difficulty ladder holds. Each campaign is two files:
 
-`App.tsx` is the only place that owns the live `GameState` (via `useState`) and is the seam between `presentation/` and the rest of the app — it imports from `application/`, never directly from deep inside `domain/`.
+- `domain/chapters/stories/<nation>.ts`: the chapters (title, briefing, party lines, objectives, an optional crisis, ending lines keyed by choice) and the letters (`DecisionDefinition`s marked `story: true`, so they never enter the random pool).
+- `application/stories/<nation>.ts`: `StoryRules` per chapter, `opens(state, month)` and `checks`, built from the helpers in `storyChecks.ts` (`answered`, `chose`, `crisisDealtWith`). They are gathered into `STORY_RULES`.
 
-**Layout**: the map is the central, dominant element rather than a banner above everything else. `App.tsx` renders `TopBar`, then a `.game-layout__main` flex row of `[left sidebar][map stage][right sidebar]` — `StatsPanel`/`ActionsPanel` on the left, `ProjectsPanel`/`ReportsPanel`/`EventLog` on the right, each independently scrollable, with the map filling all remaining space (`MapPanel`'s `<svg>` uses `preserveAspectRatio="xMidYMid meet"` so it scales cleanly rather than being capped at a fixed height). Below ~1100px viewport width, `.game-layout__main` switches to a column layout via a media query so it degrades to something usable on narrow screens instead of squeezing three columns.
+A story chapter opens only once the chapter it follows (`after`, one id or several) is **told**: opened, its briefing read, and its letter answered (`isTold`). Waiting on "told" rather than "done" keeps a story from stalling on an objective the player can't meet yet. A beat can branch by testing an earlier choice in its `opens` rule (Veldoria's sixth beat is the congress or the general strike, by the first letter's answer).
 
-**Deleted actions**: Military and Taxes are gone, not hidden. `recruitSoldiers.ts`, `taxActions.ts`, `domain/army/`, `calculateDailyExpenses`, and `CountryStats.armyStrength` were all removed once it was clear nothing could reach them — army strength was pinned at 0 for an entire game, which made army upkeep (the model's only expense) 0 too, and dragged an always-`-0` "Upkeep" tile, an unreachable map marker, and an always-`-0` "Expenses" report row along behind it. `taxRate` itself survives: it still feeds income and popularity drift, there's just no control to change it. Reintroducing either means designing it, not un-hiding it.
+Reading a story briefing (`readBriefing`) queues its letter and strikes its crisis, if it has one, provided the province is held, free of a crisis and, for a flood, not diked. Story crises ignore the quiet spell: the story calls for them.
 
-## How future systems can be added
+A story letter's answer applies its numbers like any decision, then its `StoryOutcome` (`application/storyOutcome.ts`): move a group's backing, political power, raise or pull down buildings in a named province, change a province's order, lay a lasting effect on the country (`GameState.lasting`, read by `getModifiers` until it runs out), make a province rise, start a crisis, or let a province off its taxes. The choice is kept as a deed (`"<letter>:<option>"`), which later rules and `storyEnding` read; the ending screen shows a line for each turn the story took. `presentation/storyText.ts` writes an outcome out in plain words on the letter.
 
-Because of the layering, most future features (see ROADMAP.md) follow the same recipe:
+## Difficulty and the Long Reign
 
-1. **New stat or resource** (e.g., "steel"): add it to `CountryStats`, add a `domain/steel/` module with its production/consumption rules, wire it into `simulateDay`, and add a line to `StatsPanel`.
-2. **New player action** (e.g., "build a mine"): add a new file in `application/actions/`, following the same shape as `buildFarm.ts` (validate cost → deduct treasury → push a new `Project`).
-3. **New system entirely** (e.g., trade, diplomacy): add a new `domain/<system>/` folder and a corresponding `application/` use case, without needing to touch unrelated domains — `domain/provinces/` and `domain/nations/` (see above) are examples of this already done. Fully simulating the two non-player nations (instead of just displaying their territory) would mean `GameState` holds a collection of country objects instead of one, but the per-country rules in `domain/` stay the same.
-4. **Persistence** (save/load): since `GameState` is a plain serializable object, this is a `presentation/` (or new `infrastructure/`) concern — serialize to `localStorage`/a file, no changes needed to `domain/` or `application/`.
+`domain/difficulty/difficultyData.ts`: each level changes a few numbers, and every change is listed on the start screen in plain words. The levels are measured, not guessed (see Tests). A lost game may go back to its last checkpoint a number of times set by the difficulty (`retriesUsed`).
 
-The goal is that adding a feature almost always means *adding* a file, rarely *editing* several existing ones.
+`domain/reign`: in the Long Reign, each election won brings a choice of burdens, which stack. The longest reign per difficulty is kept in the browser (`presentation/hooks/records.ts`).
+
+## Presentation
+
+`App.tsx` owns the live game through `useGameClock` and wires it into the windows. It is the seam: it imports from `application/` and reads from `domain/` only for data.
+
+**One place for each thing.** `presentation/navigation.ts` alone decides which window and section answers each problem, so the tab layout can change without touching the rules. The rule it keeps: the top bar shows each headline figure once, and a window shows it again only at the head of its own detail, never as a badge on its tab. A tab's "!" stays, since it says where in a window to look. A campaign adds no window or tab: its story arrives as briefing letters and lives in the objectives box on the map. `objectiveDestination` and `STORY_DESTINATIONS` send each objective to where it is done.
+
+**The map** (`MapPanel.tsx`) is the centre of the screen, an SVG whose `viewBox` is the camera. Wheel zoom uses a native non-passive listener (React's is passive, so `preventDefault` would fail); every camera move goes through `clampViewBox`; a press that moves more than `DRAG_CLICK_THRESHOLD` pixels is a drag, not a click.
+
+- `nationFrontiers.ts`: each nation's outer frontier as line segments, worked out from the provinces it holds now (`nationShapes(lostProvinceIds)`, cached per set of lost provinces), so a province that broke away falls outside the band and the nation's name moves onto the land it still holds.
+- `MapArmies.tsx`: regiment counters, picked up and sent by tapping. A march is a dashed line along the way still to go, with the counter moving along it by distance. At sea the way comes from `seaRoutes.ts`: waypoints a little off every coast (each corner of the continent, each corner of every island's convex hull) and the shortest way between those that can see each other without crossing land. Drawing only: the days at sea are the rules'.
+
+**Tooltips** (`Tooltips.tsx`, `tipPreference.ts`): one tooltip for the whole game takes over plain `title` attributes. It is asked for, not thrown at the player: it shows only once the pointer has rested (`TIP_REST_MS`, shorter when reading along a row), Shift shows it at once, a click puts it away until the pointer leaves, and resting tips can be turned off from the top bar. The province card on the map follows the same rest. On touch, a press and hold shows a tip.
+
+**Words**: `glossary.ts` names each thing once, and `tests/vocabulary.test.ts` checks the player-facing text uses those names. Player-facing text is plain sentences.
+
+## Tests
+
+Vitest, in `tests/`. Two kinds:
+
+- **Rules**: focused tests per system (crises, uprisings, sea routes, saves, each nation's story...).
+- **Played games**: `tests/support/carefulPlayer.ts` plays whole games by script, seeded through `tests/support/seededRandom.ts` (the game rolls `Math.random`; tests swap in a seeded generator, so a result can be repeated). It plays careful or sloppy, can follow one path of a tree, chooses Long Reign burdens, keeps garrisons, answers crises, and with `neglect` lets things slide until a province is lost.
+
+`tests/balance.test.ts` holds the ladder: 27 five-year games per difficulty, with bars for the sloppy and careful players (the measured results are in `difficultyData.ts`). Any change that touches balance should be measured against it, and the measurement written up in TODO.md.
+
+Before a commit: `npx tsc -b`, `npm run lint`, `npm test` and `npm run build`.
+
+## Adding things
+
+Most features follow one of these recipes, and most mean adding files rather than editing many:
+
+1. **A new figure or system**: a `domain/<name>/` folder with its rules, a step (or a line) in the day, and a place on screen chosen by the one-place rule in `navigation.ts`.
+2. **A new player action**: a file in `application/actions/`, exported from `actions/index.ts`, booking what it changed through `recordAction`.
+3. **A new `GameState` field**: a default in `hydrateGameState`, or old saves break.
+4. **A new crisis kind**: its answers and costs in `crisisRules.ts`, what it does in `day/crises.ts` and `crisisActions.ts`, its words in `presentation/crisisText.ts`, its mark in `CrisisIcon.tsx`.
+5. **A new story beat**: a chapter and letter in `domain/chapters/stories/<nation>.ts`, its rules in `application/stories/<nation>.ts`, a destination for any new objective in `navigation.ts`, and a line in that nation's story test.
+6. **A new modifier**: a field in `ModifierEffects` (`domain/policy/modifiers.ts`), read by the rule it changes; laws, research, creeds and story effects can all then use it.

@@ -27,7 +27,7 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 - **Small screens.** Below 1050px the tree details drop under the tree (picking a node scrolls to them); below about 700px the tree scrolls sideways.
 - **Chapters are the same for every nation.** Nation-specific chapters (Veldoria meeting the streets first, say) would suit their stories better, but would need their own balance pass.
 - **Long Reign burdens are drawn at random, and chosen well.** The careful scripted player takes the burden that hurts it least (money and goods before support; `BURDEN_PREFERENCE` in tests/support/carefulPlayer.ts), the sloppy one the first offered. Measured 2026-10-20, one seed, three nations: choosing lasts 14.6 years on Normal and 9.6 on Hard, against 12.1 and 6.1 taking the first. Every reign still ends inside twenty years.
-- **TECHNICAL_DESIGN.md** may still describe the early MVP in places. README and GAME_DESIGN were brought up to date on 2026-10-16.
+- **TECHNICAL_DESIGN.md** was rewritten for the game as it stands on 2026-10-28 (step 6, phase J). README and GAME_DESIGN were brought up to date on 2026-10-16.
 
 ## Uprisings
 
