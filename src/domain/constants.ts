@@ -326,7 +326,7 @@ export const TAX_RELIEF_DAYS = 360; // a year without taxes from the province
 export const RANDOM_EVENT_INTERVAL_MONTHS = 6; // a random event fires every N in-game months
 
 // --- Political decisions (see domain/decisions) ---
-export const DECISION_CHANCE_PER_MONTH = 0.18; // rolled on the first day of every month; ~1 every 5-6 months on average
+export const DECISION_CHANCE_PER_MONTH = 0.12; // rolled on the first day of every month; ~1 every 8 months on average
 export const MAX_DECISION_HISTORY = 20;
 // Situational decisions (see decisionData.ts): the country's own troubles
 // come knocking more often than chance does, and win the pick when they can.
@@ -404,7 +404,7 @@ export const RELATIONS_HOSTILE_APPETITE = 1.5; // how much keener on islands
 export const RELATIONS_TRADE = 5; // a trade with them, accepted
 
 // Trade by letter (see domain/neighbours/tradeRules.ts).
-export const TRADE_OFFER_CHANCE = 0.1; // a month, for each neighbour, once the market is open
+export const TRADE_OFFER_CHANCE = 0.07; // a month, for each neighbour, once the market is open
 export const TRADE_SELL_DISCOUNT = 0.15; // their food, under the market's price...
 export const TRADE_BUY_PREMIUM = 0.2; // ...and what they want, over what the market pays you
 export const TRADE_PRICE_PER_RELATION = 0.001; // and each point of relations moves the price this share in your favour

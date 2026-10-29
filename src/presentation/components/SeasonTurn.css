@@ -1,0 +1,170 @@
+/* The turn of a season (see SeasonTurn.tsx): over everything, taking no
+   clicks, gone on its own after a few seconds. */
+.season-turn {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  overflow: hidden;
+  pointer-events: none;
+  animation: season-turn-out 4.6s ease forwards;
+}
+
+.season-turn--spring {
+  --turn-a: rgba(176, 210, 120, 0.55);
+  --turn-b: rgba(233, 169, 182, 0.5);
+}
+
+.season-turn--summer {
+  --turn-a: rgba(239, 201, 92, 0.55);
+  --turn-b: rgba(248, 226, 150, 0.6);
+}
+
+.season-turn--autumn {
+  --turn-a: rgba(224, 122, 38, 0.6);
+  --turn-b: rgba(184, 82, 28, 0.55);
+}
+
+.season-turn--winter {
+  --turn-a: rgba(169, 189, 208, 0.65);
+  --turn-b: rgba(246, 243, 236, 0.7);
+}
+
+/* The band: the new season's colour, sweeping from left to right. */
+.season-turn__band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 70%;
+  background: linear-gradient(100deg, transparent 0%, var(--turn-a) 25%, var(--turn-b) 50%, var(--turn-a) 75%, transparent 100%);
+  mix-blend-mode: multiply;
+  animation: season-sweep 2.8s cubic-bezier(0.45, 0, 0.35, 1) both;
+}
+
+.season-turn--winter .season-turn__band {
+  mix-blend-mode: screen;
+}
+
+@keyframes season-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(160%);
+  }
+}
+
+.season-turn__fall {
+  position: absolute;
+  inset: 0;
+}
+
+.season-turn__flake {
+  position: absolute;
+  top: -40px;
+  animation-name: season-fall;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+.season-turn__fall.is-rising .season-turn__flake {
+  top: auto;
+  bottom: -40px;
+  animation-name: season-rise;
+}
+
+@keyframes season-fall {
+  from {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  to {
+    transform: translate(var(--drift), 110vh) rotate(var(--turn));
+    opacity: 0.9;
+  }
+}
+
+@keyframes season-rise {
+  from {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  to {
+    transform: translate(var(--drift), -70vh) rotate(var(--turn));
+    opacity: 0;
+  }
+}
+
+/* The card: the season's name in gilt on the frame's green silk. */
+.season-turn__card {
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: min(32rem, calc(100vw - 2rem));
+  padding: 0.9rem 2.2rem 1rem;
+  background: var(--damask) 0 0 / 48px 64px repeat, var(--bar);
+  border: 1px solid var(--bar-edge);
+  outline: 1px solid var(--gilt);
+  outline-offset: -5px;
+  text-align: center;
+  transform: translateX(-50%);
+  animation: season-card-in 0.7s ease-out 0.5s both;
+}
+
+.season-turn__name {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  color: var(--gilt-bright);
+}
+
+.season-turn__line {
+  font-size: 1rem;
+  color: #efe3c4;
+}
+
+@keyframes season-card-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes season-turn-out {
+  0%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Without motion: only the card, fading in and out. */
+@media (prefers-reduced-motion: reduce) {
+  .season-turn__band,
+  .season-turn__fall {
+    display: none;
+  }
+
+  .season-turn__card {
+    animation: none;
+  }
+}

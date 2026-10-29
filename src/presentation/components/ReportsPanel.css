@@ -1,22 +1,9 @@
 /* The monthly report (see ReportsPanel.tsx): the month's numbers big at the
    head, the causes in ruled cards, and the months behind it as a table. */
 
+/* Framed as an empty plate (index.css). */
 .reports-panel__empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 2rem 1rem;
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.reports-panel__empty svg {
-  display: block;
-}
-
-.reports-panel__empty p {
-  margin: 0;
+  min-height: 10rem;
 }
 
 /* --- Which month ---------------------------------------------------------- */
@@ -38,6 +25,22 @@
 .report-head__note {
   font-style: italic;
   color: var(--ink-muted);
+}
+
+.report-head__people {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+  font-weight: 700;
+}
+
+.report-head__people.is-gain {
+  color: var(--success);
+}
+
+.report-head__people.is-loss {
+  color: var(--danger);
 }
 
 /* --- The five numbers, big ----------------------------------------------- */

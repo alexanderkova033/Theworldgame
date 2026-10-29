@@ -48,7 +48,7 @@ export const DECISIONS: DecisionDefinition[] = [
     icon: "popularity",
     options: [
       { id: "attack", label: "Attack them", effects: { popularityDelta: 6, stabilityDelta: -3 } },
-      { id: "high-road", label: "Take the high road", effects: { popularityDelta: 2, stabilityDelta: 2 } },
+      { id: "high-road", label: "Take the high road", effects: { stabilityDelta: 2 } },
     ],
   },
   {
@@ -58,7 +58,7 @@ export const DECISIONS: DecisionDefinition[] = [
     icon: "treasury",
     options: [
       { id: "attend", label: "Attend, court donors", effects: { treasuryDelta: 800, popularityDelta: -2 } },
-      { id: "decline", label: "Decline, stay with the people", effects: { popularityDelta: 4 } },
+      { id: "decline", label: "Decline, stay with the people", effects: { popularityDelta: 2 } },
     ],
   },
   {
@@ -78,7 +78,7 @@ export const DECISIONS: DecisionDefinition[] = [
     icon: "popularity",
     options: [
       { id: "amplify", label: "Amplify it", effects: { popularityDelta: 8, stabilityDelta: -5 } },
-      { id: "ignore", label: "Stay above it", effects: { popularityDelta: 1 } },
+      { id: "ignore", label: "Stay above it", effects: { stabilityDelta: 1 } },
     ],
   },
   {
@@ -118,8 +118,8 @@ export const DECISIONS: DecisionDefinition[] = [
     prompt: "This season's yield exceeds every estimate.",
     icon: "food",
     options: [
-      { id: "sell", label: "Sell the surplus", effects: { treasuryDelta: 500, foodDelta: -1000 } },
-      { id: "store", label: "Store it for lean times", effects: { foodDelta: 1500, popularityDelta: 2 } },
+      { id: "sell", label: "Sell the surplus", effects: { treasuryDelta: 500, foodDelta: -50000 } },
+      { id: "store", label: "Store it for lean times", effects: { foodDelta: 30000 } },
     ],
   },
   {
@@ -129,7 +129,7 @@ export const DECISIONS: DecisionDefinition[] = [
     icon: "population",
     options: [
       { id: "grand", label: "Throw a grand parade", effects: { treasuryDelta: -500, popularityDelta: 7 } },
-      { id: "simple", label: "Keep it simple", effects: { popularityDelta: 2 } },
+      { id: "simple", label: "Keep it simple", effects: { popularityDelta: 1 } },
     ],
   },
 
@@ -204,7 +204,7 @@ export const DECISIONS: DecisionDefinition[] = [
     icon: "treasury",
     options: [
       { id: "sell", label: "Sell the forests", effects: { treasuryDelta: 1800, popularityDelta: -7, stabilityDelta: -2 } },
-      { id: "keep", label: "Keep them for the people", effects: { popularityDelta: 3 } },
+      { id: "keep", label: "Keep them for the people", effects: { popularityDelta: 2 } },
     ],
   },
   {
@@ -214,7 +214,7 @@ export const DECISIONS: DecisionDefinition[] = [
     icon: "industry",
     options: [
       { id: "accept", label: "Accept their terms", effects: { treasuryDelta: 2200, popularityDelta: -9 } },
-      { id: "refuse", label: "Refuse, stay independent", effects: { popularityDelta: 4, stabilityDelta: 1 } },
+      { id: "refuse", label: "Refuse, stay independent", effects: { popularityDelta: 2 } },
     ],
   },
   {

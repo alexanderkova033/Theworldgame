@@ -1,7 +1,8 @@
-// Pop-up notices in the corner of the map for everything that happens: a
-// new monthly report, a building breaking down, and every other entry that
-// lands in the event log. Each one has a button straight to the
-// tab that deals with it, and fades out on its own after a few seconds.
+// Pop-up notices in the corner of the map for what happens to the country:
+// a bad month's report, a building breaking down, and the other entries in
+// the event log that the player didn't do themselves (see eventKinds.ts).
+// Each one has a button straight to the tab that deals with it, and fades
+// out on its own after a few seconds.
 //
 // A notice repeated while it's still showing (e.g. "stability is critically
 // low", which fires daily) is folded into the one already up, not stacked.
@@ -31,9 +32,10 @@ interface Toast {
 // Every toast's button goes where the event's problem is dealt with (see
 // eventKinds.ts) — the event log otherwise.
 function toastFromEvent(event: GameEvent): Toast | null {
-  // A chapter arrives as its own briefing letter; a toast would only repeat it.
-  if (event.topic === "chapter") return null;
-  const { kind, action } = getEventKind(event);
+  // What only belongs in the log (see eventKinds.ts); a chapter arrives as
+  // its own briefing letter, so a toast would only repeat it.
+  const { kind, action, toast } = getEventKind(event);
+  if (event.minor || toast === "never" || (toast === "warnings" && event.severity === "info")) return null;
   if (kind === "breakdown") {
     return {
       key: event.id,
@@ -68,6 +70,11 @@ function reportHeadline(report: MonthlyReport): string {
   const amount = formatSigned(total, metric === "support" || metric === "stability");
   const why = causes.map((c) => getCauseInfo(metric, c.cause).label.toLowerCase()).join(" and ");
   return `${METRIC_LABELS[metric]} ${amount}${metric === "treasury" ? ` ${CURRENCY_SYMBOL}` : ""}${why ? `: ${why}` : ""}`;
+}
+
+function isBadMonth(report: MonthlyReport): boolean {
+  const headline = report.ledger ? getLedgerHeadline(report.ledger) : null;
+  return headline !== null && headline.total < 0;
 }
 
 function toastFromReport(report: MonthlyReport): Toast {
@@ -131,9 +138,11 @@ export function Toasts({ events, monthlyReports, isPaused, onOpenPanel }: Toasts
     }
     lastEventId.current = events[0]?.id ?? null;
 
+    // A month's report pops up only when its headline is a fall worth asking
+    // "why?" about; a good month waits in Reports.
     const report = monthlyReports[0];
     if (report && report.id !== lastReportId.current) {
-      fresh.unshift(toastFromReport(report));
+      if (isBadMonth(report)) fresh.unshift(toastFromReport(report));
       lastReportId.current = report.id;
     }
     if (fresh.length === 0) return;

@@ -26,7 +26,7 @@ const BASE_TICK_MS = 3000;
 // write instead of up to 5/sec.
 const AUTOSAVE_DEBOUNCE_MS = 400;
 
-function isLetterWaiting(s: GameState): boolean {
+export function isLetterWaiting(s: GameState): boolean {
   return (
     s.chapters.unread.length > 0 ||
     !!s.burdenOffer ||

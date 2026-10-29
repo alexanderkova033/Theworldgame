@@ -147,6 +147,11 @@ export function getChapter(id: ChapterId): ChapterData {
   return (CHAPTERS.find((c) => c.id === id) ?? STORY_CHAPTERS.find((c) => c.id === id))!;
 }
 
+// The story chapter that sends this letter, if any.
+export function getLetterChapter(letterId: string): ChapterData | undefined {
+  return STORY_CHAPTERS.find((c) => c.letter === letterId);
+}
+
 // The chapters a game of this nation is told: the systems', then its story.
 export function chaptersFor(nationId: string): ChapterData[] {
   return [...CHAPTERS, ...STORY_CHAPTERS.filter((c) => c.nation === nationId)];

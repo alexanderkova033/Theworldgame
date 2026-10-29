@@ -8,6 +8,7 @@ import type { GameState } from "../../domain/country/types";
 import { playSeal } from "../audio/sound";
 import { Modal } from "./Modal";
 import { NavIcon } from "./NavIcon";
+import { StoryPlate } from "./StoryPlate";
 
 // What each system is called where the player finds it.
 const FEATURE_NAMES: Record<Feature, string> = {
@@ -39,6 +40,7 @@ export function ChapterBriefing({ state, onRead }: ChapterBriefingProps) {
   return (
     <Modal title={chapter.title} icon={<NavIcon type="reports" size={22} />} onClose={read}>
       <div className="briefing">
+        <StoryPlate chapterId={id} />
         <p className="briefing__letter">
           {chapter.briefing}
           {chapter.partyLines?.[state.partyId] && <> {chapter.partyLines[state.partyId]}</>}

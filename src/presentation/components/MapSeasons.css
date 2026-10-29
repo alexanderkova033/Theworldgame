@@ -1,0 +1,88 @@
+/* The season on the chart (see MapSeasons.tsx). MapPanel sets data-season;
+   each season names its washes here, and the land and sea ease from one
+   to the next over a few seconds. */
+.map-panel {
+  --season-land: #ffffff;
+  --season-land-opacity: 0;
+  --season-frost-opacity: 0;
+  --season-sea: #ffffff;
+  --season-sea-opacity: 0;
+}
+
+.map-panel[data-season="spring"] {
+  --season-land: #c3d98e;
+  --season-land-opacity: 0.38;
+  --season-sea: #cfe0cf;
+  --season-sea-opacity: 0.2;
+}
+
+.map-panel[data-season="summer"] {
+  --season-land: #efc95c;
+  --season-land-opacity: 0.34;
+  --season-sea: #b7d6cc;
+  --season-sea-opacity: 0.22;
+}
+
+.map-panel[data-season="autumn"] {
+  --season-land: #e07a26;
+  --season-land-opacity: 0.44;
+  --season-sea: #c2a27a;
+  --season-sea-opacity: 0.24;
+}
+
+.map-panel[data-season="winter"] {
+  --season-land: #a9bdd0;
+  --season-land-opacity: 0.5;
+  --season-frost-opacity: 0.34;
+  --season-sea: #8197a8;
+  --season-sea-opacity: 0.38;
+}
+
+.map-season__wash,
+.map-season__sea {
+  mix-blend-mode: multiply;
+  transition:
+    fill 2.6s ease,
+    opacity 2.6s ease;
+}
+
+.map-season__wash {
+  fill: var(--season-land);
+  opacity: var(--season-land-opacity);
+}
+
+.map-season__sea {
+  fill: var(--season-sea);
+  opacity: var(--season-sea-opacity);
+}
+
+/* Frost: the land paled toward white, as snow lies on a printed chart. */
+.map-season__frost {
+  fill: #f6f3ec;
+  opacity: var(--season-frost-opacity);
+  transition: opacity 2.6s ease;
+}
+
+.map-season__mark {
+  opacity: 0;
+  transition: opacity 2.2s ease 0.6s;
+}
+
+.map-panel[data-season="spring"] .map-season__mark--spring,
+.map-panel[data-season="autumn"] .map-season__mark--autumn,
+.map-panel[data-season="winter"] .map-season__mark--winter {
+  opacity: 0.85;
+}
+
+.map-panel[data-season="summer"] .map-season__mark--summer {
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-season__wash,
+  .map-season__sea,
+  .map-season__frost,
+  .map-season__mark {
+    transition: none;
+  }
+}

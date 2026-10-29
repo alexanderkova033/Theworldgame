@@ -114,12 +114,13 @@ export function BudgetPanel({ state, production, onOpenPanel }: { state: GameSta
       go: { ...PEOPLE, label: "Workers" },
     },
   ];
+  // A cost that is nothing today (no staff, nothing being built) takes no row.
   const spending: BudgetLine[] = [
     {
       key: "wages",
       icon: <WagesIcon size={20} />,
       label: "Wages",
-      detail: scientists + police > 0 ? `${plural(scientists, "scientist", "scientists")} and ${plural(police, "officer", "officers")}` : "Nobody on the payroll",
+      detail: `${plural(scientists, "scientist", "scientists")} and ${plural(police, "officer", "officers")}`,
       value: -production.salaries,
     },
     ...(production.armyPay > 0
@@ -138,7 +139,7 @@ export function BudgetPanel({ state, production, onOpenPanel }: { state: GameSta
       key: "building",
       icon: <NavIcon type="build" size={20} />,
       label: "Building",
-      detail: projects > 0 ? `Instalments on ${plural(projects, "project", "projects")}` : "Nothing being built",
+      detail: `Instalments on ${plural(projects, "project", "projects")}`,
       value: -production.buildingInstalments,
       hint: "A new building takes 60% of its price the day you order it; the rest comes out here, a little each day, until it's finished.",
       go: { ...BUILDINGS, label: "Build" },
@@ -192,7 +193,7 @@ export function BudgetPanel({ state, production, onOpenPanel }: { state: GameSta
             </th>
             <td className="budget-sheet__subtotal is-loss">{formatSigned(-totalOut)}</td>
           </tr>
-          {spending.map((line) => (
+          {spending.filter((line) => Math.round(line.value) !== 0).map((line) => (
             <Line key={line.key} line={line} focus={focus} onFocus={setFocus} onOpenPanel={onOpenPanel} />
           ))}
         </tbody>

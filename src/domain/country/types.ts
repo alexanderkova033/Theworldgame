@@ -82,7 +82,7 @@ export type EventTopic =
   | "repaired"
   | "venture"
   | "army" // regiments fighting, a province taken back, a regiment lost (see domain/military)
-  | "season"
+  | "season" // the turn of a season: no longer logged, kept for older saves
   | "world"
   | "chapter" // a chapter opening or completed (see domain/chapters)
   | "crisis"; // a flood, a worked-out seam... striking a province, or ending (see domain/crises)
@@ -102,6 +102,7 @@ export interface GameEvent {
   topic?: EventTopic; // absent on events from older saves
   about?: EventTopic; // for a pause: the danger that stopped the game
   tier?: ResearchOutcomeTier; // for a finished research: how it turned out
+  minor?: boolean; // kept in the log, never popped up (a rival's campaign talk)
 }
 
 export interface DailyDelta {

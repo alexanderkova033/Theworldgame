@@ -174,7 +174,7 @@ export const ASTRAVIA_LETTERS: DecisionDefinition[] = [
         effects: {},
         outcome: {
           groups: { Agrarian: 15, Commercial: -15 },
-          build: [{ provinceId: THORNWICK, type: "farm", count: 2 }],
+          build: [{ provinceId: THORNWICK, type: "farm", count: 1 }],
           lasting: { effects: { incomeMultiplier: 0.88 }, days: 360, why: "The estate owners took their money abroad" },
         },
       },
@@ -259,8 +259,8 @@ export const ASTRAVIA_LETTERS: DecisionDefinition[] = [
       {
         id: "celebrate",
         label: "Celebrate with them",
-        effects: {},
-        outcome: { groups: { Agrarian: 5 }, lasting: { effects: { farmYieldMultiplier: 1.1 }, days: 720, why: "Thornwick's new farmers' good years" } },
+        effects: { treasuryDelta: -500 },
+        outcome: { groups: { Agrarian: 5 }, lasting: { effects: { farmYieldMultiplier: 1.1 }, days: 360, why: "Thornwick's new farmers' good years" } },
       },
       { id: "tax", label: "Tax their good years", effects: { treasuryDelta: 1500 }, outcome: { groups: { Agrarian: -10 } } },
     ],

@@ -1,0 +1,10 @@
+/* A chapter's engraved plate: ink line work on the page's own paper,
+   heading the briefing and the story letter. */
+.story-plate {
+  --plate-paper: var(--paper-raised);
+  display: block;
+  width: 100%;
+  height: auto;
+  color: var(--ink);
+  margin: 0 0 0.9rem;
+}

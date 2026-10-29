@@ -1,7 +1,7 @@
 // The monthly report, set out to be read at a glance: one month at a time,
-// its five numbers big and labelled at the head (what moved, which way, by
-// how much), then why each one moved, then every recent month as a table
-// with named columns — click a row to read that month.
+// why each number moved (each card heads with its total), then every recent
+// month as a table with named columns — click a row to read that month.
+// Reports from before causes were tracked show their numbers as tiles.
 import "./ReportsPanel.css";
 import { useState } from "react";
 import { formatMonthYear, getReportedMonth } from "../../domain/country/calendar";
@@ -71,6 +71,19 @@ function Tile({ report, column }: { report: MonthlyReport; column: (typeof COLUM
   );
 }
 
+// The one number the cause cards don't carry: how many more (or fewer) people.
+function People({ report }: { report: MonthlyReport }) {
+  const text = formatChange("population", report.populationChange);
+  const direction = tone(text);
+  return (
+    <span className={`report-head__people ${direction}`}>
+      <StatIcon type="population" size={16} />
+      <Arrow direction={direction} />
+      {text} people
+    </span>
+  );
+}
+
 export function ReportsPanel({ reports }: ReportsPanelProps) {
   const recent = reports.slice(0, 6);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -80,7 +93,7 @@ export function ReportsPanel({ reports }: ReportsPanelProps) {
     return (
       <section className="panel reports-panel">
         <h2>Monthly Report</h2>
-        <div className="reports-panel__empty">
+        <div className="reports-panel__empty empty-plate">
           <span aria-hidden="true">
             <NavIcon type="reports" size={32} />
           </span>
@@ -97,13 +110,16 @@ export function ReportsPanel({ reports }: ReportsPanelProps) {
       <p className="report-head">
         <span className="report-head__month">{formatMonthYear(getReportedMonth(selected.date))}</span>
         <span className="report-head__note">{selected.id === recent[0].id ? "The month just ended" : "An earlier month"}</span>
+        {selected.ledger && <People report={selected} />}
       </p>
 
-      <div className="report-tiles">
-        {COLUMNS.map((column) => (
-          <Tile key={column.key} report={selected} column={column} />
-        ))}
-      </div>
+      {!selected.ledger && (
+        <div className="report-tiles">
+          {COLUMNS.map((column) => (
+            <Tile key={column.key} report={selected} column={column} />
+          ))}
+        </div>
+      )}
 
       {selected.ledger && (
         <>

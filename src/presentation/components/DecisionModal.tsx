@@ -7,8 +7,9 @@ import { BuildingGlyph } from "./CauseIcon";
 import { Modal } from "./Modal";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon, type StatIconType } from "./StatIcon";
-import { formatSigned } from "../formatNumber";
-import { describeOutcome } from "../storyText";
+import { describeEffects, describeOutcomeParts, type OutcomePart } from "../storyText";
+import { StoryPlate } from "./StoryPlate";
+import { getLetterChapter } from "../../domain/chapters/chapterData";
 
 interface DecisionModalProps {
   state: GameState;
@@ -26,14 +27,18 @@ function effectIcons(effects: DecisionEffects): StatIconType[] {
   return icons;
 }
 
-function formatEffects(effects: DecisionEffects): string {
-  const parts: string[] = [];
-  if (effects.treasuryDelta) parts.push(`${formatSigned(effects.treasuryDelta)} Cr`);
-  if (effects.foodDelta) parts.push(`${formatSigned(effects.foodDelta)} food`);
-  if (effects.stabilityDelta) parts.push(`${formatSigned(effects.stabilityDelta, true)} stability`);
-  if (effects.populationDelta) parts.push(`${formatSigned(effects.populationDelta)} people`);
-  if (effects.popularityDelta) parts.push(`${formatSigned(effects.popularityDelta, true)} support`);
-  return parts.join(" · ");
+// What an answer does, each part in the ink of a gain or a cost.
+export function OutcomeParts({ parts }: { parts: OutcomePart[] }) {
+  return (
+    <>
+      {parts.map((p, i) => (
+        <span key={p.text} className={p.good ? "outcome-part outcome-part--good" : "outcome-part outcome-part--bad"}>
+          {i > 0 && <span className="outcome-part__sep"> · </span>}
+          {p.text}
+        </span>
+      ))}
+    </>
+  );
 }
 
 // A decision's icon: a stat, or for the situational ones about coal and
@@ -57,14 +62,19 @@ export function DecisionModal({ state, onResolve, onDismiss }: DecisionModalProp
   if (!state.pendingDecisionId) return null;
   const decision = getDecision(state.pendingDecisionId);
   if (!decision) return null;
+  const chapter = decision.story ? getLetterChapter(decision.id) : undefined;
 
   return (
     // A story letter must be answered: its choice is the story (domain/chapters).
     <Modal title={decision.title} onClose={decision.story ? undefined : onDismiss}>
       <div className="decision-modal">
-        <div className="decision-modal__icon">
-          <DecisionIcon icon={decision.icon} size={36} />
-        </div>
+        {chapter ? (
+          <StoryPlate chapterId={chapter.id} />
+        ) : (
+          <div className="decision-modal__icon">
+            <DecisionIcon icon={decision.icon} size={36} />
+          </div>
+        )}
         <p className="decision-modal__prompt">{decision.prompt}</p>
         <div className="decision-modal__options">
           {decision.options.map((option) => (
@@ -83,7 +93,7 @@ export function DecisionModal({ state, onResolve, onDismiss }: DecisionModalProp
                     <StatIcon type={icon} size={16} key={`${icon}-${i}`} />
                   ))}
                 </span>
-                {[formatEffects(option.effects), ...describeOutcome(option.outcome)].filter(Boolean).join(" · ")}
+                <OutcomeParts parts={[...describeEffects(option.effects), ...describeOutcomeParts(option.outcome, state)]} />
               </span>
             </button>
           ))}

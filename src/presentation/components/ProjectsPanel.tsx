@@ -46,7 +46,7 @@ export function ProjectsPanel({ state }: ProjectsPanelProps) {
     <section className="panel projects-panel">
       <h2>Active Projects</h2>
       {projects.length === 0 && (
-        <div className="projects-panel__empty">
+        <div className="projects-panel__empty empty-plate">
           <svg viewBox="-12 -16 24 24" aria-hidden="true">
             <BuildingIcon type="road" x={0} y={0} size={7} />
           </svg>

@@ -70,7 +70,7 @@ The calendar is simplified on purpose (`domain/country/calendar.ts`): twelve mon
 
 The game stops for anything that needs an answer. `presentation/hooks/useGameClock.ts` is the only place with a timer; it runs `playDay` once per tick and refuses to resume while `isLetterWaiting(state)`: an unread briefing, a burden to choose, a decision, a demand, a crisis, a trade offer or an unanswered ultimatum. The simulation sets `isPaused` when one arrives; the clock makes sure Resume can't skip past it.
 
-Letters never stack. A random decision rolls only when none is pending, a random crisis only when no other letter waits, and a story letter waits in `chapters.letters` until the decision slot is free.
+Letters never stack. A random decision rolls only when none is pending and no briefing is unread, a random crisis only when no other letter waits, and a story letter waits in `chapters.letters` until the decision slot is free.
 
 ## Provinces and people
 
@@ -135,7 +135,7 @@ A story chapter opens only once the chapter it follows (`after`, one id or sever
 
 Reading a story briefing (`readBriefing`) queues its letter and strikes its crisis, if it has one, provided the province is held, free of a crisis and, for a flood, not diked. Story crises ignore the quiet spell: the story calls for them.
 
-A story letter's answer applies its numbers like any decision, then its `StoryOutcome` (`application/storyOutcome.ts`): move a group's backing, political power, raise or pull down buildings in a named province, change a province's order, lay a lasting effect on the country (`GameState.lasting`, read by `getModifiers` until it runs out), make a province rise, start a crisis, or let a province off its taxes. The choice is kept as a deed (`"<letter>:<option>"`), which later rules and `storyEnding` read; the ending screen shows a line for each turn the story took. `presentation/storyText.ts` writes an outcome out in plain words on the letter.
+A story letter's answer applies its numbers like any decision, then its `StoryOutcome` (`application/storyOutcome.ts`): move a group's backing, political power, raise or pull down buildings in a named province, change a province's order, lay a lasting effect on the country (`GameState.lasting`, read by `getModifiers` until it runs out), make a province rise, start a crisis, or let a province off its taxes. The choice is kept as a deed (`"<letter>:<option>"`), which later rules and `storyEnding` read; the ending screen shows a line for each turn the story took. `presentation/storyText.ts` writes an outcome out in plain words on the letter, each part marked as a gain or a cost, and a lasting change to income also in Crowns at today's takings. The season is not logged: the map shows it (`MapSeasons.tsx`, driven by `data-season` on the map), and its turn plays across the screen (`SeasonTurn.tsx`) once no letter is open (`hooks/useSeasonTurn.ts`). A chapter with a scene in `presentation/components/StoryPlate.tsx` (`SCENE_OF`) heads its briefing and its letter with an engraved plate drawn in SVG.
 
 ## Difficulty and the Long Reign
 

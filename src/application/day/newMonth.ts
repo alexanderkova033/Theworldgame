@@ -4,7 +4,7 @@
 // These land in the new month's ledger.
 import { RANDOM_EVENT_INTERVAL_MONTHS, RIVAL_CAMPAIGN_CHANCE_PER_MONTH, WAR_WEARINESS_PER_MONTH } from "../../domain/constants";
 import { isEveryNMonths, isFirstDayOfMonth } from "../../domain/country/calendar";
-import type { CountryStats, GameDate, GameEvent, GameState } from "../../domain/country/types";
+import type { CountryStats, GameDate, GameState } from "../../domain/country/types";
 import { isFriendly, rollForeignMeddling, updateForeignPolitics } from "../../domain/diplomacy/diplomacyRules";
 import { getNation } from "../../domain/nations/nationRules";
 import { applyFactionEffects, applyUniformDelta, type getFactionWeights } from "../../domain/parties/factionRules";
@@ -17,12 +17,6 @@ import { getBurdenRivalSwing } from "../../domain/reign/reignRules";
 
 // The turn of the season, announced on its first day: winter especially,
 // since it's when farms stop pulling their weight.
-const SEASON_MESSAGES: Record<number, { message: string; severity: GameEvent["severity"] }> = {
-  3: { message: "Spring thaw: the fields are workable again.", severity: "info" },
-  9: { message: "Harvest season: farms yield their best of the year. Stockpile for winter.", severity: "info" },
-  12: { message: "Winter sets in. Farms yield little and grain fields lie fallow until spring.", severity: "warning" },
-};
-
 export interface NewMonth {
   stats: CountryStats;
   resources: GameState["resources"];
@@ -61,7 +55,7 @@ export function turnOfTheMonth(
     factionApproval = applied.factionApproval;
     book(day, "late", "support", { rival: applied.popularity - stats.popularity });
     stats = { ...stats, popularity: applied.popularity };
-    log(day, { date, message: move.message, severity: swing < 0 ? "warning" : "info", topic: "elections" });
+    log(day, { date, message: move.message, severity: swing < 0 ? "warning" : "info", topic: "elections", minor: true });
   }
 
   // The neighbours' politics move once a month: their electorates relax
@@ -98,6 +92,7 @@ export function turnOfTheMonth(
             : `${nation.name}'s ${party.name} is funding your opposition: support ${move.supportDelta}.`,
         severity: move.supportDelta > 0 ? "info" : "warning",
         topic: "elections",
+        minor: true,
       });
     }
   }
@@ -113,10 +108,6 @@ export function turnOfTheMonth(
       log(day, { date, message: `The war with ${getNation(nationId).name} wears on the country: support ${WAR_WEARINESS_PER_MONTH} with everyone.`, severity: "warning", topic: "army" });
     }
   }
-
-  // The turn of the season.
-  const season = isFirstDayOfMonth(date) ? SEASON_MESSAGES[date.month] : undefined;
-  if (!today.isGameOver && season) log(day, { date, ...season, topic: "season" });
 
   return { stats, resources, factionApproval, foreignPolitics };
 }

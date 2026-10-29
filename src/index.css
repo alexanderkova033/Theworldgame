@@ -106,6 +106,14 @@
      texture and never competes with what sits on it. */
   --damask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='64' viewBox='0 0 48 64'%3E%3Cdefs%3E%3Cg id='f'%3E%3Ccircle cx='0' cy='-2.3' r='2.2'/%3E%3Ccircle cx='0' cy='2.3' r='2.2'/%3E%3Ccircle cx='-2.3' cy='0' r='2.2'/%3E%3Ccircle cx='2.3' cy='0' r='2.2'/%3E%3Cpath d='M0-6c1.8 1.6 1.8 4 0 5.2-1.8-1.2-1.8-3.6 0-5.2z' transform='translate(0 -3.2)'/%3E%3Cpath d='M0 6c1.8-1.6 1.8-4 0-5.2-1.8 1.2-1.8 3.6 0 5.2z' transform='translate(0 3.2)'/%3E%3Ccircle cx='-5.6' cy='-5.6' r='.9'/%3E%3Ccircle cx='5.6' cy='-5.6' r='.9'/%3E%3Ccircle cx='-5.6' cy='5.6' r='.9'/%3E%3Ccircle cx='5.6' cy='5.6' r='.9'/%3E%3C/g%3E%3C/defs%3E%3Cpath d='M24 0C24 14 2 18 0 32C2 46 24 50 24 64M24 0C24 14 46 18 48 32C46 46 24 50 24 64' fill='none' stroke='%23e2c27a' stroke-opacity='.11'/%3E%3Cg fill='%23e2c27a' fill-opacity='.1'%3E%3Cuse href='%23f' x='24' y='32'/%3E%3Cuse href='%23f' x='0' y='0'/%3E%3Cuse href='%23f' x='48' y='0'/%3E%3Cuse href='%23f' x='0' y='64'/%3E%3Cuse href='%23f' x='48' y='64'/%3E%3C/g%3E%3C/svg%3E");
 
+  /* Strapwork, after the carved and plastered ceilings of the old houses:
+     flat bands ruled in ink, crossing on a lattice and looped through rings,
+     with a lozenge in every cell. It fills the bare paper of a window (the
+     page under its cards) so an empty stretch reads as ornament rather than
+     as nothing; the stronger cut marks an empty list. */
+  --strapwork: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%232b1d12' stroke-opacity='.11' stroke-width='.8'%3E%3Cpath d='M1.1-1.1L49.1 46.9M-1.1 1.1L46.9 49.1M46.9-1.1L-1.1 46.9M49.1 1.1L1.1 49.1'/%3E%3Cg fill='%23dcc79d'%3E%3Ccircle cx='24' cy='24' r='6.5'/%3E%3Ccircle r='6.5'/%3E%3Ccircle cx='48' r='6.5'/%3E%3Ccircle cy='48' r='6.5'/%3E%3Ccircle cx='48' cy='48' r='6.5'/%3E%3C/g%3E%3Ccircle cx='24' cy='24' r='3.4'/%3E%3Ccircle r='3.4'/%3E%3Ccircle cx='48' r='3.4'/%3E%3Ccircle cy='48' r='3.4'/%3E%3Ccircle cx='48' cy='48' r='3.4'/%3E%3Cpath d='M24-4.5L28.5 0L24 4.5L19.5 0ZM24 43.5L28.5 48L24 52.5L19.5 48ZM-4.5 24L0 19.5L4.5 24L0 28.5ZM43.5 24L48 19.5L52.5 24L48 28.5Z'/%3E%3C/g%3E%3C/svg%3E");
+  --strapwork-strong: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%232b1d12' stroke-opacity='.26' stroke-width='.8'%3E%3Cpath d='M1.1-1.1L49.1 46.9M-1.1 1.1L46.9 49.1M46.9-1.1L-1.1 46.9M49.1 1.1L1.1 49.1'/%3E%3Cg fill='%23dcc79d'%3E%3Ccircle cx='24' cy='24' r='6.5'/%3E%3Ccircle r='6.5'/%3E%3Ccircle cx='48' r='6.5'/%3E%3Ccircle cy='48' r='6.5'/%3E%3Ccircle cx='48' cy='48' r='6.5'/%3E%3C/g%3E%3Ccircle cx='24' cy='24' r='3.4'/%3E%3Ccircle r='3.4'/%3E%3Ccircle cx='48' r='3.4'/%3E%3Ccircle cy='48' r='3.4'/%3E%3Ccircle cx='48' cy='48' r='3.4'/%3E%3Cpath d='M24-4.5L28.5 0L24 4.5L19.5 0ZM24 43.5L28.5 48L24 52.5L19.5 48ZM-4.5 24L0 19.5L4.5 24L0 28.5ZM43.5 24L48 19.5L52.5 24L48 28.5Z'/%3E%3C/g%3E%3C/svg%3E");
+
   /* A heading's ornament: a hairline, a lozenge and dots, in oxblood. */
   --ornament: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='12' viewBox='0 0 180 12'%3E%3Cg fill='%237b2121'%3E%3Crect x='6' y='5.5' width='66' height='1'/%3E%3Crect x='108' y='5.5' width='66' height='1'/%3E%3Ccircle cx='78' cy='6' r='1.6'/%3E%3Ccircle cx='102' cy='6' r='1.6'/%3E%3Cpath d='M90 0.5 L95.5 6 L90 11.5 L84.5 6 Z'/%3E%3C/g%3E%3Cpath d='M90 3.5 L92.5 6 L90 8.5 L87.5 6 Z' fill='%23d2bb8e'/%3E%3C/svg%3E");
 
@@ -523,4 +531,40 @@ label {
     -webkit-user-select: text;
     user-select: text;
   }
+}
+
+/* An empty list (nothing being built, no report yet): a framed panel of
+   strapwork with its few words on a paper label, so "nothing" still looks
+   like a place things will go. */
+.empty-plate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 7rem;
+  padding: 1rem;
+  border: 1px solid var(--rule);
+  outline: 1px solid var(--rule);
+  outline-offset: -5px;
+  background: var(--strapwork-strong) center / 48px 48px, var(--paper-raised);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.empty-plate > * {
+  margin: 0;
+  background: var(--paper-raised);
+}
+
+.empty-plate > p {
+  padding: 0.25rem 0.8rem;
+  border: 1px solid var(--rule);
+}
+
+.empty-plate > :not(p) {
+  display: inline-flex;
+  padding: 0.35rem;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
 }

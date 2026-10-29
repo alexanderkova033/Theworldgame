@@ -119,22 +119,13 @@
   font-weight: 700;
 }
 
+/* Framed as an empty plate (index.css). */
 .projects-panel__empty {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.2rem 0;
-  color: var(--text-muted);
   font-size: 0.85rem;
-  text-align: center;
 }
 
 .projects-panel__empty svg {
   width: 24px;
   height: 24px;
-  opacity: 0.4;
-}
-
-.projects-panel__empty p {
-  margin: 0;
+  box-sizing: content-box;
 }

@@ -12,6 +12,10 @@ export interface EventKind {
   kind: string;
   plural: string; // "3 breakdowns", for folding repeats
   foldable: boolean; // repeats often enough that a run of them reads better as one line
+  // Whether it pops up as a notice or only waits in the log: the player's own
+  // doings (a choice, a repair) and the seasons never pop up, and political
+  // actions (a rally, a sale abroad) only when they went wrong.
+  toast: "always" | "warnings" | "never";
   action?: EventAction;
 }
 
@@ -23,35 +27,35 @@ const POLITICS: EventAction = { label: "Politics", ...SUPPORT };
 const BUILD: EventAction = { label: "Build", ...BUILDINGS };
 
 const KINDS: Record<Exclude<EventTopic, "paused">, Omit<EventKind, "kind">> = {
-  hunger: { plural: "days of food shortage", foldable: true, action: BUY_FOOD },
-  cold: { plural: "heating warnings", foldable: true, action: BUY_COAL },
-  homes: { plural: "warnings about homes", foldable: true, action: SEE_PEOPLE },
-  money: { plural: "money warnings", foldable: true, action: SEE_BUDGET },
-  unrest: { plural: "unrest changes", foldable: false, action: { label: "Unrest", ...UNREST } },
-  provinceUnrest: { plural: "province unrest", foldable: false, action: SEE_PEOPLE },
-  uprising: { plural: "uprisings", foldable: false, action: { label: "Unrest", ...UNREST } },
-  army: { plural: "army reports", foldable: false, action: { label: "Army", panel: "army" } },
-  politics: { plural: "political actions", foldable: true, action: POLITICS },
-  elections: { plural: "campaign moves", foldable: true, action: POLITICS },
-  laws: { plural: "law votes", foldable: false, action: { label: "Laws", panel: "laws" } },
-  research: { plural: "research finished", foldable: false, action: { label: "Research", panel: "research" } },
-  decision: { plural: "decisions", foldable: false, action: POLITICS },
-  built: { plural: "buildings finished", foldable: true, action: BUILD },
-  stall: { plural: "construction stalls", foldable: true, action: BUILD },
-  breakdown: { plural: "breakdowns", foldable: true, action: { ...BUILD, label: "Repair" } },
-  repaired: { plural: "repairs finished", foldable: true },
-  venture: { plural: "ventures", foldable: false, action: { label: "Ventures", panel: "ventures" } },
-  season: { plural: "seasons", foldable: false },
-  world: { plural: "world events", foldable: false },
-  chapter: { plural: "chapters", foldable: false },
-  crisis: { plural: "crises", foldable: false, action: SEE_PEOPLE },
+  hunger: { plural: "days of food shortage", foldable: true, toast: "always", action: BUY_FOOD },
+  cold: { plural: "heating warnings", foldable: true, toast: "always", action: BUY_COAL },
+  homes: { plural: "warnings about homes", foldable: true, toast: "always", action: SEE_PEOPLE },
+  money: { plural: "money warnings", foldable: true, toast: "always", action: SEE_BUDGET },
+  unrest: { plural: "unrest changes", foldable: false, toast: "always", action: { label: "Unrest", ...UNREST } },
+  provinceUnrest: { plural: "province unrest", foldable: false, toast: "always", action: SEE_PEOPLE },
+  uprising: { plural: "uprisings", foldable: false, toast: "always", action: { label: "Unrest", ...UNREST } },
+  army: { plural: "army reports", foldable: false, toast: "always", action: { label: "Army", panel: "army" } },
+  politics: { plural: "political actions", foldable: true, toast: "warnings", action: POLITICS },
+  elections: { plural: "campaign moves", foldable: true, toast: "always", action: POLITICS },
+  laws: { plural: "law votes", foldable: false, toast: "always", action: { label: "Laws", panel: "laws" } },
+  research: { plural: "research finished", foldable: false, toast: "always", action: { label: "Research", panel: "research" } },
+  decision: { plural: "decisions", foldable: false, toast: "never", action: POLITICS },
+  built: { plural: "buildings finished", foldable: true, toast: "always", action: BUILD },
+  stall: { plural: "construction stalls", foldable: true, toast: "always", action: BUILD },
+  breakdown: { plural: "breakdowns", foldable: true, toast: "always", action: { ...BUILD, label: "Repair" } },
+  repaired: { plural: "repairs finished", foldable: true, toast: "never" },
+  venture: { plural: "ventures", foldable: false, toast: "always", action: { label: "Ventures", panel: "ventures" } },
+  season: { plural: "seasons", foldable: false, toast: "never" },
+  world: { plural: "world events", foldable: false, toast: "always" },
+  chapter: { plural: "chapters", foldable: false, toast: "never" },
+  crisis: { plural: "crises", foldable: false, toast: "always", action: SEE_PEOPLE },
 };
 
-const OTHER: EventKind = { kind: "other", plural: "events", foldable: false };
+const OTHER: EventKind = { kind: "other", plural: "events", foldable: false, toast: "always" };
 
 export function getEventKind(event: GameEvent): EventKind {
   if (!event.topic) return OTHER;
   // A pause is never folded away, and its button goes to whatever stopped the game.
-  if (event.topic === "paused") return { kind: "paused", plural: "pauses", foldable: false, action: event.about && event.about !== "paused" ? KINDS[event.about].action : undefined };
+  if (event.topic === "paused") return { kind: "paused", plural: "pauses", foldable: false, toast: "always", action: event.about && event.about !== "paused" ? KINDS[event.about].action : undefined };
   return { kind: event.topic, ...KINDS[event.topic] };
 }

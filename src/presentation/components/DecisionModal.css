@@ -114,3 +114,16 @@
 .decision-modal__option-icons svg {
   display: block;
 }
+
+/* An answer's parts: what it gives in green ink, what it costs in red. */
+.outcome-part--good {
+  color: var(--success);
+}
+
+.outcome-part--bad {
+  color: var(--danger);
+}
+
+.outcome-part__sep {
+  color: var(--text-muted);
+}

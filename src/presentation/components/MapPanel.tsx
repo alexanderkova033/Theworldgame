@@ -22,6 +22,8 @@ import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 import { ArmyLayer, type MarchPreview } from "./MapArmies";
 import { CrisisIcon } from "./CrisisIcon";
+import { SeasonLand, SeasonSea } from "./MapSeasons";
+import type { Season } from "../../domain/country/calendar";
 import { CRISIS_HINTS, CRISIS_NAMES } from "../crisisText";
 import type { CrisisKind } from "../../domain/crises/types";
 
@@ -80,6 +82,7 @@ interface MapPanelProps {
   planMarch: (to: string) => MarchPreview | null; // the way there, for the preview
   freeProvinces: Record<string, FreeProvince>; // provinces that broke away, held by rebels
   sieges: Record<string, number>; // islands your regiments besiege: days so far
+  season: Season; // washed over the land and sea (see MapSeasons)
 }
 
 // Every terrain gets a decorative texture, drawn on top of the province's
@@ -575,6 +578,7 @@ const MapLayers = memo(function MapLayers({
         pointerEvents="none"
       />
     ))}
+    <SeasonSea x={OCEAN_RECT.x} y={OCEAN_RECT.y} width={OCEAN_RECT.width} height={OCEAN_RECT.height} />
 
     <CompassRose />
 
@@ -767,6 +771,8 @@ const MapLayers = memo(function MapLayers({
           />
         );
       })}
+
+      <SeasonLand />
 
       {/* Map modes (HOI4-style): your provinces shaded by how their homes,
           jobs or order stand — three steps, each with its own hatching.
@@ -1039,6 +1045,7 @@ export const MapPanel = memo(function MapPanel({
   planMarch,
   freeProvinces,
   sieges,
+  season,
 }: MapPanelProps) {
   const { provinces } = MAP_GEOMETRY;
 
@@ -1427,7 +1434,7 @@ export const MapPanel = memo(function MapPanel({
   }, [placedBuildings]);
 
   return (
-    <section className="map-panel">
+    <section className="map-panel" data-season={season}>
       <div className="map-panel__stage" ref={stageRef} onMouseMove={handleStageMouseMove}>
         <svg
           ref={svgRef}

@@ -185,10 +185,11 @@ export function simulateDay(state: GameState): GameState {
   // every month, more often while the country is in a trouble that has its
   // own decision (a coal shortage, a housing protest...), judged on the
   // country as it stands at the end of today. Skipped if one is already
-  // pending or the game just ended. Popping up pauses the game until the
-  // player picks an option.
+  // pending, a chapter's briefing is still unread (one letter at a time), or
+  // the game just ended. Popping up pauses the game until the player picks
+  // an option.
   let pendingDecisionId = working.pendingDecisionId;
-  if (!isGameOver && !pendingDecisionId && isFirstDayOfMonth(date)) {
+  if (!isGameOver && !pendingDecisionId && working.chapters.unread.length === 0 && isFirstDayOfMonth(date)) {
     const today: GameState = { ...working, date, debt: goods.debt, stats: finalStats, resources: month.resources };
     if (Math.random() < getDecisionChance(today)) pendingDecisionId = pickDecision(today).id;
   }

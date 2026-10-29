@@ -48,10 +48,13 @@ import { ReportsPanel } from "./presentation/components/ReportsPanel";
 import { ResearchPanel } from "./presentation/components/ResearchPanel";
 import { StartScreen } from "./presentation/components/StartScreen";
 import { Toasts } from "./presentation/components/Toasts";
+import { SeasonTurn } from "./presentation/components/SeasonTurn";
+import { useSeasonTurn } from "./presentation/hooks/useSeasonTurn";
+import { getSeason } from "./domain/country/calendar";
 import { TopBar } from "./presentation/components/TopBar";
 import { FIRST_SECTIONS, lockedReason, politicsSectionFor, reachable, type PanelKey, type Section, type Sections } from "./presentation/navigation";
 import { MoneyPanel } from "./presentation/components/MoneyPanel";
-import { useGameClock } from "./presentation/hooks/useGameClock";
+import { isLetterWaiting, useGameClock } from "./presentation/hooks/useGameClock";
 import { isFeatureOpen } from "./domain/chapters/chapterData";
 import { readBriefing } from "./application/chapters";
 import { ChapterBriefing } from "./presentation/components/ChapterBriefing";
@@ -316,6 +319,10 @@ function App() {
     wasGameOver.current = state?.isGameOver ?? false;
   }, [state?.isGameOver]);
 
+  // The season on the map, and its turn across the screen once no letter is
+  // open (see SeasonTurn).
+  const season = useSeasonTurn(state ? getSeason(state.date) : null, !!state && isLetterWaiting(state));
+
   // A chapter opened (see application/chapters.ts): its letter arrives, and
   // whatever tab is open closes for it.
   const unreadBriefings = state?.chapters.unread.length ?? 0;
@@ -500,6 +507,7 @@ function App() {
             planMarch={planMarch}
             freeProvinces={isFeatureOpen(state, "army") ? state.freeProvinces : {}}
             sieges={state.sieges}
+            season={season.shown ?? getSeason(state.date)}
           />
           {marchFrom && (
             <MarchBanner
@@ -591,6 +599,7 @@ function App() {
         </Modal>
       )}
 
+      <SeasonTurn turning={season.turning} />
       <Toasts events={state.events} monthlyReports={state.monthlyReports} isPaused={state.isPaused} onOpenPanel={openPanel} />
 
       {/* A chapter's briefing comes first; a decision letter waits behind it. */}
