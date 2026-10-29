@@ -40,6 +40,10 @@ function harvestGlut(state: GameState): boolean {
 // Short, two-option decisions. Kept deliberately terse — a title, one
 // prompt sentence, and two option labels short enough to read at a glance —
 // since the popup is meant to be answered in a few seconds, not studied.
+// Three were cut on 2026-10-29 as repeats of others: Strike Threat (General
+// Strike and Longer Shifts), Scandal Rumor (Press Interview) and Grain
+// Surplus (Harvest Glut and Harvest Festival). A save waiting on one of them
+// drops it on load (presentation/hooks/gameSave.ts).
 export const DECISIONS: DecisionDefinition[] = [
   {
     id: "press-interview",
@@ -59,26 +63,6 @@ export const DECISIONS: DecisionDefinition[] = [
     options: [
       { id: "attend", label: "Attend, court donors", effects: { treasuryDelta: 800, popularityDelta: -2 } },
       { id: "decline", label: "Decline, stay with the people", effects: { popularityDelta: 2 } },
-    ],
-  },
-  {
-    id: "factory-strike",
-    title: "Strike Threat",
-    prompt: "Workers threaten to strike over conditions.",
-    icon: "industry",
-    options: [
-      { id: "concede", label: "Meet their demands", effects: { popularityDelta: 5, treasuryDelta: -600 } },
-      { id: "stand-firm", label: "Stand firm", effects: { stabilityDelta: -6, treasuryDelta: 200 } },
-    ],
-  },
-  {
-    id: "scandal-rumor",
-    title: "Scandal Rumor",
-    prompt: "Rumors swirl about a rival's closest ally.",
-    icon: "popularity",
-    options: [
-      { id: "amplify", label: "Amplify it", effects: { popularityDelta: 8, stabilityDelta: -5 } },
-      { id: "ignore", label: "Stay above it", effects: { stabilityDelta: 1 } },
     ],
   },
   {
@@ -110,16 +94,6 @@ export const DECISIONS: DecisionDefinition[] = [
     options: [
       { id: "squeeze", label: "Squeeze harder", effects: { treasuryDelta: 700, popularityDelta: -5 } },
       { id: "ease", label: "Ease up", effects: { popularityDelta: 4, treasuryDelta: -100 } },
-    ],
-  },
-  {
-    id: "grain-surplus",
-    title: "Grain Surplus",
-    prompt: "This season's yield exceeds every estimate.",
-    icon: "food",
-    options: [
-      { id: "sell", label: "Sell the surplus", effects: { treasuryDelta: 500, foodDelta: -50000 } },
-      { id: "store", label: "Store it for lean times", effects: { foodDelta: 30000 } },
     ],
   },
   {

@@ -6,13 +6,16 @@
 import "./MarketPanel.css";
 import { useState } from "react";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
-import { buyGood, canBuyGood, canSellGood, getMarketBuyCost, getMarketSellRevenue, sellGood } from "../../application/actions";
+import { acceptOffer, buyGood, canAcceptOffer, canBuyGood, canSellGood, declineOffer, getMarketBuyCost, getMarketSellRevenue, sellGood } from "../../application/actions";
+import { dayNumber } from "../../domain/country/calendar";
+import { getNation } from "../../domain/nations/nationRules";
+import { relationsWord } from "../../domain/neighbours/relationsRules";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
-import { GOOD_SPECS, MARKET_GOODS, getBatchSize, getMidPrice, getPriceRatio, holdsPort } from "../../domain/market/marketRules";
+import { GOOD_SPECS, MARKET_GOODS, getBatchSize, getBuyCost, getMidPrice, getPriceRatio, getSellRevenue, holdsPort } from "../../domain/market/marketRules";
 import type { MarketGood } from "../../domain/market/types";
 import { formatAmount } from "../formatNumber";
-import { playCoins } from "../audio/sound";
+import { playCoins, playSeal } from "../audio/sound";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 
@@ -127,12 +130,66 @@ function MarketRow({ state, good, perDay, quantity, dispatch }: RowProps) {
   );
 }
 
+// A neighbour's offer, standing here until it's taken, put aside, or lapses:
+// to sell you a lot, or to buy one of yours, with what the market would
+// ask or pay for the same beside it.
+function OfferCard({ state, dispatch }: { state: GameState; dispatch: MarketPanelProps["dispatch"] }) {
+  const offer = state.pendingOffer;
+  if (!offer) return null;
+  const nation = getNation(offer.nationId);
+  const selling = offer.kind === "sell";
+  const market = selling ? getBuyCost(state.market, offer.good, offer.amount, holdsPort(state)) : getSellRevenue(state.market, offer.good, offer.amount);
+  const feeling = relationsWord(state.neighbours[offer.nationId]?.relations ?? 0).toLowerCase();
+  const daysLeft = offer.until ? dayNumber(offer.until) - dayNumber(state.date) : null;
+  const canTake = canAcceptOffer(state);
+  return (
+    <section className="panel market-offer" aria-label={`A trade offer from ${nation.name}`}>
+      <span className="market-offer__icon">
+        {offer.good === "food" ? (
+          <StatIcon type="food" size={30} />
+        ) : (
+          <svg viewBox="-10 -10 20 20" width={30} height={30} aria-hidden="true">
+            <ResourceIcon type={offer.good} size={8} />
+          </svg>
+        )}
+      </span>
+      <div className="market-offer__body">
+        <h3 className="market-offer__title">
+          {nation.name} {selling ? "offers" : "would buy"} {formatAmount(offer.amount)} {offer.good}
+          {daysLeft !== null && <span className="market-offer__days">{daysLeft > 0 ? `${daysLeft} days left` : "Last day"}</span>}
+        </h3>
+        <p className="market-offer__terms" title={`They are ${feeling} towards you; a deal would warm them.`}>
+          For {formatAmount(offer.price)} {CURRENCY_SYMBOL}. The market would {selling ? "ask" : "pay"} {formatAmount(market)} {CURRENCY_SYMBOL}.
+        </p>
+      </div>
+      <div className="market-offer__actions">
+        <button
+          type="button"
+          className="btn-primary"
+          disabled={!canTake}
+          title={canTake ? undefined : selling ? "Not enough Crowns" : `Not enough ${offer.good} in store`}
+          onClick={() => {
+            playSeal();
+            dispatch(acceptOffer);
+          }}
+        >
+          {selling ? "Buy it" : "Sell it"}
+        </button>
+        <button type="button" onClick={() => dispatch(declineOffer)}>
+          Put aside
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export function MarketPanel({ state, production, dispatch }: MarketPanelProps) {
   const [quantity, setQuantity] = useState(1);
   const hasPort = holdsPort(state);
 
   return (
     <div className="market">
+      <OfferCard state={state} dispatch={dispatch} />
       <section className="panel market__board">
         <div className="market__head">
           <div className="market__quantity" role="group" aria-label="How much per trade">

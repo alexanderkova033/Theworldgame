@@ -14,6 +14,9 @@ interface ModalProps {
   // Which window this is: each inks its headings and open tab in its own
   // colour (see the --ink-* tokens in index.css).
   window?: string;
+  // Docked to the right with no wash, and the map beside it still takes
+  // clicks (Build: pick the province on the map).
+  side?: boolean;
 }
 
 // A generic overlay for panels that are an occasional decision rather than an
@@ -22,7 +25,7 @@ interface ModalProps {
 //
 // Not aria-modal: the top bar stays live above it on purpose (switch tabs,
 // pause), so the rest of the page isn't inert while it's open.
-export function Modal({ title, onClose, children, wide = false, icon, window: windowKey }: ModalProps) {
+export function Modal({ title, onClose, children, wide = false, icon, window: windowKey, side = false }: ModalProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -49,10 +52,10 @@ export function Modal({ title, onClose, children, wide = false, icon, window: wi
   }, []);
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className={`modal-overlay ${side ? "modal-overlay--side" : ""}`} onClick={side ? undefined : onClose}>
       <div
         ref={dialogRef}
-        className={`modal ${wide ? "modal--wide" : ""}`}
+        className={`modal ${wide ? "modal--wide" : ""} ${side ? "modal--side" : ""}`}
         data-window={windowKey}
         role="dialog"
         aria-labelledby={titleId}

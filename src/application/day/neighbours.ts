@@ -4,8 +4,8 @@
 // people. Building is quiet (the Neighbours page shows it); a voyage is
 // news, and the country is told at once, since it is a race.
 import { isFeatureOpen } from "../../domain/chapters/chapterData";
-import { DAYS_PER_MONTH, RACE_VOYAGE_DAYS, SETTLE_COST, THREAT_STRENGTH_RATIO, ULTIMATUM_DAYS, WAR_ISLAND_GARRISON } from "../../domain/constants";
-import { addDays, isFirstDayOfMonth } from "../../domain/country/calendar";
+import { DAYS_PER_MONTH, RACE_VOYAGE_DAYS, SETTLE_COST, THREAT_STRENGTH_RATIO, TRADE_OFFER_DAYS, ULTIMATUM_DAYS, WAR_ISLAND_GARRISON } from "../../domain/constants";
+import { addDays, dayNumber, isFirstDayOfMonth } from "../../domain/country/calendar";
 import type { GameDate, GameState } from "../../domain/country/types";
 import { pickRaceTarget } from "../../domain/islands/islandRules";
 import { chooseBuilding, chooseVoyage, liveMonth } from "../../domain/neighbours/neighbourRules";
@@ -28,8 +28,10 @@ export function runNeighbours(
   working: GameState,
   date: GameDate,
 ): Pick<GameState, "neighbours" | "foreignVoyages" | "pendingOffer" | "regiments" | "ultimatum"> {
+  // A trade offer stands in the Market until it lapses.
+  const standing = working.pendingOffer?.until && dayNumber(date) > dayNumber(working.pendingOffer.until) ? null : working.pendingOffer;
   if (!isFirstDayOfMonth(date)) {
-    return { neighbours: working.neighbours, foreignVoyages: working.foreignVoyages, pendingOffer: working.pendingOffer, regiments: working.regiments, ultimatum: working.ultimatum };
+    return { neighbours: working.neighbours, foreignVoyages: working.foreignVoyages, pendingOffer: standing, regiments: working.regiments, ultimatum: working.ultimatum };
   }
   let regiments = working.regiments;
   let ultimatum = working.ultimatum;
@@ -44,10 +46,11 @@ export function runNeighbours(
       }));
   const month = monthNumber(date);
   let foreignVoyages = working.foreignVoyages;
-  let pendingOffer = working.pendingOffer;
+  let pendingOffer = standing;
   const neighbours: GameState["neighbours"] = {};
-  // A trade offer waits until no other letter does, and the market is open.
-  const canOffer = isFeatureOpen(working, "market") && !working.pendingDecisionId && !working.pendingDemand;
+  // A trade offer is no letter: it stands in the Market (one at a time) once
+  // the market is open, and a notice says so.
+  const canOffer = isFeatureOpen(working, "market");
   const hasPort = holdsPort(working);
 
   for (const [nationId, before] of Object.entries(working.neighbours)) {
@@ -72,7 +75,20 @@ export function runNeighbours(
     } else {
       neighbours[nationId] = { ...neighbour, lastDeed: deed };
     }
-    if (canOffer && !atWar && !pendingOffer) pendingOffer = draftOffer(neighbours[nationId], nationId, month, working.market, hasPort, working.resources);
+    const drafted = canOffer && !atWar && !pendingOffer ? draftOffer(neighbours[nationId], nationId, month, working.market, hasPort, working.resources) : null;
+    if (drafted) {
+      pendingOffer = { ...drafted, until: addDays(date, TRADE_OFFER_DAYS) };
+      const lot = `${drafted.amount} ${drafted.good}`;
+      log(day, {
+        date,
+        message:
+          drafted.kind === "sell"
+            ? `${getNation(nationId).name} offers you ${lot} for ${drafted.price} Cr. The offer stands in the Market for ${TRADE_OFFER_DAYS} days.`
+            : `${getNation(nationId).name} would buy ${lot} from you for ${drafted.price} Cr. The offer stands in the Market for ${TRADE_OFFER_DAYS} days.`,
+        severity: "info",
+        topic: "trade",
+      });
+    }
     // Its army: a month's pay, and perhaps a new regiment (militaryRules.ts).
     // Unpaid, its newest goes home.
     const paid = { ...neighbours[nationId], treasury: neighbours[nationId].treasury - getArmyPay(regiments, nationId) * DAYS_PER_MONTH };

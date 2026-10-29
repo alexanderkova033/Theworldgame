@@ -319,3 +319,11 @@ button.build-row__button {
     font-size: 0.8125rem;
   }
 }
+
+.actions-panel__where-hint {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 400;
+  font-style: italic;
+}

@@ -333,3 +333,34 @@ button.resource-ticker__pin-button {
   font-size: 0.8125rem;
   white-space: nowrap;
 }
+
+/* A letter's answer under the pointer: the numbers it would move are ringed
+   in gilt, each with the change on a small plate beside it. */
+.resource-ticker__chip.is-previewed {
+  outline: 2px solid var(--gilt-bright);
+  outline-offset: -2px;
+}
+
+.resource-ticker__preview {
+  padding: 0 0.35rem;
+  border-radius: 3px;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: #f4ead0;
+  animation: ticker-preview-in 0.15s ease-out;
+}
+
+.resource-ticker__preview.is-gain {
+  background: #2f5a34;
+}
+
+.resource-ticker__preview.is-loss {
+  background: #7a1d14;
+}
+
+@keyframes ticker-preview-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}

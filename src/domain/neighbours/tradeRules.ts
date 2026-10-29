@@ -18,6 +18,7 @@ import {
   TRADE_PRICE_PER_RELATION,
   TRADE_SELL_DISCOUNT,
 } from "../constants";
+import type { GameDate } from "../country/types";
 import type { MarketGood, MarketState } from "../market/types";
 import { getBatchSize, getBuyCost, getSellRevenue } from "../market/marketRules";
 import type { ResourceType } from "../resources/types";
@@ -30,6 +31,7 @@ export interface TradeOffer {
   good: MarketGood;
   amount: number;
   price: number; // Crowns, for the whole lot
+  until?: GameDate; // it lapses after this day (absent on offers from older saves: it stands until answered)
 }
 
 // What each neighbour's temper wants from you.

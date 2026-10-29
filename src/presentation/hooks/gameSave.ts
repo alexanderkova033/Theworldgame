@@ -20,6 +20,7 @@ import { emptyResourceBundle } from "../../domain/resources/resourceRules";
 import { getStageForStability } from "../../domain/unrest/unrestRules";
 import { emptyWorkforce } from "../../domain/workforce/workforceRules";
 import { allChaptersOpen } from "../../domain/chapters/chapterData";
+import { getDecision } from "../../domain/decisions/decisionRules";
 import { createNeighbours } from "../../domain/neighbours/neighbourRules";
 import { newFreeProvince } from "../../domain/military/battleRules";
 
@@ -118,7 +119,8 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     history: raw.history ?? [],
     pendingLedger: raw.pendingLedger ?? emptyLedger(),
     lastDayLedger: raw.lastDayLedger ?? emptyLedger(),
-    pendingDecisionId: raw.pendingDecisionId ?? null,
+    // A letter since cut from the game is dropped, or the clock would wait on it.
+    pendingDecisionId: raw.pendingDecisionId && getDecision(raw.pendingDecisionId) ? raw.pendingDecisionId : null,
     pendingDemand: raw.pendingDemand ?? null,
     pendingCrisis: raw.pendingCrisis ?? null,
     crisisQuietUntil: raw.crisisQuietUntil ?? null,

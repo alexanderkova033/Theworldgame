@@ -309,6 +309,15 @@
   filter: grayscale(0.45);
 }
 
+/* Only waiting on the one above: further back still, with no tag. */
+.law-node--locked-prerequisite .law-node__icon {
+  opacity: 0.5;
+}
+
+.law-node--locked-prerequisite .law-node__name {
+  opacity: 0.75;
+}
+
 .law-node--foreclosed .law-node__icon {
   opacity: 0.42;
   filter: grayscale(1);

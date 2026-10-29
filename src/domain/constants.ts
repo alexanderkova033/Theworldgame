@@ -404,7 +404,8 @@ export const RELATIONS_HOSTILE_APPETITE = 1.5; // how much keener on islands
 export const RELATIONS_TRADE = 5; // a trade with them, accepted
 
 // Trade by letter (see domain/neighbours/tradeRules.ts).
-export const TRADE_OFFER_CHANCE = 0.07; // a month, for each neighbour, once the market is open
+export const TRADE_OFFER_CHANCE = 0.1; // a month, for each neighbour, once the market is open
+export const TRADE_OFFER_DAYS = 45; // an offer stands in the Market this long, then lapses
 export const TRADE_SELL_DISCOUNT = 0.15; // their food, under the market's price...
 export const TRADE_BUY_PREMIUM = 0.2; // ...and what they want, over what the market pays you
 export const TRADE_PRICE_PER_RELATION = 0.001; // and each point of relations moves the price this share in your favour

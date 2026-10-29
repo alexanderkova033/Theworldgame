@@ -149,3 +149,20 @@ button.advisor-fix.is-armed {
     min-height: 2.5rem;
   }
 }
+
+/* The way to the provinces that need you: gilt-edged, as it moves the map
+   rather than opening a tab, with how many there are. */
+.advisor-chip--next {
+  border-color: var(--gilt);
+  cursor: pointer;
+}
+
+.advisor-chip__count {
+  min-width: 1.2rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #f4ead0;
+  font-size: 0.75rem;
+  text-align: center;
+}

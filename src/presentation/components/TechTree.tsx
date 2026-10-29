@@ -155,7 +155,10 @@ function NodeBadge({
       </span>
       <span className="law-node__name">{node.name}</span>
       {node.ideology && <span className="law-node__party">Your party only</span>}
-      {statusLabel && <span className="law-node__status">{statusLabel}</span>}
+      {/* A node only waiting on the one above it says so in its tip and its
+          faded medallion, not a tag: tags are kept for what can be acted on
+          and for a lock with a reason of its own (a quota, the other tree). */}
+      {statusLabel && status !== "locked-prerequisite" && <span className="law-node__status">{statusLabel}</span>}
       {/* Work done so far: shown as a bar on research cards (ResearchPanel.css). */}
       {progress > 0 && <span className="law-node__progress" style={{ width: `${Math.round(progress * 100)}%` }} aria-hidden="true" />}
     </button>

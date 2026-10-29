@@ -33,7 +33,6 @@ export function isLetterWaiting(s: GameState): boolean {
     !!s.pendingDecisionId ||
     !!s.pendingDemand ||
     !!s.pendingCrisis ||
-    !!s.pendingOffer ||
     (!!s.ultimatum && !s.ultimatum.answered)
   );
 }

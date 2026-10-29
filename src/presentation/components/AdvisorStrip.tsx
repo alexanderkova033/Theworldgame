@@ -1,5 +1,6 @@
 // "What needs you now": a slim row under the tabs with the two or three most
-// urgent problems, each a chip that opens the tab that fixes it. Everything
+// urgent problems, each a chip that opens the tab that fixes it, led by the
+// way to the provinces that need you (key N), worst first. Everything
 // comes from getAdvisorOutlook, computed once per day in App.tsx; this only
 // draws it. The chapter objectives have their own box on the map.
 import "./AdvisorStrip.css";
@@ -110,13 +111,34 @@ interface AdvisorStripProps {
   heating: HeatingOutlook;
   dispatch: (action: (state: GameState) => GameState) => void;
   onOpenPanel: OpenPanel;
+  problemCount: number; // provinces that need the player (see getTroubledProvinces)
+  onNextProblem: () => void; // select the next of them and open its card
 }
 
-export function AdvisorStrip({ outlook, state, heating, dispatch, onOpenPanel }: AdvisorStripProps) {
+// A map pin: this one takes you to a place, where the others open a tab.
+function PinIcon() {
+  return (
+    <svg viewBox="-10 -10 20 20" width={ICON_SIZE} height={ICON_SIZE} aria-hidden="true">
+      <path d="M0 9C-5 2 -6.5 -1 -6.5 -3.5A6.5 6.5 0 0 1 6.5 -3.5C6.5 -1 5 2 0 9Z" fill="currentColor" />
+      <circle cx={0} cy={-3.5} r={2.4} fill="var(--bar-deep)" />
+    </svg>
+  );
+}
+
+export function AdvisorStrip({ outlook, state, heating, dispatch, onOpenPanel, problemCount, onNextProblem }: AdvisorStripProps) {
   const { alerts } = outlook;
 
   return (
     <div className="advisor-strip" role="region" aria-label="What needs you now">
+      {problemCount > 0 && (
+        <button type="button" className="advisor-chip advisor-chip--next" title="Go to the next province that needs you, worst first (key: N)" onClick={onNextProblem}>
+          <span className="advisor-chip__icon">
+            <PinIcon />
+          </span>
+          <span>Next problem</span>
+          <span className="advisor-chip__count">{problemCount}</span>
+        </button>
+      )}
       {alerts.map((alert) => {
         const fix = getQuickFix(state, alert, heating);
         return (
@@ -142,7 +164,7 @@ export function AdvisorStrip({ outlook, state, heating, dispatch, onOpenPanel }:
         );
       })}
 
-      {alerts.length === 0 && (
+      {alerts.length === 0 && problemCount === 0 && (
         <span className="advisor-chip is-quiet">
           <CheckIcon />
           All quiet

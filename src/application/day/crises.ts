@@ -127,7 +127,7 @@ function rollCrisis(s: GameState): GameState {
   const quiet = s.crisisQuietUntil !== null && dayNumber(s.date) < dayNumber(s.crisisQuietUntil);
   const busy =
     quiet ||
-    isCrisisUnderWay(s.provinces) || s.pendingDecisionId || s.pendingDemand || s.pendingOffer || (s.ultimatum && !s.ultimatum.answered) || s.burdenOffer || s.chapters.unread.length > 0;
+    isCrisisUnderWay(s.provinces) || s.pendingDecisionId || s.pendingDemand || (s.ultimatum && !s.ultimatum.answered) || s.burdenOffer || s.chapters.unread.length > 0;
   if (busy || Math.random() >= CRISIS_CHANCE_PER_MONTH * getDifficulty(s.difficulty).crisisChance) return s;
   const capacity = getHousingCapacityByProvince(s);
   const season = getSeason(s.date);

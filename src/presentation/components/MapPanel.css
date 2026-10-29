@@ -480,32 +480,6 @@
 }
 
 /* Beside the legend: the next province that needs you. */
-.map-panel__next-problem {
-  position: absolute;
-  left: 7.2rem;
-  bottom: 0.9rem;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.7rem;
-  font-size: 0.8125rem;
-}
-
-.map-panel__next-problem.has-problems {
-  font-weight: 700;
-}
-
-.map-panel__next-problem-count {
-  min-width: 1.2rem;
-  padding: 0 0.3rem;
-  border-radius: 999px;
-  background: var(--danger);
-  color: var(--paper-raised);
-  font-size: 0.75rem;
-  text-align: center;
-}
-
 .map-panel__legend {
   position: absolute;
   left: 0.9rem;

@@ -308,6 +308,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
       <div className="actions-panel__where">
         <span className="actions-panel__where-label" id="build-where-label">
           Build in
+          <span className="actions-panel__where-hint">or click the map</span>
         </span>
         <div className="actions-panel__provinces" role="radiogroup" aria-labelledby="build-where-label">
           {provinces.map((province) => {

@@ -30,7 +30,7 @@ The whole game is one plain, serialisable object, `GameState` (`domain/country/t
 - **Places**: `provinces` (each province's own people, order, uprising, crisis, dike and seam), `placedBuildings` (every finished building and where it stands, with its condition: broken, repairing, seized or ruined), `projects` under way, `lostProvinceIds` and `freeProvinces` (provinces that broke away, and their rebels), and the islands (`settlements`, `settledIslandIds`, `expeditions`, `scoutedIslandIds`).
 - **Policy**: enacted laws and research, `activeLaw`, `researchFocus`, `researchProgress`, `researchOutcomes`, `researchPathsFinished`, the `workforce` (scientists and police), and `lasting` effects laid on by a story's choices.
 - **The world**: `neighbours` (each a country run by the computer), `foreignPolitics`, `foreignIslands` and `foreignIslandsSince`, `foreignVoyages`, `market`, `regiments` (every country's), `wars`, `sieges` and `ultimatum`.
-- **Letters waiting**: `pendingDecisionId`, `pendingDemand`, `pendingCrisis`, `pendingOffer`, `ultimatum` (until answered), `burdenOffer`, and unread chapter briefings in `chapters.unread`.
+- **Letters waiting**: `pendingDecisionId`, `pendingDemand`, `pendingCrisis`, `ultimatum` (until answered), `burdenOffer`, and unread chapter briefings in `chapters.unread`. A neighbour's trade offer (`pendingOffer`) is no letter: it stands in Money, Market until answered or until its `until` day.
 - **The story so far**: `chapters` (opened, done, unread, the deeds and choices made, and story letters still to send), `decisionHistory`, `burdens`, `electionsWon`, `retriesUsed`, `crisisQuietUntil` and `dangerPauses`.
 - **The record**: `events`, `monthlyReports`, `history` (the days since the last report), `pendingLedger` and `lastDayLedger`.
 
@@ -54,7 +54,7 @@ In order:
 8. The day is recorded and the calendar turns. On the first of a month the old month gets its report (`generateMonthlyReport.ts`), and **newMonth** rolls world events, the rival's campaign and the season.
 9. **election**, when one is due. A decision may arrive on the first of the month.
 10. **army**: an ultimatum may run out into war; every regiment drills, marches or fights; islands change hands.
-11. **neighbours**: on the first of the month each neighbour lives a month, builds, recruits, may send settlers and may write a trade offer.
+11. **neighbours**: on the first of the month each neighbour lives a month, builds, recruits, may send settlers and may make a trade offer (it stands in the Market for `TRADE_OFFER_DAYS`, with a notice; a standing offer lapses on the day after `until`).
 12. **crises** (`day/crises.ts`): one whose time is up ends, a neglected fever spreads, and one may strike.
 13. A waiting story letter goes out (`sendStoryLetter`) and chapters open or complete (`advanceChapters`).
 
@@ -68,7 +68,7 @@ The calendar is simplified on purpose (`domain/country/calendar.ts`): twelve mon
 
 ## Letters and the clock
 
-The game stops for anything that needs an answer. `presentation/hooks/useGameClock.ts` is the only place with a timer; it runs `playDay` once per tick and refuses to resume while `isLetterWaiting(state)`: an unread briefing, a burden to choose, a decision, a demand, a crisis, a trade offer or an unanswered ultimatum. The simulation sets `isPaused` when one arrives; the clock makes sure Resume can't skip past it.
+The game stops for anything that needs an answer. `presentation/hooks/useGameClock.ts` is the only place with a timer; it runs `playDay` once per tick and refuses to resume while `isLetterWaiting(state)`: an unread briefing, a burden to choose, a decision, a demand, a crisis or an unanswered ultimatum. The simulation sets `isPaused` when one arrives; the clock makes sure Resume can't skip past it.
 
 Letters never stack. A random decision rolls only when none is pending and no briefing is unread, a random crisis only when no other letter waits, and a story letter waits in `chapters.letters` until the decision slot is free.
 
@@ -145,11 +145,11 @@ A story letter's answer applies its numbers like any decision, then its `StoryOu
 
 ## Presentation
 
-`App.tsx` owns the live game through `useGameClock` and wires it into the windows. It is the seam: it imports from `application/` and reads from `domain/` only for data.
+`App.tsx` owns the live game through `useGameClock` and wires it into the windows. It is the seam: it imports from `application/` and reads from `domain/` only for data. The windows load on first use (`presentation/lazyWindows.ts`) and are fetched in the background once a game is under way. Build docks beside the map (`Modal`'s `side`), so a province is picked by clicking it there.
 
 **One place for each thing.** `presentation/navigation.ts` alone decides which window and section answers each problem, so the tab layout can change without touching the rules. The rule it keeps: the top bar shows each headline figure once, and a window shows it again only at the head of its own detail, never as a badge on its tab. A tab's "!" stays, since it says where in a window to look. A campaign adds no window or tab: its story arrives as briefing letters and lives in the objectives box on the map. `objectiveDestination` and `STORY_DESTINATIONS` send each objective to where it is done.
 
-**The map** (`MapPanel.tsx`) is the centre of the screen, an SVG whose `viewBox` is the camera. Wheel zoom uses a native non-passive listener (React's is passive, so `preventDefault` would fail); every camera move goes through `clampViewBox`; a press that moves more than `DRAG_CLICK_THRESHOLD` pixels is a drag, not a click.
+**The map** is the centre of the screen, in four files: `MapPanel.tsx` (the panel: camera, legend, modes, tooltip), `MapLayers.tsx` (everything drawn on it, memoized), `MapDecor.tsx` (water-lining, compass, names, flags) and `mapCommon.ts` (fills, the camera's limits, the map modes). It is an SVG whose `viewBox` is the camera. Wheel zoom uses a native non-passive listener (React's is passive, so `preventDefault` would fail); every camera move goes through `clampViewBox`; a press that moves more than `DRAG_CLICK_THRESHOLD` pixels is a drag, not a click.
 
 - `nationFrontiers.ts`: each nation's outer frontier as line segments, worked out from the provinces it holds now (`nationShapes(lostProvinceIds)`, cached per set of lost provinces), so a province that broke away falls outside the band and the nation's name moves onto the land it still holds.
 - `MapArmies.tsx`: regiment counters, picked up and sent by tapping. A march is a dashed line along the way still to go, with the counter moving along it by distance. At sea the way comes from `seaRoutes.ts`: waypoints a little off every coast (each corner of the continent, each corner of every island's convex hull) and the shortest way between those that can see each other without crossing land. Drawing only: the days at sea are the rules'.

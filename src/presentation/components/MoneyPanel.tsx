@@ -44,7 +44,8 @@ export function MoneyPanel({ state, production, dispatch, onOpenPanel, section, 
             label: "Market",
             locked: lockedReason(state, "money", "market") ?? undefined,
             icon: <NavIcon type="market" size={22} />,
-            hint: "Buy and sell goods",
+            hint: state.pendingOffer ? "Buy and sell goods. A neighbour's offer is waiting here." : "Buy and sell goods",
+            badge: state.pendingOffer ? "Offer" : undefined,
           },
         ]}
         active={section}

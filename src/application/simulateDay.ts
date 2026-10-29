@@ -245,7 +245,7 @@ export function simulateDay(state: GameState): GameState {
     date,
     // A choice of burdens stops the clock until one is taken.
     isPaused:
-      isGameOver || pendingDecisionId || working.pendingDemand || neighbourMonth.pendingOffer || (neighbourMonth.ultimatum && !neighbourMonth.ultimatum.answered) || election.burdenOffer
+      isGameOver || pendingDecisionId || working.pendingDemand || (neighbourMonth.ultimatum && !neighbourMonth.ultimatum.answered) || election.burdenOffer
         ? true
         : working.isPaused,
     isGameOver,

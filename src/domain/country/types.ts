@@ -83,6 +83,7 @@ export type EventTopic =
   | "venture"
   | "army" // regiments fighting, a province taken back, a regiment lost (see domain/military)
   | "season" // the turn of a season: no longer logged, kept for older saves
+  | "trade" // a neighbour's trade offer, standing in the Market
   | "world"
   | "chapter" // a chapter opening or completed (see domain/chapters)
   | "crisis"; // a flood, a worked-out seam... striking a province, or ending (see domain/crises)
@@ -170,7 +171,7 @@ export interface GameState {
   foreignIslands: Record<string, string>; // islands a neighbour has claimed: island id to nation id
   foreignIslandsSince: Record<string, GameDate>; // when each came to them, settled or taken (none in older saves: long held)
   neighbours: Record<string, Neighbour>; // every nation but the player's, run by the computer (see domain/neighbours)
-  pendingOffer: TradeOffer | null; // a neighbour's trade offer waiting for an answer (see domain/neighbours/tradeRules.ts)
+  pendingOffer: TradeOffer | null; // a neighbour's trade offer standing in the Market until answered or lapsed (see domain/neighbours/tradeRules.ts)
   regiments: Regiment[]; // every country's regiments, on the map (see domain/military)
   wars: Record<string, War>; // neighbours you are at war with, by nation id (see domain/military/warRules.ts)
   ultimatum: Ultimatum | null; // a neighbour threatening war over an island of yours (see domain/military/threatRules.ts)

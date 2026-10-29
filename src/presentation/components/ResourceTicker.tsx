@@ -27,6 +27,7 @@ import { CauseBreakdown } from "./CauseBreakdown";
 import { FlameIcon, HourglassIcon, LoanIcon, UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
+import { useLetterPreview, type PreviewMetric } from "../letterPreview";
 
 interface ResourceTickerProps {
   stats: CountryStats;
@@ -66,12 +67,19 @@ function Alert() {
   );
 }
 
-function Chip({ label, danger, warn, children }: { label: string; danger?: boolean; warn?: boolean; children: ReactNode }) {
+function Chip({ label, danger, warn, children, previewing }: { label: string; danger?: boolean; warn?: boolean; children: ReactNode; previewing?: boolean }) {
   return (
-    <div className={`resource-ticker__chip ${danger ? "is-danger" : warn ? "is-warn" : ""}`} title={label} aria-label={label}>
+    <div className={`resource-ticker__chip ${danger ? "is-danger" : warn ? "is-warn" : ""} ${previewing ? "is-previewed" : ""}`} title={label} aria-label={label}>
       {children}
     </div>
   );
+}
+
+// What the letter's answer under the pointer would do to this number.
+function PreviewMark({ value, metric }: { value: number | undefined; metric: PreviewMetric }) {
+  if (value === undefined) return null;
+  const text = formatChange(metric, value);
+  return <span className={`resource-ticker__preview ${value >= 0 ? "is-gain" : "is-loss"}`}>{text}</span>;
 }
 
 function ResourceGlyph({ type, size = 20 }: { type: ResourceType; size?: number }) {
@@ -142,11 +150,12 @@ function WhyChip({
   children: ReactNode;
 }) {
   const { open, setOpen, ref } = usePopover();
+  const previewed = useLetterPreview()?.[metric];
   return (
     <div className="resource-ticker__why" ref={ref}>
       <button
         type="button"
-        className={`resource-ticker__chip resource-ticker__why-button ${danger ? "is-danger" : warn ? "is-warn" : ""} ${open ? "is-open" : ""}`}
+        className={`resource-ticker__chip resource-ticker__why-button ${danger ? "is-danger" : warn ? "is-warn" : ""} ${open ? "is-open" : ""} ${previewed !== undefined ? "is-previewed" : ""}`}
         aria-expanded={open}
         aria-haspopup="true"
         aria-label={`${label}${runOut ? `. Runs out in ${runOut.days} days if nothing changes` : ""}. Show why it changed.`}
@@ -154,6 +163,7 @@ function WhyChip({
         onClick={() => setOpen((v) => !v)}
       >
         {children}
+        <PreviewMark value={previewed} metric={metric} />
         {/* Runs out within the forecast window: an hourglass and the days left. */}
         {runOut && (
           <span className={`resource-ticker__runout ${runOut.days < 30 ? "is-soon" : ""}`} aria-hidden="true">
@@ -328,6 +338,7 @@ function Stores({
 
 export function ResourceTicker({ stats, electionThreshold, unrestStage, resources, production, heating, debt, shortages, lastDayLedger, monthLedger, forecasts, onOpenReports }: ResourceTickerProps) {
   const why = { lastDay: lastDayLedger, month: monthLedger, onOpenReports };
+  const previewedPeople = useLetterPreview()?.population;
   const [storesPinned, setStoresPinned] = useState(readStoresPinned);
   const pinStores = (pinned: boolean) => {
     setStoresPinned(pinned);
@@ -360,12 +371,14 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, resource
       <Chip
         label={`People: ${formatExact(stats.population)}, homes for ${formatExact(production.housingCapacity)}${production.homeless > 0 ? `, ${formatExact(production.homeless)} without a home` : ""}`}
         danger={homesTrouble}
+        previewing={previewedPeople !== undefined}
       >
         <StatIcon type="population" size={20} />
         <span>
           {formatAmount(stats.population)} / {formatAmount(production.housingCapacity)}
         </span>
         {homesTrouble && <Alert />}
+        <PreviewMark value={previewedPeople} metric="population" />
       </Chip>
 
       <WhyChip {...why} metric="food" runOut={forecasts.food} label={`Food: ${formatExact(stats.food)} (${formatRate(production.netFood)})`}>

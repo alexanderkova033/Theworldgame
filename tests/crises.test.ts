@@ -7,6 +7,7 @@ import { simulateDay } from "../src/application/simulateDay";
 import { startNewGame } from "../src/application/startNewGame";
 import { allChaptersOpen } from "../src/domain/chapters/chapterData";
 import {
+  CRISIS_FROM_MONTH,
   FELLING_DAYS,
   FELLING_REPLANT_DAYS,
   FEVER_FIRST_DEATHS,
@@ -17,7 +18,7 @@ import {
   SEAM_SHAFT_DAYS,
   SEAM_SHAFT_YIELD,
 } from "../src/domain/constants";
-import { addDays } from "../src/domain/country/calendar";
+import { addDays, monthNumber } from "../src/domain/country/calendar";
 import type { GameState } from "../src/domain/country/types";
 import { crisesFor, getLandProduction } from "../src/domain/crises/crisisRules";
 import { getNation } from "../src/domain/nations/nationRules";
@@ -170,18 +171,19 @@ describe("crises in a played country", () => {
   it("strike now and then, and never before the first summer", () => {
     let s: GameState = { ...astravia, isPaused: false };
     let struck = 0;
-    let first = -1;
+    let first: GameState["date"] | null = null;
     for (let day = 0; day < 3 * 360; day++) {
       s = simulateDay({ ...s, isPaused: false, pendingDecisionId: null, pendingDemand: null, pendingOffer: null });
       if (s.pendingCrisis) {
         struck += 1;
-        if (first < 0) first = day;
+        first ??= s.date;
         const answers = getCrisisAnswers(s);
         s = answerCrisis(s, answers[answers.length - 1]);
       }
     }
     expect(struck).toBeGreaterThan(0);
-    expect(first).toBeGreaterThan(150);
+    // The first day of summer at the earliest (it can be that very day).
+    expect(monthNumber(first!)).toBeGreaterThanOrEqual(CRISIS_FROM_MONTH);
   });
 
   it("are remembered by saves, and older saves have none", () => {

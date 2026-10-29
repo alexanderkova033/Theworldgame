@@ -1,6 +1,8 @@
 /* The season on the chart (see MapSeasons.tsx). MapPanel sets data-season;
    each season names its washes here, and the land and sea ease from one
-   to the next over a few seconds. */
+   to the next over a few seconds. Plain see-through fills, not blend
+   modes: a blended layer the size of the map is redrawn on every pan and
+   zoom, and weaker devices feel it. */
 .map-panel {
   --season-land: #ffffff;
   --season-land-opacity: 0;
@@ -11,36 +13,35 @@
 
 .map-panel[data-season="spring"] {
   --season-land: #c3d98e;
-  --season-land-opacity: 0.38;
+  --season-land-opacity: 0.26;
   --season-sea: #cfe0cf;
-  --season-sea-opacity: 0.2;
+  --season-sea-opacity: 0.14;
 }
 
 .map-panel[data-season="summer"] {
   --season-land: #efc95c;
-  --season-land-opacity: 0.34;
+  --season-land-opacity: 0.24;
   --season-sea: #b7d6cc;
-  --season-sea-opacity: 0.22;
+  --season-sea-opacity: 0.14;
 }
 
 .map-panel[data-season="autumn"] {
   --season-land: #e07a26;
-  --season-land-opacity: 0.44;
+  --season-land-opacity: 0.36;
   --season-sea: #c2a27a;
-  --season-sea-opacity: 0.24;
+  --season-sea-opacity: 0.18;
 }
 
 .map-panel[data-season="winter"] {
   --season-land: #a9bdd0;
-  --season-land-opacity: 0.5;
+  --season-land-opacity: 0.36;
   --season-frost-opacity: 0.34;
   --season-sea: #8197a8;
-  --season-sea-opacity: 0.38;
+  --season-sea-opacity: 0.28;
 }
 
 .map-season__wash,
 .map-season__sea {
-  mix-blend-mode: multiply;
   transition:
     fill 2.6s ease,
     opacity 2.6s ease;

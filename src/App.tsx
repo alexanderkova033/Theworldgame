@@ -2,16 +2,15 @@
 // app: it owns the live GameState (via useGameClock) and wires it into the
 // UI panels. It never computes simulation values itself.
 import "./App.css";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArmyPanel, BuildPanel, EventLog, ExpeditionPanel, GameEndScreen, LawsPanel, MoneyPanel, PartySelectScreen, PoliticsPanel, preloadWindows, ReportsPanel, ResearchPanel } from "./presentation/lazyWindows";
 import { emptyLedger, mergeLedgers } from "./domain/ledger/ledgerRules";
 import { getNation } from "./domain/nations/nationRules";
 import { NATIONS } from "./domain/nations/nationData";
 import type { GameSpeed } from "./domain/country/types";
 import { getElectionThreshold } from "./domain/parties/electionRules";
 import { getPartiesForNation, getParty } from "./domain/parties/partyRules";
-import { acceptOffer, answerCrisis, answerDemand, declineOffer, dismissDecision, resolveDecision } from "./application/actions";
-import { OfferLetter } from "./presentation/components/OfferLetter";
-import { ArmyPanel } from "./presentation/components/ArmyPanel";
+import { answerCrisis, answerDemand, dismissDecision, resolveDecision } from "./application/actions";
 import { UltimatumLetter } from "./presentation/components/UltimatumLetter";
 import { payTribute, standFirm } from "./application/actions/ultimatumActions";
 import { MarchBanner } from "./presentation/components/MapArmies";
@@ -32,20 +31,11 @@ import { AdvisorStrip } from "./presentation/components/AdvisorStrip";
 import { DecisionModal } from "./presentation/components/DecisionModal";
 import { DemandLetter } from "./presentation/components/DemandLetter";
 import { CrisisLetter } from "./presentation/components/CrisisLetter";
-import { BuildPanel } from "./presentation/components/BuildPanel";
-import { EventLog } from "./presentation/components/EventLog";
-import { ExpeditionPanel } from "./presentation/components/ExpeditionPanel";
-import { GameEndScreen } from "./presentation/components/GameEndScreen";
-import { LawsPanel } from "./presentation/components/LawsPanel";
 import { MapPanel } from "./presentation/components/MapPanel";
 import { Modal } from "./presentation/components/Modal";
 import { NavIcon } from "./presentation/components/NavIcon";
 import { StatIcon } from "./presentation/components/StatIcon";
-import { PartySelectScreen } from "./presentation/components/PartySelectScreen";
-import { PoliticsPanel } from "./presentation/components/PoliticsPanel";
 import { ProvinceCard } from "./presentation/components/ProvinceCard";
-import { ReportsPanel } from "./presentation/components/ReportsPanel";
-import { ResearchPanel } from "./presentation/components/ResearchPanel";
 import { StartScreen } from "./presentation/components/StartScreen";
 import { Toasts } from "./presentation/components/Toasts";
 import { SeasonTurn } from "./presentation/components/SeasonTurn";
@@ -53,7 +43,6 @@ import { useSeasonTurn } from "./presentation/hooks/useSeasonTurn";
 import { getSeason } from "./domain/country/calendar";
 import { TopBar } from "./presentation/components/TopBar";
 import { FIRST_SECTIONS, lockedReason, politicsSectionFor, reachable, type PanelKey, type Section, type Sections } from "./presentation/navigation";
-import { MoneyPanel } from "./presentation/components/MoneyPanel";
 import { isLetterWaiting, useGameClock } from "./presentation/hooks/useGameClock";
 import { isFeatureOpen } from "./domain/chapters/chapterData";
 import { readBriefing } from "./application/chapters";
@@ -87,6 +76,9 @@ function App() {
   const [selectedProvinceId, setSelectedProvinceId] = useState<string | null>(null);
   // Clicking a province on the map also opens its card (see ProvinceCard).
   const [isProvinceCardOpen, setProvinceCardOpen] = useState(false);
+  // While Build is open beside the map, a click on the map picks where to
+  // build rather than opening the province's card.
+  const buildOpen = useRef(false);
   // Regiments picked up on the map, by the province they stand in: the
   // next province tapped is where they march (see MapArmies.tsx).
   const [marchFrom, setMarchFrom] = useState<string | null>(null);
@@ -106,7 +98,7 @@ function App() {
         return;
       }
       setSelectedProvinceId(provinceId);
-      setProvinceCardOpen(true);
+      if (!buildOpen.current) setProvinceCardOpen(true);
     },
     [marchFrom, dispatch],
   );
@@ -150,6 +142,9 @@ function App() {
   // on-demand overlay (HOI4-style tabs) instead of a permanent sidebar —
   // see Modal.tsx and TopBar.tsx.
   const [openModal, setOpenModal] = useState<PanelKey | null>(null);
+  useEffect(() => {
+    buildOpen.current = openModal === "build";
+  }, [openModal]);
   // Which section each window shows: remembered between visits, and set
   // directly when an advisor chip or toast points somewhere.
   const [sections, setSections] = useState<Sections>(FIRST_SECTIONS);
@@ -321,6 +316,12 @@ function App() {
 
   // The season on the map, and its turn across the screen once no letter is
   // open (see SeasonTurn).
+  // Once a game is under way, the windows load in the background.
+  const playing = !!state;
+  useEffect(() => {
+    if (playing) preloadWindows();
+  }, [playing]);
+
   const season = useSeasonTurn(state ? getSeason(state.date) : null, !!state && isLetterWaiting(state));
 
   // A chapter opened (see application/chapters.ts): its letter arrives, and
@@ -340,14 +341,6 @@ function App() {
     playLetter();
     setOpenModal(null);
   }, [state?.pendingDecisionId]);
-
-  // A neighbour's trade offer, the same way (see OfferLetter).
-  const offerKey = state?.pendingOffer ? `${state.pendingOffer.nationId}:${state.pendingOffer.good}:${state.date.year}-${state.date.month}` : null;
-  useEffect(() => {
-    if (!offerKey) return;
-    playLetter();
-    setOpenModal(null);
-  }, [offerKey]);
 
   // A neighbour's ultimatum, the same way (see UltimatumLetter).
   const ultimatumKey = state?.ultimatum && !state.ultimatum.answered ? `${state.ultimatum.nationId}:${state.ultimatum.islandId}` : null;
@@ -395,6 +388,7 @@ function App() {
 
     const pendingNation = getNation(pendingNationId);
     return (
+      <Suspense fallback={null}>
       <PartySelectScreen
         nation={pendingNation}
         parties={getPartiesForNation(pendingNationId)}
@@ -404,6 +398,7 @@ function App() {
           setSelectedProvinceId(pendingNation.capitalProvinceId);
         }}
       />
+      </Suspense>
     );
   }
 
@@ -411,6 +406,7 @@ function App() {
     const checkpoint = state.outcome === "victory" ? null : peekCheckpoint();
     const allowed = getDifficulty(state.difficulty).retries;
     return (
+      <Suspense fallback={null}>
       <GameEndScreen
         state={state}
         retry={checkpoint ? { chapterTitle: getChapter(checkpoint.chapters.opened[checkpoint.chapters.opened.length - 1]).title, left: allowed - state.retriesUsed, total: allowed } : null}
@@ -422,6 +418,7 @@ function App() {
           setPendingSlotId(null);
         }}
       />
+      </Suspense>
     );
   }
 
@@ -474,7 +471,7 @@ function App() {
         debt={state.debt}
         activePanel={openModal}
         reportsBadgeCount={unseenEventCount}
-        advisor={advisor && <AdvisorStrip outlook={advisor} state={state} heating={heating!} dispatch={dispatch} onOpenPanel={openPanel} />}
+        advisor={advisor && <AdvisorStrip outlook={advisor} state={state} heating={heating!} dispatch={dispatch} onOpenPanel={openPanel} problemCount={troubledIds.length} onNextProblem={showNextProblem} />}
         onPause={pause}
         onResume={resume}
         onSetSpeed={setSpeed}
@@ -499,8 +496,6 @@ function App() {
             foreignRulers={foreignRulers}
             provinceStatus={provinceStatus}
             provinceOverview={provinceOverview}
-            problemCount={troubledIds.length}
-            onNextProblem={showNextProblem}
             regiments={isFeatureOpen(state, "army") ? state.regiments : null}
             marchFrom={marchFrom}
             onPickArmy={pickArmy}
@@ -527,6 +522,8 @@ function App() {
         </div>
       </main>
 
+      {/* The windows load on first use (lazyWindows.ts). */}
+      <Suspense fallback={null}>
       {openModal === "politics" && (
         <Modal title="Politics" window="politics" icon={<NavIcon type="politics" size={22} />} onClose={() => setOpenModal(null)}>
           <PoliticsPanel state={state} dispatch={dispatch} onOpenPanel={openPanel} section={sections.politics} onSection={(section) => setSection("politics", section)} />
@@ -534,7 +531,7 @@ function App() {
       )}
 
       {openModal === "build" && (
-        <Modal title="Build" window="build" icon={<NavIcon type="build" size={22} />} onClose={() => setOpenModal(null)} wide>
+        <Modal title="Build" window="build" icon={<NavIcon type="build" size={22} />} onClose={() => setOpenModal(null)} side>
           <BuildPanel
             state={state}
             dispatch={dispatch}
@@ -598,6 +595,7 @@ function App() {
           <ExpeditionPanel state={state} selectedIslandId={selectedIslandId} dispatch={dispatch} />
         </Modal>
       )}
+      </Suspense>
 
       <SeasonTurn turning={season.turning} />
       <Toasts events={state.events} monthlyReports={state.monthlyReports} isPaused={state.isPaused} onOpenPanel={openPanel} />
@@ -644,20 +642,6 @@ function App() {
           }}
           onStandFirm={() => {
             dispatch(standFirm);
-            resume();
-          }}
-        />
-      )}
-      {/* A neighbour's trade offer waits behind every other letter. */}
-      {state.chapters.unread.length === 0 && !state.burdenOffer && !state.pendingDecisionId && !state.pendingDemand && !state.pendingCrisis && !(state.ultimatum && !state.ultimatum.answered) && (
-        <OfferLetter
-          state={state}
-          onAccept={() => {
-            dispatch(acceptOffer);
-            resume();
-          }}
-          onDecline={() => {
-            dispatch(declineOffer);
             resume();
           }}
         />

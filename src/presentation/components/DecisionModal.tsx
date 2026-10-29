@@ -1,4 +1,6 @@
 import "./DecisionModal.css";
+import { useEffect } from "react";
+import { previewOf, setLetterPreview } from "../letterPreview";
 import type { GameState } from "../../domain/country/types";
 import { getDecision } from "../../domain/decisions/decisionRules";
 import type { DecisionEffects } from "../../domain/decisions/types";
@@ -59,6 +61,10 @@ export function DecisionIcon({ icon, size }: { icon: string; size: number }) {
 // than one the player opened — rendered unconditionally in App.tsx and
 // self-guards on there being nothing pending, so it's a no-op most ticks.
 export function DecisionModal({ state, onResolve, onDismiss }: DecisionModalProps) {
+  // Pointing at an answer marks what it would move on the top bar; the
+  // marks go when the letter does.
+  const pending = state.pendingDecisionId;
+  useEffect(() => () => setLetterPreview(null), [pending]);
   if (!state.pendingDecisionId) return null;
   const decision = getDecision(state.pendingDecisionId);
   if (!decision) return null;
@@ -83,8 +89,13 @@ export function DecisionModal({ state, onResolve, onDismiss }: DecisionModalProp
               className={`decision-modal__option ${decision.story ? "decision-modal__option--stacked" : ""}`}
               onClick={() => {
                 playSeal();
+                setLetterPreview(null);
                 onResolve(decision.id, option.id);
               }}
+              onMouseEnter={() => setLetterPreview(previewOf(state, option))}
+              onMouseLeave={() => setLetterPreview(null)}
+              onFocus={() => setLetterPreview(previewOf(state, option))}
+              onBlur={() => setLetterPreview(null)}
             >
               <span className="decision-modal__option-label">{option.label}</span>
               <span className="decision-modal__option-effect">
