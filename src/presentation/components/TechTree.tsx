@@ -758,7 +758,7 @@ export function StatusLine({ status, children }: { status: "enacted" | "in-progr
 // Research, political power for Laws.
 export function TreeBank({ icon, value, rate, label }: { icon: StatIconType; value: number; rate: number; label: string }) {
   return (
-    <div className="law-tree__bank" title={`${label}: ${value.toFixed(1)}, +${rate.toFixed(2)} per day`}>
+    <div className={`law-tree__bank law-tree__bank--${icon}`} title={`${label}: ${value.toFixed(1)}, +${rate.toFixed(2)} per day`}>
       <StatIcon type={icon} size={22} />
       <span className="law-tree__bank-label">{label}</span>
       <span className="law-tree__bank-value">{Math.floor(value)}</span>

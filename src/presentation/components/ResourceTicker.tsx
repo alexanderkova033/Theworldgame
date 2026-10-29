@@ -362,7 +362,7 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, resource
         danger={stats.treasury < 0}
       >
         <StatIcon type="treasury" size={20} />
-        <span>
+        <span className={stats.treasury < 0 ? undefined : "tone-money"}>
           {formatAmount(stats.treasury)} {CURRENCY_SYMBOL}
         </span>
         <Delta value={production.netTreasury} />
@@ -405,7 +405,7 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, resource
 
       <WhyChip {...why} metric="support" label={`Support: ${formatExact(stats.popularity)}%. The next election needs ${electionThreshold}%.`} danger={stats.popularity < electionThreshold}>
         <StatIcon type="popularity" size={20} />
-        <span>{formatAmount(stats.popularity)}%</span>
+        <span className={stats.popularity < electionThreshold ? undefined : "tone-politics"}>{formatAmount(stats.popularity)}%</span>
         {stats.popularity < electionThreshold && <Alert />}
       </WhyChip>
 

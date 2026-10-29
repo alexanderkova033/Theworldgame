@@ -387,6 +387,9 @@
   font-size: 0.8125rem;
   line-height: 1.2;
   text-align: center;
+  max-width: 100%;
+  hyphens: auto; /* a long name breaks rather than being cut off */
+  overflow-wrap: anywhere;
   color: var(--text-muted);
 }
 
@@ -1125,4 +1128,22 @@ button.law-tree__lane-head.is-selected {
   .law-node__party {
     font-size: 0.78rem;
   }
+}
+
+/* The colour key (index.css) on the trees: political power in plum,
+   research in Prussian blue, Crowns in umber gold, each where it's banked
+   and where it's spent. */
+.law-tree__bank--politicalPower .law-tree__bank-value,
+.law-inspector__enact-cost .cost-chip--politicalPower {
+  color: var(--tone-politics);
+}
+
+.law-tree__bank--research .law-tree__bank-value,
+.law-inspector__enact-cost .cost-chip--research,
+.research-inspector__eta {
+  color: var(--tone-research);
+}
+
+.law-inspector__enact-cost .cost-chip--treasury {
+  color: var(--tone-money);
 }

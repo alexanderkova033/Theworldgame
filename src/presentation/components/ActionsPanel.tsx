@@ -1,8 +1,9 @@
-// Build orders, as a list you can read: pick the province at the top (the
-// panel covers the map, so it can't be clicked there), then every building
-// sits under what it's for — Homes & learning, Food, Industry & roads —
-// on one row saying in words what it does, what it costs, how many stand
-// here, and, when it can't be built, exactly why.
+// Build orders for one kind of building (the rail in BuildPanel picks which):
+// pick the province at the top or on the map, then each building is a row
+// with its picture, what it gives, pips for how many stand here, and its
+// costs in green (enough), amber (enough to start) or red (not enough). What
+// it does in a sentence is in its name's tip; when it can't be built, the
+// row says exactly why.
 import "./ActionsPanel.css";
 import { getModifiers } from "../../domain/policy/policyRules";
 import type { ReactNode } from "react";
@@ -64,9 +65,11 @@ import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 import { BuildingGlyph, LockIcon } from "./CauseIcon";
 import { chapterFor, isFeatureOpen } from "../../domain/chapters/chapterData";
+import { BUILD_GROUPS, type BuildGroup } from "../buildGroups";
 
 interface ActionsPanelProps {
   state: GameState;
+  group: BuildGroup;
   selectedProvinceId: string;
   dispatch: (action: (state: GameState) => GameState) => void;
   provinces: ProvinceOverview[];
@@ -98,14 +101,6 @@ function ResourceGlyph({ type, size = 14 }: { type: ResourceType; size?: number 
   );
 }
 
-type BuildGroup = "people" | "food" | "industry" | "sea";
-
-const GROUPS: Array<{ key: BuildGroup; title: string }> = [
-  { key: "people", title: "Homes & learning" },
-  { key: "food", title: "Food" },
-  { key: "industry", title: "Industry & roads" },
-  { key: "sea", title: "The sea" },
-];
 
 interface BuildItem {
   type: ProjectType;
@@ -295,7 +290,18 @@ function provinceFlag(overview: ProvinceOverview): { text: string; urgent: boole
   return null;
 }
 
-export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, onSelectProvince }: ActionsPanelProps) {
+// How many stand here out of the most there can be, as filled pips.
+function Pips({ count, max }: { count: number; max: number }) {
+  return (
+    <span className="build-row__pips" aria-hidden="true">
+      {Array.from({ length: max }, (_, i) => (
+        <span key={i} className={i < count ? "is-built" : ""} />
+      ))}
+    </span>
+  );
+}
+
+export function ActionsPanel({ state, group, selectedProvinceId, dispatch, provinces, onSelectProvince }: ActionsPanelProps) {
   const season = getSeason(state.date);
   const mods = getModifiers(state);
   const jobsPer = getJobsPerBuilding(state);
@@ -322,6 +328,8 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
                 aria-checked={selected}
                 className={`actions-panel__province ${selected ? "is-selected" : ""}`}
                 onClick={() => onSelectProvince(province.id)}
+                // Picked on the map: brought into view along the line.
+                ref={selected ? (el) => el?.scrollIntoView({ block: "nearest", inline: "nearest" }) : undefined}
               >
                 <span className="actions-panel__province-name">
                   {province.isCapital && <span aria-label="Capital">★ </span>}
@@ -334,7 +342,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
         </div>
       </div>
 
-      {GROUPS.map((group) => (
+      {BUILD_GROUPS.filter((g) => g.key === group).map((group) => (
         <div key={group.key} className="build-group">
           <h3 className="build-group__title">{group.title}</h3>
           <ul className="build-list">
@@ -381,14 +389,20 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
 
                   <span className="build-row__main">
                     <span className="build-row__title">
-                      <span className="build-row__name">{item.name}</span>
+                      <span className="build-row__name" title={item.summary}>
+                        {item.name}
+                      </span>
                       {!isLocked && (
                         <span className="build-row__yield" title={item.hint}>
                           {typeof item.yields === "function" ? item.yields(season, mods) : item.yields}
                         </span>
                       )}
+                      {!isLocked && (
+                        <span className="build-row__count" title={`${count} of ${max} built or underway in ${provinceName}`}>
+                          <Pips count={count} max={max} />
+                        </span>
+                      )}
                     </span>
-                    <span className="build-row__summary">{item.summary}</span>
 
                     {!isLocked && (
                       <span className="build-row__costs">
@@ -398,27 +412,23 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
                           title={`You have ${formatAmount(treasury)} ${CURRENCY_SYMBOL}. It costs ${formatAmount(cost)} in all: ${formatAmount(upfront(cost))} when ordered, the rest during the build.`}
                         >
                           <StatIcon type="treasury" size={14} />
-                          <span>
-                            <span className="build-row__have">{formatAmount(treasury)}</span>/{formatAmount(cost)} {CURRENCY_SYMBOL}
-                          </span>
+                          {formatAmount(cost)}
                         </span>
                         <span
                           className={`build-row__cost ${resourceShort ? "is-short" : resourcePartial ? "is-partial" : ""}`}
                           title={`You have ${formatAmount(stock)} ${item.resourceType}. It takes ${item.resourceCost} in all: ${upfront(item.resourceCost)} when ordered, the rest during the build.`}
                         >
                           <ResourceGlyph type={item.resourceType} />
-                          <span>
-                            <span className="build-row__have">{formatAmount(stock)}</span>/{item.resourceCost} {item.resourceType}
-                          </span>
+                          {item.resourceCost}
                         </span>
-                        <span className="build-row__cost" title={`${item.buildDays} days to build`}>
+                        <span className="build-row__cost build-row__cost--plain" title={`${item.buildDays} days to build`}>
                           <HourglassIcon />
-                          {item.buildDays} days
+                          {item.buildDays}d
                         </span>
                         {workers > 0 && (
-                          <span className="build-row__cost" title={`Needs ${formatAmount(workers)} workers from your population. Without them it runs below capacity.`}>
+                          <span className="build-row__cost build-row__cost--plain" title={`Needs ${formatAmount(workers)} workers from your population. Without them it runs below capacity.`}>
                             <StatIcon type="population" size={14} />
-                            {formatAmount(workers)} workers
+                            {formatAmount(workers)}
                           </span>
                         )}
                       </span>
@@ -443,11 +453,6 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, o
                   </span>
 
                   <span className="build-row__action">
-                    {!isLocked && (
-                      <span className="build-row__count" title={`${count} of ${max} built or underway in ${provinceName}`}>
-                        {count} / {max} here
-                      </span>
-                    )}
                     <button
                       type="button"
                       className="btn-primary build-row__button"

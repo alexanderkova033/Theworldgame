@@ -142,13 +142,13 @@ function App() {
   // on-demand overlay (HOI4-style tabs) instead of a permanent sidebar —
   // see Modal.tsx and TopBar.tsx.
   const [openModal, setOpenModal] = useState<PanelKey | null>(null);
-  useEffect(() => {
-    buildOpen.current = openModal === "build";
-  }, [openModal]);
   // Which section each window shows: remembered between visits, and set
   // directly when an advisor chip or toast points somewhere.
   const [sections, setSections] = useState<Sections>(FIRST_SECTIONS);
   const setSection = useCallback(<K extends keyof Sections>(panel: K, section: Sections[K]) => setSections((s) => ({ ...s, [panel]: section })), []);
+  useEffect(() => {
+    buildOpen.current = openModal === "build" && sections.build === "buildings";
+  }, [openModal, sections.build]);
 
   // How many of state.events the player has actually seen — everything past
   // that count shows up as an unread badge on the Reports tab, since the
@@ -531,7 +531,7 @@ function App() {
       )}
 
       {openModal === "build" && (
-        <Modal title="Build" window="build" icon={<NavIcon type="build" size={22} />} onClose={() => setOpenModal(null)} side>
+        <Modal title="Build" window="build" icon={<NavIcon type="build" size={22} />} onClose={() => setOpenModal(null)} side={sections.build === "buildings"} wide>
           <BuildPanel
             state={state}
             dispatch={dispatch}

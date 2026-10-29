@@ -145,7 +145,7 @@ export function AdvisorStrip({ outlook, state, heating, dispatch, onOpenPanel, p
         <span key={alert.kind} className={`advisor-group ${fix ? "has-fix" : ""}`}>
         <button
           type="button"
-          className={`advisor-chip ${alert.critical ? "is-critical" : "is-warning"}`}
+          className={`advisor-chip ${alert.critical ? "is-critical" : "is-warning"} ${alert.kind === "research" ? "tone-research" : ""}`}
           title={alert.detail}
           onClick={() => { const to = alertDestination(alert, state); onOpenPanel(to.panel, to.section); }}
         >

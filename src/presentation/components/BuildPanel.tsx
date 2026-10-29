@@ -1,9 +1,13 @@
 // The Build window, in two sections:
-// - Buildings: what to build where, what's underway, what needs repairing
+// - Buildings: what's being built as a strip of rings along the top, a rail
+//   of building kinds down the left (and Repairs), and the chosen kind's
+//   buildings beside it
 // - People: homes, jobs, heating and food, nationally and by province
 // Each section tab says at a glance how it stands, with a "!" when
 // something there needs the player; the advisor strip and toasts open the
 // right section directly (see navigation.ts).
+import "./BuildPanel.css";
+import { useState } from "react";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
 import type { GameState } from "../../domain/country/types";
@@ -11,8 +15,10 @@ import type { BuildSection, OpenPanel } from "../navigation";
 import { ActionsPanel } from "./ActionsPanel";
 import { NavIcon } from "./NavIcon";
 import { PeoplePanel } from "./PeoplePanel";
-import { ProjectsPanel } from "./ProjectsPanel";
-import { RepairsPanel } from "./RepairsPanel";
+import { ProjectRings } from "./ProjectsPanel";
+import { RepairsPanel, WrenchIcon } from "./RepairsPanel";
+import { BuildingIcon } from "./BuildingIcon";
+import { BUILD_GROUPS, type BuildGroup } from "../buildGroups";
 import { StatIcon } from "./StatIcon";
 import { SubTabs, type SubTab } from "./SubTabs";
 
@@ -41,7 +47,6 @@ function sectionTabs(state: GameState, production: DailyProductionSummary, provi
       label: "Buildings",
       icon: <NavIcon type="build" size={22} />,
       alert: broken > 0 || stalled > 0,
-      badge: state.projects.length > 0 ? `${state.projects.length} underway` : undefined,
       hint: `${state.projects.length} projects underway${broken > 0 ? `, ${broken} broken buildings to repair` : ""}${stalled > 0 ? `, ${stalled} stalled` : ""}`,
     },
     {
@@ -54,17 +59,72 @@ function sectionTabs(state: GameState, production: DailyProductionSummary, provi
   ];
 }
 
+type RailKey = BuildGroup | "repairs";
+
+// The kind last looked at, kept between openings of the window.
+let lastRail: RailKey = "people";
+
 export function BuildPanel({ state, dispatch, production, provinces, selectedProvinceId, onSelectProvince, onOpenPanel, section, onSection }: BuildPanelProps) {
+  const [rail, setRailState] = useState<RailKey>(lastRail);
+  const setRail = (key: RailKey) => {
+    lastRail = key;
+    setRailState(key);
+  };
+  const broken = state.placedBuildings.filter((b) => b.condition === "broken").length;
+  const damaged = broken + state.placedBuildings.filter((b) => b.condition === "repairing").length;
   return (
     <div className="window-panel">
       <SubTabs label="Build sections" tabs={sectionTabs(state, production, provinces)} active={section} onSelect={(key) => onSection(key as BuildSection)} />
 
       {section === "buildings" && (
-        <div className="window-layout">
-          <ActionsPanel state={state} selectedProvinceId={selectedProvinceId} dispatch={dispatch} provinces={provinces} onSelectProvince={onSelectProvince} />
-          <div className="window-layout__side">
-            <ProjectsPanel state={state} />
-            <RepairsPanel state={state} dispatch={dispatch} />
+        <div className="production">
+          <ProjectRings state={state} dailyCost={production.buildingInstalments} />
+          <div className="production__body">
+            <nav className="production__rail" aria-label="Kinds of building">
+              {BUILD_GROUPS.map((group) => (
+                <button
+                  key={group.key}
+                  type="button"
+                  className={`production__kind ${rail === group.key ? "is-active" : ""}`}
+                  aria-pressed={rail === group.key}
+                  aria-label={group.title}
+                  title={group.title}
+                  onClick={() => setRail(group.key)}
+                >
+                  <svg viewBox="-12 -16 24 24" aria-hidden="true">
+                    <BuildingIcon type={group.picture} x={0} y={0} size={7} />
+                  </svg>
+                </button>
+              ))}
+              <span className="production__rail-gap" />
+              <button
+                type="button"
+                className={`production__kind production__kind--repairs ${rail === "repairs" ? "is-active" : ""} ${broken > 0 ? "has-broken" : ""}`}
+                aria-pressed={rail === "repairs"}
+                aria-label={broken > 0 ? `Repairs, ${broken} broken` : "Repairs"}
+                title={broken > 0 ? `Repairs: ${broken} broken` : "Repairs"}
+                onClick={() => setRail("repairs")}
+              >
+                <WrenchIcon size={24} />
+                {broken > 0 && <span className="production__count">{broken}</span>}
+              </button>
+            </nav>
+            <div className="production__main">
+              {rail === "repairs" ? (
+                damaged > 0 ? (
+                  <RepairsPanel state={state} dispatch={dispatch} />
+                ) : (
+                  <div className="empty-plate production__nothing">
+                    <span>
+                      <WrenchIcon size={22} />
+                    </span>
+                    <p>Nothing broken.</p>
+                  </div>
+                )
+              ) : (
+                <ActionsPanel state={state} group={rail} selectedProvinceId={selectedProvinceId} dispatch={dispatch} provinces={provinces} onSelectProvince={onSelectProvince} />
+              )}
+            </div>
           </div>
         </div>
       )}

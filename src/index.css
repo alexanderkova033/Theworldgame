@@ -65,6 +65,19 @@
   --info: #183e66;
   --success: #1b4a25;
 
+  /* The colour key for text: one colour, one meaning, everywhere. Gains and
+     what can be paid are green, losses and what can't are red, what's
+     tight is amber; money held is umber gold, research Prussian blue,
+     politics plum, and the thing to act on oxblood. Each is also told by
+     a shape where it matters (an arrow, a "!"), never by colour alone. */
+  --tone-gain: var(--success);
+  --tone-loss: var(--danger);
+  --tone-tight: var(--warning);
+  --tone-money: var(--ink-money);
+  --tone-research: var(--prussian);
+  --tone-politics: var(--ink-politics);
+  --tone-act: var(--oxblood);
+
   /* Recesses: one solid tone, so a well inside a well never steps darker. */
   --inset: var(--paper-deep);
   --inset-strong: var(--paper-deep);
@@ -156,6 +169,14 @@
   --warning: #ebbc68;
   --info: #93bfe8;
   --success: #93d19f;
+  /* The colour key, lightened for the green silk. */
+  --tone-gain: var(--success);
+  --tone-loss: var(--danger);
+  --tone-tight: var(--warning);
+  --tone-money: var(--gilt-bright);
+  --tone-research: #9cc3e6;
+  --tone-politics: #d9a7d2;
+  --tone-act: #f1937d;
   color: var(--text);
 }
 
@@ -568,3 +589,12 @@ label {
   border: 1px solid var(--rule);
   border-radius: 50%;
 }
+
+/* The colour key (tokens above), for a figure that carries its meaning. */
+.tone-gain { color: var(--tone-gain); }
+.tone-loss { color: var(--tone-loss); }
+.tone-tight { color: var(--tone-tight); }
+.tone-money { color: var(--tone-money); }
+.tone-research { color: var(--tone-research); }
+.tone-politics { color: var(--tone-politics); }
+.tone-act { color: var(--tone-act); }

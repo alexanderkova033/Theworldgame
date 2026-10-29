@@ -20,15 +20,16 @@ import { LockIcon } from "./CauseIcon";
 
 const SPEEDS: GameSpeed[] = [1, 2, 3, 5];
 
-// Ventures have no tab: they open from an island on the map, or the event log.
+// The windows, as pictures: each tab is its icon, named in its tip. Ventures
+// have no tab (they open from an island on the map, or the event log), and
+// Politics opens from the nation's seal at the left of the bar.
 const TABS: Array<{ key: PanelKey; label: string; icon: () => ReactNode }> = [
-  { key: "build", label: "Build", icon: () => <NavIcon type="build" size={22} /> },
-  { key: "money", label: "Money", icon: () => <StatIcon type="treasury" size={22} /> },
-  { key: "politics", label: "Politics", icon: () => <NavIcon type="politics" size={22} /> },
-  { key: "laws", label: "Laws", icon: () => <NavIcon type="laws" size={22} /> },
-  { key: "research", label: "Research", icon: () => <NavIcon type="research" size={22} /> },
-  { key: "army", label: "Army", icon: () => <NavIcon type="army" size={22} /> },
-  { key: "reports", label: "Reports", icon: () => <NavIcon type="reports" size={22} /> },
+  { key: "build", label: "Build", icon: () => <NavIcon type="build" size={28} /> },
+  { key: "money", label: "Money", icon: () => <StatIcon type="treasury" size={28} /> },
+  { key: "laws", label: "Laws", icon: () => <NavIcon type="laws" size={28} /> },
+  { key: "research", label: "Research", icon: () => <NavIcon type="research" size={28} /> },
+  { key: "army", label: "Army", icon: () => <NavIcon type="army" size={28} /> },
+  { key: "reports", label: "Reports", icon: () => <NavIcon type="reports" size={28} /> },
 ];
 
 // A small hourglass in place of a bare date string.
@@ -242,6 +243,10 @@ export function TopBar({
             <NavIcon type="politics" size={15} />
             Needs {electionThreshold}% in {electionMonths} mo
           </span>
+          {/* The seal says this plate opens something: Politics. */}
+          <span className="top-bar__nation-seal" aria-hidden="true">
+            <NavIcon type="politics" size={20} />
+          </span>
         </button>
 
         <div className="top-bar__ticker">
@@ -268,19 +273,18 @@ export function TopBar({
               className={`top-bar__tab ${activePanel === tab.key ? "is-active" : ""} ${locked[tab.key] ? "is-locked" : ""}`}
               onClick={() => onOpenPanel(tab.key)}
               disabled={!!locked[tab.key]}
-              title={locked[tab.key] ? `${tab.label}: ${locked[tab.key]}` : undefined}
+              title={locked[tab.key] ? `${tab.label}: ${locked[tab.key]}` : tab.label}
               aria-current={activePanel === tab.key ? "true" : undefined}
               aria-label={tab.key === "reports" && reportsBadgeCount > 0 ? `${tab.label}, ${reportsBadgeCount} unread` : tab.label}
             >
               <span className="top-bar__tab-icon">
-                {locked[tab.key] ? <LockIcon size={18} /> : tab.icon()}
+                {locked[tab.key] ? <LockIcon size={22} /> : tab.icon()}
                 {tab.key === "reports" && reportsBadgeCount > 0 && (
                   <span className="top-bar__tab-badge" aria-hidden="true">
                     {reportsBadgeCount > 9 ? "9+" : reportsBadgeCount}
                   </span>
                 )}
               </span>
-              <span>{tab.label}</span>
             </button>
           ))}
         </nav>

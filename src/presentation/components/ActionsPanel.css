@@ -18,10 +18,20 @@
   color: var(--ink-muted);
 }
 
+/* One line of provinces, scrolled sideways when there are many: the map
+   beside the panel is the other way to pick one. */
 .actions-panel__provinces {
   display: flex;
-  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
   gap: 0.35rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: 0.15rem;
+}
+
+.actions-panel__provinces > button {
+  flex-shrink: 0;
 }
 
 button.actions-panel__province {
@@ -186,20 +196,23 @@ button.actions-panel__province.is-selected {
   display: block;
 }
 
-.build-row__summary {
-  font-size: 0.875rem;
-  color: var(--ink-muted);
-}
-
+/* The costs, in the colour key's colours (index.css): green when there's
+   enough, amber when there's enough to start, red when there isn't. The
+   days and the workers are facts, not a gap, so they stay in ink. */
 .build-row__costs {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem 0.85rem;
   margin-top: 0.15rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--success);
   font-variant-numeric: tabular-nums;
+}
+
+.build-row__cost--plain {
+  font-weight: 600;
+  color: var(--ink-muted);
 }
 
 .build-row__cost {
@@ -212,11 +225,6 @@ button.actions-panel__province.is-selected {
 .build-row__cost svg {
   display: block;
   flex-shrink: 0;
-}
-
-/* What you have, before the slash. */
-.build-row__have {
-  font-weight: 800;
 }
 
 /* Enough to start, not enough to finish from what's in store today. */
@@ -284,12 +292,26 @@ button.actions-panel__province.is-selected {
   gap: 0.3rem;
 }
 
+/* How many stand here: one pip each, filled when built or underway. */
 .build-row__count {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--ink-muted);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+}
+
+.build-row__pips {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+.build-row__pips span {
+  width: 0.8rem;
+  height: 0.5rem;
+  border: 1px solid var(--rule-dark);
+  border-radius: 2px;
+}
+
+.build-row__pips span.is-built {
+  background: var(--wash-good);
+  border-color: var(--success);
 }
 
 button.build-row__button {

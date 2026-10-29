@@ -271,7 +271,7 @@
 /* --- Election, 3. voter groups: hover lights their seats --- */
 .politics-group {
   display: grid;
-  grid-template-columns: auto minmax(0, 1.25fr) minmax(0, 1fr) 3.4rem auto;
+  grid-template-columns: minmax(9rem, 1fr) minmax(0, 1.4fr) 3.4rem max-content; /* who, the bar, the share, Court */
   align-items: center;
   gap: 0.6rem;
   padding: 0.35rem 0.4rem;
@@ -334,6 +334,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  min-width: max-content; /* the gain stays inside the button */
+  white-space: nowrap;
   padding: 0.2rem 0.65rem;
   font-family: var(--font-body);
   font-size: 0.875rem;

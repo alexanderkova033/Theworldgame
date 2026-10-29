@@ -15,7 +15,7 @@ interface ChipProps {
 
 export function TreasuryChip({ amount, suffix }: ChipProps) {
   return (
-    <span className="cost-chip">
+    <span className="cost-chip cost-chip--treasury">
       <StatIcon type="treasury" size={15} />
       {amount}
       {suffix}
@@ -37,7 +37,7 @@ export function ResourceChip({ type, amount, suffix }: ChipProps & { type: Resou
 
 export function StatChip({ type, amount, suffix }: ChipProps & { type: StatIconType }) {
   return (
-    <span className="cost-chip">
+    <span className={`cost-chip cost-chip--${type}`}>
       <StatIcon type={type} size={15} />
       {amount}
       {suffix}

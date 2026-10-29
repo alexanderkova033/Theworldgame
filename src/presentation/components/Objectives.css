@@ -1,95 +1,208 @@
-/* Top right of the map, left of the zoom buttons: a slip of paper with
-   the chapters under way and their objectives. */
+/* Top right of the map, left of the zoom buttons: a slip with the chapter
+   in hand (its plate, a wax seal, numbered steps) and any other on a line
+   under it. See Objectives.tsx. */
 .objectives {
   position: absolute;
   top: 0.9rem;
   right: 5.6rem;
   z-index: 3;
-  width: 15rem;
+  width: 17rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  padding: 0.6rem 0.75rem;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem 0.6rem;
   background: var(--grain) 0 0/90px 90px repeat, var(--paper-raised);
   border: 1px solid var(--rule-dark);
-  border-radius: 8px;
-  box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 3px var(--rule), 0 4px 10px rgba(20, 12, 4, 0.25);
+  border-radius: 4px;
+  box-shadow: 0 0 0 3px var(--paper-raised), 0 0 0 4px var(--rule), 0 6px 14px rgba(20, 12, 4, 0.3);
+}
+
+.objectives__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* The plate, a wax seal pressed on its lower corner, and the title under it. */
+.objectives__head {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin: 0 -0.1rem;
+}
+
+.objectives__head .story-plate {
+  margin: 0;
+}
+
+.objectives__head .objectives__title {
+  margin: 0.15rem 1.4rem 0 2.6rem;
+  font-size: 1.1rem;
+  line-height: 1.2;
 }
 
 .objectives__title {
-  margin: 0 0 0.3rem;
-  font-size: 0.9rem;
+  font-family: var(--font-display);
   font-style: normal;
+  font-weight: 700;
   color: var(--oxblood);
 }
 
-.objectives ul {
+/* The wax seal on the plate's corner. */
+.objectives__seal {
+  position: absolute;
+  left: 0.35rem;
+  bottom: -0.1rem;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #a83a2c, #5e1717 70%);
+  border: 1.5px solid var(--gilt-bright);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+  color: #f4ead0;
+}
+
+.objectives__seal svg {
+  display: block;
+}
+
+.objectives__seal--small {
+  position: static;
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* How far the chapter has got. */
+.objectives__bar {
+  position: relative;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: var(--paper-deep);
+  overflow: hidden;
+}
+
+.objectives__bar span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--wash-good);
+  transition: width 0.4s ease;
+}
+
+/* The objectives, as numbered steps on a line. */
+.objectives__steps {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
 }
 
-.objectives li {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-  line-height: 1.3;
+.objectives__step {
+  position: relative;
+  padding-bottom: 0.35rem;
 }
 
-.objectives li.is-done {
-  color: var(--ink-muted);
-  text-decoration: line-through;
+/* The line from one step's mark to the next. */
+.objectives__step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 0.72rem;
+  top: 1.5rem;
+  bottom: 0;
+  width: 2px;
+  background: var(--rule);
 }
 
-.objectives__box {
+.objectives__step.is-done:not(:last-child)::before {
+  background: var(--success);
+}
+
+.objectives__step-mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 0.95rem;
-  height: 0.95rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
   border: 1.5px solid var(--rule-dark);
-  border-radius: 3px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--success);
   background: var(--paper);
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--ink-muted);
 }
 
-/* An objective still to do: the whole line opens the window where it's
-   done, marked by an oxblood arrow, and still reads as a line of the slip. */
+.objectives__step.is-done .objectives__step-mark {
+  border-color: var(--success);
+  background: var(--success);
+  color: #f4ead0;
+}
+
+.objectives__step.is-current .objectives__step-mark {
+  border-color: var(--oxblood);
+  background: var(--oxblood);
+  color: #f4ead0;
+  box-shadow: 0 0 0 2px var(--gilt-bright);
+}
+
+.objectives__plain,
 .objectives button.objectives__go {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   width: 100%;
   min-height: 0;
-  padding: 0.1rem 0;
+  padding: 0.15rem 0.2rem 0.15rem 0;
   border: none;
-  border-radius: 3px;
+  border-radius: 4px;
   background: none;
+  box-shadow: none;
   color: inherit;
   font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.25;
   text-align: left;
-  box-shadow: none;
 }
 
 .objectives__text {
   flex: 1;
 }
 
-.objectives__arrow {
+.objectives__step.is-done .objectives__text {
+  color: var(--ink-muted);
+  text-decoration: line-through;
+}
+
+/* The step in hand: lit, with the way to where it's done. */
+.objectives__step.is-current .objectives__text {
   font-weight: 700;
-  color: var(--oxblood);
+  color: var(--ink);
+}
+
+.objectives__step.is-current button.objectives__go {
+  padding: 0.3rem 0.3rem 0.3rem 0;
+  background: #f1e4c3;
+  box-shadow: inset 0 0 0 1px var(--gilt);
+}
+
+.objectives__go-label {
+  flex-shrink: 0;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  background: var(--oxblood);
+  color: #f4ead0;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 @media (hover: hover) {
   .objectives button.objectives__go:hover:not(:disabled) {
-    background: none;
+    background: #f1e4c3;
     border-color: transparent;
   }
 
@@ -100,6 +213,110 @@
   }
 }
 
+/* One pip per objective, filled when it's met. */
+.objectives__pips {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 0.2rem;
+}
+
+.objectives__pips span {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--oxblood);
+}
+
+.objectives__pips span.is-done {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+/* Another chapter under way, on one line at the foot. */
+.objectives__also {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 -0.6rem -0.6rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--paper);
+  border-top: 1px solid var(--rule);
+  font-size: 0.85rem;
+}
+
+.objectives__also-label {
+  font-weight: 700;
+  color: var(--ink-muted);
+}
+
+.objectives__also-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Folded: one line, the seal, the newest chapter, its pips and what's
+   left, opening on a click. */
+.objectives.is-folded {
+  width: auto;
+  max-width: 19rem;
+  padding: 0;
+}
+
+.objectives button.objectives__fold {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 0;
+  padding: 0.35rem 0.6rem;
+  border: none;
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.objectives.is-folded .objectives__title {
+  flex: 1;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.95rem;
+}
+
+.objectives__left {
+  flex-shrink: 0;
+  padding: 0 0.4rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--paper);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.objectives__caret {
+  flex-shrink: 0;
+  color: var(--oxblood);
+  font-size: 0.8rem;
+}
+
+/* Open: the fold control on the plate's top-right corner. */
+.objectives button.objectives__fold--close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.85rem;
+  width: auto;
+  padding: 0.05rem 0.4rem;
+  border-radius: 3px;
+  background: var(--paper-raised);
+  box-shadow: 0 0 0 1px var(--rule);
+}
+
 /* Touch: room for a fingertip (see index.css). */
 @media (pointer: coarse) {
   .objectives button.objectives__go {
@@ -108,7 +325,22 @@
 }
 
 /* A Long Reign's burdens: names that wrap, explained on hover. */
+.objectives__chapter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.objectives__chapter .objectives__title {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
 .objectives ul.objectives__burdens {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   gap: 0.25rem 0.4rem;
@@ -129,64 +361,17 @@
   font-weight: 700;
 }
 
-/* Folded: one line, the newest chapter and what's left, opening on a click. */
-.objectives.is-folded {
-  width: auto;
-  max-width: 15rem;
-  padding: 0;
-}
-
-.objectives button.objectives__fold {
+/* A chapter without a plate: the seal and title sit on one line instead. */
+.objectives__head:not(:has(.story-plate)) {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  width: 100%;
-  min-height: 0;
-  padding: 0.4rem 0.7rem;
-  border: none;
+  min-height: 2rem;
+}
+
+.objectives__head:not(:has(.story-plate)) .objectives__seal,
+.objectives__head:not(:has(.story-plate)) .objectives__title {
+  position: static;
+  padding: 0;
   background: none;
-  box-shadow: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-}
-
-.objectives.is-folded .objectives__title {
-  margin: 0;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: var(--font-display);
-  font-weight: 700;
-}
-
-.objectives__left {
-  flex-shrink: 0;
-  padding: 0 0.4rem;
-  border: 1px solid var(--rule);
-  border-radius: 999px;
-  background: var(--paper);
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.objectives__caret {
-  flex-shrink: 0;
-  color: var(--oxblood);
-  font-size: 0.8rem;
-}
-
-/* Open: a small fold control in the slip's top-right corner, clear of the
-   first title. */
-.objectives__chapter:first-of-type .objectives__title {
-  padding-right: 1.4rem;
-}
-
-.objectives button.objectives__fold--close {
-  position: absolute;
-  top: 0.3rem;
-  right: 0.3rem;
-  width: auto;
-  padding: 0.1rem 0.35rem;
 }

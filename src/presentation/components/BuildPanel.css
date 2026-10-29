@@ -1,0 +1,107 @@
+/* The Buildings section (see BuildPanel.tsx): the rings of what's being
+   built along the top, then a rail of building kinds down the left in the
+   frame's green silk, and the chosen kind's buildings beside it. */
+.production {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.production__body {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+}
+
+.production__rail {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.5rem 0.4rem;
+  background: var(--damask) 0 0 / 48px 64px repeat, var(--bar);
+  border: 1px solid var(--gilt);
+  border-radius: 6px;
+}
+
+.production__rail-gap {
+  height: 0.6rem;
+}
+
+.production button.production__kind {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid rgba(226, 194, 122, 0.35);
+  border-radius: 6px;
+  background: var(--bar-deep);
+  color: #e6d6ae;
+  box-shadow: none;
+}
+
+.production__kind svg {
+  display: block;
+  width: 2.3rem;
+  height: 2.3rem;
+}
+
+.production button.production__kind--repairs svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+@media (hover: hover) {
+  .production button.production__kind:hover:not(:disabled) {
+    background: var(--bar-raised);
+    border-color: rgba(226, 194, 122, 0.7);
+    color: var(--gilt-bright);
+  }
+}
+
+/* The kind shown: lit, with a gilt edge, as the open tab is on the bar. */
+.production button.production__kind.is-active {
+  background: var(--bar-raised);
+  border: 2px solid var(--gilt-bright);
+  color: var(--gilt-bright);
+}
+
+.production button.production__kind--repairs.has-broken {
+  background: #5e1717;
+  border-color: #f6b3a3;
+  color: #f4ead0;
+}
+
+.production__count {
+  position: absolute;
+  top: -0.4rem;
+  right: -0.4rem;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  background: var(--danger);
+  border: 1px solid var(--gilt-bright);
+  color: #f4ead0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.05rem;
+  text-align: center;
+}
+
+.production__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.production__main .panel {
+  margin-bottom: 0;
+}
+
+.production__nothing {
+  min-height: 9rem;
+}
