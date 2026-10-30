@@ -228,8 +228,16 @@ export const FACTION_SENSITIVITY = 3;
 // --- Economy / taxes ---
 export const BASE_TAX_INCOME_PER_POP = 0.016; // tax per person at a 100% rate, per day — kept low so the treasury is always tight
 export const COMFORTABLE_TAX_RATE = 0.15; // the rate people accept without complaint
-export const MIN_TAX_RATE = 0.05;
-export const MAX_TAX_RATE = 0.4;
+export const MIN_TAX_RATE = -0.2; // below zero the state pays people: a handout (see economyRules)
+export const MAX_TAX_RATE = 0.9;
+export const TAX_HEAVY_RATE = 0.4; // above this people dodge: less is collected, and anger climbs faster
+export const TAX_EVASION_AT_MAX = 0.8; // the share of what is owed that goes uncollected at MAX_TAX_RATE
+export const TAX_RIOT_RATE = 0.5; // above this order itself breaks down, whatever support says
+export const TAX_STABILITY_PER_POINT = 0.025; // stability lost a day per point of tax above TAX_RIOT_RATE
+export const TAX_CUT_FLOOR = 0.05; // below this, cutting further wins little: people soon take it as given
+export const TAX_HANDOUT_POPULARITY_PER_POINT = 0.2; // support per point below TAX_CUT_FLOOR
+export const TAX_HANDOUT_COST = 2; // each crown handed out costs this many: paying people out takes clerks, and leaks
+export const TAX_HEAVY_POPULARITY_PER_POINT = 2; // support lost per point of tax above TAX_HEAVY_RATE
 export const TAX_RATE_STEP = 0.05;
 
 // --- Public opinion (see domain/politics/politicsRules.ts) ---

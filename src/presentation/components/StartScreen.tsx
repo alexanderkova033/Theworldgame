@@ -5,6 +5,7 @@ import { getNation } from "../../domain/nations/nationRules";
 import { getParty } from "../../domain/parties/partyRules";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
 import type { SaveSlotPreview } from "../hooks/gameSave";
+import { FEEDBACK_URL } from "../feedback";
 
 interface StartScreenProps {
   saveSlots: SaveSlotPreview[];
@@ -152,6 +153,11 @@ export function StartScreen({ saveSlots, onSelectSlot, onContinueSlot, onRenameS
             />
           ))}
         </div>
+        {FEEDBACK_URL && (
+          <a className="start-screen__feedback" href={FEEDBACK_URL} target="_blank" rel="noreferrer">
+            Tell us what you think
+          </a>
+        )}
       </div>
     </div>
   );

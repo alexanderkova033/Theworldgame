@@ -12,9 +12,11 @@
 // until the pointer leaves. Holding Shift shows it at once, and is the
 // only way to ask when the player has turned resting tips off.
 //
-// SVG <title> children (the map, the chamber's seats) keep the browser's
-// tooltip: React owns those nodes, and taking them out of the page would
-// break its updates.
+// Drawn things (the map, the chamber's seats) carry `data-tip` instead: an SVG
+// title element would bring the browser's own tooltip back beside this one. A title
+// that changes while it's pointed at (a figure ticking over) is set aside
+// again as it arrives, and a click only hides the box: the title stays aside
+// until the pointer leaves.
 //
 // A finger has no hover, so on a touch screen a tip comes from pressing and
 // holding instead: it shows once the finger has rested a moment, stays
@@ -41,8 +43,12 @@ interface Tip {
 interface Held {
   el: Element;
   title: string;
+  fromTitle: boolean; // a `title` set aside, to put back; a `data-tip` just stays
   describedBy: string | null;
+  watcher: MutationObserver;
 }
+
+const TIPPED = "[title],[data-tip],[data-tip-held]";
 
 function placeFor(el: Element, text: string): Tip {
   const rect = el.getBoundingClientRect();
@@ -71,7 +77,9 @@ export function Tooltips() {
       const h = held.current;
       if (!h) return;
       held.current = null;
-      if (!h.el.hasAttribute("title")) h.el.setAttribute("title", h.title);
+      h.watcher.disconnect();
+      h.el.removeAttribute("data-tip-held");
+      if (h.fromTitle && !h.el.hasAttribute("title")) h.el.setAttribute("title", h.title);
       if (h.describedBy === null) h.el.removeAttribute("aria-describedby");
       else h.el.setAttribute("aria-describedby", h.describedBy);
       setTip(null);
@@ -93,12 +101,35 @@ export function Tooltips() {
     function take(el: Element): boolean {
       if (held.current?.el === el) return true;
       release();
-      const title = el.getAttribute("title");
+      const ownTitle = el.getAttribute("title");
+      const title = ownTitle || el.getAttribute("data-tip");
       if (!title) return false;
-      held.current = { el, title, describedBy: el.getAttribute("aria-describedby") };
+      // The page may set a new title while this one is aside (a daily figure
+      // in its text): take that too, and show it if the tip is up.
+      const watcher = new MutationObserver(() => {
+        const fresh = el.getAttribute("title");
+        const h = held.current;
+        if (fresh === null || !h || h.el !== el) return;
+        el.removeAttribute("title");
+        h.title = fresh;
+        if (shown.current) setTip((tip) => (tip ? { ...tip, text: fresh } : tip));
+      });
+      watcher.observe(el, { attributes: true, attributeFilter: ["title"] });
+      held.current = { el, title, fromTitle: ownTitle !== null, describedBy: el.getAttribute("aria-describedby"), watcher };
       el.removeAttribute("title");
+      el.setAttribute("data-tip-held", "");
       el.setAttribute("aria-describedby", TOOLTIP_ID);
       return true;
+    }
+
+    // Put the box away but keep the title aside, for a click: the browser's
+    // own tip would otherwise come up under a pointer that's still there.
+    function hide() {
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = null;
+      setTip(null);
+      if (shown.current) lastHidden.current = Date.now();
+      shown.current = false;
     }
 
     // (Re)start the wait for the mouse to settle.
@@ -112,7 +143,7 @@ export function Tooltips() {
       timer.current = setTimeout(show, warm ? TIP_REST_WARM_MS : TIP_REST_MS);
     }
 
-    const titled = (target: EventTarget | null) => (target instanceof Element ? target.closest("[title]") : null);
+    const titled = (target: EventTarget | null) => (target instanceof Element ? target.closest(TIPPED) : null);
 
     function cancelHold() {
       if (hold.current) clearTimeout(hold.current.timer);
@@ -122,9 +153,10 @@ export function Tooltips() {
     function onOver(e: PointerEvent) {
       // A tap's pretend hover would pop a tip on every touch.
       if (e.pointerType !== "mouse") return;
-      // Within the element already held (its title set aside), stay with it.
-      const h = held.current;
-      const el = h && e.target instanceof Node && h.el.contains(e.target) ? h.el : titled(e.target);
+      // The nearest tipped thing: a part of the one already held stays with
+      // it (it's marked), and one with its own title inside it takes over,
+      // so that title can't show as the browser's tip.
+      const el = titled(e.target);
       if (el && el === dismissed.current) return;
       if (el && held.current?.el !== el) {
         if (take(el)) {
@@ -139,6 +171,7 @@ export function Tooltips() {
       const stillIn = (el: Element) => e.relatedTarget instanceof Node && el.contains(e.relatedTarget);
       if (dismissed.current && !stillIn(dismissed.current)) dismissed.current = null;
       const h = held.current;
+      // Inside it, but on something with a tip of its own: onOver takes over.
       if (h && !stillIn(h.el)) release();
     }
     function onFocus(e: FocusEvent) {
@@ -153,7 +186,8 @@ export function Tooltips() {
       const h = held.current;
       const onHeld = h && e.target instanceof Node && h.el.contains(e.target);
       dismissed.current = e.pointerType !== "mouse" ? null : onHeld ? h.el : titled(e.target);
-      release();
+      if (e.pointerType === "mouse" && onHeld) hide();
+      else release();
       cancelHold();
       swallowClick.current = false;
       if (e.pointerType === "mouse" || !e.isPrimary) return;

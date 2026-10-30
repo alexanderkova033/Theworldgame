@@ -1,8 +1,8 @@
 // The Build window, in two sections:
-// - Buildings: what's being built as a strip of rings along the top, a rail
-//   of building kinds down the left (and Repairs), and the chosen kind's
-//   buildings beside it
-// - People: homes, jobs, heating and food, nationally and by province
+// - Buildings: what's being built as a strip of rings along the top, then
+//   every kind of building in groups ruled off from one another, for the
+//   province chosen on the map (which shows each province's slots meanwhile)
+// - People: homes, jobs, heating and food
 // Each section tab says at a glance how it stands, with a "!" when
 // something there needs the player; the advisor strip and toasts open the
 // right section directly (see navigation.ts).
@@ -11,13 +11,13 @@ import type { DailyProductionSummary } from "../../application/getDailyProductio
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
 import type { GameState } from "../../domain/country/types";
 import type { BuildSection, OpenPanel } from "../navigation";
+import { useEffect, useRef } from "react";
 import { ActionsPanel } from "./ActionsPanel";
 import { NavIcon } from "./NavIcon";
 import { PeoplePanel } from "./PeoplePanel";
 import { ProjectRings } from "./ProjectsPanel";
-import { RepairsPanel, WrenchIcon } from "./RepairsPanel";
-import { BuildingIcon } from "./BuildingIcon";
-import { BUILD_GROUPS, type BuildRail } from "../buildGroups";
+import { RepairsPanel } from "./RepairsPanel";
+import type { BuildRail } from "../buildGroups";
 import { StatIcon } from "./StatIcon";
 import { SubTabs, type SubTab } from "./SubTabs";
 
@@ -27,12 +27,10 @@ interface BuildPanelProps {
   production: DailyProductionSummary;
   provinces: ProvinceOverview[];
   selectedProvinceId: string;
-  onSelectProvince: (provinceId: string) => void;
   onOpenPanel: OpenPanel;
   section: BuildSection;
   onSection: (section: BuildSection) => void;
-  rail: BuildRail;
-  onRail: (rail: BuildRail) => void;
+  rail: BuildRail | null;
 }
 
 function sectionTabs(state: GameState, production: DailyProductionSummary, provinces: ProvinceOverview[]): SubTab[] {
@@ -60,9 +58,13 @@ function sectionTabs(state: GameState, production: DailyProductionSummary, provi
   ];
 }
 
-// The kind looked at (`rail`) is kept by App between openings of the
-// window, so a "Go" elsewhere can open Build straight at farms.
-export function BuildPanel({ state, dispatch, production, provinces, selectedProvinceId, onSelectProvince, onOpenPanel, section, onSection, rail, onRail: setRail }: BuildPanelProps) {
+// `rail` is where a "Go" elsewhere wanted the window to open (at farms, say):
+// the list scrolls there.
+export function BuildPanel({ state, dispatch, production, provinces, selectedProvinceId, onOpenPanel, section, onSection, rail }: BuildPanelProps) {
+  const list = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (rail && section === "buildings") list.current?.querySelector(`[data-rail="${rail}"]`)?.scrollIntoView({ block: "start" });
+  }, [rail, section]);
   const broken = state.placedBuildings.filter((b) => b.condition === "broken").length;
   const damaged = broken + state.placedBuildings.filter((b) => b.condition === "repairing").length;
   return (
@@ -72,52 +74,15 @@ export function BuildPanel({ state, dispatch, production, provinces, selectedPro
       {section === "buildings" && (
         <div className="production">
           <ProjectRings state={state} dailyCost={production.buildingInstalments} />
-          <div className="production__body">
-            <nav className="production__rail" aria-label="Kinds of building">
-              {BUILD_GROUPS.map((group) => (
-                <button
-                  key={group.key}
-                  type="button"
-                  className={`production__kind ${rail === group.key ? "is-active" : ""}`}
-                  aria-pressed={rail === group.key}
-                  aria-label={group.title}
-                  title={group.title}
-                  onClick={() => setRail(group.key)}
-                >
-                  <svg viewBox="-12 -16 24 24" aria-hidden="true">
-                    <BuildingIcon type={group.picture} x={0} y={0} size={7} />
-                  </svg>
-                </button>
-              ))}
-              <span className="production__rail-gap" />
-              <button
-                type="button"
-                className={`production__kind production__kind--repairs ${rail === "repairs" ? "is-active" : ""} ${broken > 0 ? "has-broken" : ""}`}
-                aria-pressed={rail === "repairs"}
-                aria-label={broken > 0 ? `Repairs, ${broken} broken` : "Repairs"}
-                title={broken > 0 ? `Repairs: ${broken} broken` : "Repairs"}
-                onClick={() => setRail("repairs")}
-              >
-                <WrenchIcon size={24} />
-                {broken > 0 && <span className="production__count">{broken}</span>}
-              </button>
-            </nav>
-            <div className="production__main">
-              {rail === "repairs" ? (
-                damaged > 0 ? (
-                  <RepairsPanel state={state} dispatch={dispatch} />
-                ) : (
-                  <div className="empty-plate production__nothing">
-                    <span>
-                      <WrenchIcon size={22} />
-                    </span>
-                    <p>Nothing broken.</p>
-                  </div>
-                )
-              ) : (
-                <ActionsPanel state={state} group={rail} selectedProvinceId={selectedProvinceId} dispatch={dispatch} provinces={provinces} onSelectProvince={onSelectProvince} netPerDay={production.netTreasury} />
-              )}
-            </div>
+          {/* Every kind of building, the groups ruled off; Repairs below when
+              anything needs mending. */}
+          <div className="production__main" ref={list}>
+            <ActionsPanel state={state} selectedProvinceId={selectedProvinceId} dispatch={dispatch} provinces={provinces} netPerDay={production.netTreasury} />
+            {damaged > 0 && (
+              <div className="production__repairs" data-rail="repairs">
+                <RepairsPanel state={state} dispatch={dispatch} />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -126,11 +91,7 @@ export function BuildPanel({ state, dispatch, production, provinces, selectedPro
         <PeoplePanel
           state={state}
           production={production}
-          provinces={provinces}
-          selectedProvinceId={selectedProvinceId}
-          onSelectProvince={onSelectProvince}
           onOpenPanel={onOpenPanel}
-          onBuild={() => onSection("buildings")}
         />
       )}
     </div>

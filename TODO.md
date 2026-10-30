@@ -21,6 +21,9 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 
 ## Known rough edges
 
+- **The wide tax range is untested in play** (2026-10-30). Handouts (down to -20%) and riot-level rates (up to 90%) are in the rules and tests/taxes.test.ts, but the scripted players stay at 12 to 15%, so the balance tests say nothing about them. Handouts were cut back on 2026-10-30 after the first look found them too strong (+28 support at -20% for 32 Cr a day): now +17 for 64 Cr a day, and anything under 5% adds little. Levers: TAX_HANDOUT_POPULARITY_PER_POINT, TAX_HANDOUT_COST, TAX_CUT_FLOOR.
+- **Feedback link:** set `VITE_FEEDBACK_URL` in the Vercel project; the links stay hidden until it is set.
+
 - **Political power for researchers.** A player following a law path ends three years with 50 to 600. One who only researches banks 94 to 886 (about 465 on average, measured 2026-10-17), because research never spends it; the scripted player follows one tree only, so a real player would spend it on laws or rallies. Spending it to speed research would mostly empty the tree sooner: a single research path is finished inside those three years.
 - **Income multipliers are still modest in Crowns.** Taxes and industry now pay a third more and market sales pay less, so daily income is most of a careful player's money (net about 24 Cr a day). Astravia still earns about 19k from selling grain over three years, next to 26k from income.
 - **Old saves.** A law being drafted under the old tree layout still finishes even if it now sits on another path. Research directions that became unreachable are cleared on load.

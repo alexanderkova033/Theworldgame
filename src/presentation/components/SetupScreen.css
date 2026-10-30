@@ -1,6 +1,6 @@
-/* Starting a game, on one screen (see SetupScreen.tsx): the chart on the
-   left, where a nation is chosen by clicking it; everything else on a green
-   morocco panel beside it, with the one button at its foot. */
+/* Starting a game, on one screen (see SetupScreen.tsx): the chart, where a
+   nation is chosen by clicking it; everything else on a green morocco plate
+   lying on it, with the one button at its foot. */
 .setup {
   display: flex;
   height: 100vh;
@@ -449,5 +449,82 @@
 @media (pointer: coarse) {
   .setup__mark {
     font-size: 0.8125rem;
+  }
+}
+
+/* --- The plate: the chart fills the screen, framed like the map in play, and
+   the choices lie on it, ringed in gilt, with their seal on the top edge. --- */
+@media (min-width: 901px) {
+  .setup {
+    position: relative;
+    display: block;
+  }
+
+  .setup__map {
+    position: absolute;
+    inset: 0;
+    border-right: none;
+  }
+
+  .setup__map::after {
+    content: "";
+    position: absolute;
+    inset: 0.7rem;
+    border: 7px solid var(--bar);
+    outline: 1px solid var(--gilt);
+    outline-offset: -4px;
+    pointer-events: none;
+  }
+
+  /* The land keeps clear of the plate. */
+  .setup__chart {
+    width: calc(100% - 37rem);
+  }
+
+  .setup__map button.setup__back {
+    top: 2rem;
+    left: 2.2rem;
+    z-index: 1;
+  }
+
+  .setup__slot {
+    left: 2.3rem;
+    bottom: 1.9rem;
+  }
+
+  .setup__panel {
+    position: absolute;
+    top: 1.1rem;
+    right: 3rem;
+    bottom: 0.9rem;
+    width: 33rem;
+    border: 1px solid var(--bar-edge);
+    outline: 3px double var(--gilt);
+    outline-offset: -9px;
+    box-shadow: 0 16px 40px rgba(12, 22, 16, 0.5);
+  }
+
+  .setup__choices {
+    gap: 0.55rem;
+    padding: 1.2rem 1.6rem 0.5rem;
+  }
+
+  .setup__foot {
+    padding: 0.7rem 1.6rem 1.3rem;
+  }
+
+  .setup__plate-seal {
+    position: absolute;
+    top: -0.95rem;
+    left: 50%;
+    z-index: 1;
+    display: block;
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 900px) {
+  .setup__plate-seal {
+    display: none;
   }
 }

@@ -264,19 +264,17 @@ function Chamber({
             className={`chamber__seat ${seat.yours ? "" : "is-rival"} ${slipping ? "is-slipping" : ""} ${coming ? "is-coming" : ""} ${focus && seat.ideology !== focus ? "is-dim" : ""} ${focus === seat.ideology ? "is-focus" : ""}`}
             style={slipping ? undefined : coming ? { stroke: inked(party.color) } : seat.yours ? { fill: washed(party.color) } : { fill: paled(rival.color), stroke: inked(rival.color) }}
             onMouseEnter={() => onFocus(seat.ideology)}
-          >
-            <title>
-              {GROUP_NAMES[seat.ideology]}: {seat.yours ? party.name : rival.name}
-              {slipping && `, slipping to ${rival.name}`}
-              {coming && `, coming to ${party.name}`}
-            </title>
-          </circle>
+            data-tip={`${GROUP_NAMES[seat.ideology]}: ${seat.yours ? party.name : rival.name}${slipping ? `, slipping to ${rival.name}` : ""}${coming ? `, coming to ${party.name}` : ""}`}
+          />
         );
       })}
       {heading !== yours && (
-        <path d="M0,7 L-6.5,-5 L6.5,-5 Z" className={`chamber__heading ${heading < yours ? "is-falling" : ""}`} transform={`translate(${marker.x} ${marker.y}) rotate(${90 - (headingAngle * 180) / Math.PI})`}>
-          <title>Support drifts toward {heading}%, where the causes below push it</title>
-        </path>
+        <path
+          d="M0,7 L-6.5,-5 L6.5,-5 Z"
+          className={`chamber__heading ${heading < yours ? "is-falling" : ""}`}
+          transform={`translate(${marker.x} ${marker.y}) rotate(${90 - (headingAngle * 180) / Math.PI})`}
+          data-tip={`Support drifts toward ${heading}%, where the causes below push it`}
+        />
       )}
       <text x={0} y={-4} className="chamber__share" style={{ fill: inked(party.color) }}>
         {popularity}%

@@ -1,18 +1,15 @@
 import "./MapPanel.css";
 import { washColor, type ViewBox, BASE_VIEW, DRAG_CLICK_THRESHOLD, WHEEL_SETTLE_MS, LABEL_ZOOM_THRESHOLD, clampViewBox, homeView, type MapMode, type ModeLevel, MODE_COLORS, MAP_MODES } from "./mapCommon";
-import { StatusFlag } from "./MapDecor";
 import { MapLayers } from "./MapLayers";
 import { flushSync } from "react-dom";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { ProjectType } from "../../domain/construction/types";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
-import { NATIONS } from "../../domain/nations/nationData";
 import type { Nation } from "../../domain/nations/types";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
 import type { PlacedBuilding, Terrain } from "../../domain/provinces/types";
 import { RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
-import { RESOURCE_TYPES } from "../../domain/resources/types";
-import { BUILDING_COLORS, BuildingIcon } from "./BuildingIcon";
+import { BuildingIcon } from "./BuildingIcon";
 import type { UnderwayBuilding } from "./MapSettlements";
 import type { ProvinceOverview, ProvinceStatus } from "../../application/getProvinceOverview";
 import { formatAmount } from "../formatNumber";
@@ -21,12 +18,8 @@ import { JobsIcon, UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 import { ArmyLayer, type MarchPreview } from "./MapArmies";
-import { CrisisIcon } from "./CrisisIcon";
 import type { Season } from "../../domain/country/calendar";
-import { CRISIS_HINTS, CRISIS_NAMES } from "../crisisText";
-import type { CrisisKind } from "../../domain/crises/types";
 
-const CRISIS_KINDS: CrisisKind[] = ["flood", "seam", "felling", "fever", "fishing"];
 import { areTipsOn, TIP_REST_MS, TIP_REST_SLOP } from "../tipPreference";
 import type { FreeProvince } from "../../domain/military/battleRules";
 import type { Regiment } from "../../domain/military/types";
@@ -61,6 +54,7 @@ interface MapPanelProps {
   nation: Nation;
   placedBuildings: PlacedBuilding[];
   underway: UnderwayBuilding[]; // what's going up, stable from day to day so the map isn't redrawn for it
+  buildKinds: ProjectType[] | null; // the Build window is open: show the building slots for these kinds
   selectedProvinceId: string;
   onSelectProvince: (provinceId: string) => void;
   scoutedIslandIds: string[];
@@ -83,7 +77,42 @@ interface MapPanelProps {
   season: Season; // washed over the land and sea (see MapSeasons)
 }
 
-// A legend swatch drawing the same colour and hatching as the map.
+const ICONS_KEY = "theworldgame-map-icons";
+
+function readIconsOn(): boolean {
+  try {
+    return localStorage.getItem(ICONS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeIconsOn(on: boolean): void {
+  try {
+    localStorage.setItem(ICONS_KEY, on ? "1" : "0");
+  } catch {
+    // Storage unavailable: the choice holds for this session only.
+  }
+}
+
+// Each map mode as a picture, named in its tip.
+const MODE_ICONS: Record<MapMode, ReactNode> = {
+  political: (
+    <svg viewBox="-12 -12 24 24" width={26} height={26} aria-hidden="true">
+      <path d="M-6,10 L-6,-10" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" />
+      <path d="M-6,-9 Q0,-12 3,-8 Q6,-5 10,-8 L10,1 Q6,4 3,1 Q0,-3 -6,0 Z" fill="currentColor" />
+    </svg>
+  ),
+  homes: (
+    <svg viewBox="-12 -13 24 24" width={26} height={26} aria-hidden="true">
+      <BuildingIcon type="housing" x={0} y={0} size={8} />
+    </svg>
+  ),
+  jobs: <JobsIcon size={24} />,
+  unrest: <UnrestStageIcon stage="riots" size={24} />,
+};
+
+// A swatch drawing the same colour and hatching as the map.
 function ModeSwatch({ level }: { level: ModeLevel }) {
   return (
     <svg width={18} height={14} viewBox="0 0 18 14" aria-hidden="true">
@@ -104,45 +133,6 @@ function ModeSwatch({ level }: { level: ModeLevel }) {
   );
 }
 
-type FlagKey = "homesFull" | "homesOver" | "jobsShort" | "jobsJobless" | "discontent" | "strikes" | "riots" | "risen" | CrisisKind;
-
-// The legend's key to the province flags — drawn with the very glyphs the
-// info bars use.
-const FLAG_LEGEND: Array<{ key: FlagKey; label: string; hint: string; glyph: ReactNode }> = [
-  { key: "homesOver", label: "People without a home", hint: "1% or more of the people here have no home. Build homes here.", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="homes" level="alert" cx={-1} cy={1} /></svg> },
-  { key: "homesFull", label: "Homes nearly full", hint: "95% of the places here are taken, so there's no room to grow.", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="homes" level="warn" cx={0} cy={1} /></svg> },
-  { key: "jobsJobless", label: "Jobless", hint: "10% or more of the workers here have no job. Build workplaces here.", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="jobs" level="alert" cx={-1} cy={1} /></svg> },
-  { key: "jobsShort", label: "Jobs unfilled", hint: "5% or more of the jobs here have nobody to do them. Homes here would bring workers.", glyph: <svg width={22} height={22} viewBox="-10 -10 20 20" className="map-panel__legend-icon" aria-hidden="true"><StatusFlag kind="jobs" level="warn" cx={0} cy={1} /></svg> },
-  { key: "discontent", label: "Discontent", hint: UNREST_INFO.discontent.effect, glyph: <UnrestStageIcon stage="discontent" size={22} /> },
-  { key: "strikes", label: "Strikes", hint: UNREST_INFO.strikes.effect, glyph: <UnrestStageIcon stage="strikes" size={22} /> },
-  {
-    key: "riots",
-    label: "Riots",
-    hint: "A province rioting on its own wrecks its buildings and drags national stability down",
-    glyph: <UnrestStageIcon stage="riots" size={22} />,
-  },
-  {
-    key: "risen",
-    label: "Risen",
-    hint: "Risen against the government: rebels hold its farms and works, and it pays no taxes. Send in the militia from Politics, Unrest.",
-    glyph: <StatIcon type="uprising" size={22} />,
-  },
-  ...CRISIS_KINDS.map((kind) => ({ key: kind, label: CRISIS_NAMES[kind], hint: CRISIS_HINTS[kind], glyph: <CrisisIcon kind={kind} size={22} /> })),
-];
-
-function countFlags(status: Record<string, ProvinceStatus>): Record<FlagKey, number> {
-  const counts: Record<FlagKey, number> = { homesFull: 0, homesOver: 0, jobsShort: 0, jobsJobless: 0, discontent: 0, strikes: 0, riots: 0, risen: 0, flood: 0, seam: 0, felling: 0, fever: 0, fishing: 0 };
-  for (const s of Object.values(status)) {
-    if (s.crisis) counts[s.crisis]++;
-    if (s.homes === "over") counts.homesOver++;
-    if (s.homes === "full") counts.homesFull++;
-    if (s.jobs === "jobless") counts.jobsJobless++;
-    if (s.jobs === "short") counts.jobsShort++;
-    if (s.risen) counts.risen++;
-    else if (s.stage !== "calm") counts[s.stage]++;
-  }
-  return counts;
-}
 
 // Memoized: the map is by far the heaviest thing on screen (hundreds of SVG
 // nodes and patterns), but it only depends on which buildings
@@ -153,6 +143,7 @@ export const MapPanel = memo(function MapPanel({
   nation,
   placedBuildings,
   underway,
+  buildKinds,
   selectedProvinceId,
   onSelectProvince,
   scoutedIslandIds,
@@ -196,7 +187,7 @@ export const MapPanel = memo(function MapPanel({
   const [isPanning, setIsPanning] = useState(false);
 
   // A custom hover tooltip for owned provinces — richer than the browser's
-  // native <title> (name/owner only): terrain, produced resource, and every
+  // native title element (name/owner only): terrain, produced resource, and every
   // building actually standing there, in one place instead of only as
   // small icons on the map itself.
   const [hoveredProvinceId, setHoveredProvinceId] = useState<string | null>(null);
@@ -220,14 +211,11 @@ export const MapPanel = memo(function MapPanel({
     if (cardTimer.current) clearTimeout(cardTimer.current);
   }, []);
 
-  // The legend is a lot of content (every nation, building type, and raw
-  // resource) — collapsed by default so it doesn't sit permanently on top of
-  // the map, and toggled from a small corner button instead, HOI4-outliner
-  // style.
-  const [showLegend, setShowLegend] = useState(false);
+  // Each province's strip of small icons, or the buildings and people drawn
+  // on the land: one or the other, the player's choice, kept between visits.
+  const [showIcons, setShowIcons] = useState(readIconsOn);
   // Which map mode is showing — a view choice, not simulation truth.
   const [mapMode, setMapMode] = useState<MapMode>("political");
-  const flagCounts = useMemo(() => countFlags(provinceStatus), [provinceStatus]);
 
   function handleStageMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     const rect = stageRef.current?.getBoundingClientRect();
@@ -534,16 +522,6 @@ export const MapPanel = memo(function MapPanel({
     [onSelectIsland],
   );
 
-  function zoomBy(factor: number) {
-    commitView();
-    setView((vb) => {
-      const cx = vb.x + vb.width / 2;
-      const cy = vb.y + vb.height / 2;
-      const newWidth = vb.width * factor;
-      const newHeight = newWidth * (BASE_VIEW.height / BASE_VIEW.width);
-      return clampViewBox({ x: cx - newWidth / 2, y: cy - newHeight / 2, width: newWidth, height: newHeight });
-    });
-  }
 
   // Rebuilt only when a building actually completes — not on every pan,
   // zoom, or hover, all of which re-render this component.
@@ -580,6 +558,8 @@ export const MapPanel = memo(function MapPanel({
             nation={nation}
             buildingsByProvince={buildingsByProvince}
             underway={underway}
+            showIcons={showIcons}
+            buildKinds={buildKinds}
             roadCountByProvince={roadCountByProvince}
             selectedProvinceId={selectedProvinceId}
             hoveredProvinceId={hoveredProvinceId}
@@ -602,21 +582,6 @@ export const MapPanel = memo(function MapPanel({
           {regiments && <ArmyLayer regiments={regiments} playerNationId={nation.id} marchFrom={marchFrom} onPick={handlePickArmy} preview={preview} freeProvinces={freeProvinces} sieges={sieges} />}
         </svg>
 
-        <div className="map-panel__zoom-controls">
-          <button type="button" onClick={() => zoomBy(1 / 1.4)} aria-label="Zoom in">
-            +
-          </button>
-          <button type="button" onClick={() => {
-              commitView();
-              setView(home);
-            }}
-            aria-label="Reset view">
-            Reset
-          </button>
-          <button type="button" onClick={() => zoomBy(1.4)} aria-label="Zoom out">
-            −
-          </button>
-        </div>
 
         {hoveredProvinceId &&
           cardShown &&
@@ -711,31 +676,9 @@ export const MapPanel = memo(function MapPanel({
             );
           })()}
 
-        <button
-          type="button"
-          className={`map-panel__legend-toggle ${showLegend ? "is-active" : ""}`}
-          onClick={() => setShowLegend((v) => !v)}
-          aria-expanded={showLegend}
-          title="What the colours and marks on the map mean"
-        >
-          Legend
-        </button>
-
-        {/* Map modes: a segmented switch, with the active mode's key. */}
+        {/* Bottom right: the small icons or the buildings on the land, then
+            the map modes, each a picture named in its tip. */}
         <div className="map-panel__modes">
-          <div className="map-panel__mode-switch" role="group" aria-label="Map mode">
-            {MAP_MODES.map((mode) => (
-              <button
-                key={mode.key}
-                type="button"
-                className={mapMode === mode.key ? "is-active" : ""}
-                aria-pressed={mapMode === mode.key}
-                onClick={() => setMapMode(mode.key)}
-              >
-                {mode.label}
-              </button>
-            ))}
-          </div>
           {(() => {
             const levels = MAP_MODES.find((m) => m.key === mapMode)?.levels;
             if (!levels) return null;
@@ -750,49 +693,43 @@ export const MapPanel = memo(function MapPanel({
               </div>
             );
           })()}
-        </div>
-
-        {showLegend && (
-          <div className="map-panel__legend">
-            {/* The flags first: they're what changes, and what needs you. */}
-            <span className="map-panel__legend-heading">Province flags</span>
-            {FLAG_LEGEND.map((flag) => (
-              <span key={flag.key} className={`map-panel__legend-item ${flagCounts[flag.key] > 0 ? "is-present" : ""}`} title={flag.hint}>
-                {flag.glyph}
-                {flag.label}
-                {flagCounts[flag.key] > 0 && (
-                  <strong className="map-panel__legend-count">
-                    {flagCounts[flag.key]} {flagCounts[flag.key] === 1 ? "province" : "provinces"}
-                  </strong>
-                )}
-              </span>
-            ))}
-            <span className="map-panel__legend-note">Zoomed out, only provinces with a problem show a strip. Zoom in, or point at a province, to see what it produces. Buildings stand on the land; tents mean people without a home, placards a strike, torches a riot.</span>
-            <span className="map-panel__legend-heading">Map</span>
-            {NATIONS.map((n) => (
-              <span key={n.id} className={`map-panel__legend-item ${n.id === nation.id ? "is-you" : ""}`} title={n.name}>
-                <span className="map-panel__legend-swatch" style={{ backgroundColor: n.color }} />
-                {n.name}
-              </span>
-            ))}
-            {(Object.keys(BUILDING_COLORS) as ProjectType[]).map((type) => (
-              <span key={type} className="map-panel__legend-item" title={BUILDING_LABELS[type]}>
-                <svg width={20} height={20} viewBox="-9 -9 18 18" className="map-panel__legend-icon">
-                  <BuildingIcon type={type} x={0} y={0} size={5.5} />
-                </svg>
-                {BUILDING_LABELS[type]}
-              </span>
-            ))}
-            {RESOURCE_TYPES.map((type) => (
-              <span key={type} className="map-panel__legend-item" title={RESOURCE_LABELS[type]}>
-                <svg width={20} height={20} viewBox="-9 -9 18 18" className="map-panel__legend-icon">
-                  <ResourceIcon type={type} size={7.5} />
-                </svg>
-                {RESOURCE_LABELS[type]}
-              </span>
-            ))}
+          <div className="map-panel__mode-rail">
+            <button
+              type="button"
+              className={`map-panel__mode-button map-panel__icons-toggle ${showIcons ? "is-active" : ""}`}
+              aria-pressed={showIcons}
+              aria-label="Province icons"
+              title={showIcons ? "Province icons on. Click for buildings and people on the land" : "Buildings and people on the land. Click for province icons"}
+              onClick={() => {
+                setShowIcons(!showIcons);
+                writeIconsOn(!showIcons);
+              }}
+            >
+              <svg viewBox="-13 -9 26 18" width={28} height={20} aria-hidden="true">
+                <rect x={-12} y={-8} width={24} height={16} rx={3} fill="#dcc79d" stroke="#2b1d12" strokeWidth={1} />
+                <path d="M-9,1 L-5,-4 L-1,1 L-1,5 L-9,5 Z" fill="#7b2121" />
+                <circle cx={6} cy={-2} r={2.4} fill="#2b1d12" />
+                <path d="M2,5 C2,0 10,0 10,5 Z" fill="#2b1d12" />
+              </svg>
+            </button>
+            <span className="map-panel__mode-gap" />
+            <div className="map-panel__mode-group" role="group" aria-label="Map mode">
+              {MAP_MODES.map((mode) => (
+                <button
+                  key={mode.key}
+                  type="button"
+                  className={`map-panel__mode-button ${mapMode === mode.key ? "is-active" : ""}`}
+                  aria-pressed={mapMode === mode.key}
+                  aria-label={mode.label}
+                  title={mode.label}
+                  onClick={() => setMapMode(mode.key)}
+                >
+                  {MODE_ICONS[mode.key]}
+                </button>
+              ))}
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </section>
   );

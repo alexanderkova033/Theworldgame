@@ -4,6 +4,7 @@
 // this is a read-only projection of "if a day happened right now," not a
 // second copy of the simulation rules.
 import { BASE_TAX_INCOME_PER_POP, INCOME_PER_INDUSTRY } from "../domain/constants";
+import { getCollectedTaxRate } from "../domain/economy/economyRules";
 import { getTaxedPopulation } from "../domain/uprising/uprisingRules";
 import { getPayRiseBill } from "../domain/uprising/demandRules";
 import { getSeason, type Season } from "../domain/country/calendar";
@@ -25,7 +26,8 @@ import { getArmyPay } from "../domain/military/militaryRules";
 import { getColonyAccounts, getGrazingFood } from "../domain/islands/islandRules";
 
 export interface DailyProductionSummary {
-  taxIncome: number;
+  taxBase: number; // what a day's tax would be if every crown were taken
+  taxIncome: number; // below zero when the state is paying handouts
   industryIncome: number;
   salaries: number; // paid out daily to scientists, police and militia, and pay rises granted
   colonyIncome: number; // the islands: the salt trade, less supply fees for colonies not linked by harbours
@@ -57,7 +59,8 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const mods = getModifiers(state);
   const incomeMultiplier = efficiencyMultiplier * mods.incomeMultiplier * getDiplomacyIncomeMultiplier(state.foreignPolitics);
 
-  const taxIncome = getTaxedPopulation(state.provinces, state.stats.population, state.date) * BASE_TAX_INCOME_PER_POP * state.taxRate * incomeMultiplier;
+  const taxBase = getTaxedPopulation(state.provinces, state.stats.population, state.date) * BASE_TAX_INCOME_PER_POP * incomeMultiplier;
+  const taxIncome = taxBase * getCollectedTaxRate(state.taxRate);
   const industryIncome = state.stats.industry * INCOME_PER_INDUSTRY * incomeMultiplier;
   const salaries = getDailySalaries(state.workforce, mods.wageMultiplier) + getPayRiseBill(state.provinces, state.date);
   const buildingInstalments = state.projects.reduce((sum, project) => sum + project.treasuryCostPerDay, 0);
@@ -82,6 +85,7 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const researchRates = getResearchRates(state);
 
   return {
+    taxBase,
     taxIncome,
     industryIncome,
     salaries,

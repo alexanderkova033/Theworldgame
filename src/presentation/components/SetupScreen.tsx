@@ -23,8 +23,8 @@ interface SetupScreenProps {
 // The chart's frame: the land and every island, with a little sea round them.
 const CHART_VIEW = "10 15 1285 910";
 
-// Starting a game, on one screen. The chart chooses the nation (click its
-// land, or its seal in the panel); the panel beside it holds the party, how
+// Starting a game, on one screen. The chart fills it and chooses the nation
+// (click its land, or its seal on the plate); a plate lying on it holds the party, how
 // the game ends and how hard it is. Everything has a choice made already, so
 // "Take office" is always ready. The game doesn't exist until it's pressed.
 export function SetupScreen({ nations, slotName, onBack, onStart }: SetupScreenProps) {
@@ -61,9 +61,8 @@ export function SetupScreen({ nations, slotName, onBack, onStart }: SetupScreenP
                 className={`setup__province ${owner?.id === nation.id ? "is-chosen" : ""}`}
                 style={{ "--nation-color": owner?.color ?? "#a8946c", "--nation-wash": washColor(owner?.color ?? "#a8946c") } as CSSProperties}
                 onClick={owner ? () => setNationId(owner.id) : undefined}
-              >
-                <title>{owner?.name ?? province.name}</title>
-              </path>
+                data-tip={owner?.name ?? province.name}
+              />
             );
           })}
           <path d={MAP_GEOMETRY.coastPath} className="setup__coast" />
@@ -86,6 +85,10 @@ export function SetupScreen({ nations, slotName, onBack, onStart }: SetupScreenP
       </div>
 
       <div className="setup__panel">
+        <svg className="setup__plate-seal" width={36} height={36} viewBox="-18 -18 36 36" aria-hidden="true">
+          <circle r={16} fill="var(--oxblood)" stroke="var(--gilt)" strokeWidth={1.5} />
+          <polygon points={starPoints(0, 0, 9, 3.8)} fill="var(--gilt-bright)" />
+        </svg>
         <div className="setup__choices">
           <section className="setup__section">
             <div className="setup__nation-head">

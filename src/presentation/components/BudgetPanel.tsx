@@ -96,14 +96,25 @@ export function BudgetPanel({ state, production, onOpenPanel }: { state: GameSta
   const police = state.workforce.police;
   const projects = state.projects.length;
 
+  // Below a zero rate the taxes line is money going out: handouts.
+  const handingOut = production.taxIncome < 0;
+  const taxes: BudgetLine = handingOut
+    ? {
+        key: "taxes",
+        icon: <TaxIcon size={20} />,
+        label: "Handouts",
+        detail: `${Math.round(-state.taxRate * 100)}% handed out to ${formatAmount(state.stats.population)} people`,
+        value: production.taxIncome,
+      }
+    : {
+        key: "taxes",
+        icon: <TaxIcon size={20} />,
+        label: "Taxes",
+        detail: `${Math.round(state.taxRate * 100)}% tax on ${formatAmount(state.stats.population)} people`,
+        value: production.taxIncome,
+      };
   const income: BudgetLine[] = [
-    {
-      key: "taxes",
-      icon: <TaxIcon size={20} />,
-      label: "Taxes",
-      detail: `${Math.round(state.taxRate * 100)}% tax on ${formatAmount(state.stats.population)} people`,
-      value: production.taxIncome,
-    },
+    ...(handingOut ? [] : [taxes]),
     {
       key: "industry",
       icon: <StatIcon type="industry" size={20} />,
@@ -116,6 +127,7 @@ export function BudgetPanel({ state, production, onOpenPanel }: { state: GameSta
   ];
   // A cost that is nothing today (no staff, nothing being built) takes no row.
   const spending: BudgetLine[] = [
+    ...(handingOut ? [taxes] : []),
     {
       key: "wages",
       icon: <WagesIcon size={20} />,
@@ -217,7 +229,7 @@ export function BudgetPanel({ state, production, onOpenPanel }: { state: GameSta
         </strong>
         {runOut ? (
           <span className="is-loss">
-            empty in {runOut.days} days ({formatDate(runOut.date)})
+            empty in {runOut.days} {runOut.days === 1 ? "day" : "days"} ({formatDate(runOut.date)})
           </span>
         ) : net > 0 ? (
           <span className="is-gain">growing</span>

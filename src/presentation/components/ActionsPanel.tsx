@@ -1,5 +1,4 @@
-// Build orders for one kind of building (the rail in BuildPanel picks which):
-// pick the province at the top or on the map, then each building is a row
+// Build orders, for the province chosen on the map. Each building is a row
 // with its picture, what it gives, pips for how many stand here, and its
 // costs in green (enough), amber (enough to start) or red (not enough). What
 // it does in a sentence is in its name's tip; when it can't be built, the
@@ -70,11 +69,9 @@ import { BUILD_GROUPS, type BuildGroup } from "../buildGroups";
 
 interface ActionsPanelProps {
   state: GameState;
-  group: BuildGroup;
   selectedProvinceId: string;
   dispatch: (action: (state: GameState) => GameState) => void;
   provinces: ProvinceOverview[];
-  onSelectProvince: (provinceId: string) => void;
   netPerDay: number; // the treasury's daily balance, for how long a shortfall takes to save
 }
 
@@ -307,50 +304,27 @@ function Pips({ count, max }: { count: number; max: number }) {
   );
 }
 
-export function ActionsPanel({ state, group, selectedProvinceId, dispatch, provinces, onSelectProvince, netPerDay }: ActionsPanelProps) {
+export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, netPerDay }: ActionsPanelProps) {
   const season = getSeason(state.date);
   const mods = getModifiers(state);
   const jobsPer = getJobsPerBuilding(state);
   const provinceName = getProvinceName(selectedProvinceId);
+  const selected = provinces.find((p) => p.id === selectedProvinceId);
+  const flag = selected ? provinceFlag(selected) : null;
 
   return (
     <section className="panel actions-panel">
-      {/* Where to build: every province of yours, with its most pressing
-          need, so the right one is easy to pick. */}
-      <div className="actions-panel__where">
-        <span className="actions-panel__where-label" id="build-where-label">
-          Build in
-          <span className="actions-panel__where-hint">or click the map</span>
-        </span>
-        <div className="actions-panel__provinces" role="radiogroup" aria-labelledby="build-where-label">
-          {provinces.map((province) => {
-            const flag = provinceFlag(province);
-            const selected = province.id === selectedProvinceId;
-            return (
-              <button
-                key={province.id}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                className={`actions-panel__province ${selected ? "is-selected" : ""}`}
-                onClick={() => onSelectProvince(province.id)}
-                // Picked on the map: brought into view along the line.
-                ref={selected ? (el) => el?.scrollIntoView({ block: "nearest", inline: "nearest" }) : undefined}
-              >
-                <span className="actions-panel__province-name">
-                  {province.isCapital && <span aria-label="Capital">★ </span>}
-                  {province.name}
-                </span>
-                {flag && <span className={`actions-panel__province-flag ${flag.urgent ? "is-urgent" : ""}`}>{flag.text}</span>}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {/* Where these go: the province chosen on the map, and its most
+          pressing need. */}
+      <p className="actions-panel__where" title="Click a province on the map to build there">
+        {selected?.isCapital && <span aria-label="Capital">★ </span>}
+        <strong>{provinceName}</strong>
+        {flag && <span className={`actions-panel__province-flag ${flag.urgent ? "is-urgent" : ""}`}>{flag.text}</span>}
+      </p>
 
-      {BUILD_GROUPS.filter((g) => g.key === group).map((group) => (
-        <div key={group.key} className="build-group">
-          <h3 className="build-group__title">{group.title}</h3>
+      {/* Every building, in groups ruled off from one another. */}
+      {BUILD_GROUPS.map((group) => (
+        <div key={group.key} className="build-group" data-rail={group.key} role="group" aria-label={group.title}>
           <ul className="build-list">
             {BUILD_ITEMS.filter((item) => item.group === group.key).map((item) => {
               // Shut until a research step (granaries, canneries) or a chapter (schools) opens it.

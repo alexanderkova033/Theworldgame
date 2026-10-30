@@ -9,13 +9,13 @@
 }
 .toasts {
   position: fixed;
-  right: 1rem;
+  right: 5.5rem;
   bottom: 1rem;
   z-index: 40;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  width: min(24rem, calc(100vw - 2rem));
+  width: min(24rem, calc(100vw - 6.5rem));
 }
 
 /* A notice on the dark silk of the top bar — chrome, not a page — edged in

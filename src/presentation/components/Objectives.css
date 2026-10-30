@@ -1,10 +1,10 @@
-/* Top right of the map, left of the zoom buttons: a slip with the chapter
+/* Top right of the map: a slip with the chapter
    in hand (its plate, a wax seal, numbered steps) and any other on a line
    under it. See Objectives.tsx. */
 .objectives {
   position: absolute;
   top: 0.9rem;
-  right: 5.6rem;
+  right: 0.9rem;
   z-index: 3;
   width: 17rem;
   display: flex;

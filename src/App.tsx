@@ -44,7 +44,8 @@ import { useSeasonTurn } from "./presentation/hooks/useSeasonTurn";
 import { getSeason } from "./domain/country/calendar";
 import { TopBar } from "./presentation/components/TopBar";
 import { FIRST_SECTIONS, lockedReason, politicsSectionFor, reachable, type PanelKey, type Section, type Sections } from "./presentation/navigation";
-import type { BuildRail } from "./presentation/buildGroups";
+import { getOpenBuildKinds, type BuildRail } from "./presentation/buildGroups";
+import type { ProjectType } from "./domain/construction/types";
 import { isLetterWaiting, useGameClock } from "./presentation/hooks/useGameClock";
 import { isFeatureOpen } from "./domain/chapters/chapterData";
 import { readBriefing } from "./application/chapters";
@@ -144,8 +145,8 @@ function App() {
   // directly when an advisor chip or toast points somewhere.
   const [sections, setSections] = useState<Sections>(FIRST_SECTIONS);
   const setSection = useCallback(<K extends keyof Sections>(panel: K, section: Sections[K]) => setSections((s) => ({ ...s, [panel]: section })), []);
-  // The kind of building Build's Buildings shows, kept the same way.
-  const [buildRail, setBuildRail] = useState<BuildRail>("people");
+  // Which group of buildings a "Go" sent Build to open at: it scrolls there.
+  const [buildRail, setBuildRail] = useState<BuildRail | null>(null);
   useEffect(() => {
     buildOpen.current = openModal === "build" && sections.build === "buildings";
   }, [openModal, sections.build]);
@@ -184,6 +185,9 @@ function App() {
   const expeditionIslandIds = useMemo(() => (expeditionKey ? expeditionKey.split(",") : []), [expeditionKey]);
   // What's being built and where, kept the same from day to day (only the
   // days left change) so the memoized map isn't redrawn for it.
+  // Build open on its buildings: the map shows slots, for what is open today.
+  const buildKindsKey = state && openModal === "build" && sections.build === "buildings" ? getOpenBuildKinds(state).join(",") : "";
+  const buildKinds = useMemo(() => (buildKindsKey ? (buildKindsKey.split(",") as ProjectType[]) : null), [buildKindsKey]);
   const underwayKey = state?.projects.map((p) => `${p.type}:${p.provinceId}`).join(",") ?? "";
   const underway = useMemo(
     () =>
@@ -435,7 +439,7 @@ function App() {
       const next = section ?? (panel === "politics" ? politicsSectionFor(state!) : undefined);
       if (next) setSections((s) => ({ ...s, [panel]: next }));
     }
-    if (rail) setBuildRail(rail);
+    setBuildRail(rail ?? null);
     // Always opens/switches to the tab — never toggles it closed. An
     // earlier version closed the panel when you clicked its already-active
     // tab again, but that made an accidental double-click (easy to trigger
@@ -486,6 +490,7 @@ function App() {
             foreignIslands={state.foreignIslands}
             placedBuildings={state.placedBuildings}
             underway={underway}
+            buildKinds={buildKinds}
             selectedProvinceId={currentProvinceId}
             onSelectProvince={selectProvinceOnMap}
             scoutedIslandIds={state.scoutedIslandIds}
@@ -538,12 +543,10 @@ function App() {
             production={dailyProduction}
             provinces={provinceOverview}
             selectedProvinceId={currentProvinceId}
-            onSelectProvince={setSelectedProvinceId}
             onOpenPanel={openPanel}
             section={sections.build}
             onSection={(section) => setSection("build", section)}
             rail={buildRail}
-            onRail={setBuildRail}
           />
         </Modal>
       )}

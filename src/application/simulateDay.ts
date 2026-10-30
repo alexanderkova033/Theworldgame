@@ -261,6 +261,7 @@ export function simulateDay(state: GameState): GameState {
     market: goods.market,
     factionApproval: month.factionApproval,
     workforce: takings.workforce,
+    taxRate: takings.taxRate,
     foreignPolitics: month.foreignPolitics,
     ...neighbourMonth,
     debt: goods.debt,

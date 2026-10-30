@@ -131,6 +131,7 @@ function Counter({ stack, isYours, isPicked, onPick }: { stack: Stack; isYours: 
       role={onPick ? "button" : undefined}
       tabIndex={onPick ? 0 : undefined}
       aria-label={onPick ? title : undefined}
+      data-tip={title}
       aria-pressed={onPick ? isPicked : undefined}
       onKeyDown={
         onPick
@@ -143,7 +144,6 @@ function Counter({ stack, isYours, isPicked, onPick }: { stack: Stack; isYours: 
           : undefined
       }
     >
-      <title>{title}</title>
       <rect x={-20} y={-11} width={40} height={22} rx={3} className="map-armies__field" style={{ fill: nation.color }} />
       <rect x={-16} y={-7} width={16} height={14} className="map-armies__mark" />
       <path d="M-16,-7 L0,7 M0,-7 L-16,7" className="map-armies__cross" style={{ stroke: nation.color }} />
@@ -172,8 +172,7 @@ function RebelCounter({ provinceId, free, beside }: { provinceId: string; free: 
   const at = { ...point, x: point.x - (beside * COUNTER_SPACING) / 2 };
   const strength = Math.round(free.strength);
   return (
-    <g className="map-armies__counter is-rebels" transform={`translate(${at.x.toFixed(1)} ${at.y.toFixed(1)})`}>
-      <title>{`Rebels hold ${getProvinceName(provinceId)}: strength ${strength} of 100. March regiments here to take it back.`}</title>
+    <g className="map-armies__counter is-rebels" transform={`translate(${at.x.toFixed(1)} ${at.y.toFixed(1)})`} data-tip={`Rebels hold ${getProvinceName(provinceId)}: strength ${strength} of 100. March regiments here to take it back.`}>
       <rect x={-20} y={-11} width={40} height={22} rx={3} className="map-armies__field map-armies__field--rebels" />
       <path d="M-14,-7 L-14,7 M-13.4,-7 L-3,-7 L-5.5,-3.5 L-3,0 L-13.4,0 Z" className="map-armies__banner" />
       <text x={8} y={4.5} className="map-armies__count map-armies__count--rebels">

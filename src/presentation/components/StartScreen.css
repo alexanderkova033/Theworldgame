@@ -189,3 +189,9 @@
     border-color: var(--danger);
   }
 }
+
+.start-screen__feedback {
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--oxblood);
+}

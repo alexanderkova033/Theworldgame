@@ -55,3 +55,11 @@ describe("the player's vocabulary", () => {
     expect(misses).toEqual([]);
   });
 });
+
+describe("one tooltip", () => {
+  it("draws no SVG title element: it brings the browser's own tip up beside the game's", () => {
+    const dir = "src/presentation/components";
+    const offenders = readdirSync(dir).filter((file) => file.endsWith(".tsx") && /<title>/.test(readFileSync(`${dir}/${file}`, "utf8")));
+    expect(offenders).toEqual([]);
+  });
+});

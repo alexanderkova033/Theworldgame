@@ -3,6 +3,7 @@
 import type { CountryStats, GameState } from "../../domain/country/types";
 import { getColdStabilityPenalty, getHomelessStabilityPenalty } from "../../domain/housing/housingRules";
 import { fitCauses } from "../../domain/ledger/ledgerRules";
+import { getTaxStabilityPenalty } from "../../domain/economy/economyRules";
 import { getDebtStabilityPenalty } from "../../domain/loans/loanRules";
 import { getProvinceRiotDrag } from "../../domain/provinces/provinceOrder";
 import { getStabilityPressures, updateStability } from "../../domain/stability/stabilityRules";
@@ -40,12 +41,13 @@ export function keepOrder(
   const debtStabilityPenalty = getDebtStabilityPenalty(today.debt);
   const homelessStabilityPenalty = getHomelessStabilityPenalty(today.homelessShare);
   const coldStabilityPenalty = getColdStabilityPenalty(today.unheatedShare);
+  const taxStabilityPenalty = getTaxStabilityPenalty(working.taxRate);
   const policeStabilityBonus = getPoliceStabilityBonus(today.police);
   // Provinces rioting on their own pull the whole country down.
   const provinceRiotDrag = getProvinceRiotDrag(working.provinces, working.unrestStage);
   const stability = Math.min(
     100,
-    updateStability(today.statsWithFood, today.isShortage, debtStabilityPenalty + homelessStabilityPenalty + coldStabilityPenalty + provinceRiotDrag) +
+    updateStability(today.statsWithFood, today.isShortage, debtStabilityPenalty + homelessStabilityPenalty + coldStabilityPenalty + provinceRiotDrag + taxStabilityPenalty) +
       policeStabilityBonus +
       day.mods.stabilityPerDay,
   );
@@ -59,6 +61,7 @@ export function keepOrder(
         food: pressures.food,
         support: pressures.support,
         debt: -debtStabilityPenalty,
+        taxes: -taxStabilityPenalty,
         homes: -homelessStabilityPenalty,
         cold: -coldStabilityPenalty,
         provinces: -provinceRiotDrag,

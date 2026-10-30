@@ -13,6 +13,7 @@ import type { ResourceBundle } from "../../domain/resources/types";
 import type { UnrestStage } from "../../domain/unrest/types";
 import { isMuted, setMuted } from "../audio/sound";
 import { areTipsOn, setTipsOn } from "../tipPreference";
+import { FEEDBACK_URL } from "../feedback";
 import { NavIcon } from "./NavIcon";
 import { StatIcon } from "./StatIcon";
 import { ResourceTicker } from "./ResourceTicker";
@@ -142,6 +143,16 @@ function TipsIcon({ off }: { off: boolean }) {
         <line x1={-4.5} y1={0.3} x2={2} y2={0.3} />
       </g>
       {off && <line x1={-9} y1={8.5} x2={9} y2={-8.5} stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" />}
+    </svg>
+  );
+}
+
+// A quill, for the feedback form.
+function FeedbackIcon() {
+  return (
+    <svg width={16} height={16} viewBox="-10 -10 20 20" aria-hidden="true">
+      <path d="M8,-9 C2,-8 -4,-3 -6,5 L-8,9 L-4,7 C3,5 7,-2 8,-9 Z" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" />
+      <path d="M-4,5 L3,-3" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" />
     </svg>
   );
 }
@@ -326,6 +337,11 @@ export function TopBar({
             >
               <TipsIcon off={!tipsOn} />
             </button>
+            {FEEDBACK_URL && (
+              <a className="top-bar__icon-button" href={FEEDBACK_URL} target="_blank" rel="noreferrer" aria-label="Send feedback" title="Tell us what you think: opens a short form">
+                <FeedbackIcon />
+              </a>
+            )}
           </div>
 
           <div className="top-bar__clock-controls">

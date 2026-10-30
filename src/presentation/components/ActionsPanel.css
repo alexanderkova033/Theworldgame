@@ -1,59 +1,17 @@
-/* --- Where to build: one chip per province ----------------------------- */
+/* The province these go in: chosen on the map (see ActionsPanel.tsx). */
 .actions-panel__where {
   display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  margin-bottom: 0.4rem;
-  padding: 0.6rem 0.7rem;
-  background: var(--paper-deep);
-  border: 1px solid var(--rule);
-  border-radius: 6px;
-}
-
-.actions-panel__where-label {
-  flex-shrink: 0;
-  padding-top: 0.4rem;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0 0 0.3rem;
   font-family: var(--font-display);
-  font-weight: 700;
-  color: var(--ink-muted);
-}
-
-/* One line of provinces, scrolled sideways when there are many: the map
-   beside the panel is the other way to pick one. */
-.actions-panel__provinces {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-  max-height: 7.6rem; /* about three rows of provinces; more scroll */
-  overflow-y: auto;
-  scrollbar-width: thin;
-  padding-bottom: 0.15rem;
-}
-
-.actions-panel__provinces > button {
-  flex-shrink: 0;
-}
-
-button.actions-panel__province {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0;
-  padding: 0.3rem 0.65rem;
-  background: var(--paper-raised);
-  border-color: var(--rule);
-  line-height: 1.25;
-  text-align: left;
-}
-
-.actions-panel__province-name {
-  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--ink);
 }
 
 .actions-panel__province-flag {
-  font-size: 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--warning);
 }
@@ -62,40 +20,10 @@ button.actions-panel__province {
   color: var(--danger);
 }
 
-/* The chosen province: set in green morocco, like every other selection. */
-button.actions-panel__province.is-selected {
-  background: var(--leather);
-  border-color: var(--leather-dark);
-  color: #f4ead0;
-  box-shadow: inset 0 0 0 1px rgba(226, 194, 122, 0.5);
-}
-
-@media (hover: hover) {
-  button.actions-panel__province.is-selected:hover:not(:disabled) {
-    background: var(--leather);
-    border-color: var(--leather-dark);
-    color: #f4ead0;
-    box-shadow: inset 0 0 0 1px rgba(226, 194, 122, 0.5);
-  }
-}
-
-.actions-panel__province.is-selected .actions-panel__province-flag {
-  color: #ebbc68;
-}
-
-.actions-panel__province.is-selected .actions-panel__province-flag.is-urgent {
-  color: #f1937d;
-}
-
-/* --- The buildings, grouped by what they're for ------------------------- */
-.build-group__title {
-  margin: 1rem 0 0.4rem;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid var(--rule);
-  font-style: normal;
-  font-size: 0.95rem;
-  letter-spacing: 0.04em;
-  color: var(--window-ink);
+/* --- The buildings, in groups ruled off from one another ---------------- */
+.build-group {
+  padding: 0.45rem 0;
+  border-top: 3px double var(--rule);
 }
 
 .build-list {
@@ -104,7 +32,7 @@ button.actions-panel__province.is-selected {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.1rem;
 }
 
 /* One building: picture | what it is, does and costs | count and Build. */
@@ -112,25 +40,18 @@ button.actions-panel__province.is-selected {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.55rem 0.7rem;
-  background: var(--paper-raised);
-  border: 1px solid var(--rule);
-  border-radius: 6px;
+  gap: 0.65rem;
+  padding: 0.3rem 0.1rem;
 }
 
-.build-row.is-locked {
-  border-style: dashed;
-  background: transparent;
-}
 
 .build-row__art {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3rem;
-  height: 3rem;
+  width: 2.6rem;
+  height: 2.6rem;
   border-radius: 50%;
   background: var(--paper);
   border: 1px solid var(--rule-dark);
@@ -344,10 +265,3 @@ button.build-row__button {
   }
 }
 
-.actions-panel__where-hint {
-  display: block;
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  font-weight: 400;
-  font-style: italic;
-}

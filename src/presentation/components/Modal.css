@@ -237,3 +237,9 @@
     transform: none;
   }
 }
+
+/* Moved, or docked beside the map: nothing here catches clicks, so the window
+   can ride above the top bar (TopBar.css, z-index 60) wherever it's dragged. */
+.modal-overlay.modal-overlay--moved {
+  z-index: 200;
+}

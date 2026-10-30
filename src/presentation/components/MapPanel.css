@@ -1,5 +1,5 @@
 /* No .panel here on purpose: the map fills the whole stage edge to edge,
-   a hand-coloured engraved chart with every control (zoom, legend, modes)
+   a hand-coloured engraved chart with every control (the modes, the icons toggle)
    laid on it as a small paper cartouche. Fills and strokes only, never a
    filter, so panning never re-rasterizes anything. */
 .map-panel {
@@ -56,43 +56,6 @@
 }
 
 /* --- Controls: paper cartouches on the chart ---------------------------- */
-
-.map-panel__zoom-controls {
-  position: absolute;
-  top: 0.9rem;
-  right: 0.9rem;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  align-items: center;
-}
-
-.map-panel__zoom-controls button {
-  width: 2.4rem;
-  height: 2.4rem;
-  border-radius: 50%;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-size: 1.35rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.map-panel__zoom-controls button[aria-label="Reset view"] {
-  width: auto;
-  height: auto;
-  min-width: 2.4rem;
-  min-height: 1.9rem;
-  border-radius: 999px;
-  padding: 0.3rem 0.65rem;
-  font-family: var(--font-body);
-  font-size: 0.8125rem;
-  font-weight: 600;
-}
 
 /* --- The sea ------------------------------------------------------------- */
 
@@ -403,53 +366,75 @@
   stroke-dasharray: 10 6;
 }
 
-/* --- Map modes, bottom centre: the switch, and the active mode's key ----- */
+/* --- Bottom right: the map modes as pictures, and the icons toggle ------ */
 
 .map-panel__modes {
   position: absolute;
-  left: 50%;
+  right: 0.9rem;
   bottom: 0.9rem;
   z-index: 2;
-  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.map-panel__mode-rail {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.map-panel__mode-switch {
-  display: flex;
+  gap: 0.4rem;
+  padding: 0.35rem;
+  background: var(--damask) 0 0 / 48px 64px repeat, var(--bar);
+  border: 1px solid var(--gilt);
   border-radius: 6px;
+}
+
+.map-panel__mode-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.map-panel__mode-gap {
+  height: 1px;
+  background: var(--bar-rule);
+}
+
+.map-panel__modes button.map-panel__mode-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.7rem;
+  height: 2.7rem;
+  min-height: 0;
+  padding: 0;
+  background: var(--bar-deep);
+  border: 1px solid var(--bar-rule);
+  border-radius: 4px;
   box-shadow: none;
+  color: var(--gilt-bright);
 }
 
-.map-panel__mode-switch button {
-  min-height: 2rem;
-  padding: 0.3rem 0.85rem;
-  border-radius: 0;
-  font-size: 0.875rem;
+@media (hover: hover) {
+  .map-panel__modes button.map-panel__mode-button:hover:not(:disabled) {
+    background: var(--bar-raised);
+    border-color: var(--gilt-bright);
+    color: var(--gilt-bright);
+  }
 }
 
-.map-panel__mode-switch button + button {
-  margin-left: -1px;
-}
-
-.map-panel__mode-switch button:first-child {
-  border-radius: 6px 0 0 6px;
-}
-
-.map-panel__mode-switch button:last-child {
-  border-radius: 0 6px 6px 0;
+.map-panel__modes button.map-panel__mode-button.is-active {
+  background: var(--bar-raised);
+  border: 2px solid var(--gilt-bright);
 }
 
 .map-panel__mode-key {
   display: flex;
-  gap: 0.8rem;
-  padding: 0.3rem 0.7rem;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.4rem 0.6rem;
   border-radius: 4px;
   background: var(--paper-raised);
   border: 1px solid var(--rule);
-  box-shadow: none;
   font-size: 0.8125rem;
   color: var(--text);
 }
@@ -457,92 +442,12 @@
 .map-panel__mode-key span {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.35rem;
   white-space: nowrap;
 }
 
 .map-panel__mode-key svg {
   display: block;
-}
-
-/* --- The legend: a key in a ruled cartouche, as a chart's corner held ---- */
-
-.map-panel__legend-toggle {
-  position: absolute;
-  left: 0.9rem;
-  bottom: 0.9rem;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.7rem;
-  font-size: 0.8125rem;
-}
-
-/* Beside the legend: the next province that needs you. */
-.map-panel__legend {
-  position: absolute;
-  left: 0.9rem;
-  right: 0.9rem;
-  bottom: 3.1rem;
-  z-index: 2;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  max-height: 40%;
-  overflow-y: auto;
-  padding: 0.8rem 1rem;
-  background: var(--grain) 0 0/90px 90px repeat, var(--paper-raised);
-  border: 1px solid var(--rule-dark);
-  border-radius: 8px;
-  box-shadow: inset 0 0 0 4px var(--paper-raised), inset 0 0 0 5px var(--rule);
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  animation: modal-pop 0.12s ease-out;
-}
-
-.map-panel__legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-/* Each group starts a new line. */
-.map-panel__legend-heading {
-  flex-basis: 100%;
-  font-family: var(--font-display);
-  font-weight: 700;
-  color: var(--oxblood);
-}
-
-.map-panel__legend-note {
-  flex-basis: 100%;
-  font-size: 0.8125rem;
-  font-style: italic;
-  color: var(--ink-muted);
-}
-
-.map-panel__legend-item:not(.is-present) svg {
-  opacity: 0.75;
-}
-
-.map-panel__legend-count {
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
-
-
-.map-panel__legend-swatch {
-  width: 12px;
-  height: 12px;
-  border-radius: 8px;
-  border: 1px solid var(--ink);
-  display: inline-block;
-}
-
-.map-panel__legend-icon {
-  display: inline-block;
-  flex-shrink: 0;
 }
 
 /* --- The hover note ------------------------------------------------------ */
@@ -612,16 +517,10 @@
 
 /* Touch: room for a fingertip (see index.css). */
 @media (pointer: coarse) {
-  .map-panel__zoom-controls button {
-    width: 2.75rem;
-    height: 2.75rem;
-  }
 
-  .map-panel__zoom-controls button[aria-label="Reset view"] {
-    min-height: 2.5rem;
-  }
 
-  .map-panel__mode-switch button {
-    min-height: 2.5rem;
+  .map-panel__modes button.map-panel__mode-button {
+    width: 3rem;
+    height: 3rem;
   }
 }

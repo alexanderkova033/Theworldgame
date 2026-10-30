@@ -14,6 +14,10 @@ import {
   POPULARITY_BASE_TARGET,
   POPULARITY_DRIFT_RATE,
   STABILITY_POPULARITY_WEIGHT,
+  TAX_CUT_FLOOR,
+  TAX_HANDOUT_POPULARITY_PER_POINT,
+  TAX_HEAVY_POPULARITY_PER_POINT,
+  TAX_HEAVY_RATE,
   TAX_POPULARITY_PER_POINT,
   UNEMPLOYMENT_POPULARITY_PENALTY,
 } from "../constants";
@@ -49,7 +53,7 @@ export interface PopularityDriver {
 export function getPopularityDrivers(c: PopularityConditions): PopularityDriver[] {
   const hardship = c.hardship ?? 1;
   return [
-    { key: "taxes", label: "Taxes", value: (getAcceptedTaxRate(c.taxTolerance) - c.taxRate) * 100 * TAX_POPULARITY_PER_POINT },
+    { key: "taxes", label: "Taxes", value: getTaxMood(c.taxRate, c.taxTolerance) },
     { key: "food", label: "Food", value: c.isFoodShortage ? -FOOD_SHORTAGE_POPULARITY_PENALTY : 0 },
     { key: "homes", label: "Homes", value: -c.homelessShare * HOMELESS_POPULARITY_PENALTY * hardship },
     { key: "heat", label: "Heating", value: -c.unheatedShare * COLD_POPULARITY_PENALTY * hardship },
@@ -58,6 +62,17 @@ export function getPopularityDrivers(c: PopularityConditions): PopularityDriver[
     { key: "policy", label: "Laws", value: c.policy ?? 0 },
     { key: "expectations", label: "Expectations", value: c.expectations ?? 0 }, // the difficulty level (see domain/difficulty)
   ];
+}
+
+// Support from the tax rate. Each point from what people accept counts the
+// same, up to two bends: below TAX_CUT_FLOOR cuts and handouts buy little, and past
+// TAX_HEAVY_RATE anger climbs faster.
+export function getTaxMood(taxRate: number, taxTolerance = 0): number {
+  const accepted = getAcceptedTaxRate(taxTolerance);
+  const ordinary = Math.min(TAX_HEAVY_RATE, Math.max(TAX_CUT_FLOOR, taxRate));
+  const below = Math.max(0, TAX_CUT_FLOOR - taxRate);
+  const heavy = Math.max(0, taxRate - TAX_HEAVY_RATE);
+  return (accepted - ordinary) * 100 * TAX_POPULARITY_PER_POINT + below * 100 * TAX_HANDOUT_POPULARITY_PER_POINT - heavy * 100 * TAX_HEAVY_POPULARITY_PER_POINT;
 }
 
 // The tax rate people accept without grumbling, after laws and creed.

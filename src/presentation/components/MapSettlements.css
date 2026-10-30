@@ -132,3 +132,36 @@
     transition: none;
   }
 }
+
+/* --- The Build window's slot plates (see MapBuildSlots.tsx) --- */
+.map-slots__plate {
+  fill: var(--paper-raised);
+  stroke: var(--rule-dark);
+  stroke-width: 0.8;
+}
+
+.map-slots .is-selected .map-slots__plate {
+  stroke: var(--oxblood);
+  stroke-width: 2;
+}
+
+.map-slots__rule {
+  stroke: var(--rule-dark);
+  stroke-width: 0.7;
+}
+
+.map-slots__pip {
+  fill: var(--paper);
+  stroke: var(--rule-dark);
+  stroke-width: 0.6;
+}
+
+.map-slots__pip.is-built {
+  fill: #5d8a4a;
+  stroke: #1b4a25;
+}
+
+.map-slots__pip.is-going {
+  fill: #e0a83f;
+  stroke: #5c3704;
+}

@@ -96,7 +96,7 @@ export const MIN_ZOOM = BASE_VIEW.width / WORLD_VIEW.width; // zooming out this 
 export const MAX_ZOOM = 6;
 export const DRAG_CLICK_THRESHOLD = 6; // total pixels of movement from the initial press before a drag stops counting as a click
 export const WHEEL_SETTLE_MS = 140; // a wheel pause this long ends the gesture and redraws the map at its new zoom
-export const LABEL_ZOOM_THRESHOLD = 1.5; // zoomRatio past which every province gets its name label, not just the focused one
+export const LABEL_ZOOM_THRESHOLD = 1.5; // zoomRatio past which every province's strip shows what it produces
 
 export function clampViewBox(vb: ViewBox): ViewBox {
   const minWidth = BASE_VIEW.width / MAX_ZOOM;

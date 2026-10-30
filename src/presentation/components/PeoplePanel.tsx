@@ -1,20 +1,15 @@
 // The four things people need from you, as four matching cards: a roof, a
 // job, heat in winter and food, each a meter with its numbers said in
-// words. Then where the workers actually work (farms and food first, then
-// schools, then factories), and every province as a row of a table.
+// words. Province by province, the map shows the same (its Homes and Jobs modes).
 import "./PeoplePanel.css";
 import type { ReactNode } from "react";
 import { getHeatingOutlook } from "../../application/getHeatingOutlook";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import type { GameState } from "../../domain/country/types";
-import { getLabourSituation, type Sector, type SectorJobs } from "../../domain/labour/labourRules";
-import { ADVISOR_FOOD_CRITICAL_DAYS, ADVISOR_FOOD_WARN_DAYS, COMMUTE_SHARE, LABOUR_SHARE } from "../../domain/constants";
-import { isWorking } from "../../domain/maintenance/maintenanceRules";
-import type { ProjectType } from "../../domain/construction/types";
+import { getLabourSituation } from "../../domain/labour/labourRules";
+import { ADVISOR_FOOD_CRITICAL_DAYS, ADVISOR_FOOD_WARN_DAYS } from "../../domain/constants";
 import { formatAmount, formatRate, formatSigned } from "../formatNumber";
-import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
-import { UNREST_INFO } from "../unrestStages";
-import { BuildingGlyph, FlameIcon, JobsIcon, UnrestStageIcon } from "./CauseIcon";
+import { BuildingGlyph, FlameIcon, JobsIcon } from "./CauseIcon";
 import { Gauge } from "./Gauge";
 import { ResourceIcon } from "./ResourceIcon";
 import type { OpenPanel } from "../navigation";
@@ -63,205 +58,13 @@ function Meter({
   );
 }
 
-// Where the workers work, by kind of job, in the order they're hired:
-// food (farms, granaries, canneries), then schools, then factories.
-const SECTOR_ROWS: Array<{ key: Sector; label: string; types: ProjectType[]; icon: ReactNode }> = [
-  { key: "food", label: "Farms & food", types: ["farm", "granary", "cannery"], icon: <BuildingGlyph type="farm" size={18} /> },
-  { key: "school", label: "Schools", types: ["education"], icon: <BuildingGlyph type="education" size={18} /> },
-  { key: "industry", label: "Factories", types: ["factory"], icon: <BuildingGlyph type="factory" size={18} /> },
-];
-
-const TYPE_NAMES: Partial<Record<ProjectType, [string, string]>> = {
-  farm: ["farm", "farms"],
-  granary: ["granary", "granaries"],
-  cannery: ["cannery", "canneries"],
-  education: ["school", "schools"],
-  factory: ["factory", "factories"],
-};
-
-function percent(jobs: SectorJobs): number | null {
-  return jobs.jobs > 0 ? Math.round((jobs.hired / jobs.jobs) * 100) : null;
-}
-
-function WorkTable({ state, sectors }: { state: GameState; sectors: Record<Sector, SectorJobs> }) {
-  const working = state.placedBuildings.filter(isWorking);
-  return (
-    <div className="people-work">
-      <div className="people-section-head">
-        <h3 className="people-section-title">Where people work</h3>
-        {/* The order jobs are filled in, as a chain; the why is in the tooltip. */}
-        <span
-          className="people-work__order"
-          title={`About ${Math.round(LABOUR_SHARE * 100)}% of your people are of working age. They take food jobs first, then schools, then factories. So when hands run short, the factories go quiet before the farms do. Of the people left without work in one province, ${Math.round(COMMUTE_SHARE * 10)} in 10 travel to fill jobs in another.`}
-        >
-          Filled first
-          {SECTOR_ROWS.map((row, i) => (
-            <span key={row.key} className="people-work__step">
-              {i > 0 && <span aria-hidden="true">→</span>}
-              {row.icon}
-              <span className="sr-only">{row.label}</span>
-            </span>
-          ))}
-        </span>
-      </div>
-      <table className="people-table">
-        <thead>
-          <tr>
-            <th scope="col">Work</th>
-            <th scope="col">Buildings</th>
-            <th scope="col" className="is-num">
-              Workers
-            </th>
-            <th scope="col" className="is-num">
-              Jobs
-            </th>
-            <th scope="col">Staffed</th>
-          </tr>
-        </thead>
-        <tbody>
-          {SECTOR_ROWS.filter((row) => row.key === "food" || sectors[row.key].jobs > 0).map((row) => {
-            const jobs = sectors[row.key];
-            const share = percent(jobs);
-            const buildings = row.types
-              .map((type) => {
-                const count = working.filter((b) => b.type === type).length;
-                const names = TYPE_NAMES[type]!;
-                return count > 0 ? `${count} ${names[count === 1 ? 0 : 1]}` : null;
-              })
-              .filter(Boolean);
-            const short = share !== null && share < 100;
-            return (
-              <tr key={row.key} className={short ? "is-short" : ""}>
-                <th scope="row">
-                  <span className="people-table__name">
-                    {row.icon}
-                    {row.label}
-                  </span>
-                </th>
-                <td>{buildings.length > 0 ? buildings.join(", ") : "None yet"}</td>
-                <td className="is-num">{formatAmount(jobs.hired)}</td>
-                <td className="is-num">{formatAmount(jobs.jobs)}</td>
-                <td>
-                  {share === null ? (
-                    <span className="people-table__muted">none</span>
-                  ) : (
-                    <span className="people-table__staffed">
-                      <Gauge max={100} size="sm" segments={[{ value: share, tone: share >= 100 ? "good" : share >= 60 ? "warn" : "bad" }]} label={`${share}% staffed`} />
-                      <strong>{share}%</strong>
-                    </span>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-// Every province as a row with named columns. Picking a row makes it the
-// province the Build panel builds in, and offers to go and build there.
-function ProvinceTable({
-  provinces,
-  selectedProvinceId,
-  onSelectProvince,
-  onBuild,
-}: {
-  provinces: ProvinceOverview[];
-  selectedProvinceId: string;
-  onSelectProvince: (provinceId: string) => void;
-  onBuild: () => void;
-}) {
-  return (
-    <div className="people-provinces">
-      <h3 className="people-section-title">Provinces</h3>
-      <table className="people-table people-table--provinces">
-        <thead>
-          <tr>
-            <th scope="col">Province</th>
-            <th scope="col" className="is-num">
-              People / homes
-            </th>
-            <th scope="col" className="is-num">
-              Farm & food jobs
-            </th>
-            <th scope="col" className="is-num">
-              Factory jobs
-            </th>
-            <th scope="col" className="is-num">
-              Jobless
-            </th>
-            <th scope="col">Mood</th>
-            <th scope="col">
-              <span className="sr-only">Build</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {provinces.map((p) => {
-            const status = getProvinceStatus(p);
-            const selected = p.id === selectedProvinceId;
-            const food = p.sectors.food;
-            const industry = p.sectors.industry;
-            return (
-              <tr key={p.id} className={selected ? "is-selected" : ""} onClick={() => onSelectProvince(p.id)}>
-                <th scope="row">
-                  <button type="button" className="people-table__pick" aria-pressed={selected} onClick={() => onSelectProvince(p.id)} title="Build here">
-                    {p.isCapital && <span aria-label="Capital">★ </span>}
-                    {p.name}
-                  </button>
-                </th>
-                <td className={`is-num ${status.homes === "over" ? "is-bad" : status.homes === "full" ? "is-warn" : ""}`}>
-                  {formatAmount(p.population)} / {formatAmount(p.capacity)}
-                </td>
-                <td className={`is-num ${food.hired < food.jobs ? "is-warn" : ""}`}>
-                  {food.jobs > 0 ? `${formatAmount(food.hired)} / ${formatAmount(food.jobs)}` : <span className="people-table__muted">none</span>}
-                </td>
-                <td className={`is-num ${industry.hired < industry.jobs ? "is-warn" : ""}`}>
-                  {industry.jobs > 0 ? `${formatAmount(industry.hired)} / ${formatAmount(industry.jobs)}` : <span className="people-table__muted">none</span>}
-                </td>
-                <td className={`is-num ${status.jobs === "jobless" ? "is-bad" : ""}`}>{p.unemployed >= 1 ? formatAmount(p.unemployed) : <span className="people-table__muted">0</span>}</td>
-                <td>
-                  <span className="people-table__mood">
-                    <UnrestStageIcon stage={p.unrestStage} size={16} />
-                    {UNREST_INFO[p.unrestStage].name}
-                  </span>
-                </td>
-                <td className="people-table__action">
-                  {selected && (
-                    <button
-                      type="button"
-                      className="people-table__build"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onBuild();
-                      }}
-                    >
-                      Build here ›
-                    </button>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 interface PeoplePanelProps {
   state: GameState;
   production: DailyProductionSummary;
-  provinces: ProvinceOverview[];
-  selectedProvinceId: string;
-  onSelectProvince: (provinceId: string) => void;
   onOpenPanel: OpenPanel;
-  onBuild: () => void; // to the Build section, for the picked province
 }
 
-export function PeoplePanel({ state, production, provinces, selectedProvinceId, onSelectProvince, onOpenPanel, onBuild }: PeoplePanelProps) {
+export function PeoplePanel({ state, production, onOpenPanel }: PeoplePanelProps) {
   const population = state.stats.population;
   const capacity = production.housingCapacity;
   const homeless = production.homeless; // summed over provinces — a free home elsewhere doesn't help
@@ -429,9 +232,7 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
       />
       </div>
 
-      <WorkTable state={state} sectors={labour.sectors} />
 
-      <ProvinceTable provinces={provinces} selectedProvinceId={selectedProvinceId} onSelectProvince={onSelectProvince} onBuild={onBuild} />
     </section>
   );
 }

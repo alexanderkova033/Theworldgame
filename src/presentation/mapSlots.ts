@@ -90,7 +90,7 @@ const widenedForCrowd = (r: Room): Room => ({ left: r.left - CROWD_REACH.across,
 // The two grounds: the nearest open ones to the province's name, one each
 // side of it if it can. Each try gives up a little more where a province is
 // too small: first closeness to the border, then the nation's name, then its
-// own (shown only when zoomed in), and last the strip of flags under it.
+// own (shown only when in focus), and last the strip of flags under it.
 function findGrounds(polygon: Point[], label: Point, labelRoom: Room, nameRooms: Room[]): { camp: Point; square: Point } {
   const distance = ([x, y]: Point) => Math.hypot(x - label[0], y - label[1]);
   const stripRoom: Room = { left: label[0] - STRIP_HALF_WIDTH, right: label[0] + STRIP_HALF_WIDTH, top: label[1] + 6, bottom: label[1] + 36 };

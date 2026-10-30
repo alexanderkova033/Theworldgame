@@ -8,6 +8,8 @@ import { getParty } from "../../domain/parties/partyRules";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
 import type { PlacedBuilding } from "../../domain/provinces/types";
 import { RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
+import type { ProjectType } from "../../domain/construction/types";
+import { MapBuildSlots } from "./MapBuildSlots";
 import { MapSettlements, type UnderwayBuilding } from "./MapSettlements";
 import { nationShapes } from "../nationFrontiers";
 import type { ProvinceStatus } from "../../application/getProvinceOverview";
@@ -24,10 +26,12 @@ interface MapLayersProps {
   nation: Nation;
   buildingsByProvince: Map<string, PlacedBuilding[]>;
   underway: UnderwayBuilding[];
+  showIcons: boolean; // each province's strip of small icons, in place of the buildings on the land
+  buildKinds: ProjectType[] | null; // the Build window is open: its building slots, for these kinds
   roadCountByProvince: Map<string, number>;
   selectedProvinceId: string;
   hoveredProvinceId: string | null;
-  zoomedIn: boolean; // past LABEL_ZOOM_THRESHOLD: every province labeled, nation names hidden
+  zoomedIn: boolean; // past LABEL_ZOOM_THRESHOLD: every province's strip shows what it produces
   scoutedIslandIds: string[];
   expeditionIslandIds: string[];
   selectedIslandId: string | null;
@@ -52,6 +56,8 @@ export const MapLayers = memo(function MapLayers({
   nation,
   buildingsByProvince,
   underway,
+  showIcons,
+  buildKinds,
   roadCountByProvince,
   selectedProvinceId,
   hoveredProvinceId,
@@ -208,9 +214,7 @@ export const MapLayers = memo(function MapLayers({
               }}
               onMouseEnter={() => onHoverProvince(land.id)}
               onMouseLeave={() => onHoverProvince((prev) => (prev === land.id ? null : prev))}
-            >
-              <title>{land.name} (yours)</title>
-            </path>
+            />
           );
         }
         const isScouted = scoutedIslandIds.includes(land.id);
@@ -238,11 +242,8 @@ export const MapLayers = memo(function MapLayers({
               isSelected ? "is-selected" : "",
             ].join(" ")}
             onClick={venturesOpen || lostProvinceIds.includes(land.id) || holder ? () => onIslandClick(land.id) : undefined}
-          >
-            <title>
-              {land.name} ({status})
-            </title>
-          </path>
+            data-tip={`${land.name} (${status})`}
+          />
         );
       })}
       {/* A neighbour's island: their colour washed over the paper, as their
@@ -312,12 +313,9 @@ export const MapLayers = memo(function MapLayers({
             }
             onMouseEnter={isOwned ? () => onHoverProvince(province.id) : undefined}
             onMouseLeave={isOwned ? () => onHoverProvince((prev) => (prev === province.id ? null : prev)) : undefined}
-          >
-            <title>
-              {province.name}
-              {isOwned ? " (yours)" : isFree ? " (broke away: free. March regiments here to take it back)" : owner ? ` (${owner.name})` : " (unclaimed)"}
-            </title>
-          </path>
+            // Yours has the fuller card on hover (MapPanel), so no tip as well.
+            data-tip={isOwned ? undefined : `${province.name}${isFree ? " (broke away: free. March regiments here to take it back)" : owner ? ` (${owner.name})` : " (unclaimed)"}`}
+          />
         );
       })}
 
@@ -459,15 +457,19 @@ export const MapLayers = memo(function MapLayers({
         );
       })}
 
-    <MapSettlements provinceIds={ownedIds} buildingsByProvince={buildingsByProvince} underway={underway} provinceStatus={provinceStatus} />
+    {/* The land shows one thing at a time: buildings and people standing on
+        it, or (by the toggle) each province's strip of icons, or (with the
+        Build window open) its building slots. */}
+    {!buildKinds && !showIcons && <MapSettlements provinceIds={ownedIds} buildingsByProvince={buildingsByProvince} underway={underway} provinceStatus={provinceStatus} />}
 
     {/* Big, spaced-out nation names across each country (EU4-style),
-        with the party currently ruling each neighbor underneath. They
-        give way to the per-province labels once zoomed in. */}
-    {!zoomedIn && (
+        with the party currently ruling each neighbor underneath. */}
+    {(
       <g pointerEvents="none">
         {shapes.map((shape) => {
           const isYou = shape.nationId === nation.id;
+          // With the Build window open your own land shows its slots instead.
+          if (isYou && buildKinds) return null;
           const rulerId = foreignRulers[shape.nationId];
           const ruler = rulerId ? getParty(rulerId) : null;
           return (
@@ -487,14 +489,10 @@ export const MapLayers = memo(function MapLayers({
 
     {places.map((province) => {
       const isCapital = province.id === nation.capitalProvinceId;
-      // The continent packs a lot of small provinces close together —
-      // at the fully-zoomed-out default view, every name label at full
-      // size collides with its neighbors into unreadable clutter,
-      // so only the province the player's attention is already on
-      // (selected/hovered) stays labeled until they zoom in past
-      // LABEL_ZOOM_THRESHOLD, same as EU4/HOI4-style province maps.
+      // Only the province the player's attention is on is named, at any
+      // zoom: the map is for looking at, and every name would crowd it.
       const isFocused = province.id === selectedProvinceId || province.id === hoveredProvinceId;
-      const showLabel = isCapital || isFocused || zoomedIn;
+      const showLabel = isCapital || isFocused;
       if (!showLabel) return null;
       return (
         <g key={`${province.id}-label`}>
@@ -517,7 +515,9 @@ export const MapLayers = memo(function MapLayers({
         buildings, short homes or work, unrest. Zoom in, or point at or pick
         a province, and it adds what the province produces. What's built
         there stands on the land itself (MapSettlements). */}
-    {places.map((province) => {
+    {buildKinds && <MapBuildSlots provinceIds={ownedIds} kinds={buildKinds} buildingsByProvince={buildingsByProvince} roadCountByProvince={roadCountByProvince} underway={underway} selectedProvinceId={selectedProvinceId} />}
+
+    {!buildKinds && showIcons && places.map((province) => {
       if (!owns(province.id)) return null;
 
       const buildings = buildingsByProvince.get(province.id) ?? [];
