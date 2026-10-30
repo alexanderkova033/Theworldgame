@@ -122,6 +122,30 @@ export function clampViewBox(vb: ViewBox): ViewBox {
   };
 }
 
+// How close the map opens: near enough that your own land reads, far
+// enough that the whole continent and the nearest islands stay in view.
+export const HOME_ZOOM = 1.35;
+
+// The view the map opens on (and Reset returns to): centred on your own
+// provinces at HOME_ZOOM.
+export function homeView(provinceIds: readonly string[]): ViewBox {
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (const province of MAP_GEOMETRY.provinces) {
+    if (!provinceIds.includes(province.id)) continue;
+    for (const [, x, y] of province.path.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)) {
+      xs.push(Number(x));
+      ys.push(Number(y));
+    }
+  }
+  if (xs.length === 0) return BASE_VIEW;
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+  const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+  const width = BASE_VIEW.width / HOME_ZOOM;
+  const height = BASE_VIEW.height / HOME_ZOOM;
+  return clampViewBox({ x: cx - width / 2, y: cy - height / 2, width, height });
+}
+
 // The visible ocean canvas itself, generous enough to cover the full pan
 // range above with room to spare — it should never run out before the pan
 // clamp does.

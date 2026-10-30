@@ -16,7 +16,7 @@ import { formatSigned } from "../formatNumber";
 import { getCauseInfo, METRIC_LABELS } from "../causes";
 import { getEventKind } from "../eventKinds";
 import { WrenchIcon } from "./RepairsPanel";
-import { BUILDINGS, type Destination, type OpenPanel } from "../navigation";
+import { REPAIRS, type Destination, type OpenPanel } from "../navigation";
 
 const TOAST_LIFETIME_MS = 8000;
 const MAX_TOASTS = 4;
@@ -42,7 +42,7 @@ function toastFromEvent(event: GameEvent): Toast | null {
       kind: "breakdown",
       title: "Breakdown",
       message: event.message,
-      action: action ?? { label: "Repair", ...BUILDINGS },
+      action: action ?? { label: "Repair", ...REPAIRS },
     };
   }
   // A technology that came out better than projected gets its own moment.
@@ -180,7 +180,7 @@ export function Toasts({ events, monthlyReports, isPaused, onOpenPanel }: Toasts
               type="button"
               className="btn-primary"
               onClick={() => {
-                onOpenPanel(toast.action.panel, toast.action.section);
+                onOpenPanel(toast.action.panel, toast.action.section, toast.action.rail);
                 setToasts((current) => current.filter((t) => t.key !== toast.key));
               }}
             >

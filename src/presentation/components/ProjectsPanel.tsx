@@ -23,7 +23,7 @@ export function ProjectRings({ state, dailyCost }: ProjectRingsProps) {
   const affordabilities = getProjectAffordabilities(state);
 
   return (
-    <section className="project-rings" aria-label="Being built">
+    <section className={`project-rings ${projects.length === 0 ? "is-empty" : ""}`} aria-label="Being built">
       {projects.length === 0 && <p className="project-rings__none">Nothing being built</p>}
       <ul className="project-rings__list">
         {projects.map((project) => {

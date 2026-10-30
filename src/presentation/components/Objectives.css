@@ -244,6 +244,29 @@
   font-size: 0.85rem;
 }
 
+.objectives button.objectives__also {
+  width: calc(100% + 1.2rem);
+  min-height: 0;
+  border: none;
+  border-top: 1px solid var(--rule);
+  border-radius: 0;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.objectives button.objectives__also:hover {
+  background: #f1e4c3;
+}
+
+.objectives__also-go {
+  color: var(--oxblood);
+  font-weight: 700;
+}
+
 .objectives__also-label {
   font-weight: 700;
   color: var(--ink-muted);

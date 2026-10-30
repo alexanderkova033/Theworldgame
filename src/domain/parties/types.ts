@@ -18,7 +18,7 @@ export interface Party {
   ideology: Ideology;
   color: string;
   description: string;
-  platform: string; // who they speak for, in a line, shown on the party-select screen
+  platform: string; // who they speak for, in a line, shown on the setup screen
   // What governing as this party actually changes, for as long as it's in
   // power: two strengths and a weakness, folded into the same modifiers as
   // laws and research (see domain/policy). This is what makes the two

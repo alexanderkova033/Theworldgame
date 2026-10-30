@@ -157,6 +157,29 @@
   stroke-width: 1.8;
 }
 
+/* Seats about to change hands, as support drifts: rings, not filled. Red
+   for ones you're losing, your own colour (set inline) for ones you're
+   winning. The marker outside the arc points at where the drift ends. */
+.chamber__seat.is-slipping,
+.chamber__seat.is-coming {
+  fill: var(--paper-raised);
+  stroke-width: 2.4;
+}
+
+.chamber__seat.is-slipping {
+  stroke: var(--danger);
+}
+
+.chamber__heading {
+  fill: var(--success);
+  stroke: var(--paper-raised);
+  stroke-width: 1;
+}
+
+.chamber__heading.is-falling {
+  fill: var(--danger);
+}
+
 .chamber__line {
   stroke: var(--ink);
   stroke-width: 2;

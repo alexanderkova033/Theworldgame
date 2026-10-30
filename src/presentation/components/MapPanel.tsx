@@ -1,5 +1,5 @@
 import "./MapPanel.css";
-import { washColor, type ViewBox, BASE_VIEW, DRAG_CLICK_THRESHOLD, WHEEL_SETTLE_MS, LABEL_ZOOM_THRESHOLD, clampViewBox, type MapMode, type ModeLevel, MODE_COLORS, MAP_MODES } from "./mapCommon";
+import { washColor, type ViewBox, BASE_VIEW, DRAG_CLICK_THRESHOLD, WHEEL_SETTLE_MS, LABEL_ZOOM_THRESHOLD, clampViewBox, homeView, type MapMode, type ModeLevel, MODE_COLORS, MAP_MODES } from "./mapCommon";
 import { StatusFlag } from "./MapDecor";
 import { MapLayers } from "./MapLayers";
 import { flushSync } from "react-dom";
@@ -13,6 +13,7 @@ import type { PlacedBuilding, Terrain } from "../../domain/provinces/types";
 import { RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
 import { RESOURCE_TYPES } from "../../domain/resources/types";
 import { BUILDING_COLORS, BuildingIcon } from "./BuildingIcon";
+import type { UnderwayBuilding } from "./MapSettlements";
 import type { ProvinceOverview, ProvinceStatus } from "../../application/getProvinceOverview";
 import { formatAmount } from "../formatNumber";
 import { UNREST_INFO } from "../unrestStages";
@@ -59,6 +60,7 @@ const BUILDING_LABELS: Record<ProjectType, string> = {
 interface MapPanelProps {
   nation: Nation;
   placedBuildings: PlacedBuilding[];
+  underway: UnderwayBuilding[]; // what's going up, stable from day to day so the map isn't redrawn for it
   selectedProvinceId: string;
   onSelectProvince: (provinceId: string) => void;
   scoutedIslandIds: string[];
@@ -150,6 +152,7 @@ function countFlags(status: Record<string, ProvinceStatus>): Record<FlagKey, num
 export const MapPanel = memo(function MapPanel({
   nation,
   placedBuildings,
+  underway,
   selectedProvinceId,
   onSelectProvince,
   scoutedIslandIds,
@@ -175,7 +178,9 @@ export const MapPanel = memo(function MapPanel({
 
   const svgRef = useRef<SVGSVGElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const [view, setView] = useState<ViewBox>(BASE_VIEW);
+  // Opens on your own land (see homeView); Reset comes back here.
+  const home = useMemo(() => homeView(nation.provinceIds), [nation.provinceIds]);
+  const [view, setView] = useState<ViewBox>(home);
   const zoomRatio = BASE_VIEW.width / view.width;
   // dragOrigin is the original pointerdown position, used only to decide
   // "was this whole gesture a click or a drag" — dragStart is the *last*
@@ -574,6 +579,7 @@ export const MapPanel = memo(function MapPanel({
           <MapLayers
             nation={nation}
             buildingsByProvince={buildingsByProvince}
+            underway={underway}
             roadCountByProvince={roadCountByProvince}
             selectedProvinceId={selectedProvinceId}
             hoveredProvinceId={hoveredProvinceId}
@@ -602,7 +608,7 @@ export const MapPanel = memo(function MapPanel({
           </button>
           <button type="button" onClick={() => {
               commitView();
-              setView(BASE_VIEW);
+              setView(home);
             }}
             aria-label="Reset view">
             Reset
@@ -761,7 +767,7 @@ export const MapPanel = memo(function MapPanel({
                 )}
               </span>
             ))}
-            <span className="map-panel__legend-note">Zoomed out, only provinces with a problem show a strip. Zoom in, or point at a province, to see what it produces and what's built there.</span>
+            <span className="map-panel__legend-note">Zoomed out, only provinces with a problem show a strip. Zoom in, or point at a province, to see what it produces. Buildings stand on the land; tents mean people without a home, placards a strike, torches a riot.</span>
             <span className="map-panel__legend-heading">Map</span>
             {NATIONS.map((n) => (
               <span key={n.id} className={`map-panel__legend-item ${n.id === nation.id ? "is-you" : ""}`} title={n.name}>

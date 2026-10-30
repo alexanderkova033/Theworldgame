@@ -1,7 +1,6 @@
 // Everything drawn on the map itself (see MapLayers below), apart from the
 // panel that holds it, pans and zooms it (MapPanel).
-import { memo, type Dispatch, type SetStateAction } from "react";
-import type { ProjectType } from "../../domain/construction/types";
+import { memo, useMemo, type Dispatch, type SetStateAction } from "react";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import { getNation, getNationForProvince } from "../../domain/nations/nationRules";
 import type { Nation } from "../../domain/nations/types";
@@ -9,7 +8,7 @@ import { getParty } from "../../domain/parties/partyRules";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
 import type { PlacedBuilding } from "../../domain/provinces/types";
 import { RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
-import { BuildingIcon } from "./BuildingIcon";
+import { MapSettlements, type UnderwayBuilding } from "./MapSettlements";
 import { nationShapes } from "../nationFrontiers";
 import type { ProvinceStatus } from "../../application/getProvinceOverview";
 import { UnrestStageIcon } from "./CauseIcon";
@@ -24,6 +23,7 @@ import { Waterlines, CompassRose, NationName, CapitalBadge, StatusFlag } from ".
 interface MapLayersProps {
   nation: Nation;
   buildingsByProvince: Map<string, PlacedBuilding[]>;
+  underway: UnderwayBuilding[];
   roadCountByProvince: Map<string, number>;
   selectedProvinceId: string;
   hoveredProvinceId: string | null;
@@ -51,6 +51,7 @@ interface MapLayersProps {
 export const MapLayers = memo(function MapLayers({
   nation,
   buildingsByProvince,
+  underway,
   roadCountByProvince,
   selectedProvinceId,
   hoveredProvinceId,
@@ -78,6 +79,10 @@ export const MapLayers = memo(function MapLayers({
   // Everywhere a province of yours can be: the mainland and held islands.
   const places = [...provinces, ...islands.filter((island) => owns(island.id))];
   const capital = provinces.find((p) => p.id === nation.capitalProvinceId);
+  const ownedIds = useMemo(
+    () => [...MAP_GEOMETRY.provinces, ...MAP_GEOMETRY.islands].map((p) => p.id).filter((id) => (nation.provinceIds.includes(id) || settledIslandIds.includes(id)) && !lostProvinceIds.includes(id)),
+    [nation.provinceIds, settledIslandIds, lostProvinceIds],
+  );
   // Frontiers and nation names follow the land each nation holds today.
   const shapes = nationShapes(lostProvinceIds);
 
@@ -454,6 +459,8 @@ export const MapLayers = memo(function MapLayers({
         );
       })}
 
+    <MapSettlements provinceIds={ownedIds} buildingsByProvince={buildingsByProvince} underway={underway} provinceStatus={provinceStatus} />
+
     {/* Big, spaced-out nation names across each country (EU4-style),
         with the party currently ruling each neighbor underneath. They
         give way to the per-province labels once zoomed in. */}
@@ -507,19 +514,13 @@ export const MapLayers = memo(function MapLayers({
     {/* Province info bar, on its own translucent backing so it reads
         clearly whatever lies underneath. Zoomed out, it appears only on a
         province with something wrong, and shows only that — broken
-        buildings, short homes or work, unrest — so problems stand out
-        instead of drowning among every province's buildings. Zoom in, or
-        point at or pick a province, and it adds what the province
-        produces and what's built there (one icon + a count per type). */}
+        buildings, short homes or work, unrest. Zoom in, or point at or pick
+        a province, and it adds what the province produces. What's built
+        there stands on the land itself (MapSettlements). */}
     {places.map((province) => {
       if (!owns(province.id)) return null;
 
       const buildings = buildingsByProvince.get(province.id) ?? [];
-      const counts = new Map<ProjectType, number>();
-      for (const building of buildings) {
-        counts.set(building.type, (counts.get(building.type) ?? 0) + 1);
-      }
-      const buildingTypes = [...counts.keys()];
       // Held by rebels is not broken: the banner says why they stand idle.
       const brokenCount = buildings.filter((b) => !isWorking(b) && b.condition !== "seized" && b.condition !== "ruined").length;
       // Only what's wrong gets a flag: tight or overflowing homes, short
@@ -533,11 +534,10 @@ export const MapLayers = memo(function MapLayers({
 
       const showDetail = zoomedIn || province.id === selectedProvinceId || province.id === hoveredProvinceId;
       if (!showDetail && flags.length === 0 && brokenCount === 0) return null;
-      const shownTypes = showDetail ? buildingTypes : [];
       const lead = showDetail ? 1 : 0; // the resource slot, when shown
 
       const itemWidth = 20;
-      const itemCount = lead + shownTypes.length + (brokenCount > 0 ? 1 : 0) + flags.length; // resource + one slot per building type shown + a broken marker + the flags
+      const itemCount = lead + (brokenCount > 0 ? 1 : 0) + flags.length; // resource + a broken marker + the flags
       const barWidth = itemCount * itemWidth + 6;
       const barX = province.labelX - barWidth / 2;
       const barY = province.labelY + 10;
@@ -554,30 +554,16 @@ export const MapLayers = memo(function MapLayers({
               size={7}
             />
           )}
-          {shownTypes.map((type, index) => {
-            const cx = barX + itemWidth * (index + lead) + itemWidth / 2 + 3;
-            const count = counts.get(type)!;
-            return (
-              <g key={type}>
-                <BuildingIcon type={type} x={cx - 3} y={itemCenterY} size={5.5} />
-                {count > 1 && (
-                  <text x={cx + 7} y={itemCenterY + 3} className="map-panel__info-count">
-                    {count}
-                  </text>
-                )}
-              </g>
-            );
-          })}
           {brokenCount > 0 && (
             <g>
-              <circle cx={barX + itemWidth * (shownTypes.length + lead) + itemWidth / 2 + 3} cy={itemCenterY} r={7} className="map-panel__broken-marker" />
-              <text x={barX + itemWidth * (shownTypes.length + lead) + itemWidth / 2 + 3} y={itemCenterY + 3.5} className="map-panel__broken-count">
+              <circle cx={barX + itemWidth * lead + itemWidth / 2 + 3} cy={itemCenterY} r={7} className="map-panel__broken-marker" />
+              <text x={barX + itemWidth * lead + itemWidth / 2 + 3} y={itemCenterY + 3.5} className="map-panel__broken-count">
                 !
               </text>
             </g>
           )}
           {flags.map((flag, index) => {
-            const cx = barX + itemWidth * (lead + shownTypes.length + (brokenCount > 0 ? 1 : 0) + index) + itemWidth / 2 + 3;
+            const cx = barX + itemWidth * (lead + (brokenCount > 0 ? 1 : 0) + index) + itemWidth / 2 + 3;
             if (flag === "crisis") return <CrisisIcon key={flag} kind={status.crisis!} size={15} x={cx} y={itemCenterY} />;
             if (flag === "stage") {
               return (

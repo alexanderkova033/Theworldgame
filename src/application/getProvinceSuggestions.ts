@@ -12,6 +12,7 @@ import { buildHousing } from "./actions/buildHousing";
 import { planBuyAndBuild, type BuyAndBuildPlan } from "./actions/buyAndBuild";
 import { countBuildingsInProvince, getBuildCost, upfrontCost, type BuildAction } from "./actions/createBuildAction";
 import { canRepairBuilding } from "./actions/repairBuilding";
+import { describeWait, getDaysToSave } from "./getDaysToSave";
 import { getProvinceStatus, type ProvinceOverview } from "./getProvinceOverview";
 
 export const MAX_SUGGESTIONS = 3;
@@ -37,10 +38,13 @@ function buildSuggestion(state: GameState, provinceId: string, action: BuildActi
   const plan = planBuyAndBuild(state, action, provinceId);
   if (plan) return { ...base, how: "buy", plan };
   const moneyShort = Math.ceil(upfrontCost(cost) - state.stats.treasury);
+  const days = getDaysToSave(state, moneyShort);
   const blockedBy =
-    moneyShort > 0
-      ? `Needs ${moneyShort.toLocaleString()} more ${CURRENCY_SYMBOL} to start`
-      : `Needs more ${action.config.resourceType}, and the money to buy it`;
+    moneyShort <= 0
+      ? `Needs more ${action.config.resourceType}, and the money to buy it`
+      : days !== null
+      ? `Enough money ${describeWait(days)} (${moneyShort.toLocaleString()} ${CURRENCY_SYMBOL} short)`
+      : `Needs ${moneyShort.toLocaleString()} more ${CURRENCY_SYMBOL} to start`;
   return { ...base, how: "blocked", plan: null, blockedBy };
 }
 

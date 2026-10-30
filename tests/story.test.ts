@@ -126,7 +126,8 @@ describe("a nation's story", () => {
   it("sends its objectives to their own windows", () => {
     expect(objectiveDestination(PROLOGUE, 0)).toEqual({ panel: "politics" });
     expect(objectiveDestination(SEQUEL, 0)).toBeNull();
-    expect(objectiveDestination("first-winter", 0)).toEqual({ panel: "build", section: "buildings" });
+    // "Build a farm" opens Build at the farms, not wherever it was left.
+    expect(objectiveDestination("first-winter", 0)).toEqual({ panel: "build", section: "buildings", rail: "food" });
   });
 
   it("is not told in saves from before it, and saves keep a letter waiting", () => {

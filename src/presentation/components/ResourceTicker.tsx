@@ -42,6 +42,8 @@ interface ResourceTickerProps {
   monthLedger: Ledger; // the same, for the month so far
   forecasts: Forecasts; // when food and money run out if nothing changes
   onOpenReports: () => void;
+  onOpenMarket: () => void;
+  marketLocked?: string; // why the Market is still shut, if it is
 }
 
 const RESOURCE_LABELS: Record<ResourceType, string> = {
@@ -243,12 +245,16 @@ function Stores({
   shortages,
   pinned,
   onPin,
+  onOpenMarket,
+  marketLocked,
 }: {
   resources: ResourceBundle;
   production: DailyProductionSummary;
   shortages: MaterialShortage[];
   pinned: boolean;
   onPin: (pinned: boolean) => void;
+  onOpenMarket: () => void;
+  marketLocked?: string;
 }) {
   const { open, setOpen, ref } = usePopover();
 
@@ -317,7 +323,21 @@ function Stores({
             );
           })}
           <div className="resource-ticker__store-foot">
-            <p className="resource-ticker__store-hint">Buy and sell on the Money tab.</p>
+            {/* The way to the Market, or when it opens. */}
+            {marketLocked ? (
+              <p className="resource-ticker__store-hint">The Market {marketLocked.replace(/^Opens/, "opens")}.</p>
+            ) : (
+              <button
+                type="button"
+                className="resource-ticker__store-hint resource-ticker__store-go"
+                onClick={() => {
+                  setOpen(false);
+                  onOpenMarket();
+                }}
+              >
+                Buy and sell in the Market ›
+              </button>
+            )}
             <button
               type="button"
               className="resource-ticker__pin-button"
@@ -336,7 +356,7 @@ function Stores({
   );
 }
 
-export function ResourceTicker({ stats, electionThreshold, unrestStage, resources, production, heating, debt, shortages, lastDayLedger, monthLedger, forecasts, onOpenReports }: ResourceTickerProps) {
+export function ResourceTicker({ stats, electionThreshold, unrestStage, resources, production, heating, debt, shortages, lastDayLedger, monthLedger, forecasts, onOpenReports, onOpenMarket, marketLocked }: ResourceTickerProps) {
   const why = { lastDay: lastDayLedger, month: monthLedger, onOpenReports };
   const previewedPeople = useLetterPreview()?.population;
   const [storesPinned, setStoresPinned] = useState(readStoresPinned);
@@ -451,7 +471,7 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, resource
       ))}
 
       <div className="resource-ticker__divider" />
-      <Stores resources={resources} production={production} shortages={shortages} pinned={storesPinned} onPin={pinStores} />
+      <Stores resources={resources} production={production} shortages={shortages} pinned={storesPinned} onPin={pinStores} onOpenMarket={onOpenMarket} marketLocked={marketLocked} />
     </div>
   );
 }

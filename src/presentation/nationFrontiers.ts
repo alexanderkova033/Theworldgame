@@ -15,22 +15,22 @@ import { NATIONS } from "../domain/nations/nationData";
 import type { Nation } from "../domain/nations/types";
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
 
-type Point = [number, number];
-type Segment = [Point, Point];
+export type Point = [number, number];
+export type Segment = [Point, Point];
 
 const TOLERANCE = 1; // map units
 
-function parsePolygon(path: string): Point[] {
+export function parsePolygon(path: string): Point[] {
   return [...path.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)].map((m) => [Number(m[1]), Number(m[2])]);
 }
 
-function edges(points: Point[]): Segment[] {
+export function edges(points: Point[]): Segment[] {
   return points
     .map((a, i): Segment => [a, points[(i + 1) % points.length]])
     .filter(([a, b]) => a[0] !== b[0] || a[1] !== b[1]);
 }
 
-function distanceToSegment([px, py]: Point, [[ax, ay], [bx, by]]: Segment): number {
+export function distanceToSegment([px, py]: Point, [[ax, ay], [bx, by]]: Segment): number {
   const dx = bx - ax;
   const dy = by - ay;
   const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy || 1)));

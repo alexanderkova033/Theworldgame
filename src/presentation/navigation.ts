@@ -12,6 +12,7 @@
 import type { AdvisorAlert, AdvisorAlertKind } from "../application/getAdvisorOutlook";
 import { chapterFor, isFeatureOpen, isStoryChapter, type ChapterId, type Feature, type StoryChapterId, type SystemChapterId } from "../domain/chapters/chapterData";
 import type { GameState } from "../domain/country/types";
+import { BUILD_GROUPS, type BuildRail } from "./buildGroups";
 
 export type PanelKey = "build" | "money" | "politics" | "laws" | "research" | "reports" | "ventures" | "army";
 
@@ -29,10 +30,12 @@ export interface Sections {
 export interface Destination {
   panel: PanelKey;
   section?: Section;
+  rail?: BuildRail; // Build's Buildings only: the kind of building it opens on
 }
 
-// Opens a window, optionally straight at one of its sections.
-export type OpenPanel = (panel: PanelKey, section?: Section) => void;
+// Opens a window, optionally straight at one of its sections (and, for
+// Build, at one kind of building).
+export type OpenPanel = (panel: PanelKey, section?: Section, rail?: BuildRail) => void;
 
 export const FIRST_SECTIONS: Sections = { build: "buildings", money: "budget", politics: "support" };
 
@@ -64,6 +67,10 @@ export function reachable(state: GameState, to: Destination): Destination {
 export const MARKET: Destination = { panel: "money", section: "market" };
 export const BUDGET: Destination = { panel: "money", section: "budget" };
 export const BUILDINGS: Destination = { panel: "build", section: "buildings" };
+export const HOMES: Destination = { ...BUILDINGS, rail: "people" };
+export const FARMS: Destination = { ...BUILDINGS, rail: "food" };
+export const HARBOURS: Destination = { ...BUILDINGS, rail: "sea" };
+export const REPAIRS: Destination = { ...BUILDINGS, rail: "repairs" };
 export const PEOPLE: Destination = { panel: "build", section: "people" };
 export const SUPPORT: Destination = { panel: "politics", section: "support" };
 export const UNREST: Destination = { panel: "politics", section: "unrest" };
@@ -73,12 +80,12 @@ const ALERTS: Record<AdvisorAlertKind, Destination> = {
   unrest: UNREST,
   provinceUnrest: PEOPLE,
   coal: MARKET,
-  food: BUILDINGS,
+  food: FARMS,
   money: BUDGET,
   farmWorkers: PEOPLE,
   factoryWorkers: PEOPLE,
   homeless: PEOPLE,
-  broken: BUILDINGS,
+  broken: REPAIRS,
   debt: BUDGET,
   election: SUPPORT,
   stalled: BUILDINGS,
@@ -108,18 +115,20 @@ const SECTION_NAMES: Record<Section, string> = {
   neighbours: "Neighbours",
 };
 
-// A destination as the player sees it: the window, and the tab inside it.
-export function destinationName({ panel, section }: Destination): string {
-  return section ? `${WINDOW_NAMES[panel]} › ${SECTION_NAMES[section]}` : WINDOW_NAMES[panel];
+// A destination as the player sees it: the window, the tab inside it, and
+// the kind of building.
+export function destinationName({ panel, section, rail }: Destination): string {
+  const railName = rail === "repairs" ? "Repairs" : BUILD_GROUPS.find((g) => g.key === rail)?.title;
+  return [WINDOW_NAMES[panel], section && SECTION_NAMES[section], railName].filter(Boolean).join(" › ");
 }
 
 // Where each chapter's objectives are done, in the order the chapter
 // lists them. null: there is nowhere to go, it comes with time.
 export const OBJECTIVE_DESTINATIONS: Record<SystemChapterId, Array<Destination | null>> = {
-  "first-winter": [BUILDINGS, BUILDINGS, null],
+  "first-winter": [FARMS, HOMES, null],
   exchange: [MARKET],
   assembly: [{ panel: "laws" }],
-  society: [{ panel: "research" }, BUILDINGS],
+  society: [{ panel: "research" }, HOMES],
   streets: [UNREST],
   voters: [{ panel: "politics", section: "voters" }],
   envoys: [{ panel: "politics", section: "neighbours" }],
@@ -129,10 +138,10 @@ export const OBJECTIVE_DESTINATIONS: Record<SystemChapterId, Array<Destination |
 
 // The same for a nation's story chapters, filled campaign by campaign.
 export const STORY_DESTINATIONS: Record<StoryChapterId, Array<Destination | null>> = {
-  "astravia:promise": [null, BUILDINGS],
+  "astravia:promise": [null, FARMS],
   "astravia:flood": [null],
   "astravia:lean-year": [null, MARKET],
-  "astravia:coast": [null, BUILDINGS],
+  "astravia:coast": [null, HARBOURS],
   "astravia:island": [{ panel: "ventures" }, { panel: "ventures" }],
   "astravia:new-farmers": [null],
   "astravia:thornwick-rises": [null],

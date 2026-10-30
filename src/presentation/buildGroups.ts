@@ -4,6 +4,9 @@ import type { ProjectType } from "../domain/construction/types";
 
 export type BuildGroup = "people" | "food" | "industry" | "sea";
 
+// One stop on the rail: a kind of building, or Repairs below them.
+export type BuildRail = BuildGroup | "repairs";
+
 export const BUILD_GROUPS: Array<{ key: BuildGroup; title: string; picture: ProjectType }> = [
   { key: "people", title: "Homes & learning", picture: "housing" },
   { key: "food", title: "Food", picture: "farm" },

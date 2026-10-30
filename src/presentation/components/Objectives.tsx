@@ -80,7 +80,7 @@ function ChapterCard({ state, id, onOpenPanel }: { state: GameState; id: Chapter
           return (
             <li key={objective} className={`objectives__step ${met[i] ? "is-done" : ""} ${current ? "is-current" : ""}`}>
               {to ? (
-                <button type="button" className="objectives__go" title={`Open ${destinationName(to)}`} onClick={() => onOpenPanel(to.panel, to.section)}>
+                <button type="button" className="objectives__go" title={`Open ${destinationName(to)}`} onClick={() => onOpenPanel(to.panel, to.section, to.rail)}>
                   {mark}
                   <span className="objectives__text">{objective}</span>
                   {current && <span className="objectives__go-label">Go ›</span>}
@@ -146,14 +146,30 @@ export function Objectives({ state, onOpenPanel }: { state: GameState; onOpenPan
           ▴
         </span>
       </button>
-      {/* Another chapter under way: one line, its name and its pips. */}
-      {others.map((id) => (
-        <div key={id} className="objectives__also">
-          <span className="objectives__also-label">Also</span>
-          <span className="objectives__also-title">{getChapter(id).title}</span>
-          <Pips met={objectivesMet(state, id)} />
-        </div>
-      ))}
+      {/* Another chapter under way: one line, the step it still asks (its
+          title in the tip) and its pips, opening where that step is done. */}
+      {others.map((id) => {
+        const met = objectivesMet(state, id);
+        const next = met.indexOf(false);
+        const to = next >= 0 ? objectiveDestination(id, next) : null;
+        const line = (
+          <>
+            <span className="objectives__also-label">Also</span>
+            <span className="objectives__also-title">{next >= 0 ? getChapter(id).objectives[next] : getChapter(id).title}</span>
+            <Pips met={met} />
+          </>
+        );
+        return to ? (
+          <button key={id} type="button" className="objectives__also" title={`${getChapter(id).title}. Open ${destinationName(to)}`} onClick={() => onOpenPanel(to.panel, to.section, to.rail)}>
+            {line}
+            <span className="objectives__also-go" aria-hidden="true">›</span>
+          </button>
+        ) : (
+          <div key={id} className="objectives__also" title={getChapter(id).title}>
+            {line}
+          </div>
+        );
+      })}
       {burdens.length > 0 && (
         <div className="objectives__chapter">
           <h3 className="objectives__title">Burdens of office</h3>

@@ -95,7 +95,7 @@ export function ReportsPanel({ reports }: ReportsPanelProps) {
         <h2>Monthly Report</h2>
         <div className="reports-panel__empty empty-plate">
           <span aria-hidden="true">
-            <NavIcon type="reports" size={32} />
+            <NavIcon type="reports" size={20} />
           </span>
           <p>Nothing yet. The first report lands on the 1st of next month.</p>
         </div>

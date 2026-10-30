@@ -2,7 +2,7 @@
 // shared by the toasts and the event log so both offer the same "Go"
 // button. Read from the topic the simulation tags each event with.
 import type { EventTopic, GameEvent } from "../domain/country/types";
-import { BUDGET, BUILDINGS, MARKET, PEOPLE, SUPPORT, UNREST, type Destination } from "./navigation";
+import { BUDGET, BUILDINGS, MARKET, PEOPLE, REPAIRS, SUPPORT, UNREST, type Destination } from "./navigation";
 
 export interface EventAction extends Destination {
   label: string;
@@ -42,7 +42,7 @@ const KINDS: Record<Exclude<EventTopic, "paused">, Omit<EventKind, "kind">> = {
   decision: { plural: "decisions", foldable: false, toast: "never", action: POLITICS },
   built: { plural: "buildings finished", foldable: true, toast: "always", action: BUILD },
   stall: { plural: "construction stalls", foldable: true, toast: "always", action: BUILD },
-  breakdown: { plural: "breakdowns", foldable: true, toast: "always", action: { ...BUILD, label: "Repair" } },
+  breakdown: { plural: "breakdowns", foldable: true, toast: "always", action: { label: "Repair", ...REPAIRS } },
   repaired: { plural: "repairs finished", foldable: true, toast: "never" },
   venture: { plural: "ventures", foldable: false, toast: "always", action: { label: "Ventures", panel: "ventures" } },
   season: { plural: "seasons", foldable: false, toast: "never" },

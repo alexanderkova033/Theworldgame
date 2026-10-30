@@ -15,7 +15,7 @@ const loaders = {
   army: () => import("./components/ArmyPanel"),
   ventures: () => import("./components/ExpeditionPanel"),
   end: () => import("./components/GameEndScreen"),
-  party: () => import("./components/PartySelectScreen"),
+  setup: () => import("./components/SetupScreen"),
 };
 
 export const PoliticsPanel = lazy(() => loaders.politics().then((m) => ({ default: m.PoliticsPanel })));
@@ -28,7 +28,7 @@ export const ResearchPanel = lazy(() => loaders.research().then((m) => ({ defaul
 export const ArmyPanel = lazy(() => loaders.army().then((m) => ({ default: m.ArmyPanel })));
 export const ExpeditionPanel = lazy(() => loaders.ventures().then((m) => ({ default: m.ExpeditionPanel })));
 export const GameEndScreen = lazy(() => loaders.end().then((m) => ({ default: m.GameEndScreen })));
-export const PartySelectScreen = lazy(() => loaders.party().then((m) => ({ default: m.PartySelectScreen })));
+export const SetupScreen = lazy(() => loaders.setup().then((m) => ({ default: m.SetupScreen })));
 
 let preloaded = false;
 

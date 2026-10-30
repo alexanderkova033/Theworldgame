@@ -1,6 +1,7 @@
 // What a province's card offers to build or mend, and in what order.
 import { describe, expect, it } from "vitest";
 import { takeLoan } from "../src/application/actions/loanActions";
+import { describeWait, getDaysToSave } from "../src/application/getDaysToSave";
 import { getProvinceOverview } from "../src/application/getProvinceOverview";
 import { getProvinceSuggestions, MAX_SUGGESTIONS } from "../src/application/getProvinceSuggestions";
 import { getTroubledProvinces } from "../src/application/getTroubledProvinces";
@@ -36,7 +37,18 @@ describe("province suggestions", () => {
     const broke = { ...state, stats: { ...state.stats, treasury: 0 } };
     const [first] = getProvinceSuggestions(broke, { ...calm, homeless: calm.population * 0.2 });
     expect(first.kind === "build" && first.how).toBe("blocked");
-    expect(first.kind === "build" && first.blockedBy).toMatch(/more Cr to start/);
+    // Short of money while the treasury rises: when there will be enough.
+    expect(first.kind === "build" && first.blockedBy).toMatch(/^Enough money (tomorrow|in \d+ days) \(\d[\d,]* Cr short\)$/);
+  });
+
+  it("counts the days to save a shortfall, or none while the treasury falls", () => {
+    expect(getDaysToSave(state, 210, 32)).toBe(7);
+    expect(getDaysToSave(state, 10, 32)).toBe(1);
+    expect(getDaysToSave(state, 0, 32)).toBe(0);
+    expect(getDaysToSave(state, 210, 0)).toBeNull();
+    expect(getDaysToSave(state, 210, -5)).toBeNull();
+    expect(describeWait(1)).toBe("tomorrow");
+    expect(describeWait(7)).toBe("in 7 days");
   });
 });
 

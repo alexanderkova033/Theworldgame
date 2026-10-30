@@ -58,6 +58,7 @@ export interface ProvinceOverview {
 // tips from one state to another, so the map isn't redrawn every day.
 export interface ProvinceStatus {
   homes: "ok" | "full" | "over";
+  homelessLevel: 0 | 1 | 2 | 3; // how many are out of doors, in coarse steps, for the people drawn on the map
   jobs: "ok" | "short" | "jobless";
   stage: UnrestStage;
   risen: boolean;
@@ -131,5 +132,7 @@ export function getProvinceStatus(o: ProvinceOverview): ProvinceStatus {
       : o.jobs > 0 && o.openJobs / o.jobs >= PROVINCE_FLAG_SHORT_SHARE
         ? "short"
         : "ok";
-  return { homes, jobs, stage: o.unrestStage, risen: o.uprising !== null, crisis: o.crisis?.kind ?? null };
+  const homelessShare = o.population > 0 ? o.homeless / o.population : 0;
+  const homelessLevel = homes !== "over" ? 0 : homelessShare >= 0.15 ? 3 : homelessShare >= 0.05 ? 2 : 1;
+  return { homes, homelessLevel, jobs, stage: o.unrestStage, risen: o.uprising !== null, crisis: o.crisis?.kind ?? null };
 }

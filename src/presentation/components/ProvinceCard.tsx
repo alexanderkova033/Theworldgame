@@ -249,7 +249,13 @@ export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }
         </Fact>
 
         <Fact icon={<JobsIcon size={16} />} label="Jobs" alert={status.jobs === "jobless"}>
-          <strong>{formatAmount(province.jobs - province.openJobs)}</strong> of {formatAmount(province.jobs)} jobs filled
+          {province.jobs >= 1 ? (
+            <>
+              <strong>{formatAmount(province.jobs - province.openJobs)}</strong> of {formatAmount(province.jobs)} jobs filled
+            </>
+          ) : (
+            "No jobs here"
+          )}
           {province.unemployed >= 1 && <span className="province-card__bad"> · {formatAmount(province.unemployed)} jobless</span>}
           {province.commutersOut >= 1 && <> · {formatAmount(province.commutersOut)} work elsewhere</>}
           {/* Where they work: farms and food first, as jobs are filled. */}

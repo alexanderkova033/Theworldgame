@@ -1,0 +1,453 @@
+/* Starting a game, on one screen (see SetupScreen.tsx): the chart on the
+   left, where a nation is chosen by clicking it; everything else on a green
+   morocco panel beside it, with the one button at its foot. */
+.setup {
+  display: flex;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--bar);
+}
+
+/* --- The chart --- */
+.setup__map {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  background: repeating-linear-gradient(0deg, rgba(76, 106, 120, 0.16) 0 1px, transparent 1px 6px), #b8bfa5;
+  border-right: 3px double var(--gilt);
+}
+
+.setup__chart {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.setup__island {
+  fill: #efe3c4;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.setup__province {
+  fill: color-mix(in srgb, var(--nation-wash) 62%, #efe3c4);
+  stroke: #5c4733;
+  stroke-width: 1.5;
+  stroke-dasharray: 2 4;
+  stroke-linecap: round;
+  cursor: pointer;
+  transition: fill 0.15s ease;
+}
+
+.setup__province.is-chosen {
+  fill: color-mix(in srgb, var(--nation-color) 82%, #d2bb8e);
+}
+
+@media (hover: hover) {
+  .setup__province:hover {
+    fill: var(--nation-wash);
+  }
+
+  .setup__province.is-chosen:hover {
+    fill: color-mix(in srgb, var(--nation-color) 82%, #d2bb8e);
+  }
+}
+
+.setup__coast {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* The chosen nation's frontier: gilt on a dark line, so it reads on any land. */
+.setup__frontier,
+.setup__frontier-under {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.setup__frontier-under {
+  stroke: var(--ink);
+  stroke-width: 7;
+}
+
+.setup__frontier {
+  stroke: var(--gilt-bright);
+  stroke-width: 3.5;
+}
+
+.setup__label {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  fill: var(--ink);
+  opacity: 0.65;
+  paint-order: stroke;
+  stroke: rgba(239, 227, 196, 0.7);
+  stroke-width: 3px;
+  pointer-events: none;
+}
+
+.setup__label.is-chosen {
+  font-size: 32px;
+  font-weight: 800;
+  opacity: 1;
+}
+
+.setup__map button.setup__back {
+  position: absolute;
+  top: 1.25rem;
+  left: 1.25rem;
+}
+
+.setup__slot {
+  position: absolute;
+  left: 1.25rem;
+  bottom: 1.1rem;
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--ink);
+}
+
+/* --- The panel --- */
+.setup__panel {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 34rem;
+  background: var(--damask) 0 0/48px 64px repeat, var(--bar);
+  color: #f4ead0;
+}
+
+.setup__choices {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  padding: 1.5rem 1.75rem 1.25rem;
+}
+
+.setup__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.setup__label-line {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--gilt-bright);
+  text-shadow: none;
+}
+
+.setup__label-line::after {
+  display: none;
+}
+
+.setup__note {
+  margin: 0;
+  font-size: 0.9rem;
+  font-style: italic;
+  line-height: 1.4;
+  color: #e6d6ae;
+}
+
+/* The nation: its name large, and a wax seal for each to choose between. */
+.setup__nation-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.setup__nation-name {
+  margin: 0;
+  padding: 0;
+  font-size: 2.3rem;
+  line-height: 1.1;
+  text-align: left;
+  color: var(--gilt-bright);
+  text-shadow: none;
+}
+
+.setup__nation-name::after {
+  display: none;
+}
+
+.setup__seals {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.setup button.setup__seal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  min-height: 0;
+  padding: 0;
+  border: 2px solid var(--bar-rule);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.28), transparent 55%),
+    radial-gradient(circle at 70% 76%, rgba(43, 29, 18, 0.3), transparent 60%),
+    var(--nation-color);
+  box-shadow: none;
+  filter: saturate(0.6) brightness(0.8);
+  transition: filter 0.15s ease;
+}
+
+.setup button.setup__seal.is-active {
+  border-color: var(--gilt-bright);
+  box-shadow: 0 0 0 2px var(--bar), 0 0 0 4px var(--gilt-bright);
+  filter: none;
+}
+
+@media (hover: hover) {
+  .setup button.setup__seal:hover:not(:disabled) {
+    background:
+      radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.28), transparent 55%),
+      radial-gradient(circle at 70% 76%, rgba(43, 29, 18, 0.3), transparent 60%),
+      var(--nation-color);
+    border-color: var(--gilt-bright);
+    filter: none;
+  }
+}
+
+.setup__seal-hole {
+  fill: var(--nation-color);
+}
+
+.setup__blurb {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.setup__bonus {
+  align-self: flex-start;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid rgba(169, 207, 134, 0.6);
+  border-radius: 3px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #b9db98;
+}
+
+/* Everything chosen here: a dark tile, lit in gilt when it's the one. */
+.setup button.setup__party,
+.setup button.mode-tile,
+.setup button.rank-badge {
+  min-height: 0;
+  background: var(--bar-deep);
+  border: 1px solid var(--bar-rule);
+  border-radius: 4px;
+  color: #e6d6ae;
+  font-family: var(--font-body);
+  box-shadow: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.setup button.setup__party.is-active,
+.setup button.mode-tile.is-active,
+.setup button.rank-badge.is-active {
+  background: var(--bar-raised);
+  border-color: var(--gilt-bright);
+  box-shadow: inset 0 -3px 0 var(--gilt-bright);
+  color: #f4ead0;
+}
+
+@media (hover: hover) {
+  .setup button.setup__party:hover:not(:disabled),
+  .setup button.mode-tile:hover:not(:disabled),
+  .setup button.rank-badge:hover:not(:disabled) {
+    background: var(--bar-raised);
+    border-color: var(--gilt-bright);
+    color: #f4ead0;
+  }
+}
+
+/* The party: its seal, its name, and what governing as it changes. */
+.setup button.setup__party {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 0.65rem 0.8rem;
+  text-align: left;
+}
+
+.setup__party-seal {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--gilt);
+  border-radius: 50%;
+  background: var(--party-color);
+}
+
+.setup__party-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.setup__party-name {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.setup__party.is-active .setup__party-name {
+  color: var(--gilt-bright);
+}
+
+.setup__perk {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.setup__perk.is-gain {
+  color: #b9db98;
+}
+
+.setup__perk.is-loss {
+  color: #efa998;
+}
+
+.setup__mark {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+}
+
+/* How it ends: two tiles, each with its emblem. */
+.setup__modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.setup button.mode-tile,
+.setup button.rank-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.45rem 0.4rem 0.5rem;
+}
+
+.mode-tile__emblem,
+.rank-badge__shield {
+  display: block;
+}
+
+.mode-tile__name,
+.rank-badge__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.mode-tile__name {
+  font-size: 1.05rem;
+}
+
+.mode-tile.is-active .mode-tile__name,
+.rank-badge.is-active .rank-badge__name {
+  color: var(--gilt-bright);
+}
+
+/* How hard: four rank badges, a chevron more each step. */
+.setup__ranks {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.rank-badge--easy { --rank-color: #4f7a3a; }
+.rank-badge--normal { --rank-color: #8a6a2a; }
+.rank-badge--hard { --rank-color: #7b2121; }
+.rank-badge--ruthless { --rank-color: #3d4a52; }
+
+.rank-badge__name {
+  font-size: 1rem;
+}
+
+/* The one way in, always on screen however far the choices scroll. */
+.setup__foot {
+  flex-shrink: 0;
+  padding: 0.9rem 1.75rem 1.25rem;
+  border-top: 3px double rgba(226, 194, 122, 0.45);
+}
+
+.setup button.setup__start {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--oxblood);
+  border: 1px solid var(--gilt-bright);
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px var(--oxblood-dark);
+  color: #f4ead0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+@media (hover: hover) {
+  .setup button.setup__start:hover:not(:disabled) {
+    background: #8e2828;
+    border-color: var(--gilt-bright);
+    color: #fff6dc;
+  }
+}
+
+/* Narrow: the chart on top, the panel under it. */
+@media (max-width: 900px) {
+  .setup {
+    flex-direction: column;
+  }
+
+  .setup__map {
+    flex: 0 0 34vh;
+    border-right: none;
+    border-bottom: 3px double var(--gilt);
+  }
+
+  .setup__panel {
+    flex: 1;
+    width: auto;
+    min-height: 0;
+  }
+}
+
+/* Touch: the page is drawn smaller on a tablet (index.html), so the
+   smallest labels step up to stay readable. */
+@media (pointer: coarse) {
+  .setup__mark {
+    font-size: 0.8125rem;
+  }
+}

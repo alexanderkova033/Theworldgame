@@ -1,0 +1,134 @@
+/* The buildings and people drawn on the land (see MapSettlements.tsx). */
+
+/* A farm's field follows the season (MapPanel sets data-season). */
+.map-settle__field {
+  fill: #cdb765;
+  stroke: #5c4a24;
+  stroke-width: 0.7;
+  transition: fill 2s ease;
+}
+
+.map-panel[data-season="spring"] .map-settle__field { fill: #a9c56f; }
+.map-panel[data-season="summer"] .map-settle__field { fill: #d9bb54; }
+.map-panel[data-season="autumn"] .map-settle__field { fill: #c98a38; }
+.map-panel[data-season="winter"] .map-settle__field { fill: #c4c3ad; }
+
+.map-settle__furrows {
+  fill: none;
+  stroke: #5c4a24;
+  stroke-width: 0.6;
+  opacity: 0.55;
+}
+
+/* Broken, seized or ruined: standing, but faded. */
+.map-settle__building.is-idle {
+  opacity: 0.5;
+}
+
+/* Going up: a pale picture on a patch of cleared ground. */
+.map-settle__building.is-underway {
+  opacity: 0.55;
+}
+
+.map-settle__ground {
+  fill: #8a7350;
+  stroke: var(--ink);
+  stroke-width: 0.6;
+  stroke-dasharray: 2 1.5;
+}
+
+/* --- People --- */
+.map-settle__head {
+  fill: #e8cfa6;
+  stroke: var(--ink);
+  stroke-width: 0.6;
+}
+
+.map-settle__body {
+  stroke: var(--ink);
+  stroke-width: 0.6;
+}
+
+.map-settle__body.is-homeless { fill: #7c7264; }
+.map-settle__body.is-striker { fill: #2f4a66; }
+.map-settle__body.is-rioter { fill: #4a2118; }
+
+.map-settle__tent {
+  fill: #cdbd98;
+  stroke: var(--ink);
+  stroke-width: 0.8;
+  stroke-linejoin: round;
+}
+
+.map-settle__tent-seam {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 0.8;
+}
+
+.map-settle__pole {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 0.9;
+  stroke-linecap: round;
+}
+
+.map-settle__board {
+  fill: #f1e4c3;
+  stroke: var(--oxblood);
+  stroke-width: 0.9;
+}
+
+.map-settle__board-mark {
+  fill: none;
+  stroke: var(--oxblood);
+  stroke-width: 1.1;
+}
+
+.map-settle__placard {
+  transform-box: fill-box;
+  transform-origin: 40% 100%;
+  animation: map-settle-sway 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes map-settle-sway {
+  from { transform: rotate(-7deg); }
+  to { transform: rotate(7deg); }
+}
+
+.map-settle__ash {
+  fill: #3a2a1c;
+}
+
+.map-settle__flame {
+  fill: #d9622b;
+  stroke: #7b2121;
+  stroke-width: 0.7;
+}
+
+.map-settle__flame-core {
+  fill: #f0c869;
+}
+
+.map-settle__torch {
+  fill: #e8843a;
+  stroke: #7b2121;
+  stroke-width: 0.5;
+  animation: map-settle-flicker 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes map-settle-flicker {
+  from { opacity: 0.65; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-settle__placard,
+  .map-settle__torch {
+    animation: none;
+  }
+
+  .map-settle__field {
+    transition: none;
+  }
+}

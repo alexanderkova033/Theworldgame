@@ -554,17 +554,17 @@ label {
   }
 }
 
-/* An empty list (nothing being built, no report yet): a framed panel of
-   strapwork with its few words on a paper label, so "nothing" still looks
-   like a place things will go. */
+/* An empty list (no report yet, nothing to repair): one framed line of
+   strapwork, its icon and its few words, so "nothing" still looks like a
+   place things will go without taking the room the things would. */
 .empty-plate {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  min-height: 7rem;
-  padding: 1rem;
+  gap: 0.6rem;
+  min-height: 0;
+  padding: 0.55rem 0.9rem;
   border: 1px solid var(--rule);
   outline: 1px solid var(--rule);
   outline-offset: -5px;

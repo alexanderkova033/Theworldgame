@@ -77,7 +77,7 @@ function groupEvents(events: GameEvent[]): MonthGroup[] {
 function GoButton({ action, onOpenPanel }: { action?: EventAction; onOpenPanel: OpenPanel }) {
   if (!action) return null;
   return (
-    <button type="button" className="event-log__go" onClick={() => onOpenPanel(action.panel, action.section)}>
+    <button type="button" className="event-log__go" onClick={() => onOpenPanel(action.panel, action.section, action.rail)}>
       {action.label}
     </button>
   );

@@ -54,7 +54,7 @@ function Line({ line, focus, onFocus, onOpenPanel }: { line: BudgetLine; focus: 
         <span className="budget-sheet__detail">
           {line.detail}
           {line.go && (
-            <button type="button" className="budget-sheet__go" onClick={() => onOpenPanel(line.go!.panel, line.go!.section)}>
+            <button type="button" className="budget-sheet__go" onClick={() => onOpenPanel(line.go!.panel, line.go!.section, line.go!.rail)}>
               {line.go.label} ›
             </button>
           )}

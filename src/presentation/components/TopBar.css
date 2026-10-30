@@ -609,3 +609,21 @@
     height: 2.5rem;
   }
 }
+
+/* A window still shut: its own picture as a dashed outline, in an empty
+   frame, so the bar shows what's to come without a row of padlocks. Named,
+   and when it opens, in the tip. */
+.top-bar .top-bar__tab.is-locked,
+.top-bar .top-bar__tab.is-locked:disabled {
+  background: transparent;
+  border: 1px dashed rgba(226, 194, 122, 0.5);
+  border-bottom: none;
+  opacity: 1;
+}
+
+.top-bar__tab.is-locked svg * {
+  fill: none;
+  stroke: var(--gilt-bright);
+  stroke-width: 0.8;
+  opacity: 0.85;
+}

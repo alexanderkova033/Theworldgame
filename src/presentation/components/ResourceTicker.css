@@ -364,3 +364,22 @@ button.resource-ticker__pin-button {
     transform: translateY(-3px);
   }
 }
+
+/* The Stores menu's way to the Market: a plain line that reads as a link. */
+button.resource-ticker__store-go {
+  min-height: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  color: var(--gilt-bright);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.resource-ticker__store-go:hover {
+  text-decoration: underline;
+}

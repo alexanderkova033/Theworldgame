@@ -126,7 +126,7 @@ export interface MonthlyReport {
 export interface GameState {
   difficulty: Difficulty; // chosen before the game starts; fixed after — see domain/difficulty
   nationId: string; // chosen at the start screen; fixed for the rest of the game
-  partyId: string; // chosen right after the nation, on the same screen flow — see PartySelectScreen
+  partyId: string; // chosen with the nation, on the same screen — see SetupScreen
   electionsWon: number; // consecutive wins by construction: a single loss ends the game (see simulateDay.ts)
   date: GameDate;
   isPaused: boolean;

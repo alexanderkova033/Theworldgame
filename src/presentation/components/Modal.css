@@ -205,6 +205,28 @@
   grid-template-columns: 1fr;
 }
 
+/* A window moved by its title band (Modal.tsx): it sits beside the map,
+   not over it, so no wash and the map takes clicks around it. */
+.modal__header.is-movable {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.modal__header.is-movable:active {
+  cursor: grabbing;
+}
+
+.modal-overlay.modal-overlay--moved {
+  background: none;
+  pointer-events: none;
+}
+
+.modal-overlay--moved .modal {
+  pointer-events: auto;
+  box-shadow: 0 10px 28px rgba(12, 22, 16, 0.4);
+}
+
 @keyframes modal-slide {
   from {
     opacity: 0;

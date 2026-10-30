@@ -3,7 +3,7 @@
 
 /* Framed as an empty plate (index.css). */
 .reports-panel__empty {
-  min-height: 10rem;
+  min-height: 0;
 }
 
 /* --- Which month ---------------------------------------------------------- */

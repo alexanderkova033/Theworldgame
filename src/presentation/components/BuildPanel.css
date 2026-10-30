@@ -103,5 +103,5 @@
 }
 
 .production__nothing {
-  min-height: 9rem;
+  min-height: 0;
 }

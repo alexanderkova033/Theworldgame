@@ -3,13 +3,13 @@
 // UI panels. It never computes simulation values itself.
 import "./App.css";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArmyPanel, BuildPanel, EventLog, ExpeditionPanel, GameEndScreen, LawsPanel, MoneyPanel, PartySelectScreen, PoliticsPanel, preloadWindows, ReportsPanel, ResearchPanel } from "./presentation/lazyWindows";
+import { ArmyPanel, BuildPanel, EventLog, ExpeditionPanel, GameEndScreen, LawsPanel, MoneyPanel, PoliticsPanel, preloadWindows, ReportsPanel, ResearchPanel, SetupScreen } from "./presentation/lazyWindows";
 import { emptyLedger, mergeLedgers } from "./domain/ledger/ledgerRules";
 import { getNation } from "./domain/nations/nationRules";
 import { NATIONS } from "./domain/nations/nationData";
 import type { GameSpeed } from "./domain/country/types";
 import { getElectionThreshold } from "./domain/parties/electionRules";
-import { getPartiesForNation, getParty } from "./domain/parties/partyRules";
+import { getParty } from "./domain/parties/partyRules";
 import { answerCrisis, answerDemand, dismissDecision, resolveDecision } from "./application/actions";
 import { UltimatumLetter } from "./presentation/components/UltimatumLetter";
 import { payTribute, standFirm } from "./application/actions/ultimatumActions";
@@ -37,12 +37,14 @@ import { NavIcon } from "./presentation/components/NavIcon";
 import { StatIcon } from "./presentation/components/StatIcon";
 import { ProvinceCard } from "./presentation/components/ProvinceCard";
 import { StartScreen } from "./presentation/components/StartScreen";
+import type { UnderwayBuilding } from "./presentation/components/MapSettlements";
 import { Toasts } from "./presentation/components/Toasts";
 import { SeasonTurn } from "./presentation/components/SeasonTurn";
 import { useSeasonTurn } from "./presentation/hooks/useSeasonTurn";
 import { getSeason } from "./domain/country/calendar";
 import { TopBar } from "./presentation/components/TopBar";
 import { FIRST_SECTIONS, lockedReason, politicsSectionFor, reachable, type PanelKey, type Section, type Sections } from "./presentation/navigation";
+import type { BuildRail } from "./presentation/buildGroups";
 import { isLetterWaiting, useGameClock } from "./presentation/hooks/useGameClock";
 import { isFeatureOpen } from "./domain/chapters/chapterData";
 import { readBriefing } from "./application/chapters";
@@ -63,13 +65,9 @@ function App() {
 
   // Which save slot a new game will be written into — chosen on the Start
   // Screen before nation/party, so overwriting an occupied slot is always an
-  // explicit, labeled choice (see StartScreen's SaveSlotCard).
+  // explicit, labeled choice (see StartScreen's SaveSlotCard). The game itself
+  // doesn't exist until SetupScreen's "Take office".
   const [pendingSlotId, setPendingSlotId] = useState<number | null>(null);
-
-  // Nation picked on the Start Screen but not yet confirmed with a party —
-  // the game doesn't actually start (no GameState exists) until a party is
-  // chosen too, on the follow-up PartySelectScreen.
-  const [pendingNationId, setPendingNationId] = useState<string | null>(null);
 
   // Which province new construction goes into. This is a UI selection, not
   // simulation truth — it never touches GameState directly.
@@ -146,6 +144,8 @@ function App() {
   // directly when an advisor chip or toast points somewhere.
   const [sections, setSections] = useState<Sections>(FIRST_SECTIONS);
   const setSection = useCallback(<K extends keyof Sections>(panel: K, section: Sections[K]) => setSections((s) => ({ ...s, [panel]: section })), []);
+  // The kind of building Build's Buildings shows, kept the same way.
+  const [buildRail, setBuildRail] = useState<BuildRail>("people");
   useEffect(() => {
     buildOpen.current = openModal === "build" && sections.build === "buildings";
   }, [openModal, sections.build]);
@@ -182,6 +182,17 @@ function App() {
   // empty, so derive the id list from a plain string key instead.
   const expeditionKey = state?.expeditions.map((e) => e.islandId).join(",") ?? "";
   const expeditionIslandIds = useMemo(() => (expeditionKey ? expeditionKey.split(",") : []), [expeditionKey]);
+  // What's being built and where, kept the same from day to day (only the
+  // days left change) so the memoized map isn't redrawn for it.
+  const underwayKey = state?.projects.map((p) => `${p.type}:${p.provinceId}`).join(",") ?? "";
+  const underway = useMemo(
+    () =>
+      (underwayKey ? underwayKey.split(",") : []).map((entry) => {
+        const [type, provinceId] = entry.split(":");
+        return { type, provinceId } as UnderwayBuilding;
+      }),
+    [underwayKey],
+  );
 
   // Same trick for the neighbors' ruling parties (shown on the map), which
   // only change on the odd monthly government change.
@@ -195,13 +206,13 @@ function App() {
   // from it, through a string key so they only change identity when a
   // province actually tips (keeps the memoized map from redrawing daily).
   const provinceOverview = useMemo(() => (state ? getProvinceOverview(state) : []), [state]);
-  const provinceStatusKey = provinceOverview.map((o) => { const s = getProvinceStatus(o); return `${o.id}:${s.homes}:${s.jobs}:${s.stage}:${s.risen}:${s.crisis ?? ""}`; }).join(",");
+  const provinceStatusKey = provinceOverview.map((o) => { const s = getProvinceStatus(o); return `${o.id}:${s.homes}:${s.homelessLevel}:${s.jobs}:${s.stage}:${s.risen}:${s.crisis ?? ""}`; }).join(",");
   const provinceStatus = useMemo(
     () =>
       Object.fromEntries(
         (provinceStatusKey ? provinceStatusKey.split(",") : []).map((entry) => {
-          const [id, homes, jobs, stage, risen, crisis] = entry.split(":");
-          return [id, { homes, jobs, stage, risen: risen === "true", crisis: crisis || null } as ProvinceStatus];
+          const [id, homes, homelessLevel, jobs, stage, risen, crisis] = entry.split(":");
+          return [id, { homes, homelessLevel: Number(homelessLevel), jobs, stage, risen: risen === "true", crisis: crisis || null } as ProvinceStatus];
         }),
       ),
     [provinceStatusKey],
@@ -366,36 +377,23 @@ function App() {
     setOpenModal(null);
   }, [crisisKey]);
 
-  // No game yet: pick a save slot, then a nation, then a party, then the
+  // No game yet: pick a save slot, then the nation, party and terms, then the
   // game itself starts. Nation/party are permanent — there is no
   // "change nation/party" control anywhere in the game UI below.
   if (!state) {
-    if (!pendingNationId) {
-      return (
-        <StartScreen
-          nations={NATIONS}
-          saveSlots={saveSlots}
-          pendingSlotId={pendingSlotId}
-          onSelectSlot={setPendingSlotId}
-          onBackToSlots={() => setPendingSlotId(null)}
-          onContinueSlot={continueGame}
-          onRenameSlot={renameSlot}
-          onDeleteSlot={deleteSlot}
-          onSelectNation={setPendingNationId}
-        />
-      );
+    if (pendingSlotId === null) {
+      return <StartScreen saveSlots={saveSlots} onSelectSlot={setPendingSlotId} onContinueSlot={continueGame} onRenameSlot={renameSlot} onDeleteSlot={deleteSlot} />;
     }
 
-    const pendingNation = getNation(pendingNationId);
     return (
       <Suspense fallback={null}>
-      <PartySelectScreen
-        nation={pendingNation}
-        parties={getPartiesForNation(pendingNationId)}
-        onBack={() => setPendingNationId(null)}
-        onSelectParty={(partyId, difficulty, mode) => {
-          startGame(pendingNationId, partyId, pendingSlotId ?? 0, difficulty, mode);
-          setSelectedProvinceId(pendingNation.capitalProvinceId);
+      <SetupScreen
+        nations={NATIONS}
+        slotName={saveSlots.find((s) => s.slotId === pendingSlotId)?.name ?? `Save ${pendingSlotId + 1}`}
+        onBack={() => setPendingSlotId(null)}
+        onStart={(nationId, partyId, difficulty, mode) => {
+          startGame(nationId, partyId, pendingSlotId, difficulty, mode);
+          setSelectedProvinceId(getNation(nationId).capitalProvinceId);
         }}
       />
       </Suspense>
@@ -414,7 +412,6 @@ function App() {
         reign={reignResult}
         onNewGame={() => {
           resetGame();
-          setPendingNationId(null);
           setPendingSlotId(null);
         }}
       />
@@ -430,14 +427,15 @@ function App() {
   // Non-null past the `!state` guard above — it's memoized from that same value.
   const dailyProduction = production!;
 
-  function openPanel(wanted: PanelKey, wantedSection?: Section) {
+  function openPanel(wanted: PanelKey, wantedSection?: Section, wantedRail?: BuildRail) {
     // A shut window or section opens somewhere open instead (see navigation.ts).
-    const { panel, section } = reachable(state!, { panel: wanted, section: wantedSection });
+    const { panel, section, rail } = reachable(state!, { panel: wanted, section: wantedSection, rail: wantedRail });
     if (panel === "build" || panel === "money" || panel === "politics") {
       // Politics with no section given opens on whatever is most urgent.
       const next = section ?? (panel === "politics" ? politicsSectionFor(state!) : undefined);
       if (next) setSections((s) => ({ ...s, [panel]: next }));
     }
+    if (rail) setBuildRail(rail);
     // Always opens/switches to the tab — never toggles it closed. An
     // earlier version closed the panel when you clicked its already-active
     // tab again, but that made an accidental double-click (easy to trigger
@@ -452,6 +450,7 @@ function App() {
     <div className="game-layout">
       <TopBar
         locked={{ laws: lockedReason(state, "laws") ?? undefined, research: lockedReason(state, "research") ?? undefined, army: lockedReason(state, "army") ?? undefined }}
+        marketLocked={lockedReason(state, "money", "market") ?? undefined}
         electionThreshold={getElectionThreshold(state)}
         nationName={nation.name}
         partyName={party.name}
@@ -486,6 +485,7 @@ function App() {
             settledIslandIds={state.settledIslandIds}
             foreignIslands={state.foreignIslands}
             placedBuildings={state.placedBuildings}
+            underway={underway}
             selectedProvinceId={currentProvinceId}
             onSelectProvince={selectProvinceOnMap}
             scoutedIslandIds={state.scoutedIslandIds}
@@ -542,6 +542,8 @@ function App() {
             onOpenPanel={openPanel}
             section={sections.build}
             onSection={(section) => setSection("build", section)}
+            rail={buildRail}
+            onRail={setBuildRail}
           />
         </Modal>
       )}

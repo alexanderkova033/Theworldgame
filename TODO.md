@@ -17,6 +17,7 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
   - `reign.test.ts`: the Long Reign's rising line and burdens; a careful player outlasts Three Terms but is always voted out within twenty years, sooner on Hard.
 - Balance changes: run the tests, and look at the numbers they report if a path starts to fail. The scripted player lives in `tests/support/carefulPlayer.ts`.
 - UI changes: check the screen in a browser, at a normal window and at about 1000px wide.
+- If every test file fails to load ("Cannot read properties of undefined (reading 'config')"), vitest was started from a lowercase `c:/` path. Run it from `C:SERS...` INSTEAD.
 
 ## Known rough edges
 

@@ -60,7 +60,7 @@ import { NavIcon } from "./NavIcon";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import { SubTabs } from "./SubTabs";
 import { EffectList } from "./TechTree";
-import { BUDGET, BUILDINGS, lockedReason, MARKET, PEOPLE, type Destination, type OpenPanel, type PoliticsSection } from "../navigation";
+import { BUDGET, HOMES, lockedReason, MARKET, PEOPLE, type Destination, type OpenPanel, type PoliticsSection } from "../navigation";
 import { MilitiaForce, PoliceForce } from "./WorkforcePanel";
 import { formatAmount, formatRate, formatSigned } from "../formatNumber";
 import { isLongReign } from "../../domain/reign/reignRules";
@@ -219,6 +219,7 @@ function Chamber({
   focus,
   onFocus,
   gain,
+  heading,
 }: {
   state: GameState;
   party: Party;
@@ -226,38 +227,57 @@ function Chamber({
   focus: Ideology | null;
   onFocus: (ideology: Ideology | null) => void;
   gain: number | null; // support an action being pointed at would add
+  heading: number; // where support is drifting to, as seats
 }) {
   const seats = seatChamber(state);
   const yours = seats.filter((s) => s.yours).length;
   const { radius, seatRadius } = CHAMBER;
   const pad = seatRadius + 3;
   const popularity = Math.round(state.stats.popularity);
+  // A marker just outside the arc, pointing in at the seat support is
+  // heading for; only when that's somewhere else.
+  const headingAngle = Math.PI * (1 - heading / 100);
+  const marker = { x: Math.cos(headingAngle) * (radius + seatRadius + 7), y: -Math.sin(headingAngle) * (radius + seatRadius + 7) };
   return (
     <svg
       className="chamber"
       viewBox={`${-radius - pad} ${-radius - pad} ${2 * (radius + pad)} ${radius + pad + seatRadius + 2}`}
       role="img"
-      aria-label={`If the vote were today: ${party.name} ${yours} seats, ${rival.name} ${CHAMBER.seats - yours}. ${getElectionThreshold(state)} seats win.`}
+      aria-label={`If the vote were today: ${party.name} ${yours} seats, ${rival.name} ${CHAMBER.seats - yours}. ${getElectionThreshold(state)} seats win. Support is heading for ${heading}.`}
       onMouseLeave={() => onFocus(null)}
     >
       {/* The line to win: half the chamber for the first election, further
           round for each one after. */}
       <WinLine threshold={getElectionThreshold(state)} inner={radius * CHAMBER.inner - seatRadius - 2} outer={radius + pad - 1} />
-      {seats.map((seat, i) => (
-        <circle
-          key={i}
-          cx={seat.x}
-          cy={seat.y}
-          r={seatRadius}
-          className={`chamber__seat ${seat.yours ? "" : "is-rival"} ${focus && seat.ideology !== focus ? "is-dim" : ""} ${focus === seat.ideology ? "is-focus" : ""}`}
-          style={seat.yours ? { fill: washed(party.color) } : { fill: paled(rival.color), stroke: inked(rival.color) }}
-          onMouseEnter={() => onFocus(seat.ideology)}
-        >
-          <title>
-            {GROUP_NAMES[seat.ideology]}: {seat.yours ? party.name : rival.name}
-          </title>
-        </circle>
-      ))}
+      {seats.map((seat, i) => {
+        // Seats fill from the left, so those between today and where support
+        // is heading are the ones about to change hands: a ring, in red if
+        // you're losing them, in your colour if you're winning them.
+        const slipping = i >= heading && i < yours;
+        const coming = i >= yours && i < heading;
+        return (
+          <circle
+            key={i}
+            cx={seat.x}
+            cy={seat.y}
+            r={seatRadius}
+            className={`chamber__seat ${seat.yours ? "" : "is-rival"} ${slipping ? "is-slipping" : ""} ${coming ? "is-coming" : ""} ${focus && seat.ideology !== focus ? "is-dim" : ""} ${focus === seat.ideology ? "is-focus" : ""}`}
+            style={slipping ? undefined : coming ? { stroke: inked(party.color) } : seat.yours ? { fill: washed(party.color) } : { fill: paled(rival.color), stroke: inked(rival.color) }}
+            onMouseEnter={() => onFocus(seat.ideology)}
+          >
+            <title>
+              {GROUP_NAMES[seat.ideology]}: {seat.yours ? party.name : rival.name}
+              {slipping && `, slipping to ${rival.name}`}
+              {coming && `, coming to ${party.name}`}
+            </title>
+          </circle>
+        );
+      })}
+      {heading !== yours && (
+        <path d="M0,7 L-6.5,-5 L6.5,-5 Z" className={`chamber__heading ${heading < yours ? "is-falling" : ""}`} transform={`translate(${marker.x} ${marker.y}) rotate(${90 - (headingAngle * 180) / Math.PI})`}>
+          <title>Support drifts toward {heading}%, where the causes below push it</title>
+        </path>
+      )}
       <text x={0} y={-4} className="chamber__share" style={{ fill: inked(party.color) }}>
         {popularity}%
       </text>
@@ -344,14 +364,14 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
   const outlook = getPopularityOutlook(state);
   const target = Math.round(outlook.target);
   const go = (to: Destination, label: string) => (
-    <button type="button" onClick={() => onOpenPanel(to.panel, to.section)}>
+    <button type="button" onClick={() => onOpenPanel(to.panel, to.section, to.rail)}>
       {label}
     </button>
   );
   const fixes: Record<PopularityDriver["key"], ReactNode> = {
     taxes: go(BUDGET, "Taxes"),
     food: go(MARKET, "Buy food"),
-    homes: go(BUILDINGS, "Build"),
+    homes: go(HOMES, "Build"),
     heat: go(MARKET, "Buy coal"),
     jobs: go(PEOPLE, "Jobs"),
     order: (
@@ -390,18 +410,13 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
             focus={focus}
             onFocus={setFocus}
             gain={rallying ? RALLY_SUPPORT : null}
+            heading={target}
           />
           <div className="politics-hero__under">
             <span className={`politics-hero__verdict ${isWinning ? "is-winning" : "is-losing"}`}>
               {isWinning ? <CheckIcon /> : <CrossIcon />}
               {isWinning ? `Winning by ${margin}` : `Losing by ${-margin}`}
             </span>
-            <Figure
-              icon="popularity"
-              value={`→ ${target}%`}
-              name={`Support drifts toward ${target}%, where the causes below push it`}
-              tone={target > popularity ? "gain" : target < popularity ? "loss" : null}
-            />
             <Figure icon="politicalPower" value={formatRate(getDailyPoliticalPower(state), true)} name="Political power a day: the more popular you are, the more you earn" />
             <Figure
               icon="stability"

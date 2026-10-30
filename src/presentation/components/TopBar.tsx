@@ -4,7 +4,7 @@ import { formatDate, type Season } from "../../domain/country/calendar";
 import { monthsUntilNextElection } from "../../domain/parties/electionRules";
 import type { CountryStats, GameDate, GameSpeed } from "../../domain/country/types";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
-import type { PanelKey } from "../navigation";
+import type { OpenPanel, PanelKey } from "../navigation";
 import type { HeatingOutlook } from "../../application/getHeatingOutlook";
 import type { Forecasts } from "../../application/getForecasts";
 import type { MaterialShortage } from "../../application/getMaterialShortages";
@@ -16,7 +16,6 @@ import { areTipsOn, setTipsOn } from "../tipPreference";
 import { NavIcon } from "./NavIcon";
 import { StatIcon } from "./StatIcon";
 import { ResourceTicker } from "./ResourceTicker";
-import { LockIcon } from "./CauseIcon";
 
 const SPEEDS: GameSpeed[] = [1, 2, 3, 5];
 
@@ -172,11 +171,13 @@ interface TopBarProps {
   onPause: () => void;
   onResume: () => void;
   onSetSpeed: (speed: GameSpeed) => void;
-  onOpenPanel: (panel: PanelKey) => void;
+  onOpenPanel: OpenPanel;
+  marketLocked?: string; // why Money › Market is still shut, if it is
 }
 
 export function TopBar({
   locked,
+  marketLocked,
   electionThreshold,
   nationName,
   partyName,
@@ -263,6 +264,8 @@ export function TopBar({
             monthLedger={monthLedger}
             forecasts={forecasts}
             onOpenReports={() => onOpenPanel("reports")}
+            onOpenMarket={() => onOpenPanel("money", "market")}
+            marketLocked={marketLocked}
           />
         </div>
 
@@ -278,7 +281,7 @@ export function TopBar({
               aria-label={tab.key === "reports" && reportsBadgeCount > 0 ? `${tab.label}, ${reportsBadgeCount} unread` : tab.label}
             >
               <span className="top-bar__tab-icon">
-                {locked[tab.key] ? <LockIcon size={22} /> : tab.icon()}
+                {tab.icon()}
                 {tab.key === "reports" && reportsBadgeCount > 0 && (
                   <span className="top-bar__tab-badge" aria-hidden="true">
                     {reportsBadgeCount > 9 ? "9+" : reportsBadgeCount}

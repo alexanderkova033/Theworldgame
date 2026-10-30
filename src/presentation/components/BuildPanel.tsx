@@ -7,7 +7,6 @@
 // something there needs the player; the advisor strip and toasts open the
 // right section directly (see navigation.ts).
 import "./BuildPanel.css";
-import { useState } from "react";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
 import type { GameState } from "../../domain/country/types";
@@ -18,7 +17,7 @@ import { PeoplePanel } from "./PeoplePanel";
 import { ProjectRings } from "./ProjectsPanel";
 import { RepairsPanel, WrenchIcon } from "./RepairsPanel";
 import { BuildingIcon } from "./BuildingIcon";
-import { BUILD_GROUPS, type BuildGroup } from "../buildGroups";
+import { BUILD_GROUPS, type BuildRail } from "../buildGroups";
 import { StatIcon } from "./StatIcon";
 import { SubTabs, type SubTab } from "./SubTabs";
 
@@ -32,6 +31,8 @@ interface BuildPanelProps {
   onOpenPanel: OpenPanel;
   section: BuildSection;
   onSection: (section: BuildSection) => void;
+  rail: BuildRail;
+  onRail: (rail: BuildRail) => void;
 }
 
 function sectionTabs(state: GameState, production: DailyProductionSummary, provinces: ProvinceOverview[]): SubTab[] {
@@ -59,17 +60,9 @@ function sectionTabs(state: GameState, production: DailyProductionSummary, provi
   ];
 }
 
-type RailKey = BuildGroup | "repairs";
-
-// The kind last looked at, kept between openings of the window.
-let lastRail: RailKey = "people";
-
-export function BuildPanel({ state, dispatch, production, provinces, selectedProvinceId, onSelectProvince, onOpenPanel, section, onSection }: BuildPanelProps) {
-  const [rail, setRailState] = useState<RailKey>(lastRail);
-  const setRail = (key: RailKey) => {
-    lastRail = key;
-    setRailState(key);
-  };
+// The kind looked at (`rail`) is kept by App between openings of the
+// window, so a "Go" elsewhere can open Build straight at farms.
+export function BuildPanel({ state, dispatch, production, provinces, selectedProvinceId, onSelectProvince, onOpenPanel, section, onSection, rail, onRail: setRail }: BuildPanelProps) {
   const broken = state.placedBuildings.filter((b) => b.condition === "broken").length;
   const damaged = broken + state.placedBuildings.filter((b) => b.condition === "repairing").length;
   return (
@@ -122,7 +115,7 @@ export function BuildPanel({ state, dispatch, production, provinces, selectedPro
                   </div>
                 )
               ) : (
-                <ActionsPanel state={state} group={rail} selectedProvinceId={selectedProvinceId} dispatch={dispatch} provinces={provinces} onSelectProvince={onSelectProvince} />
+                <ActionsPanel state={state} group={rail} selectedProvinceId={selectedProvinceId} dispatch={dispatch} provinces={provinces} onSelectProvince={onSelectProvince} netPerDay={production.netTreasury} />
               )}
             </div>
           </div>

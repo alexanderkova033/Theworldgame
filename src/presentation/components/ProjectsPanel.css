@@ -120,3 +120,9 @@
   font-size: 0.95rem;
   color: var(--danger);
 }
+
+/* Nothing underway: one line, not a strip's worth of room. */
+.project-rings.is-empty {
+  min-height: 0;
+  padding: 0.45rem 0.8rem;
+}
