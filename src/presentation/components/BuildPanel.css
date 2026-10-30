@@ -6,6 +6,29 @@
   gap: 0.6rem;
 }
 
+/* Wood and ore in store, beside what's being built. */
+.production__stock {
+  display: flex;
+  gap: 1.1rem;
+  padding: 0 0.2rem;
+}
+
+.production__good {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.production__good svg {
+  display: block;
+}
+
+.production__good-rate {
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}
+
 .production__main .panel {
   margin-bottom: 0;
 }

@@ -6,7 +6,7 @@
 import type { ProjectType } from "../../domain/construction/types";
 
 export const BUILDING_COLORS: Record<ProjectType, string> = {
-  farm: "#8bc34a",
+  farm: "#b8432f",
   factory: "#e0954a",
   road: "#e8d9ab",
   education: "#4fa8ff",
@@ -28,21 +28,31 @@ export function BuildingIcon({ type, x, y, size = 5 }: BuildingIconProps) {
 
   switch (type) {
     case "farm":
-      // A little barn: peaked roof (with a lit/shadow split) over a body
-      // (with a lit window and a shadowed wall edge), with a door.
+      // A red barn: a gambrel roof over a body with white crossed doors, and
+      // wheat standing either side.
       return (
         <g>
+          <g stroke="#b98a1e" strokeWidth={size * 0.13} strokeLinecap="round" fill="none">
+            {[-1.3, 1.3].map((side) => (
+              <g key={side}>
+                <line x1={x + side * size} y1={y + size * 1.1} x2={x + side * size} y2={y - size * 0.25} />
+                <line x1={x + side * size} y1={y + size * 0.2} x2={x + (side - 0.22) * size} y2={y - size * 0.05} />
+                <line x1={x + side * size} y1={y + size * 0.2} x2={x + (side + 0.22) * size} y2={y - size * 0.05} />
+                <line x1={x + side * size} y1={y - size * 0.1} x2={x + (side - 0.22) * size} y2={y - size * 0.35} />
+                <line x1={x + side * size} y1={y - size * 0.1} x2={x + (side + 0.22) * size} y2={y - size * 0.35} />
+              </g>
+            ))}
+          </g>
+          <rect x={x - size * 0.95} y={y - size * 0.15} width={size * 1.9} height={size * 1.25} fill={color} stroke="#4f1a12" strokeWidth={0.6} />
           <polygon
-            points={`${x},${y - size * 1.3} ${x - size},${y - size * 0.2} ${x + size},${y - size * 0.2}`}
-            fill={color}
-            stroke="#2f4a1e"
+            points={`${x - size * 1.05},${y - size * 0.15} ${x - size * 0.72},${y - size * 0.85} ${x},${y - size * 1.3} ${x + size * 0.72},${y - size * 0.85} ${x + size * 1.05},${y - size * 0.15}`}
+            fill="#8e2d20"
+            stroke="#4f1a12"
             strokeWidth={0.6}
           />
-          <polygon points={`${x},${y - size * 1.3} ${x - size},${y - size * 0.2} ${x},${y - size * 0.2}`} fill="#ffffff" opacity={0.14} />
-          <rect x={x - size} y={y - size * 0.2} width={size * 2} height={size * 1.3} fill={color} stroke="#2f4a1e" strokeWidth={0.6} />
-          <rect x={x + size * 0.55} y={y - size * 0.2} width={size * 0.45} height={size * 1.3} fill="#2f4a1e" opacity={0.22} />
-          <rect x={x - size * 0.3} y={y + size * 0.35} width={size * 0.6} height={size * 0.75} fill="#2f4a1e" />
-          <rect x={x - size * 0.75} y={y + size * 0.05} width={size * 0.32} height={size * 0.32} fill="#e6c56a" opacity={0.85} />
+          <rect x={x - size * 0.45} y={y + size * 0.25} width={size * 0.9} height={size * 0.85} fill="#f4ead0" stroke="#4f1a12" strokeWidth={0.4} />
+          <path d={`M${x - size * 0.45},${y + size * 0.25} L${x + size * 0.45},${y + size * 1.1} M${x + size * 0.45},${y + size * 0.25} L${x - size * 0.45},${y + size * 1.1}`} stroke={color} strokeWidth={size * 0.13} />
+          <rect x={x - size * 0.18} y={y - size * 0.72} width={size * 0.36} height={size * 0.36} fill="#f4ead0" stroke="#4f1a12" strokeWidth={0.4} />
         </g>
       );
     case "factory":

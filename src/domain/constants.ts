@@ -70,8 +70,10 @@ export const MAX_FACTORIES_PER_PROVINCE = 2;
 export const STALLED_PROJECT_REGRESS_FACTOR = 0.5; // a stalled project slips backward at this fraction of its normal daily pace
 
 // --- Roads (economic efficiency) ---
-export const ROAD_EFFICIENCY_BONUS = 0.02; // +2% income & construction speed per road
-export const ROAD_COST = 450;
+export const ROAD_EFFICIENCY_BONUS = 0.05; // +5% income & construction speed per road, for the first few
+export const ROAD_FULL_BONUS_COUNT = 10; // past this many, a road adds only ROAD_LATE_BONUS: the main ways are built
+export const ROAD_LATE_BONUS = 0.01;
+export const ROAD_COST = 350;
 export const ROAD_BUILD_DAYS = 45;
 export const MAX_ROADS_PER_PROVINCE = 5;
 

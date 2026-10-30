@@ -9,7 +9,6 @@ import type { HeatingOutlook } from "../../application/getHeatingOutlook";
 import type { Forecasts } from "../../application/getForecasts";
 import type { MaterialShortage } from "../../application/getMaterialShortages";
 import type { Ledger } from "../../domain/ledger/types";
-import type { ResourceBundle } from "../../domain/resources/types";
 import type { UnrestStage } from "../../domain/unrest/types";
 import { isMuted, setMuted } from "../audio/sound";
 import { areTipsOn, setTipsOn } from "../tipPreference";
@@ -168,7 +167,6 @@ interface TopBarProps {
   speed: GameSpeed;
   stats: CountryStats;
   unrestStage: UnrestStage;
-  resources: ResourceBundle;
   shortages: MaterialShortage[]; // building materials about to run out — see getMaterialShortages
   lastDayLedger: Ledger;
   monthLedger: Ledger;
@@ -183,12 +181,10 @@ interface TopBarProps {
   onResume: () => void;
   onSetSpeed: (speed: GameSpeed) => void;
   onOpenPanel: OpenPanel;
-  marketLocked?: string; // why Money › Market is still shut, if it is
 }
 
 export function TopBar({
   locked,
-  marketLocked,
   electionThreshold,
   nationName,
   partyName,
@@ -198,7 +194,6 @@ export function TopBar({
   speed,
   stats,
   unrestStage,
-  resources,
   shortages,
   lastDayLedger,
   monthLedger,
@@ -266,7 +261,6 @@ export function TopBar({
             stats={stats}
             electionThreshold={electionThreshold}
             unrestStage={unrestStage}
-            resources={resources}
             production={production}
             debt={debt}
             heating={heating}
@@ -275,8 +269,6 @@ export function TopBar({
             monthLedger={monthLedger}
             forecasts={forecasts}
             onOpenReports={() => onOpenPanel("reports")}
-            onOpenMarket={() => onOpenPanel("money", "market")}
-            marketLocked={marketLocked}
           />
         </div>
 

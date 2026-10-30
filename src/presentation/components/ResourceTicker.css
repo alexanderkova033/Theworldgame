@@ -1,5 +1,5 @@
 /* The counters, HOI4-style: one sunk strip ruled in gilt, each number a
-   cell parted from the next by a hairline — rather than a row of separate
+   cell parted from the next by a hairline â€” rather than a row of separate
    pills, each with its own frame. */
 .resource-ticker {
   display: inline-flex;
@@ -34,7 +34,7 @@
   flex-shrink: 0;
 }
 
-/* A per-day rate riding alongside a chip's current total — see
+/* A per-day rate riding alongside a chip's current total â€” see
    getDailyProductionSummary.ts. */
 .resource-ticker__delta {
   font-size: 0.8125rem;
@@ -50,7 +50,7 @@
   color: var(--danger);
 }
 
-/* In trouble: the cell's lettering turns, and a bar runs along its foot —
+/* In trouble: the cell's lettering turns, and a bar runs along its foot â€”
    with a "!" beside the number for danger, so it never rests on colour. */
 .resource-ticker__chip.is-danger {
   color: var(--danger);
@@ -91,14 +91,12 @@
   box-shadow: inset 0 -3px 0 var(--warning);
 }
 
-/* --- Stores: every resource behind one button --- */
-.resource-ticker__stores,
 .resource-ticker__why {
   position: relative;
   display: flex;
 }
 
-/* A cell you can open: no frame of its own — it lights on hover, and
+/* A cell you can open: no frame of its own â€” it lights on hover, and
    stays lit while its dropdown is open. */
 .resource-ticker button.resource-ticker__chip {
   min-height: 2.3rem;
@@ -143,7 +141,7 @@
   border-radius: 0 5px 5px 0;
 }
 
-/* A dropdown under a cell: Stores, or a number's "why". A gilt-edged card
+/* A dropdown under a cell: a number's "why". A gilt-edged card
    with a caret pointing back at its cell, held off the map by a dark green
    hairline rather than a blurred shadow. */
 .resource-ticker__popover {
@@ -224,114 +222,13 @@
   padding: 0.3rem 0.6rem;
 }
 
-.resource-ticker__store-row {
-  display: grid;
-  grid-template-columns: 20px 1fr auto auto auto;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.2rem 0;
-  font-size: 0.9rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.resource-ticker__store-row svg {
-  display: block;
-}
-
-.resource-ticker__store-row.is-short {
-  color: var(--danger);
-}
-
-.resource-ticker__store-amount {
-  font-weight: 700;
-  text-align: right;
-}
-
-.resource-ticker__store-hint {
-  margin: 0.5rem 0 0;
-  padding-top: 0.45rem;
-  border-top: 1px solid var(--bar-rule);
-  font-size: 0.8125rem;
-  color: var(--text-muted);
-}
-
-/* --- Stores pinned open: the strip's second line, one cell per good --- */
-.resource-ticker__stores-row {
-  display: flex;
-  align-items: stretch;
-  flex-basis: 100%;
-}
-
-.resource-ticker > .resource-ticker__stores-row {
-  border-left: none;
-  border-top: 1px solid rgba(226, 194, 122, 0.16);
-}
-
-.resource-ticker__stores-label {
-  color: var(--text-muted);
-  font-family: var(--font-display);
-  font-weight: 700;
-}
-
-.resource-ticker button.resource-ticker__pin-toggle {
-  margin-left: auto;
-}
-
-.resource-ticker__stores-row > * + * {
-  border-left: 1px solid rgba(226, 194, 122, 0.16);
-}
-
-.resource-ticker__store-cell {
-  gap: 0.3rem;
-  padding: 0.2rem 0.6rem;
-}
-
 /* The name is in the tooltip and read out by screen readers; on the strip
    the glyph says it. */
-.resource-ticker__store-cell-name {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.resource-ticker button.resource-ticker__pin-toggle {
-  padding: 0.2rem 0.55rem;
-  color: var(--text-muted);
-}
 
 @media (hover: hover) {
   .resource-ticker button.resource-ticker__pin-toggle:hover:not(:disabled) {
     color: var(--gilt-bright);
   }
-}
-
-.resource-ticker__store-foot {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.45rem;
-  margin-top: 0.5rem;
-  padding-top: 0.45rem;
-  border-top: 1px solid var(--bar-rule);
-}
-
-.resource-ticker__store-foot .resource-ticker__store-hint {
-  margin: 0;
-  padding: 0;
-  border: none;
-}
-
-button.resource-ticker__pin-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 0.3rem 0.6rem;
-  font-size: 0.8125rem;
-  white-space: nowrap;
 }
 
 /* A letter's answer under the pointer: the numbers it would move are ringed
@@ -365,21 +262,3 @@ button.resource-ticker__pin-button {
   }
 }
 
-/* The Stores menu's way to the Market: a plain line that reads as a link. */
-button.resource-ticker__store-go {
-  min-height: 0;
-  padding: 0;
-  border: none;
-  background: none;
-  box-shadow: none;
-  color: var(--gilt-bright);
-  font: inherit;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  text-align: left;
-  cursor: pointer;
-}
-
-button.resource-ticker__store-go:hover {
-  text-decoration: underline;
-}

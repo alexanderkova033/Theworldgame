@@ -454,7 +454,6 @@ function App() {
     <div className="game-layout">
       <TopBar
         locked={{ laws: lockedReason(state, "laws") ?? undefined, research: lockedReason(state, "research") ?? undefined, army: lockedReason(state, "army") ?? undefined }}
-        marketLocked={lockedReason(state, "money", "market") ?? undefined}
         electionThreshold={getElectionThreshold(state)}
         nationName={nation.name}
         partyName={party.name}
@@ -464,7 +463,6 @@ function App() {
         speed={state.speed}
         stats={state.stats}
         unrestStage={state.unrestStage}
-        resources={state.resources}
         shortages={shortages}
         lastDayLedger={state.lastDayLedger}
         monthLedger={monthLedger}
@@ -543,6 +541,7 @@ function App() {
             production={dailyProduction}
             provinces={provinceOverview}
             selectedProvinceId={currentProvinceId}
+            onSelectProvince={setSelectedProvinceId}
             onOpenPanel={openPanel}
             section={sections.build}
             onSection={(section) => setSection("build", section)}

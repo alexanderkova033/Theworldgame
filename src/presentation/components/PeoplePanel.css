@@ -133,3 +133,196 @@
   cursor: help;
 }
 
+/* --- Where people work: tiles in the order jobs are filled --- */
+.people-section-title {
+  margin: 0;
+  padding: 0;
+  font-size: 0.95rem;
+  font-style: normal;
+  letter-spacing: 0.04em;
+  text-align: left;
+  color: var(--window-ink);
+}
+
+.people-section-title::after {
+  display: none;
+}
+
+.people-work {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.people-work__chain {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.people-work__link {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.people-work__arrow {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--gilt);
+}
+
+.people-work__tile {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.5rem 0.6rem;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+.people-work__tile.is-empty {
+  background: transparent;
+  border-style: dashed;
+}
+
+.people-work__tile.is-empty .people-work__icon {
+  opacity: 0.45;
+}
+
+.people-work__icon {
+  flex-shrink: 0;
+  display: flex;
+}
+
+.people-work__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.people-work__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.people-work__label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.people-work__share {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.people-work__share.is-good { color: var(--success); }
+.people-work__share.is-warn { color: var(--warning); }
+.people-work__share.is-bad { color: var(--danger); }
+
+.people-work__figures {
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}
+
+/* --- Provinces: one row each, bars to compare down the column --- */
+.people-provinces {
+  display: flex;
+  flex-direction: column;
+}
+
+.people-provinces__head,
+.people-province {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr) 1.8rem 4.2rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.4rem;
+}
+
+.people-provinces__head {
+  padding-bottom: 0.35rem;
+  border-bottom: 3px double var(--rule);
+}
+
+.people-provinces__column {
+  display: inline-flex;
+}
+
+.people-province {
+  border-bottom: 1px solid rgba(122, 92, 52, 0.35);
+}
+
+.people-province.is-selected {
+  background: var(--paper-raised);
+  box-shadow: inset 3px 0 0 var(--window-ink);
+}
+
+.people-panel button.people-province__pick {
+  min-height: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-align: left;
+}
+
+@media (hover: hover) {
+  .people-panel button.people-province__pick:hover:not(:disabled) {
+    background: none;
+    border: none;
+    color: var(--window-ink);
+    text-decoration: underline;
+  }
+}
+
+.people-province__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.people-province__figure {
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.people-province__figure.is-bad {
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.people-province__mood {
+  display: inline-flex;
+  justify-content: center;
+}
+
+.people-panel button.people-province__build {
+  min-height: 0;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.8125rem;
+}
+
+/* Narrow: the fill order stacks. */
+@media (max-width: 760px) {
+  .people-work__chain {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

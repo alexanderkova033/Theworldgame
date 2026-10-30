@@ -269,7 +269,6 @@ export const MapLayers = memo(function MapLayers({
         ),
       )}
     </g>
-    {/* A held island is labelled with your provinces, below. */}
     {islands
       .filter((land) => !owns(land.id))
       .map((land) => (
@@ -487,27 +486,9 @@ export const MapLayers = memo(function MapLayers({
       </g>
     )}
 
-    {places.map((province) => {
-      const isCapital = province.id === nation.capitalProvinceId;
-      // Only the province the player's attention is on is named, at any
-      // zoom: the map is for looking at, and every name would crowd it.
-      const isFocused = province.id === selectedProvinceId || province.id === hoveredProvinceId;
-      const showLabel = isCapital || isFocused;
-      if (!showLabel) return null;
-      return (
-        <g key={`${province.id}-label`}>
-          {isCapital && <CapitalBadge x={province.labelX} y={province.labelY - 13} />}
-          <text
-            x={province.labelX}
-            y={province.labelY}
-            className={`map-panel__label ${owns(province.id) ? "" : "is-foreign"}`}
-            pointerEvents="none"
-          >
-            {province.name}
-          </text>
-        </g>
-      );
-    })}
+    {/* No province names on the map: they crowd it, and the hover card and the
+        province card both give them. The capital keeps its star. */}
+    {capital && owns(capital.id) && !buildKinds && <CapitalBadge x={capital.labelX} y={capital.labelY - 13} />}
 
     {/* Province info bar, on its own translucent backing so it reads
         clearly whatever lies underneath. Zoomed out, it appears only on a

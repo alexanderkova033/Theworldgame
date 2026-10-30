@@ -21,6 +21,7 @@ A practical, near-term list. For bigger ideas, see [ROADMAP.md](ROADMAP.md).
 
 ## Known rough edges
 
+- **Roads rebalanced** (2026-10-30). They took about 700 days to pay back at the start (450 Cr for +2% of about 32 Cr a day), against about 200 for a factory. Now 350 Cr for +5% each up to ten roads, +1% after: about 220 days at the start, faster as income grows. The scripted players build no roads, so the balance tests don't measure this.
 - **The wide tax range is untested in play** (2026-10-30). Handouts (down to -20%) and riot-level rates (up to 90%) are in the rules and tests/taxes.test.ts, but the scripted players stay at 12 to 15%, so the balance tests say nothing about them. Handouts were cut back on 2026-10-30 after the first look found them too strong (+28 support at -20% for 32 Cr a day): now +17 for 64 Cr a day, and anything under 5% adds little. Levers: TAX_HANDOUT_POPULARITY_PER_POINT, TAX_HANDOUT_COST, TAX_CUT_FLOOR.
 - **Feedback link:** set `VITE_FEEDBACK_URL` in the Vercel project; the links stay hidden until it is set.
 

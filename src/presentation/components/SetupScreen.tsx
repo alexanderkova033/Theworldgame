@@ -1,11 +1,14 @@
 import "./SetupScreen.css";
 import { useState, type CSSProperties } from "react";
 import { DIFFICULTIES, DIFFICULTY_SETTINGS, type Difficulty } from "../../domain/difficulty/difficultyData";
-import { getNationForProvince } from "../../domain/nations/nationRules";
 import type { Nation } from "../../domain/nations/types";
 import { getPartiesForNation } from "../../domain/parties/partyRules";
 import { describeEffects } from "../../domain/policy/modifiers";
-import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
+import type { PlacedBuilding } from "../../domain/provinces/types";
+import type { ProvinceStatus } from "../../application/getProvinceOverview";
+import "./MapPanel.css";
+import { MapLayers } from "./MapLayers";
+import type { UnderwayBuilding } from "./MapSettlements";
 import { cogPoints, starPoints } from "./iconShapes";
 import { washColor } from "./mapCommon";
 import { formatReign } from "../formatNumber";
@@ -20,8 +23,17 @@ interface SetupScreenProps {
   onStart: (nationId: string, partyId: string, difficulty: Difficulty, mode: GameMode) => void;
 }
 
-// The chart's frame: the land and every island, with a little sea round them.
-const CHART_VIEW = "10 15 1285 910";
+// The chart's frame: the land to the left of the plate, with sea round it.
+const CHART_VIEW = "-90 -40 2050 1150";
+
+// What a chart with no game behind it holds.
+const NO_BUILDINGS = new Map<string, PlacedBuilding[]>();
+const NO_ROADS = new Map<string, number>();
+const NOTHING: UnderwayBuilding[] = [];
+const NOTHING_IDS: string[] = [];
+const NO_RULERS: Record<string, string> = {};
+const NO_STATUS: Record<string, ProvinceStatus> = {};
+const ignore = () => {};
 
 // Starting a game, on one screen. The chart fills it and chooses the nation
 // (click its land, or its seal on the plate); a plate lying on it holds the party, how
@@ -42,42 +54,58 @@ export function SetupScreen({ nations, slotName, onBack, onStart }: SetupScreenP
   const changes = level.changes.filter((change) => mode !== "long-reign" || !/retr/i.test(change));
   // What most sets a level apart stays on screen; all of it is in the tip.
   const keyChanges = changes.filter((change) => /^Elections need|retr/i.test(change));
-  const shapes = nationShapes([]);
-  const chosen = shapes.find((s) => s.nationId === nation.id);
 
   return (
     <div className="setup">
       <div className="setup__map">
-        <svg viewBox={CHART_VIEW} className="setup__chart" role="img" aria-label={`The continent and its islands, with ${nation.name} chosen`}>
-          {MAP_GEOMETRY.islands.map((land) => (
-            <path key={land.id} d={land.path} className="setup__island" />
-          ))}
-          {MAP_GEOMETRY.provinces.map((province) => {
-            const owner = getNationForProvince(province.id);
-            return (
-              <path
-                key={province.id}
-                d={province.path}
-                className={`setup__province ${owner?.id === nation.id ? "is-chosen" : ""}`}
-                style={{ "--nation-color": owner?.color ?? "#a8946c", "--nation-wash": washColor(owner?.color ?? "#a8946c") } as CSSProperties}
-                onClick={owner ? () => setNationId(owner.id) : undefined}
-                data-tip={owner?.name ?? province.name}
-              />
-            );
-          })}
-          <path d={MAP_GEOMETRY.coastPath} className="setup__coast" />
-          {chosen && (
-            <>
-              <path d={chosen.frontier} className="setup__frontier-under" />
-              <path d={chosen.frontier} className="setup__frontier" />
-            </>
-          )}
-          {shapes.map((shape) => (
-            <text key={shape.nationId} x={shape.labelX} y={shape.labelY} className={`setup__label ${shape.nationId === nation.id ? "is-chosen" : ""}`}>
-              {shape.name}
-            </text>
-          ))}
-        </svg>
+        {/* The chart the game is played on, not a drawing of it. MapLayers
+            shows the chosen nation as your own; these clear shapes on top
+            catch the clicks for all three. */}
+        <div className="setup__chart-frame map-panel" data-season="winter">
+          <svg
+            viewBox={CHART_VIEW}
+            preserveAspectRatio="xMinYMid slice"
+            className="setup__chart"
+            style={{ "--nation-color": washColor(nation.color) } as CSSProperties}
+            role="img"
+            aria-label={`The continent and its islands, with ${nation.name} chosen`}
+          >
+            <MapLayers
+              nation={nation}
+              buildingsByProvince={NO_BUILDINGS}
+              underway={NOTHING}
+              showIcons={false}
+              buildKinds={null}
+              roadCountByProvince={NO_ROADS}
+              selectedProvinceId=""
+              hoveredProvinceId={null}
+              zoomedIn={false}
+              scoutedIslandIds={NOTHING_IDS}
+              expeditionIslandIds={NOTHING_IDS}
+              selectedIslandId={null}
+              foreignRulers={NO_RULERS}
+              provinceStatus={NO_STATUS}
+              mapMode="political"
+              onProvinceClick={ignore}
+              onProvinceKeySelect={ignore}
+              onIslandClick={ignore}
+              venturesOpen={false}
+              onHoverProvince={ignore}
+              lostProvinceIds={NOTHING_IDS}
+              settledIslandIds={NOTHING_IDS}
+              foreignIslands={NO_RULERS}
+            />
+            {nationShapes([]).map((shape) => (
+              <path key={shape.nationId} d={shape.outline} className="setup__hit" onClick={() => setNationId(shape.nationId)} data-tip={shape.name} />
+            ))}
+            {/* The chosen nation's frontier, in gilt. */}
+            {nationShapes([])
+              .filter((shape) => shape.nationId === nation.id)
+              .map((shape) => (
+                <path key={shape.nationId} d={shape.frontier} className="setup__frontier" />
+              ))}
+          </svg>
+        </div>
         <button type="button" className="setup__back" onClick={onBack}>
           ← Back to saves
         </button>

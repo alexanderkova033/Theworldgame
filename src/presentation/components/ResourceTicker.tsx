@@ -1,8 +1,8 @@
 // The always-visible strip under the nation's name: only the five numbers
 // that decide whether the government survives — treasury, people and
 // homes, food, stability (with its unrest stage) and support — plus debt
-// and heating when they matter. The raw resources sit behind one Stores
-// button; a resource that's actually running short (building materials a
+// and heating when they matter. Raw goods show where they're used (Build,
+// People, the Market); one actually running short (building materials a
 // project is about to stall on) comes back out onto the bar with a "!".
 // Political power and research have their own tabs (Politics/Laws,
 // Research), where they're spent.
@@ -17,7 +17,7 @@ import type { MaterialShortage } from "../../application/getMaterialShortages";
 import { formatDate } from "../../domain/country/calendar";
 import { isDebtDangerous } from "../../domain/loans/loanRules";
 import { formatAmount, formatExact, formatRate } from "../formatNumber";
-import { RESOURCE_TYPES, type ResourceBundle, type ResourceType } from "../../domain/resources/types";
+import type { ResourceType } from "../../domain/resources/types";
 import type { UnrestStage } from "../../domain/unrest/types";
 import { UNREST_INFO } from "../unrestStages";
 import { getLedgerTotal } from "../../domain/ledger/ledgerRules";
@@ -33,7 +33,6 @@ interface ResourceTickerProps {
   stats: CountryStats;
   electionThreshold: number;
   unrestStage: UnrestStage;
-  resources: ResourceBundle;
   production: DailyProductionSummary;
   heating: HeatingOutlook;
   debt: number;
@@ -42,8 +41,6 @@ interface ResourceTickerProps {
   monthLedger: Ledger; // the same, for the month so far
   forecasts: Forecasts; // when food and money run out if nothing changes
   onOpenReports: () => void;
-  onOpenMarket: () => void;
-  marketLocked?: string; // why the Market is still shut, if it is
 }
 
 const RESOURCE_LABELS: Record<ResourceType, string> = {
@@ -92,20 +89,6 @@ function ResourceGlyph({ type, size = 20 }: { type: ResourceType; size?: number 
   );
 }
 
-function CrateIcon() {
-  return (
-    <svg width={20} height={20} viewBox="-10 -10 20 20" aria-hidden="true">
-      <rect x={-8} y={-6} width={16} height={13} rx={1} fill="#a9773f" stroke="#5a3a1a" strokeWidth={0.9} />
-      <line x1={-8} y1={0.5} x2={8} y2={0.5} stroke="#5a3a1a" strokeWidth={0.9} />
-      <line x1={-8} y1={-6} x2={8} y2={7} stroke="#6e4a26" strokeWidth={0.9} />
-      <rect x={-9} y={-8} width={18} height={2.6} rx={0.8} fill="#c9a24a" stroke="#5a3a1a" strokeWidth={0.7} />
-    </svg>
-  );
-}
-
-// Every resource in stock and its daily rate, behind one button.
-// A chip's dropdown: open on click, closed by clicking anywhere else or
-// pressing Escape (so opening one chip's closes another's).
 function usePopover() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -208,162 +191,9 @@ function WhyChip({
 // Whether the stores are pinned open in the bar — a per-player preference,
 // kept in this browser. Storage can be missing or refuse (a private window),
 // so both ways fall back quietly to "folded".
-const STORES_PINNED_KEY = "theworldgame-stores-pinned";
-
-function readStoresPinned(): boolean {
-  try {
-    return localStorage.getItem(STORES_PINNED_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function writeStoresPinned(pinned: boolean) {
-  try {
-    localStorage.setItem(STORES_PINNED_KEY, pinned ? "1" : "0");
-  } catch {
-    // Not remembered — it still works for this session.
-  }
-}
-
-function PinIcon({ pinned }: { pinned: boolean }) {
-  return (
-    <svg viewBox="-10 -10 20 20" width={14} height={14} aria-hidden="true">
-      <g transform={pinned ? undefined : "rotate(35)"}>
-        <path d="M-4,-8 L4,-8 L3,-2 L6,2 L-6,2 L-3,-2 Z" fill="currentColor" />
-        <line x1={0} y1={2} x2={0} y2={9} stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" />
-      </g>
-    </svg>
-  );
-}
-
-// Every resource in stock and its daily rate: folded behind one button, or
-// pinned open as a row of cells in the strip.
-function Stores({
-  resources,
-  production,
-  shortages,
-  pinned,
-  onPin,
-  onOpenMarket,
-  marketLocked,
-}: {
-  resources: ResourceBundle;
-  production: DailyProductionSummary;
-  shortages: MaterialShortage[];
-  pinned: boolean;
-  onPin: (pinned: boolean) => void;
-  onOpenMarket: () => void;
-  marketLocked?: string;
-}) {
-  const { open, setOpen, ref } = usePopover();
-
-  if (pinned) {
-    return (
-      <div className="resource-ticker__stores-row" role="group" aria-label="Stores">
-        <span className="resource-ticker__chip resource-ticker__stores-label">
-          <CrateIcon />
-          Stores
-        </span>
-        {RESOURCE_TYPES.map((type) => {
-          const short = shortages.find((s) => s.type === type);
-          return (
-            <div
-              key={type}
-              className={`resource-ticker__chip resource-ticker__store-cell ${short ? "is-danger" : ""}`}
-              title={`${RESOURCE_LABELS[type]}: ${formatExact(resources[type])} in stock (${formatRate(production.resourceProduction[type])})${short ? ". Building will run out soon" : ""}`}
-            >
-              <ResourceGlyph type={type} />
-              <span className="resource-ticker__store-cell-name">{RESOURCE_LABELS[type]}</span>
-              <span>{formatAmount(resources[type])}</span>
-              <Delta value={production.resourceProduction[type]} />
-              {short && <Alert />}
-            </div>
-          );
-        })}
-        <button
-          type="button"
-          className="resource-ticker__chip resource-ticker__pin-toggle"
-          onClick={() => onPin(false)}
-          aria-label="Unpin the stores and fold them back into one button"
-          title="Fold the stores back into one button"
-        >
-          <PinIcon pinned />
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="resource-ticker__stores" ref={ref}>
-      <button
-        type="button"
-        className={`resource-ticker__chip resource-ticker__stores-button ${open ? "is-open" : ""}`}
-        aria-expanded={open}
-        aria-haspopup="true"
-        onClick={() => setOpen((v) => !v)}
-        title="Wood, ore, coal, grain and fish in stock"
-      >
-        <CrateIcon />
-        <span className="resource-ticker__stores-label">Stores</span>
-        <span aria-hidden="true">{open ? "▴" : "▾"}</span>
-      </button>
-      {open && (
-        <div className="resource-ticker__popover" role="dialog" aria-label="Stores">
-          {RESOURCE_TYPES.map((type) => {
-            const short = shortages.find((s) => s.type === type);
-            return (
-              <div key={type} className={`resource-ticker__store-row ${short ? "is-short" : ""}`}>
-                <ResourceGlyph type={type} />
-                <span className="resource-ticker__store-name">{RESOURCE_LABELS[type]}</span>
-                <span className="resource-ticker__store-amount">{formatAmount(resources[type])}</span>
-                <Delta value={production.resourceProduction[type]} />
-                {short && <Alert />}
-              </div>
-            );
-          })}
-          <div className="resource-ticker__store-foot">
-            {/* The way to the Market, or when it opens. */}
-            {marketLocked ? (
-              <p className="resource-ticker__store-hint">The Market {marketLocked.replace(/^Opens/, "opens")}.</p>
-            ) : (
-              <button
-                type="button"
-                className="resource-ticker__store-hint resource-ticker__store-go"
-                onClick={() => {
-                  setOpen(false);
-                  onOpenMarket();
-                }}
-              >
-                Buy and sell in the Market ›
-              </button>
-            )}
-            <button
-              type="button"
-              className="resource-ticker__pin-button"
-              onClick={() => {
-                setOpen(false);
-                onPin(true);
-              }}
-            >
-              <PinIcon pinned={false} />
-              Keep in the bar
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function ResourceTicker({ stats, electionThreshold, unrestStage, resources, production, heating, debt, shortages, lastDayLedger, monthLedger, forecasts, onOpenReports, onOpenMarket, marketLocked }: ResourceTickerProps) {
+export function ResourceTicker({ stats, electionThreshold, unrestStage, production, heating, debt, shortages, lastDayLedger, monthLedger, forecasts, onOpenReports }: ResourceTickerProps) {
   const why = { lastDay: lastDayLedger, month: monthLedger, onOpenReports };
   const previewedPeople = useLetterPreview()?.population;
-  const [storesPinned, setStoresPinned] = useState(readStoresPinned);
-  const pinStores = (pinned: boolean) => {
-    setStoresPinned(pinned);
-    writeStoresPinned(pinned);
-  };
   const homesTrouble = production.homeless >= 1 || production.unheatedShare > 0;
   const stage = UNREST_INFO[unrestStage];
   const stageUrgent = unrestStage === "strikes" || unrestStage === "riots";
@@ -458,7 +288,7 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, resource
 
       {/* Building materials a project is about to stall on — shown in the
           pinned stores' own cells instead, when those are out. */}
-      {!storesPinned && shortages.map((short) => (
+      {shortages.map((short) => (
         <Chip
           key={short.type}
           label={`${RESOURCE_LABELS[short.type]}: ${formatExact(short.stock)} left. Building draws ${short.perDay.toFixed(1)} a day, about ${Math.floor(short.daysLeft)} days.`}
@@ -471,7 +301,6 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, resource
       ))}
 
       <div className="resource-ticker__divider" />
-      <Stores resources={resources} production={production} shortages={shortages} pinned={storesPinned} onPin={pinStores} onOpenMarket={onOpenMarket} marketLocked={marketLocked} />
     </div>
   );
 }

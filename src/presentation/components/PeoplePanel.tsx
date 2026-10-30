@@ -1,15 +1,20 @@
 // The four things people need from you, as four matching cards: a roof, a
 // job, heat in winter and food, each a meter with its numbers said in
-// words. Province by province, the map shows the same (its Homes and Jobs modes).
+// words. Then where the workers work, as a chain of tiles in the order jobs
+// are filled, and every province as a row of small bars.
 import "./PeoplePanel.css";
 import type { ReactNode } from "react";
 import { getHeatingOutlook } from "../../application/getHeatingOutlook";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import type { GameState } from "../../domain/country/types";
-import { getLabourSituation } from "../../domain/labour/labourRules";
-import { ADVISOR_FOOD_CRITICAL_DAYS, ADVISOR_FOOD_WARN_DAYS } from "../../domain/constants";
+import { getLabourSituation, type Sector, type SectorJobs } from "../../domain/labour/labourRules";
+import { ADVISOR_FOOD_CRITICAL_DAYS, ADVISOR_FOOD_WARN_DAYS, COMMUTE_SHARE, LABOUR_SHARE } from "../../domain/constants";
+import { isWorking } from "../../domain/maintenance/maintenanceRules";
+import type { ProjectType } from "../../domain/construction/types";
+import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
+import { UNREST_INFO } from "../unrestStages";
 import { formatAmount, formatRate, formatSigned } from "../formatNumber";
-import { BuildingGlyph, FlameIcon, JobsIcon } from "./CauseIcon";
+import { BuildingGlyph, FlameIcon, JobsIcon, UnrestStageIcon } from "./CauseIcon";
 import { Gauge } from "./Gauge";
 import { ResourceIcon } from "./ResourceIcon";
 import type { OpenPanel } from "../navigation";
@@ -58,13 +63,154 @@ function Meter({
   );
 }
 
+// Where the workers work, by kind of job, in the order they're hired:
+// food (farms, granaries, canneries), then schools, then factories.
+const SECTORS: Array<{ key: Sector; label: string; types: ProjectType[]; icon: ReactNode }> = [
+  { key: "food", label: "Farms & food", types: ["farm", "granary", "cannery"], icon: <BuildingGlyph type="farm" size={30} /> },
+  { key: "school", label: "Schools", types: ["education"], icon: <BuildingGlyph type="education" size={30} /> },
+  { key: "industry", label: "Factories", types: ["factory"], icon: <BuildingGlyph type="factory" size={30} /> },
+];
+
+const TYPE_NAMES: Partial<Record<ProjectType, [string, string]>> = {
+  farm: ["farm", "farms"],
+  granary: ["granary", "granaries"],
+  cannery: ["cannery", "canneries"],
+  education: ["school", "schools"],
+  factory: ["factory", "factories"],
+};
+
+const staffedTone = (share: number) => (share >= 100 ? "good" : share >= 60 ? "warn" : "bad");
+
+function WorkChain({ state, sectors }: { state: GameState; sectors: Record<Sector, SectorJobs> }) {
+  const working = state.placedBuildings.filter(isWorking);
+  return (
+    <div className="people-work" title={`About ${Math.round(LABOUR_SHARE * 100)}% of your people are of working age. They take food jobs first, then schools, then factories, so when hands run short the factories go quiet before the farms do. Of the people left without work in one province, ${Math.round(COMMUTE_SHARE * 10)} in 10 travel to fill jobs in another.`}>
+      <h3 className="people-section-title">Where people work</h3>
+      <div className="people-work__chain">
+        {SECTORS.map((sector, i) => {
+          const jobs = sectors[sector.key];
+          const share = jobs.jobs > 0 ? Math.round((jobs.hired / jobs.jobs) * 100) : null;
+          const buildings = sector.types
+            .map((type) => {
+              const count = working.filter((b) => b.type === type).length;
+              const names = TYPE_NAMES[type]!;
+              return count > 0 ? `${count} ${names[count === 1 ? 0 : 1]}` : null;
+            })
+            .filter(Boolean);
+          return (
+            <div key={sector.key} className="people-work__link">
+              {i > 0 && (
+                <span className="people-work__arrow" aria-hidden="true">
+                  ›
+                </span>
+              )}
+              <div className={`people-work__tile ${share === null ? "is-empty" : ""}`} title={buildings.length > 0 ? buildings.join(", ") : "None yet"}>
+                <span className="people-work__icon">{sector.icon}</span>
+                <span className="people-work__body">
+                  <span className="people-work__head">
+                    <span className="people-work__label">{sector.label}</span>
+                    {share !== null && <strong className={`people-work__share is-${staffedTone(share)}`}>{share}%</strong>}
+                  </span>
+                  <Gauge max={100} size="sm" segments={share === null ? [] : [{ value: share, tone: staffedTone(share) }]} label={share === null ? `No ${sector.label.toLowerCase()} yet` : `${share}% staffed`} />
+                  <span className="people-work__figures">{share === null ? "None yet" : `${formatAmount(jobs.hired)} of ${formatAmount(jobs.jobs)} jobs`}</span>
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Every province as a row: homes and jobs as bars you can compare down the
+// column, and its mood as a picture; the exact figures in each one's tip.
+// Picking a row makes it the province Build builds in.
+function ProvinceRows({
+  provinces,
+  selectedProvinceId,
+  onSelectProvince,
+  onBuild,
+}: {
+  provinces: ProvinceOverview[];
+  selectedProvinceId: string;
+  onSelectProvince: (provinceId: string) => void;
+  onBuild: () => void;
+}) {
+  return (
+    <div className="people-provinces">
+      <div className="people-provinces__head">
+        <h3 className="people-section-title">Provinces</h3>
+        <span className="people-provinces__column" title="People and homes">
+          <StatIcon type="population" size={18} />
+        </span>
+        <span className="people-provinces__column" title="Workers and jobs">
+          <JobsIcon size={18} />
+        </span>
+        <span />
+        <span />
+      </div>
+      {provinces.map((p) => {
+        const status = getProvinceStatus(p);
+        const selected = p.id === selectedProvinceId;
+        const filled = p.jobs - p.openJobs;
+        return (
+          <div key={p.id} className={`people-province ${selected ? "is-selected" : ""}`}>
+            <button type="button" className="people-province__pick" aria-pressed={selected} onClick={() => onSelectProvince(p.id)}>
+              {p.isCapital && <span aria-label="Capital">★ </span>}
+              {p.name}
+            </button>
+            <span className="people-province__cell" title={`${formatAmount(p.population)} people, homes for ${formatAmount(p.capacity)}${p.homeless >= 1 ? `, ${formatAmount(p.homeless)} without a home` : ""}`}>
+              <Gauge
+                max={Math.max(1, p.capacity)}
+                size="sm"
+                overflow={p.homeless}
+                segments={[{ value: Math.min(p.population, p.capacity), tone: status.homes === "over" ? "bad" : status.homes === "full" ? "warn" : "good" }]}
+                label={`${formatAmount(p.population)} people, homes for ${formatAmount(p.capacity)}`}
+              />
+              <span className="people-province__figure">{formatAmount(p.population)}</span>
+            </span>
+            <span
+              className="people-province__cell"
+              title={`${formatAmount(filled)} of ${formatAmount(p.jobs)} jobs filled${p.unemployed >= 1 ? `, ${formatAmount(p.unemployed)} jobless` : ""}. Farms and food: ${formatAmount(p.sectors.food.hired)} of ${formatAmount(p.sectors.food.jobs)}. Factories: ${formatAmount(p.sectors.industry.hired)} of ${formatAmount(p.sectors.industry.jobs)}.`}
+            >
+              <Gauge
+                max={Math.max(1, p.jobs)}
+                size="sm"
+                overflow={p.unemployed}
+                segments={[{ value: filled, tone: status.jobs === "jobless" ? "bad" : status.jobs === "short" ? "warn" : "good" }]}
+                label={`${formatAmount(filled)} of ${formatAmount(p.jobs)} jobs filled`}
+              />
+              <span className={`people-province__figure ${status.jobs === "jobless" ? "is-bad" : ""}`}>{p.unemployed >= 1 ? `${formatAmount(p.unemployed)} jobless` : formatAmount(p.jobs)}</span>
+            </span>
+            <span className="people-province__mood" title={UNREST_INFO[p.unrestStage].name}>
+              <UnrestStageIcon stage={p.unrestStage} size={20} />
+            </span>
+            <span className="people-province__action">
+              {selected && (
+                <button type="button" className="people-province__build" onClick={onBuild}>
+                  Build ›
+                </button>
+              )}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 interface PeoplePanelProps {
   state: GameState;
   production: DailyProductionSummary;
+  provinces: ProvinceOverview[];
+  selectedProvinceId: string;
+  onSelectProvince: (provinceId: string) => void;
   onOpenPanel: OpenPanel;
+  onBuild: () => void; // to the Build section, for the picked province
 }
 
-export function PeoplePanel({ state, production, onOpenPanel }: PeoplePanelProps) {
+export function PeoplePanel({ state, production, provinces, selectedProvinceId, onSelectProvince, onOpenPanel, onBuild }: PeoplePanelProps) {
   const population = state.stats.population;
   const capacity = production.housingCapacity;
   const homeless = production.homeless; // summed over provinces — a free home elsewhere doesn't help
@@ -232,7 +378,9 @@ export function PeoplePanel({ state, production, onOpenPanel }: PeoplePanelProps
       />
       </div>
 
+      <WorkChain state={state} sectors={labour.sectors} />
 
+      <ProvinceRows provinces={provinces} selectedProvinceId={selectedProvinceId} onSelectProvince={onSelectProvince} onBuild={onBuild} />
     </section>
   );
 }

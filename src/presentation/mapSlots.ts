@@ -1,42 +1,38 @@
-// Where things stand inside a province on the map: a set of building plots
-// worked out once from its outline, clear of its name, its strip of flags and
-// the nation's name, and two grounds for crowds (a camp and a square) that no
-// building takes. Worked out from the geometry alone, so a building stays
-// where it is as others go up.
-import {
-  MAX_CANNERIES_PER_PROVINCE,
-  MAX_EDUCATION_PER_PROVINCE,
-  MAX_FACTORIES_PER_PROVINCE,
-  MAX_FARMS_PER_PROVINCE,
-  MAX_GRANARIES_PER_PROVINCE,
-  MAX_HARBOURS_PER_PROVINCE,
-  MAX_HOUSING_PER_PROVINCE,
-} from "../domain/constants";
+// Where things stand inside a province on the map: building plots worked out
+// once from its outline, far enough apart that no two pictures touch, clear
+// of the capital's star and the nation's name. A province with more buildings
+// than plots counts the rest on one of their kind, rather than stacking them.
+// Crowds (a camp, a square) find open ground round whatever stands.
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
 import type { ProjectType } from "../domain/construction/types";
 import { distanceToSegment, edges, nationShapes, parsePolygon, type Point } from "./nationFrontiers";
 
 export interface ProvincePlots {
-  camp: Point; // where people without a home gather
-  square: Point; // where strikers and rioters gather
-  plots: Point[]; // building plots: the clear ones, nearest the province's name first...
-  clearPlots: number; // ...this many of them; the rest are squeezed in, for a province nearly full
+  plots: Point[]; // building plots, nearest the province's middle first
+  grounds: Point[]; // places a crowd could stand, the same way round
 }
 
-// The most buildings a province can hold, roads apart (they're lines): the
-// MAX_*_PER_PROVINCE constants added up.
-export const PLOTS_NEEDED = 18;
+export interface CrowdGrounds {
+  camp: Point; // where people without a home gather
+  square: Point; // where strikers and rioters gather
+}
 
-const SPACINGS = [32, 28, 24, 20, 17]; // map units between clear plots: the widest that gives enough
-const ENOUGH_CLEAR_PLOTS = 8; // more than a province holds for a long while
-const EDGE_MARGIN = 8;
-export const PROVINCE_LABEL_ROOM = { halfWidth: 40, above: 26, below: 36 }; // the middle of the name with the capital's star, and the strip of flags under it
-const STRIP_HALF_WIDTH = 36;
+// The room one building's picture takes, whatever its kind: the farm's field
+// is the widest, the factory's chimney the tallest.
+export const BUILDING_ROOM = { width: 29, height: 25 };
+
+const SPACINGS = [38, 35, 32]; // between plots: the widest that gives enough
+const ROW_SHARE = 0.9; // rows are this much of the spacing apart, offset by half
+const ENOUGH_PLOTS = 8;
+const FEWEST_PLOTS = 3; // a home, a farm and a factory: a province with less gives up some room
+const EDGE_MARGINS = [14, 10, 6]; // a picture stays on its own side of a border, as far as it can
+const JITTER = 0.03; // a small steady wobble, so the plots don't read as a grid
+const CAPITAL_ROOM = { halfWidth: 16, above: 30, below: 6 }; // the star, just above the province's middle
 const NATION_NAME_ROOM = { maxHalfWidth: 112, halfHeight: 28 };
-const CROWD_REACH = { across: 20, above: 30, below: 10 }; // the ground a crowd covers round its point
-const CROWD_EDGE_MARGINS = [18, 13, 9]; // as far from the border as the province allows
+const CROWD_REACH = { across: 28, above: 36, below: 14 }; // the ground a crowd covers round its point
+const CROWD_EDGE_MARGIN = 13;
 const CROWD_GRID = 7;
-const GROUNDS_APART = 44;
+const GROUNDS_APART = 60;
 
 interface Room {
   left: number;
@@ -57,20 +53,18 @@ function inside([x, y]: Point, polygon: Point[]): boolean {
   return within;
 }
 
-// A small steady wobble for each plot, so they don't read as a grid.
 function wobble(n: number): number {
   return (Math.sin(n * 12.9898) * 43758.5453) % 1;
 }
 
-function candidates(polygon: Point[], spacing: number, rooms: Room[], margin: number, jitter = 0.15): Point[] {
+function candidates(polygon: Point[], spacing: number, rooms: Room[], margin: number, jitter = JITTER): Point[] {
   const outline = edges(polygon);
   const xs = polygon.map((p) => p[0]);
   const ys = polygon.map((p) => p[1]);
   const [minX, maxX, minY, maxY] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
   const found: Point[] = [];
-  const rowHeight = spacing * 0.8;
   let row = 0;
-  for (let y = minY; y <= maxY; y += rowHeight, row++) {
+  for (let y = minY; y <= maxY; y += spacing * ROW_SHARE, row++) {
     for (let x = minX + (row % 2 ? spacing / 2 : 0); x <= maxX; x += spacing) {
       const seed = x * 3.1 + y * 7.7;
       const plot: Point = [x + wobble(seed) * spacing * jitter, y + wobble(seed + 1) * spacing * jitter];
@@ -84,33 +78,8 @@ function candidates(polygon: Point[], spacing: number, rooms: Room[], margin: nu
 
 const apart = (a: Point, b: Point, distance: number) => Math.hypot(a[0] - b[0], a[1] - b[1]) >= distance;
 
-// A crowd's point must leave the crowd itself clear of a name.
+// A crowd's point must leave the crowd itself clear of the room.
 const widenedForCrowd = (r: Room): Room => ({ left: r.left - CROWD_REACH.across, right: r.right + CROWD_REACH.across, top: r.top - CROWD_REACH.below, bottom: r.bottom + CROWD_REACH.above });
-
-// The two grounds: the nearest open ones to the province's name, one each
-// side of it if it can. Each try gives up a little more where a province is
-// too small: first closeness to the border, then the nation's name, then its
-// own (shown only when in focus), and last the strip of flags under it.
-function findGrounds(polygon: Point[], label: Point, labelRoom: Room, nameRooms: Room[]): { camp: Point; square: Point } {
-  const distance = ([x, y]: Point) => Math.hypot(x - label[0], y - label[1]);
-  const stripRoom: Room = { left: label[0] - STRIP_HALF_WIDTH, right: label[0] + STRIP_HALF_WIDTH, top: label[1] + 6, bottom: label[1] + 36 };
-  const tries: Array<{ rooms: Room[]; margin: number }> = [
-    ...CROWD_EDGE_MARGINS.map((margin) => ({ rooms: [labelRoom, ...nameRooms], margin })),
-    { rooms: [labelRoom], margin: CROWD_EDGE_MARGINS[2] },
-    { rooms: [stripRoom, ...nameRooms], margin: CROWD_EDGE_MARGINS[2] },
-    { rooms: [stripRoom], margin: CROWD_EDGE_MARGINS[2] },
-    { rooms: [], margin: CROWD_EDGE_MARGINS[2] },
-    { rooms: [], margin: 0 },
-  ];
-  for (const { rooms, margin } of tries) {
-    const open = candidates(polygon, CROWD_GRID, rooms.map(widenedForCrowd), margin, 0).sort((a, b) => distance(a) - distance(b));
-    const camp = open.find((p) => p[0] < label[0]) ?? open[0];
-    if (!camp) continue;
-    const square = open.find((p) => p[0] >= label[0] && apart(p, camp, GROUNDS_APART)) ?? open.find((p) => apart(p, camp, GROUNDS_APART));
-    if (square) return { camp, square };
-  }
-  return { camp: label, square: label };
-}
 
 const plotsById = new Map<string, ProvincePlots>();
 
@@ -121,108 +90,116 @@ export function getProvincePlots(provinceId: string): ProvincePlots | null {
   if (!place) return null;
 
   const polygon = parsePolygon(place.path);
-  const label: Point = [place.labelX, place.labelY];
-  const labelHalfWidth = PROVINCE_LABEL_ROOM.halfWidth;
-  const labelRoom: Room = { left: place.labelX - labelHalfWidth, right: place.labelX + labelHalfWidth, top: place.labelY - PROVINCE_LABEL_ROOM.above, bottom: place.labelY + PROVINCE_LABEL_ROOM.below };
+  const middle: Point = [place.labelX, place.labelY];
+  const capitalRoom: Room = { left: place.labelX - CAPITAL_ROOM.halfWidth, right: place.labelX + CAPITAL_ROOM.halfWidth, top: place.labelY - CAPITAL_ROOM.above, bottom: place.labelY + CAPITAL_ROOM.below };
   const nameRooms: Room[] = nationShapes([]).map((shape) => {
     const halfWidth = Math.min(shape.labelWidth * 0.5, NATION_NAME_ROOM.maxHalfWidth);
     return { left: shape.labelX - halfWidth, right: shape.labelX + halfWidth, top: shape.labelY - NATION_NAME_ROOM.halfHeight, bottom: shape.labelY + NATION_NAME_ROOM.halfHeight };
   });
 
-  const { camp, square } = findGrounds(polygon, label, labelRoom, nameRooms);
-  const groundRoom = ([x, y]: Point): Room => ({ left: x - CROWD_REACH.across, right: x + CROWD_REACH.across, top: y - CROWD_REACH.above, bottom: y + CROWD_REACH.below });
-  const grounds = [groundRoom(camp), groundRoom(square)];
-
-  // Clear plots: the widest spacing that gives enough, or the most there are.
-  const clearRooms = [labelRoom, ...nameRooms, ...grounds];
-  let clear: Point[] = [];
-  for (const spacing of SPACINGS) {
-    const found = candidates(polygon, spacing, clearRooms, EDGE_MARGIN);
-    if (found.length > clear.length) clear = found;
-    if (clear.length >= ENOUGH_CLEAR_PLOTS) break;
+  // The widest spacing that gives enough, or the most there are. Too small a
+  // province gives up its distance from the border, then the nation's name.
+  const rooms = [capitalRoom, ...nameRooms];
+  const tries = [...EDGE_MARGINS.map((margin) => ({ rooms, margin })), ...EDGE_MARGINS.map((margin) => ({ rooms: [capitalRoom], margin }))];
+  let plots: Point[] = [];
+  for (const attempt of tries) {
+    for (const spacing of SPACINGS) {
+      const found = candidates(polygon, spacing, attempt.rooms, attempt.margin);
+      if (found.length > plots.length) plots = found;
+      if (plots.length >= ENOUGH_PLOTS) break;
+    }
+    if (plots.length >= FEWEST_PLOTS) break;
   }
   const distance = ([x, y]: Point) => Math.hypot(x - place.labelX, y - place.labelY);
-  clear.sort((a, b) => distance(a) - distance(b));
+  plots.sort((a, b) => distance(a) - distance(b));
 
-  // Squeezed in behind them, so a province nearly full still shows every
-  // building: tighter, and over the names only when nothing else is left.
-  const plots = [...clear];
-  const squeezeTries: Array<{ spacing: number; rooms: Room[]; margin: number; gap: number }> = [
-    { spacing: 16, rooms: [labelRoom, ...grounds], margin: 8, gap: 14 },
-    { spacing: 13, rooms: grounds, margin: 7, gap: 11 },
-    { spacing: 10, rooms: [], margin: 5, gap: 8 },
-    { spacing: 7, rooms: [], margin: 3, gap: 5 },
-  ];
-  for (const { spacing, rooms, margin, gap } of squeezeTries) {
-    // Furthest from the name first, where they cover least.
-    for (const plot of candidates(polygon, spacing, rooms, margin).sort((a, b) => distance(b) - distance(a))) {
-      if (plots.length >= PLOTS_NEEDED) break;
-      if (plots.every((taken) => apart(plot, taken, gap))) plots.push(plot);
-    }
-  }
+  // Clear of the names first; anywhere in the province after those.
+  const nearestFirst = (points: Point[]) => points.sort((a, b) => distance(a) - distance(b));
+  const open = [...nearestFirst(candidates(polygon, CROWD_GRID, rooms.map(widenedForCrowd), CROWD_EDGE_MARGIN, 0)), ...nearestFirst(candidates(polygon, CROWD_GRID, [], 0, 0))];
 
-  const result: ProvincePlots = { camp, square, plots, clearPlots: clear.length };
+  const result: ProvincePlots = { plots, grounds: open.length > 0 ? open : [middle] };
   plotsById.set(provinceId, result);
   return result;
 }
 
-// Homes gather round the middle of the province, farms spread to its far
-// edges with the harbour, and everything else starts part way out.
-const KIND_PLACES: Array<{ type: ProjectType; max: number; from: "near" | "far" | "middle" }> = [
-  { type: "housing", max: MAX_HOUSING_PER_PROVINCE, from: "near" },
-  { type: "farm", max: MAX_FARMS_PER_PROVINCE, from: "far" },
-  { type: "factory", max: MAX_FACTORIES_PER_PROVINCE, from: "middle" },
-  { type: "education", max: MAX_EDUCATION_PER_PROVINCE, from: "middle" },
-  { type: "granary", max: MAX_GRANARIES_PER_PROVINCE, from: "middle" },
-  { type: "cannery", max: MAX_CANNERIES_PER_PROVINCE, from: "middle" },
-  { type: "harbour", max: MAX_HARBOURS_PER_PROVINCE, from: "far" },
-];
-
-const reservedById = new Map<string, Map<ProjectType, Point[]>>();
-
-// Every building a province could ever hold has its plot set aside from the
-// start, the first of each kind before the second of any, so a building
-// never moves whatever goes up round it, and what's built first gets the
-// clear plots.
-function reservedPlots(provinceId: string): Map<ProjectType, Point[]> {
-  const cached = reservedById.get(provinceId);
-  if (cached) return cached;
-  const reserved = new Map<ProjectType, Point[]>(KIND_PLACES.map(({ type }) => [type, []]));
-  const provincePlots = getProvincePlots(provinceId);
-  if (provincePlots) {
-    const { plots, clearPlots } = provincePlots;
-    const clear = Array.from({ length: clearPlots }, (_, i) => i);
-    const squeezed = Array.from({ length: plots.length - clearPlots }, (_, i) => clearPlots + i);
-    const start = Math.floor(clearPlots * 0.4);
-    const orders = {
-      near: [...clear, ...squeezed],
-      far: [...[...clear].reverse(), ...squeezed],
-      middle: [...clear.slice(start), ...clear.slice(0, start), ...squeezed],
-    };
-    const taken = new Set<number>();
-    const mostOfAny = Math.max(...KIND_PLACES.map((kind) => kind.max));
-    for (let round = 0; round < mostOfAny; round++) {
-      for (const { type, max, from } of KIND_PLACES) {
-        if (round >= max) continue;
-        const index = orders[from].find((i) => !taken.has(i));
-        if (index === undefined) continue;
-        taken.add(index);
-        reserved.get(type)!.push(plots[index]);
-      }
-    }
-  }
-  reservedById.set(provinceId, reserved);
-  return reserved;
+// Where each of these buildings stands, in the order they went up, which keeps
+// them where they are as more arrive: homes gather round the middle, farms and
+// harbours spread to the edges, and everything else starts part way out. Null
+// for any there's no plot left for.
+export function placeBuildings(provinceId: string, types: ProjectType[]): Array<Point | null> {
+  const plots = getProvincePlots(provinceId)?.plots ?? [];
+  const near = plots.map((_, i) => i);
+  const far = [...near].reverse();
+  const start = Math.floor(plots.length * 0.4);
+  const between = [...near.slice(start), ...near.slice(0, start)];
+  const taken = new Set<number>();
+  return types.map((type) => {
+    const order = type === "housing" ? near : type === "farm" || type === "harbour" ? far : between;
+    const index = order.find((i) => !taken.has(i));
+    if (index === undefined) return null;
+    taken.add(index);
+    return plots[index];
+  });
 }
 
-// Where each of these buildings stands, in order: the nth of a kind always
-// on that kind's nth plot. Null for any there's no plot for (a road).
-export function placeBuildings(provinceId: string, types: ProjectType[]): Array<Point | null> {
-  const reserved = reservedPlots(provinceId);
-  const seen = new Map<ProjectType, number>();
-  return types.map((type) => {
-    const nth = seen.get(type) ?? 0;
-    seen.set(type, nth + 1);
-    return reserved.get(type)?.[nth] ?? null;
-  });
+// Whether a crowd standing at this point would touch a building there.
+const crowdTouches = ([x, y]: Point, [bx, by]: Point) =>
+  Math.abs(bx - x) < CROWD_REACH.across + BUILDING_ROOM.width / 2 && by - y < CROWD_REACH.below + BUILDING_ROOM.height / 2 && y - by < CROWD_REACH.above + BUILDING_ROOM.height / 2;
+
+// The nearest ground clear of everything in the way; failing that, the one
+// furthest from it.
+function clearestGround(grounds: Point[], touches: (ground: Point) => boolean, away: Point[]): Point {
+  const clear = grounds.find((ground) => !touches(ground));
+  if (clear) return clear;
+  const room = (ground: Point) => Math.min(...away.map((a) => Math.hypot(a[0] - ground[0], a[1] - ground[1])), Infinity);
+  return grounds.reduce((best, ground) => (room(ground) > room(best) ? ground : best), grounds[0]);
+}
+
+// Where this province's crowds stand, given the buildings on it: they keep to
+// open ground, and away from each other.
+export function placeCrowds(provinceId: string, standing: Point[]): CrowdGrounds | null {
+  const grounds = getProvincePlots(provinceId)?.grounds;
+  if (!grounds) return null;
+  const camp = clearestGround(grounds, (g) => standing.some((b) => crowdTouches(g, b)), standing);
+  const square = clearestGround(grounds, (g) => !apart(g, camp, GROUNDS_APART) || standing.some((b) => crowdTouches(g, b)), [...standing, camp]);
+  return { camp, square };
+}
+
+export interface PlateBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+const PLATE_GAP = 3;
+
+// Plates laid out from their provinces, pushed apart until none overlap: each
+// pair along whichever way is the shorter move. Same input, same result.
+export function separatePlates<T extends PlateBox>(plates: T[]): T[] {
+  const boxes = plates.map((p) => ({ ...p }));
+  for (let round = 0; round < 40; round++) {
+    let moved = false;
+    for (let i = 0; i < boxes.length; i++) {
+      for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i];
+        const b = boxes[j];
+        const overlapX = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x) + PLATE_GAP;
+        const overlapY = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y) + PLATE_GAP;
+        if (overlapX <= 0 || overlapY <= 0) continue;
+        moved = true;
+        if (overlapY <= overlapX) {
+          const shift = (overlapY / 2) * (a.y <= b.y ? 1 : -1);
+          a.y -= shift;
+          b.y += shift;
+        } else {
+          const shift = (overlapX / 2) * (a.x <= b.x ? 1 : -1);
+          a.x -= shift;
+          b.x += shift;
+        }
+      }
+    }
+    if (!moved) break;
+  }
+  return boxes;
 }

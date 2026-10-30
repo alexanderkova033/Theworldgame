@@ -15,6 +15,9 @@ import { useEffect, useRef } from "react";
 import { ActionsPanel } from "./ActionsPanel";
 import { NavIcon } from "./NavIcon";
 import { PeoplePanel } from "./PeoplePanel";
+import type { ResourceType } from "../../domain/resources/types";
+import { formatAmount, formatExact, formatRate } from "../formatNumber";
+import { ResourceIcon } from "./ResourceIcon";
 import { ProjectRings } from "./ProjectsPanel";
 import { RepairsPanel } from "./RepairsPanel";
 import type { BuildRail } from "../buildGroups";
@@ -27,11 +30,15 @@ interface BuildPanelProps {
   production: DailyProductionSummary;
   provinces: ProvinceOverview[];
   selectedProvinceId: string;
+  onSelectProvince: (provinceId: string) => void;
   onOpenPanel: OpenPanel;
   section: BuildSection;
   onSection: (section: BuildSection) => void;
   rail: BuildRail | null;
 }
+
+const BUILD_MATERIALS: ResourceType[] = ["wood", "ore"];
+const MATERIAL_NAMES: Partial<Record<ResourceType, string>> = { wood: "Wood", ore: "Ore" };
 
 function sectionTabs(state: GameState, production: DailyProductionSummary, provinces: ProvinceOverview[]): SubTab[] {
   const broken = state.placedBuildings.filter((b) => b.condition === "broken").length;
@@ -60,7 +67,7 @@ function sectionTabs(state: GameState, production: DailyProductionSummary, provi
 
 // `rail` is where a "Go" elsewhere wanted the window to open (at farms, say):
 // the list scrolls there.
-export function BuildPanel({ state, dispatch, production, provinces, selectedProvinceId, onOpenPanel, section, onSection, rail }: BuildPanelProps) {
+export function BuildPanel({ state, dispatch, production, provinces, selectedProvinceId, onSelectProvince, onOpenPanel, section, onSection, rail }: BuildPanelProps) {
   const list = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (rail && section === "buildings") list.current?.querySelector(`[data-rail="${rail}"]`)?.scrollIntoView({ block: "start" });
@@ -74,6 +81,18 @@ export function BuildPanel({ state, dispatch, production, provinces, selectedPro
       {section === "buildings" && (
         <div className="production">
           <ProjectRings state={state} dailyCost={production.buildingInstalments} />
+          {/* What building draws on, in store. */}
+          <div className="production__stock" role="group" aria-label="Building materials in store">
+            {BUILD_MATERIALS.map((type) => (
+              <span key={type} className="production__good" title={`${MATERIAL_NAMES[type]}: ${formatExact(state.resources[type])} in store (${formatRate(production.resourceProduction[type])})`}>
+                <svg viewBox="-10 -10 20 20" width={18} height={18} aria-hidden="true">
+                  <ResourceIcon type={type} size={8} />
+                </svg>
+                <strong>{formatAmount(state.resources[type])}</strong>
+                <span className="production__good-rate">{formatRate(production.resourceProduction[type])}</span>
+              </span>
+            ))}
+          </div>
           {/* Every kind of building, the groups ruled off; Repairs below when
               anything needs mending. */}
           <div className="production__main" ref={list}>
@@ -91,6 +110,10 @@ export function BuildPanel({ state, dispatch, production, provinces, selectedPro
         <PeoplePanel
           state={state}
           production={production}
+          provinces={provinces}
+          selectedProvinceId={selectedProvinceId}
+          onSelectProvince={onSelectProvince}
+          onBuild={() => onSection("buildings")}
           onOpenPanel={onOpenPanel}
         />
       )}

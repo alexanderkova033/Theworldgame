@@ -8,13 +8,17 @@
   background: var(--bar);
 }
 
-/* --- The chart --- */
+/* --- The chart: the one the game is played on (MapLayers). --- */
 .setup__map {
   position: relative;
   flex: 1;
   min-width: 0;
-  background: repeating-linear-gradient(0deg, rgba(76, 106, 120, 0.16) 0 1px, transparent 1px 6px), #b8bfa5;
-  border-right: 3px double var(--gilt);
+  overflow: hidden;
+}
+
+.setup__chart-frame {
+  position: absolute;
+  inset: 0;
 }
 
 .setup__chart {
@@ -23,83 +27,24 @@
   height: 100%;
 }
 
-.setup__island {
-  fill: #efe3c4;
-  stroke: var(--ink);
-  stroke-width: 2;
-  stroke-linejoin: round;
-}
-
-.setup__province {
-  fill: color-mix(in srgb, var(--nation-wash) 62%, #efe3c4);
-  stroke: #5c4733;
-  stroke-width: 1.5;
-  stroke-dasharray: 2 4;
-  stroke-linecap: round;
+/* Clear shapes over each nation, to catch the click. */
+.setup__hit {
+  fill: transparent;
   cursor: pointer;
-  transition: fill 0.15s ease;
-}
-
-.setup__province.is-chosen {
-  fill: color-mix(in srgb, var(--nation-color) 82%, #d2bb8e);
-}
-
-@media (hover: hover) {
-  .setup__province:hover {
-    fill: var(--nation-wash);
-  }
-
-  .setup__province.is-chosen:hover {
-    fill: color-mix(in srgb, var(--nation-color) 82%, #d2bb8e);
-  }
-}
-
-.setup__coast {
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 3;
-  stroke-linejoin: round;
-  pointer-events: none;
-}
-
-/* The chosen nation's frontier: gilt on a dark line, so it reads on any land. */
-.setup__frontier,
-.setup__frontier-under {
-  fill: none;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  pointer-events: none;
-}
-
-.setup__frontier-under {
-  stroke: var(--ink);
-  stroke-width: 7;
 }
 
 .setup__frontier {
+  fill: none;
   stroke: var(--gilt-bright);
-  stroke-width: 3.5;
-}
-
-.setup__label {
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-anchor: middle;
-  dominant-baseline: middle;
-  fill: var(--ink);
-  opacity: 0.65;
-  paint-order: stroke;
-  stroke: rgba(239, 227, 196, 0.7);
-  stroke-width: 3px;
+  stroke-width: 4;
+  stroke-linecap: round;
   pointer-events: none;
 }
 
-.setup__label.is-chosen {
-  font-size: 32px;
-  font-weight: 800;
-  opacity: 1;
+@media (hover: hover) {
+  .setup__hit:hover {
+    fill: rgba(244, 234, 208, 0.18);
+  }
 }
 
 .setup__map button.setup__back {
@@ -474,11 +419,6 @@
     outline: 1px solid var(--gilt);
     outline-offset: -4px;
     pointer-events: none;
-  }
-
-  /* The land keeps clear of the plate. */
-  .setup__chart {
-    width: calc(100% - 37rem);
   }
 
   .setup__map button.setup__back {

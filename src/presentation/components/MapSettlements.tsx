@@ -3,14 +3,14 @@
 // which follows the season), one going up as a faded picture, and the people
 // when something is wrong. People without a home camp out of doors, more of
 // them the more there are; strikers carry placards; rioters carry torches
-// round a fire. See mapSlots.ts for where each stands.
+// round a fire. See mapSlots.ts for where each stands. No two pictures touch.
 import "./MapSettlements.css";
 import { memo } from "react";
 import type { ProvinceStatus } from "../../application/getProvinceOverview";
 import type { ProjectType } from "../../domain/construction/types";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import type { PlacedBuilding } from "../../domain/provinces/types";
-import { getProvincePlots, placeBuildings } from "../mapSlots";
+import { placeBuildings, placeCrowds } from "../mapSlots";
 import type { Point } from "../nationFrontiers";
 import { BuildingIcon } from "./BuildingIcon";
 
@@ -20,7 +20,7 @@ export interface UnderwayBuilding {
 }
 
 const BUILDING_SIZE: Partial<Record<ProjectType, number>> = { housing: 6, factory: 7, farm: 5.5 };
-const BUILDING_SCALE = 1.3; // large enough to read at the zoom the map opens on
+const BUILDING_SCALE = 1.1; // fits BUILDING_ROOM in mapSlots.ts, which keeps pictures from touching
 const CROWD_SCALE = 1.2;
 
 // Where a crowd stands round its plot, front rank last so it overlaps right.
@@ -47,13 +47,21 @@ function Field() {
   );
 }
 
-function Building({ type, at, idle, underway }: { type: ProjectType; at: Point; idle: boolean; underway: boolean }) {
+function Building({ type, at, idle, underway, more }: { type: ProjectType; at: Point; idle: boolean; underway: boolean; more: number }) {
   const [x, y] = at;
   return (
     <g transform={`translate(${x} ${y}) scale(${BUILDING_SCALE})`} className={`map-settle__building ${idle ? "is-idle" : ""} ${underway ? "is-underway" : ""}`}>
       {type === "farm" && <Field />}
       {underway && <ellipse cx={0} cy={7} rx={10} ry={3.5} className="map-settle__ground" />}
       <BuildingIcon type={type} x={0} y={type === "farm" ? -3 : 0} size={BUILDING_SIZE[type] ?? 6} />
+      {more > 0 && (
+        <g transform="translate(9 -9)">
+          <circle r={5.2} className="map-settle__more" />
+          <text y={2.4} className="map-settle__more-count">
+            +{more}
+          </text>
+        </g>
+      )}
     </g>
   );
 }
@@ -139,8 +147,6 @@ export const MapSettlements = memo(function MapSettlements({
   return (
     <g className="map-settle" pointerEvents="none" aria-hidden="true">
       {provinceIds.map((provinceId) => {
-        const plots = getProvincePlots(provinceId);
-        if (!plots) return null;
         const built = buildingsByProvince.get(provinceId) ?? [];
         const going = underway.filter((u) => u.provinceId === provinceId);
         const spots = placeBuildings(provinceId, [...built.map((b) => b.type), ...going.map((u) => u.type)]);
@@ -148,19 +154,27 @@ export const MapSettlements = memo(function MapSettlements({
           ...built.map((b, i) => ({ key: b.id, type: b.type, at: spots[i], idle: !isWorking(b), underway: false })),
           ...going.map((u, i) => ({ key: `underway-${i}`, type: u.type, at: spots[built.length + i], idle: false, underway: true })),
         ];
+        // More of a kind than the province has plots: counted on one that stands.
+        const unplaced = new Map<ProjectType, number>();
+        for (const item of items) if (!item.at) unplaced.set(item.type, (unplaced.get(item.type) ?? 0) + 1);
+        const countedOn = new Set<ProjectType>();
         const status = provinceStatus[provinceId];
+        const troubled = status && (status.homelessLevel > 0 || status.stage === "strikes" || status.stage === "riots");
+        const crowds = troubled ? placeCrowds(provinceId, spots.filter((p) => p !== null)) : null;
         return (
           <g key={provinceId}>
             {items
               .filter((item) => item.at)
               // Further up the page is further away: drawn first, overlapped.
               .sort((a, b) => a.at![1] - b.at![1])
-              .map((item) => (
-                <Building key={item.key} type={item.type} at={item.at!} idle={item.idle} underway={item.underway} />
-              ))}
-            {status && status.homelessLevel > 0 && <Camp at={plots.camp} level={status.homelessLevel} />}
-            {status?.stage === "strikes" && <Strike at={plots.square} />}
-            {status?.stage === "riots" && <Riot at={plots.square} />}
+              .map((item) => {
+                const first = !countedOn.has(item.type);
+                countedOn.add(item.type);
+                return <Building key={item.key} type={item.type} at={item.at!} idle={item.idle} underway={item.underway} more={first ? (unplaced.get(item.type) ?? 0) : 0} />;
+              })}
+            {crowds && status.homelessLevel > 0 && <Camp at={crowds.camp} level={status.homelessLevel} />}
+            {crowds && status.stage === "strikes" && <Strike at={crowds.square} />}
+            {crowds && status.stage === "riots" && <Riot at={crowds.square} />}
           </g>
         );
       })}

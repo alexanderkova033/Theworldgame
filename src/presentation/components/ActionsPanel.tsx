@@ -45,6 +45,8 @@ import {
   ROAD_BUILD_DAYS,
   ROAD_COST,
   ROAD_EFFICIENCY_BONUS,
+  ROAD_FULL_BONUS_COUNT,
+  ROAD_LATE_BONUS,
   ROAD_ORE_COST,
   SUPPLY_FEE_PER_DAY,
 } from "../../domain/constants";
@@ -111,7 +113,7 @@ interface BuildItem {
   resourceCost: number;
   resourceType: ResourceType;
   buildDays: number;
-  yields: ReactNode | ((season: Season, mods: FoodModifiers) => ReactNode); // glyph + a short number; the full sentence is `hint`
+  yields: ReactNode | ((season: Season, mods: FoodModifiers, roads: number) => ReactNode); // glyph + a short number; the full sentence is `hint`
   hint: string;
   unlockedBy?: string; // research node name, for buildings still locked behind the Research tree
 }
@@ -181,12 +183,12 @@ const BUILD_ITEMS: BuildItem[] = [
     resourceCost: ROAD_ORE_COST,
     resourceType: "ore",
     buildDays: ROAD_BUILD_DAYS,
-    yields: (
+    yields: (_season, _mods, roads) => (
       <>
-        <StatIcon type="treasury" size={16} />+{ROAD_EFFICIENCY_BONUS * 100}%
+        <StatIcon type="treasury" size={16} />+{(roads < ROAD_FULL_BONUS_COUNT ? ROAD_EFFICIENCY_BONUS : ROAD_LATE_BONUS) * 100}%
       </>
     ),
-    hint: `+${ROAD_EFFICIENCY_BONUS * 100}% income and construction speed nationwide, per road (stacks)`,
+    hint: `+${ROAD_EFFICIENCY_BONUS * 100}% income and construction speed nationwide for each of your first ${ROAD_FULL_BONUS_COUNT} roads, +${ROAD_LATE_BONUS * 100}% for each after that`,
   },
   {
     type: "education",
@@ -374,7 +376,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, n
                       </span>
                       {!isLocked && (
                         <span className="build-row__yield" title={item.hint}>
-                          {typeof item.yields === "function" ? item.yields(season, mods) : item.yields}
+                          {typeof item.yields === "function" ? item.yields(season, mods, state.placedBuildings.filter((b) => b.type === "road").length) : item.yields}
                         </span>
                       )}
                       {!isLocked && (

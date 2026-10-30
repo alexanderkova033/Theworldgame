@@ -1,82 +1,79 @@
-// Every building a province can hold has a plot on the map, inside the
-// province, and a building stays put as others go up. See
-// src/presentation/mapSlots.ts.
+// Buildings on the map never touch: each has its own plot, inside its
+// province, and stays put as others go up. See src/presentation/mapSlots.ts.
 import { describe, expect, it } from "vitest";
-import {
-  MAX_CANNERIES_PER_PROVINCE,
-  MAX_EDUCATION_PER_PROVINCE,
-  MAX_FACTORIES_PER_PROVINCE,
-  MAX_FARMS_PER_PROVINCE,
-  MAX_GRANARIES_PER_PROVINCE,
-  MAX_HARBOURS_PER_PROVINCE,
-  MAX_HOUSING_PER_PROVINCE,
-} from "../src/domain/constants";
 import { MAP_GEOMETRY } from "../src/domain/provinces/provinceData";
-import { getProvincePlots, placeBuildings, PLOTS_NEEDED, PROVINCE_LABEL_ROOM } from "../src/presentation/mapSlots";
+import { BUILDING_ROOM, getProvincePlots, placeBuildings, placeCrowds, separatePlates } from "../src/presentation/mapSlots";
 
 const places = [...MAP_GEOMETRY.provinces, ...MAP_GEOMETRY.islands];
 
 describe("plots on the map", () => {
-  it("counts every kind of building a province can hold", () => {
-    expect(PLOTS_NEEDED).toBe(
-      MAX_HOUSING_PER_PROVINCE + MAX_FARMS_PER_PROVINCE + MAX_FACTORIES_PER_PROVINCE + MAX_EDUCATION_PER_PROVINCE + MAX_GRANARIES_PER_PROVINCE + MAX_CANNERIES_PER_PROVINCE + MAX_HARBOURS_PER_PROVINCE,
-    );
-  });
-
-  it("has room for a full province everywhere, and for its crowds", () => {
+  it("leaves no two pictures touching, anywhere", () => {
     for (const place of places) {
-      const plots = getProvincePlots(place.id)!;
-      expect(plots.plots.length, place.name).toBeGreaterThanOrEqual(PLOTS_NEEDED);
-      expect(plots.camp, place.name).not.toEqual(plots.square);
-      expect(plots.plots, place.name).not.toContain(plots.camp);
-      expect(plots.plots, place.name).not.toContain(plots.square);
+      const { plots } = getProvincePlots(place.id)!;
+      plots.forEach(([ax, ay], i) => {
+        plots.slice(i + 1).forEach(([bx, by]) => {
+          const clear = Math.abs(ax - bx) >= BUILDING_ROOM.width || Math.abs(ay - by) >= BUILDING_ROOM.height;
+          expect(clear, place.name).toBe(true);
+        });
+      });
     }
   });
 
-  it("gives every building of a full province its own plot", () => {
-    const full = [
-      ...Array<"housing">(MAX_HOUSING_PER_PROVINCE).fill("housing"),
-      ...Array<"farm">(MAX_FARMS_PER_PROVINCE).fill("farm"),
-      ...Array<"factory">(MAX_FACTORIES_PER_PROVINCE).fill("factory"),
-      ...Array<"education">(MAX_EDUCATION_PER_PROVINCE).fill("education"),
-      ...Array<"granary">(MAX_GRANARIES_PER_PROVINCE).fill("granary"),
-      ...Array<"cannery">(MAX_CANNERIES_PER_PROVINCE).fill("cannery"),
-      ...Array<"harbour">(MAX_HARBOURS_PER_PROVINCE).fill("harbour"),
-    ];
+  it("gives crowds two separate grounds, clear of a province's first buildings", () => {
     for (const place of places) {
-      const spots = placeBuildings(place.id, full);
-      expect(spots.every(Boolean), place.name).toBe(true);
-      expect(new Set(spots).size, place.name).toBe(full.length);
+      const standing = placeBuildings(place.id, ["housing", "farm"]).filter((p) => p !== null);
+      const crowds = placeCrowds(place.id, standing)!;
+      expect(crowds.camp, place.name).not.toEqual(crowds.square);
     }
-  });
-
-  it("keeps a farm where it is as homes go up round it", () => {
-    const province = MAP_GEOMETRY.provinces[0].id;
-    const before = placeBuildings(province, ["farm", "housing"]);
-    const after = placeBuildings(province, ["farm", "housing", "housing", "housing"]);
-    expect(after[0]).toEqual(before[0]);
-    expect(after[1]).toEqual(before[1]);
-  });
-
-  it("is the same every time", () => {
-    const province = MAP_GEOMETRY.provinces[3].id;
-    expect(placeBuildings(province, ["factory", "farm"])).toEqual(placeBuildings(province, ["factory", "farm"]));
-  });
-});
-
-describe("clear ground", () => {
-  it("keeps a province's first buildings clear of its name and strip", () => {
-    for (const place of places) {
-      const { plots, clearPlots } = getProvincePlots(place.id)!;
-      for (const [x, y] of plots.slice(0, clearPlots)) {
-        const onName = Math.abs(x - place.labelX) < PROVINCE_LABEL_ROOM.halfWidth && y > place.labelY - PROVINCE_LABEL_ROOM.above && y < place.labelY + PROVINCE_LABEL_ROOM.below;
-        expect(onName, place.name).toBe(false);
+    // A roomy province: nothing touches.
+    const roomy = MAP_GEOMETRY.islands.find((p) => p.name === "Solmere")!.id;
+    const standing = placeBuildings(roomy, ["housing", "farm", "factory"]).filter((p) => p !== null);
+    const { camp, square } = placeCrowds(roomy, standing)!;
+    for (const ground of [camp, square]) {
+      for (const [x, y] of standing) {
+        const clear = Math.abs(x - ground[0]) >= 28 + BUILDING_ROOM.width / 2 || y - ground[1] >= 14 + BUILDING_ROOM.height / 2 || ground[1] - y >= 36 + BUILDING_ROOM.height / 2;
+        expect(clear).toBe(true);
       }
     }
   });
 
-  it("leaves most provinces clear plots for what they hold in play", () => {
-    const roomy = places.filter((place) => getProvincePlots(place.id)!.clearPlots >= 4);
-    expect(roomy.length).toBeGreaterThanOrEqual(places.length - 4);
+  it("has room for the buildings most provinces hold in play", () => {
+    // A home, a farm and a factory: what a province usually has in play.
+    for (const place of places) expect(getProvincePlots(place.id)!.plots.length, place.name).toBeGreaterThanOrEqual(3);
+  });
+
+  it("gives nothing a plot once they run out, rather than stacking", () => {
+    const place = places[0].id;
+    const count = getProvincePlots(place)!.plots.length;
+    const spots = placeBuildings(place, Array<"housing">(count + 2).fill("housing"));
+    expect(spots.filter(Boolean).length).toBe(count);
+    expect(new Set(spots.filter(Boolean)).size).toBe(count);
+    expect(spots[count]).toBeNull();
+  });
+
+  it("keeps what stands where it is as more go up", () => {
+    const province = MAP_GEOMETRY.provinces[9].id;
+    const before = placeBuildings(province, ["farm", "housing"]);
+    const after = placeBuildings(province, ["farm", "housing", "housing", "factory"]);
+    expect(after[0]).toEqual(before[0]);
+    expect(after[1]).toEqual(before[1]);
+  });
+});
+
+describe("slot plates", () => {
+  it("pushes overlapping plates apart until none touch", () => {
+    const plates = separatePlates([
+      { x: 0, y: 0, width: 80, height: 50 },
+      { x: 20, y: 10, width: 80, height: 50 },
+      { x: 30, y: 30, width: 80, height: 50 },
+      { x: 400, y: 400, width: 80, height: 50 },
+    ]);
+    plates.forEach((a, i) => {
+      plates.slice(i + 1).forEach((b) => {
+        const overlaps = a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+        expect(overlaps).toBe(false);
+      });
+    });
+    expect(plates[3]).toEqual({ x: 400, y: 400, width: 80, height: 50 });
   });
 });
