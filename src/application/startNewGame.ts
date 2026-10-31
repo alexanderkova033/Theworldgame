@@ -25,7 +25,7 @@ import { createNeighbours } from "../domain/neighbours/neighbourRules";
 // farms barely yield, so the very first thing the player sees is food
 // falling and why. Last autumn's harvest is in the granaries
 // (STARTING_FOOD) to carry the country through to spring.
-const STARTING_DATE = { year: 1, month: 1, day: 1 };
+export const STARTING_DATE = { year: 1, month: 1, day: 1 };
 
 // Enough for a 2-farm nation to reach spring without building anything —
 // just. A 2-farm nation eats ~5,000 more than it grows per winter day.

@@ -10,9 +10,13 @@
 import "./Objectives.css";
 import { useEffect, useRef, useState } from "react";
 import { objectivesMet } from "../../application/chapters";
+import { describeWait } from "../../application/getDaysToSave";
+import { getObjectiveGuidance, type ObjectiveGuidance } from "../../application/getObjectiveGuidance";
 import { getChapter, type ChapterId } from "../../domain/chapters/chapterData";
+import { CURRENCY_SYMBOL } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { describeBurden, getBurden } from "../../domain/reign/reignRules";
+import { formatAmount } from "../formatNumber";
 import { destinationName, objectiveDestination, type OpenPanel } from "../navigation";
 import { NavIcon } from "./NavIcon";
 import { StoryPlate } from "./StoryPlate";
@@ -47,10 +51,24 @@ function Pips({ met }: { met: boolean[] }) {
   );
 }
 
+// A step that can't be paid for yet, in a line: what to do in its place.
+function Guidance({ guidance }: { guidance: ObjectiveGuidance }) {
+  if (guidance.kind === "startClock") return <span className="objectives__guidance">Start the clock: Space or Resume.</span>;
+  if (guidance.kind === "goods") return <span className="objectives__guidance">Needs {formatAmount(guidance.short)} more {guidance.good} to start.</span>;
+  const cost = `${formatAmount(guidance.cost)} ${CURRENCY_SYMBOL} to start.`;
+  if (guidance.days === null) return <span className="objectives__guidance">{cost} The treasury is not rising.</span>;
+  return (
+    <span className="objectives__guidance" title="At today's income">
+      {cost} Enough {describeWait(guidance.days)}.
+    </span>
+  );
+}
+
 // The chapter in hand: its engraved plate with the title across its foot and
 // a wax seal on its corner, a bar for how far it has got, then its
 // objectives as numbered steps on a line. The first one still to do is the
-// one lit, with the way to where it's done.
+// one lit, with the way to where it's done, or what to do first when it can't
+// be paid for yet.
 function ChapterCard({ state, id, onOpenPanel }: { state: GameState; id: ChapterId; onOpenPanel: OpenPanel }) {
   const chapter = getChapter(id);
   const met = objectivesMet(state, id);
@@ -72,6 +90,7 @@ function ChapterCard({ state, id, onOpenPanel }: { state: GameState; id: Chapter
         {chapter.objectives.map((objective, i) => {
           const to = met[i] ? null : objectiveDestination(id, i);
           const current = i === next;
+          const guidance = current ? getObjectiveGuidance(state, id, i) : null;
           const mark = (
             <span className="objectives__step-mark" aria-hidden="true">
               {met[i] ? "✓" : i + 1}
@@ -83,7 +102,7 @@ function ChapterCard({ state, id, onOpenPanel }: { state: GameState; id: Chapter
                 <button type="button" className="objectives__go" title={`Open ${destinationName(to)}`} onClick={() => onOpenPanel(to.panel, to.section, to.rail)}>
                   {mark}
                   <span className="objectives__text">{objective}</span>
-                  {current && <span className="objectives__go-label">Go ›</span>}
+                  {current && !guidance && <span className="objectives__go-label">Go ›</span>}
                 </button>
               ) : (
                 <span className="objectives__plain">
@@ -91,6 +110,7 @@ function ChapterCard({ state, id, onOpenPanel }: { state: GameState; id: Chapter
                   <span className="objectives__text">{objective}</span>
                 </span>
               )}
+              {guidance && <Guidance guidance={guidance} />}
             </li>
           );
         })}
@@ -152,6 +172,7 @@ export function Objectives({ state, onOpenPanel }: { state: GameState; onOpenPan
         const met = objectivesMet(state, id);
         const next = met.indexOf(false);
         const to = next >= 0 ? objectiveDestination(id, next) : null;
+        const guidance = next >= 0 ? getObjectiveGuidance(state, id, next) : null;
         const line = (
           <>
             <span className="objectives__also-label">Also</span>
@@ -162,7 +183,7 @@ export function Objectives({ state, onOpenPanel }: { state: GameState; onOpenPan
         return to ? (
           <button key={id} type="button" className="objectives__also" title={`${getChapter(id).title}. Open ${destinationName(to)}`} onClick={() => onOpenPanel(to.panel, to.section, to.rail)}>
             {line}
-            <span className="objectives__also-go" aria-hidden="true">›</span>
+            {guidance ? <Guidance guidance={guidance} /> : <span className="objectives__also-go" aria-hidden="true">›</span>}
           </button>
         ) : (
           <div key={id} className="objectives__also" title={getChapter(id).title}>
