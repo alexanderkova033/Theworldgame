@@ -57,7 +57,7 @@ import { RESEARCH_NODES } from "../../src/domain/research/researchData";
 import { getResearchNodeStatus } from "../../src/domain/research/researchRules";
 import type { ResearchCategory } from "../../src/domain/research/types";
 import { takeBurden } from "../../src/application/actions/burdenActions";
-import { readBriefing } from "../../src/application/chapters";
+import { joinedLetter, readBriefing } from "../../src/application/chapters";
 
 export const NATIONS: Array<[nation: string, party: string]> = [
   ["astravia", "astravia-harvest-union"],
@@ -100,8 +100,14 @@ export function pathRoute(tree: "law" | "research", pathKey: string): string[] {
   ];
 }
 
+// Each time the game would stop for the player, in the order the script deals
+// with them. "joined" is a briefing with its letter on one page (it reports
+// "decision" for that letter too, when it answers it).
+export type ScriptedStop = "briefing" | "joined" | "burden" | "ultimatum" | "demand" | "crisis" | "decision";
+
 export interface PlayOptions {
   days: number;
+  onStop?: (stop: ScriptedStop) => void;
   follow?: { tree: "law" | "research"; pathKey: string };
   onDay?: (state: GameState) => void; // sees the country after every simulated day
   difficulty?: Difficulty;
@@ -144,7 +150,7 @@ function chooseBurden(offer: string[], sloppy: boolean): string {
   return [...offer].sort((a, b) => rank(a) - rank(b))[0];
 }
 
-export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty = "easy", skill = "careful", mode, settle = false, trade = false, treaties = false, army = false, war = false, neglect = false }: PlayOptions): GameState {
+export function playCarefully(nation: string, party: string, { days, onStop, follow, onDay, difficulty = "easy", skill = "careful", mode, settle = false, trade = false, treaties = false, army = false, war = false, neglect = false }: PlayOptions): GameState {
   const sloppy = skill === "sloppy";
   let s = takeLoan(startNewGame(nation, party, difficulty, mode));
   if (!sloppy) s = setTaxRate(s, 0.12);
@@ -152,8 +158,14 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
   const area = follow?.tree === "research" ? (RESEARCH_NODES.find((n) => n.id === route[1])!.category as ResearchCategory) : null;
   for (let day = 0; day < days && !s.isGameOver; day++) {
     // A chapter's letter is read as it comes (and a story letter follows it).
-    for (const id of s.chapters.unread) s = readBriefing(s, id);
-    if (s.burdenOffer) s = takeBurden(s, chooseBurden(s.burdenOffer, sloppy));
+    for (const id of s.chapters.unread) {
+      onStop?.(joinedLetter(s, id) ? "joined" : "briefing");
+      s = readBriefing(s, id);
+    }
+    if (s.burdenOffer) {
+      onStop?.("burden");
+      s = takeBurden(s, chooseBurden(s.burdenOffer, sloppy));
+    }
     const production = getDailyProductionSummary(s);
     const nextLaw = follow?.tree === "law" ? getLawNode(route.find((id) => !s.enactedLawIds.includes(id)) ?? "") : undefined;
     const keep = (good: Good) => (good === nextLaw?.enactCost.resourceType ? (nextLaw.enactCost.resourceAmount ?? 0) : 0);
@@ -191,11 +203,15 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
       s = trade && wanted && canAcceptOffer(s) ? acceptOffer(s) : declineOffer(s);
     }
     // A neighbour's ultimatum: paid off with money to spare, else refused.
-    if (s.ultimatum && !s.ultimatum.answered) s = canPayTribute(s) && s.stats.treasury > 5000 ? payTribute(s) : standFirm(s);
+    if (s.ultimatum && !s.ultimatum.answered) {
+      onStop?.("ultimatum");
+      s = canPayTribute(s) && s.stats.treasury > 5000 ? payTribute(s) : standFirm(s);
+    }
     // A letter from a province. A careful player grants a pay rise it can
     // afford and ends an uprising on terms; a sloppy one refuses the pay
     // rise, and takes the cheapest way out of an uprising.
     if (s.pendingDemand) {
+      onStop?.("demand");
       const answer =
         s.pendingDemand.kind === "payRise"
           ? !sloppy && s.stats.treasury > 1500 ? "grant" : "refuse"
@@ -205,7 +221,10 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
     // A crisis in a province. A careful player pays for the lasting answer
     // when it has money to spare (buying wood for a dike), else the cheaper
     // one; a sloppy one takes whatever costs nothing.
-    if (s.pendingCrisis) s = answerCrisisAs(s, sloppy);
+    if (s.pendingCrisis) {
+      onStop?.("crisis");
+      s = answerCrisisAs(s, sloppy);
+    }
     // A province that has risen: raise companies and send them in. A sloppy
     // player only gets round to it after two months of losing it; a
     // neglectful one never does.
@@ -215,6 +234,7 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
       while ((s.provinces[id].uprising?.militia ?? 2) < 2 && canSendMilitia(s, id)) s = sendMilitia(s, id);
     }
     if (s.pendingDecisionId) {
+      onStop?.("decision");
       const decision = getDecision(s.pendingDecisionId)!;
       // What an answer does to support: its own, and through the groups it moves.
       const weights = getFactionWeights(s.nationId);

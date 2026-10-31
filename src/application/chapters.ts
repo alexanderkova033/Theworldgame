@@ -23,6 +23,8 @@ import { ASTRAVIA_RULES } from "./stories/astravia";
 import { CALDENREICH_RULES } from "./stories/caldenreich";
 import { VELDORIA_RULES } from "./stories/veldoria";
 import { generateId } from "../domain/country/id";
+import { getDecision } from "../domain/decisions/decisionRules";
+import { resolveDecision } from "./actions/resolveDecision";
 import type { GameState } from "../domain/country/types";
 import { getElectionThreshold } from "../domain/parties/electionRules";
 import { RELATIONS_HOSTILE } from "../domain/constants";
@@ -144,6 +146,45 @@ export function readBriefing(state: GameState, id: ChapterId): GameState {
   if (!letter) return { ...state, chapters };
   if (!state.pendingDecisionId) return { ...state, chapters, pendingDecisionId: letter, isPaused: true };
   return { ...state, chapters: { ...chapters, letters: [...chapters.letters, letter] } };
+}
+
+// The letter a briefing can be answered with, as one stop: only when reading
+// it would bring that letter up next anyway, so that doing both at once
+// changes nothing. Another briefing or a burden comes first, another letter
+// sends this one to the back of the queue, and a crisis strikes as the
+// briefing is read, which the letter's answers should be read after.
+export function joinedLetter(state: GameState, id: ChapterId): string | null {
+  const chapter = getChapter(id);
+  if (!chapter?.letter || chapter.crisis) return null;
+  const { unread } = state.chapters;
+  if (unread.length !== 1 || unread[0] !== id || state.pendingDecisionId || state.burdenOffer) return null;
+  return getDecision(chapter.letter) ? chapter.letter : null;
+}
+
+// A briefing read and its letter answered, as one step: the same two actions
+// with nothing between them.
+export function readAndAnswer(state: GameState, id: ChapterId, optionId: string): GameState {
+  const letter = joinedLetter(state, id);
+  const read = readBriefing(state, id);
+  return letter ? resolveDecision(read, letter, optionId) : read;
+}
+
+// How many more stops wait behind this briefing: the other briefings, the
+// letters they will send (but for one that will come on its briefing's page),
+// and any other letter already waiting.
+export function stopsBehind(state: GameState, id: ChapterId): number {
+  const { unread, letters } = state.chapters;
+  let letterOpen = !!state.pendingDecisionId;
+  let lettersToCome = 0;
+  unread.forEach((c, i) => {
+    const chapter = getChapter(c);
+    if (!chapter?.letter) return;
+    const joins = i === unread.length - 1 && !letterOpen && !state.burdenOffer && !chapter.crisis;
+    if (!joins) lettersToCome += 1;
+    letterOpen = true;
+  });
+  const others = [state.pendingDecisionId, state.burdenOffer, state.pendingDemand, state.pendingCrisis, state.ultimatum && !state.ultimatum.answered].filter(Boolean).length;
+  return unread.filter((c) => c !== id).length + lettersToCome + letters.length + others;
 }
 
 // The next story letter waiting, sent once no other letter is open.
