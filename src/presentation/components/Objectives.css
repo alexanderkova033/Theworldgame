@@ -200,6 +200,22 @@
   font-weight: 700;
 }
 
+/* The step in hand can't be paid for yet: what to do first, under its words. */
+.objectives__guidance {
+  display: block;
+  margin: 0.2rem 0 0 2rem;
+  color: var(--oxblood);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.objectives__also .objectives__guidance {
+  flex-basis: 100%;
+  margin: 0;
+  order: 1;
+}
+
 @media (hover: hover) {
   .objectives button.objectives__go:hover:not(:disabled) {
     background: #f1e4c3;
@@ -235,8 +251,9 @@
 /* Another chapter under way, on one line at the foot. */
 .objectives__also {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.2rem 0.5rem;
   margin: 0 -0.6rem -0.6rem;
   padding: 0.4rem 0.6rem;
   background: var(--paper);
