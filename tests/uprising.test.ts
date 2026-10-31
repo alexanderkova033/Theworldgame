@@ -6,7 +6,7 @@ import { buildFarm } from "../src/application/actions/buildFarm";
 import { canSendMilitia, disbandMilitia, raiseMilitia, recallMilitia, sendMilitia } from "../src/application/actions/militiaActions";
 import { getDailyProductionSummary } from "../src/application/getDailyProductionSummary";
 import { simulateDay } from "../src/application/simulateDay";
-import { startNewGame } from "../src/application/startNewGame";
+import { calmStart } from "./support/calmStart";
 import { allChaptersOpen } from "../src/domain/chapters/chapterData";
 import {
   MILITIA_SEND_POLITICAL_POWER,
@@ -30,9 +30,9 @@ const UPRISING_RIOT_DAYS = getDifficulty("normal").uprisingRiotDays;
 const UPRISING_RIOT_DAYS_AGGRIEVED = Math.ceil(UPRISING_RIOT_DAYS / 3);
 
 const base: GameState = {
-  ...startNewGame("astravia", "astravia-harvest-union"),
+  ...calmStart("astravia", "astravia-harvest-union"),
   chapters: allChaptersOpen(),
-  stats: { ...startNewGame("astravia", "astravia-harvest-union").stats, treasury: 20000, politicalPower: 200 },
+  stats: { ...calmStart("astravia", "astravia-harvest-union").stats, treasury: 20000, politicalPower: 200 },
 };
 // The province with the most workplaces, so seizing them shows.
 const target = Object.keys(base.provinces).sort(
@@ -116,6 +116,14 @@ describe("an uprising", () => {
     });
     const again = day(aggrieved).provinces[target].uprising;
     expect(again?.strength).toBeCloseTo(UPRISING_START_STRENGTH + UPRISING_AGGRIEVED_START_BONUS, 0);
+  });
+});
+
+describe("a risen province", () => {
+  it("is held by the rebels: no mob wrecks the homes left in it", () => {
+    let s = withProvince({ ...risen, stats: { ...risen.stats, stability: 70 } }, { uprising: { ...risen.provinces[target].uprising!, strength: 80 } });
+    for (let i = 0; i < 60; i++) s = day({ ...s, stats: { ...s.stats, stability: 70 }, pendingDemand: null });
+    expect(s.events.some((e) => e.message.startsWith("Rioters in"))).toBe(false);
   });
 });
 

@@ -125,7 +125,7 @@ export function destinationName({ panel, section, rail }: Destination): string {
 // Where each chapter's objectives are done, in the order the chapter
 // lists them. null: there is nowhere to go, it comes with time.
 export const OBJECTIVE_DESTINATIONS: Record<SystemChapterId, Array<Destination | null>> = {
-  "first-winter": [FARMS, HOMES, null],
+  "first-winter": [REPAIRS, FARMS, HOMES, null],
   exchange: [MARKET],
   assembly: [{ panel: "laws" }],
   society: [{ panel: "research" }, HOMES],

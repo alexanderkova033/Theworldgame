@@ -3,6 +3,7 @@
 import type { CountryStats, GameState } from "../../domain/country/types";
 import { getColdStabilityPenalty, getHomelessStabilityPenalty } from "../../domain/housing/housingRules";
 import { fitCauses } from "../../domain/ledger/ledgerRules";
+import { getDifficulty } from "../../domain/difficulty/difficultyData";
 import { getTaxStabilityPenalty } from "../../domain/economy/economyRules";
 import { getDebtStabilityPenalty } from "../../domain/loans/loanRules";
 import { getProvinceRiotDrag } from "../../domain/provinces/provinceOrder";
@@ -42,12 +43,16 @@ export function keepOrder(
   const homelessStabilityPenalty = getHomelessStabilityPenalty(today.homelessShare);
   const coldStabilityPenalty = getColdStabilityPenalty(today.unheatedShare);
   const taxStabilityPenalty = getTaxStabilityPenalty(working.taxRate);
+  // Governing wears a government down to the edge of trouble, however well
+  // it goes. Past that edge, only real failures take it further.
+  const level = getDifficulty(working.difficulty);
+  const wear = working.stats.stability > level.wearFloor ? level.wearPerDay : 0;
   const policeStabilityBonus = getPoliceStabilityBonus(today.police);
   // Provinces rioting on their own pull the whole country down.
   const provinceRiotDrag = getProvinceRiotDrag(working.provinces, working.unrestStage);
   const stability = Math.min(
     100,
-    updateStability(today.statsWithFood, today.isShortage, debtStabilityPenalty + homelessStabilityPenalty + coldStabilityPenalty + provinceRiotDrag + taxStabilityPenalty) +
+    updateStability(today.statsWithFood, today.isShortage, debtStabilityPenalty + homelessStabilityPenalty + coldStabilityPenalty + provinceRiotDrag + taxStabilityPenalty + wear) +
       policeStabilityBonus +
       day.mods.stabilityPerDay,
   );
@@ -62,6 +67,7 @@ export function keepOrder(
         support: pressures.support,
         debt: -debtStabilityPenalty,
         taxes: -taxStabilityPenalty,
+        wear: -wear,
         homes: -homelessStabilityPenalty,
         cold: -coldStabilityPenalty,
         provinces: -provinceRiotDrag,

@@ -7,7 +7,7 @@ import { drillTheArmy } from "../src/application/day/army";
 import { beginDay } from "../src/application/day/dayContext";
 import { runNeighbours } from "../src/application/day/neighbours";
 import { simulateDay } from "../src/application/simulateDay";
-import { startNewGame } from "../src/application/startNewGame";
+import { calmStart } from "./support/calmStart";
 import { allChaptersOpen } from "../src/domain/chapters/chapterData";
 import {
   GARRISON_ORDER,
@@ -42,7 +42,7 @@ import { addDays } from "../src/domain/country/calendar";
 import { playCarefully } from "./support/carefulPlayer";
 import { seedRandom } from "./support/seededRandom";
 
-const start = startNewGame("astravia", "astravia-harvest-union");
+const start = calmStart("astravia", "astravia-harvest-union");
 const base: GameState = { ...start, chapters: allChaptersOpen(), stats: { ...start.stats, treasury: 20000 }, isPaused: false };
 const capital = getNation("astravia").capitalProvinceId;
 const astravia = getNation("astravia").provinceIds;
@@ -249,7 +249,7 @@ describe("taking back a province that broke away", () => {
 
   it("costs regiments worn to nothing, and rebels left alone regrow", () => {
     const beaten = run(at(lost, lostId, 1, 10), 60);
-    expect(beaten.regiments).toHaveLength(0);
+    expect(beaten.regiments.filter((r) => r.nationId === beaten.nationId)).toHaveLength(0);
     expect(beaten.lostProvinceIds).toContain(lostId);
     const weakened = { ...lost, freeProvinces: { [lostId]: { people, strength: 50 } } };
     expect(day(weakened).freeProvinces[lostId].strength).toBeGreaterThan(50);

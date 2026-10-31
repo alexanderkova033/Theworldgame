@@ -6,7 +6,7 @@ export const DAYS_PER_MONTH = 30;
 export const MONTHS_PER_YEAR = 12;
 
 // --- Food ---
-export const FOOD_PER_FARM = 1900; // food produced per farm per in-game day (before the season — see FARM_SEASON_MULTIPLIER)
+export const FOOD_PER_FARM = 1900; // food produced per farm per in-game day (before the season â€” see FARM_SEASON_MULTIPLIER)
 export const FOOD_PER_POP_CONSUMPTION = 1; // food eaten per person per in-game day
 export const FARM_COST = 650;
 export const FARM_BUILD_DAYS = 60;
@@ -14,7 +14,7 @@ export const MAX_FARMS_PER_PROVINCE = 4;
 
 // --- Resources (Catan-inspired: terrain produces, provinces trade) ---
 export const RESOURCE_PER_PROVINCE = 0.3; // units of matching resource the land gives per owned province per day; mines and sawmills add to it
-export const COAL_PER_HILLS_PROVINCE = 0.25; // hills mine coal as well as ore — the fuel homes burn in winter
+export const COAL_PER_HILLS_PROVINCE = 0.25; // hills mine coal as well as ore â€” the fuel homes burn in winter
 export const STARTING_RESOURCE_STOCK = 15; // a little in the stores, for the first orders; the rest has to be produced or bought
 // ...except coal: the game opens on 1 January, sixty days of winter ahead, and
 // the starting homes burn about 50 coal getting through it. With none in
@@ -33,8 +33,8 @@ export const MARKET_BUY_MARKUP = 1.4; // buying pays this over the mid price...
 export const MARKET_PORT_BUY_MARKUP = 1.2; // ...less with a coastal port
 export const MARKET_SELL_FACTOR = 0.55; // selling gets this share of the mid price
 export const MARKET_RECOVERY_PER_DAY = 0.04; // share of the gap to normal stock closed each day
-export const MARKET_PRICE_FLOOR = 0.25; // mid price never below this × base...
-export const MARKET_PRICE_CEILING = 4; // ...or above this × base
+export const MARKET_PRICE_FLOOR = 0.25; // mid price never below this Ã— base...
+export const MARKET_PRICE_CEILING = 4; // ...or above this Ã— base
 export const MARKET_OUTLOOK_SWING = 0.1; // monthly random step in each good's world outlook
 export const MARKET_OUTLOOK_MIN = 0.7;
 export const MARKET_OUTLOOK_MAX = 1.3;
@@ -87,10 +87,10 @@ export const SAWMILL_BUILD_DAYS = 50;
 export const MAX_SAWMILLS_PER_PROVINCE = 2;
 export const WOOD_PER_SAWMILL = 0.4;
 
-// --- Food processing (Granary/Cannery — research-gated, see domain/research)
+// --- Food processing (Granary/Cannery â€” research-gated, see domain/research)
 // Grain/fish trickle in at ~1/province/day (see RESOURCE_PER_PROVINCE above),
 // so these buildings convert whatever small surplus you actually have into a
-// meaningful chunk of food — a supplement to farms, not a replacement, since
+// meaningful chunk of food â€” a supplement to farms, not a replacement, since
 // a nation's grain/fish income is capped by how many plains/coast provinces
 // it owns, not by how many granaries/canneries it builds.
 export const GRANARY_COST = 900;
@@ -149,15 +149,15 @@ export const PROVINCE_STABILITY_DRIFT = 0.05; // share of the gap to that target
 export const PROVINCE_HOMELESS_UNREST = 80; // points off, times the province's homeless share
 export const PROVINCE_JOBLESS_UNREST = 35; // points off, times the province's jobless share (gentler: some provinces start with no jobs at all)
 // National stability lost per day to provinces rioting on their own, times
-// their share of the population — a province with 1/6 of the people costs
+// their share of the population â€” a province with 1/6 of the people costs
 // 0.2 a day, an emptied one next to nothing.
 export const PROVINCE_RIOT_STABILITY_DRAG = 1.2;
 
 // When the map flags a province (see application/getProvinceOverview.ts).
-export const PROVINCE_FLAG_HOMELESS_SHARE = 0.01; // homes: over — this share or more without a home (red "!")
-export const PROVINCE_FLAG_FULL_SHARE = 0.95; // homes: full — this share of places taken
-export const PROVINCE_FLAG_JOBLESS_SHARE = 0.1; // jobs: jobless — this share of workers without work (red "!")
-export const PROVINCE_FLAG_SHORT_SHARE = 0.05; // jobs: short — this share of jobs nobody fills
+export const PROVINCE_FLAG_HOMELESS_SHARE = 0.01; // homes: over â€” this share or more without a home (red "!")
+export const PROVINCE_FLAG_FULL_SHARE = 0.95; // homes: full â€” this share of places taken
+export const PROVINCE_FLAG_JOBLESS_SHARE = 0.1; // jobs: jobless â€” this share of workers without work (red "!")
+export const PROVINCE_FLAG_SHORT_SHARE = 0.05; // jobs: short â€” this share of jobs nobody fills
 
 // --- Political actions (see application/actions/politicalActions.ts) ---
 // Ways to spend political power directly on support and order.
@@ -168,12 +168,12 @@ export const COURT_POLITICAL_POWER_COST = 15;
 export const COURT_TREASURY_COST = 300;
 export const COURT_SUPPORT = 8; // one group
 export const CRACKDOWN_POLITICAL_POWER_COST = 20;
-export const CRACKDOWN_STABILITY = 6; // plus CRACKDOWN_STABILITY_PER_POLICE per officer — see domain/unrest
+export const CRACKDOWN_STABILITY = 6; // plus CRACKDOWN_STABILITY_PER_POLICE per officer â€” see domain/unrest
 export const CRACKDOWN_SUPPORT = -4; // every group
 
 // --- Housing (see domain/housing) ---
 // People need a roof. Population keeps growing past what the homes can hold,
-// and everyone without one weighs on stability and popularity — so a growing
+// and everyone without one weighs on stability and popularity â€” so a growing
 // country is also a problem to keep up with.
 export const HOUSING_COST = 350;
 export const HOUSING_WOOD_COST = 12;
@@ -184,7 +184,7 @@ export const HOMELESS_STABILITY_PENALTY = 1.5; // per day, times the share of pe
 export const HOMELESS_PENALTY_CAP = 0.4; // ...capped
 export const HOMELESS_GROWTH_FACTOR = 0.5; // past capacity, population still grows, at half the usual rate
 
-// Heating: every working home burns coal each winter day — or firewood
+// Heating: every working home burns coal each winter day â€” or firewood
 // once the coal runs out. Run out of both and people freeze.
 export const HEATING_FUEL_PER_HOME = 0.12; // coal (or wood) per home per winter day
 export const COLD_STABILITY_PENALTY = 0.5; // per winter day, times the unheated share of homes
@@ -197,8 +197,8 @@ export const EDUCATION_BUILD_DAYS = 90;
 export const MAX_EDUCATION_PER_PROVINCE = 2;
 
 // --- Research (see domain/research) ---
-// There's no research-point pool to spend. Each area — industry,
-// agriculture, administration — makes daily progress toward whichever node
+// There's no research-point pool to spend. Each area â€” industry,
+// agriculture, administration â€” makes daily progress toward whichever node
 // it's been pointed at, at its own rate: a trickle by default, more for
 // every building in that field, and much more for every scientist hired
 // into it. Schools sharpen all three. A node is done once its area has put
@@ -212,12 +212,12 @@ export const RESEARCH_COST_BY_TIER: Record<1 | 2 | 3 | 4 | 5 | 6 | 7, number> = 
 // year after a path's capstone, the area may take up one it passed over.
 export const RESEARCH_PATH_REOPEN_DAYS = DAYS_PER_MONTH * MONTHS_PER_YEAR;
 export const RESEARCH_BASE_RATE_PER_AREA = 0.15; // per day, per area, with nothing invested
-export const RESEARCH_PER_FACTORY = 0.06; // industry — workshops tinkering on the line
+export const RESEARCH_PER_FACTORY = 0.06; // industry â€” workshops tinkering on the line
 export const RESEARCH_PER_ROAD = 0.03; // industry
-export const RESEARCH_PER_FARM = 0.05; // agriculture — field trials
+export const RESEARCH_PER_FARM = 0.05; // agriculture â€” field trials
 export const RESEARCH_PER_FOOD_PROCESSOR = 0.06; // agriculture, per granary/cannery
 export const RESEARCH_PER_SCHOOL = 0.1; // administration
-export const RESEARCH_PER_HOME = 0.03; // housing — builders learning on the job
+export const RESEARCH_PER_HOME = 0.03; // housing â€” builders learning on the job
 export const RESEARCH_PER_SCIENTIST = 0.3; // in the scientist's own area
 export const EDUCATION_RESEARCH_BONUS = 0.05; // +5% to every area per working school
 
@@ -243,13 +243,13 @@ export const POLICE_BREAKDOWN_REDUCTION_CAP = 0.4; // ...capped at -40%
 export const FARM_SEASON_MULTIPLIER = { spring: 1, summer: 1.15, autumn: 1.35, winter: 0.55 } as const;
 
 // --- Breakdowns & repairs (see domain/maintenance) ---
-export const BREAKDOWN_CHANCE_PER_DAY = 0.0008; // per working building — roughly once every 3-4 years each
+export const BREAKDOWN_CHANCE_PER_DAY = 0.0014; // per working building â€” roughly once every two years each
 export const REPAIR_COST_SHARE = 0.25; // a repair costs this share of the building's original price
 export const REPAIR_DAYS = 10;
 
 // --- Laws & political power (see domain/laws, domain/politics) ---
-// Political power trickles in daily — faster the more popular the government
-// — and every law spends a tier-scaled chunk of it (LawEnactCost.politicalPower).
+// Political power trickles in daily â€” faster the more popular the government
+// â€” and every law spends a tier-scaled chunk of it (LawEnactCost.politicalPower).
 export const POLITICAL_POWER_BASE_RATE = 0.3; // per day, even at zero popularity
 export const POLITICAL_POWER_PER_POPULARITY = 0.006; // extra per day per popularity point (+0.3/day at 50%)
 // A passed law is drafted into force over this many days (one law at a time).
@@ -271,7 +271,7 @@ export const RIVAL_CAMPAIGN_POPULARITY_SWING = 2.5; // base popularity swing fro
 
 // --- Coalition / factions (see domain/parties/factionRules.ts) ---
 // Extra approval swing, per faction, per point of that faction's ideological
-// alignment score (typically -3..+3 for a real law/research node) — layered
+// alignment score (typically -3..+3 for a real law/research node) â€” layered
 // on top of whatever flat popularityDelta the policy already carries, so an
 // industry-boosting law doesn't just cost "5 popularity," it costs the
 // Agrarian/Labor wings specifically while the Commercial/Nationalist wings
@@ -279,7 +279,7 @@ export const RIVAL_CAMPAIGN_POPULARITY_SWING = 2.5; // base popularity swing fro
 export const FACTION_SENSITIVITY = 3;
 
 // --- Economy / taxes ---
-export const BASE_TAX_INCOME_PER_POP = 0.019; // tax per person at a 100% rate, per day — kept low so the treasury is always tight
+export const BASE_TAX_INCOME_PER_POP = 0.019; // tax per person at a 100% rate, per day â€” kept low so the treasury is always tight
 export const COMFORTABLE_TAX_RATE = 0.15; // the rate people accept without complaint
 export const MIN_TAX_RATE = -0.2; // below zero the state pays people: a handout (see economyRules)
 export const MAX_TAX_RATE = 0.9;
@@ -298,11 +298,11 @@ export const TAX_RATE_STEP = 0.05;
 // Slow on purpose: what you did two months ago still counts.
 export const POPULARITY_DRIFT_RATE = 0.005; // fraction of the gap to target closed per day (~4.5 months to close half of it)
 export const POPULARITY_BASE_TARGET = 50; // where opinion settles if nothing is good or bad
-export const TAX_POPULARITY_PER_POINT = 1.2; // per percentage point of tax below (+) or above (−) the comfortable rate
+export const TAX_POPULARITY_PER_POINT = 1.2; // per percentage point of tax below (+) or above (âˆ’) the comfortable rate
 export const FOOD_SHORTAGE_POPULARITY_PENALTY = 15;
 export const HOMELESS_POPULARITY_PENALTY = 40; // times the homeless share
 export const COLD_POPULARITY_PENALTY = 20; // times the unheated share
-export const STABILITY_POPULARITY_WEIGHT = 0.2; // per point of stability above (+) or below (−) 50
+export const STABILITY_POPULARITY_WEIGHT = 0.2; // per point of stability above (+) or below (âˆ’) 50
 
 // --- Population ---
 export const POPULATION_GROWTH_RATE = 0.0003; // per day, scaled by stability
@@ -318,7 +318,7 @@ export const STABILITY_GOOD_POPULARITY_THRESHOLD = 50;
 // --- Unrest (see domain/unrest) ---
 // Falling stability escalates in stages before the government collapses at
 // zero, each one worse than the last and each announced, so a struggling
-// country gets warnings — and costs — while there's still time to act.
+// country gets warnings â€” and costs â€” while there's still time to act.
 export const UNREST_DISCONTENT_BELOW = 40; // stability under this: discontent...
 export const UNREST_STRIKES_BELOW = 25; // ...strikes...
 export const UNREST_RIOTS_BELOW = 12; // ...riots (collapse at 0)
@@ -475,9 +475,14 @@ export const NEIGHBOUR_COAL_PER_HILLS = 2; // ...and of coal from the pits in ea
 export const NEIGHBOUR_STORE_CAP = 40; // the most of each it keeps
 
 // Province crises (see domain/crises).
-export const CRISIS_FROM_MONTH = 6; // none before the first summer
-export const CRISIS_QUIET_DAYS = 120; // after one ends, none strikes at random for this long
-export const CRISIS_CHANCE_PER_MONTH = 0.22; // a month, while no other letter waits: about one a year
+export const CRISIS_FROM_MONTH = 3; // none in the first winter
+export const CRISIS_QUIET_DAYS = 60; // after one ends, none strikes at random for this long
+export const CRISIS_CHANCE_PER_MONTH = 0.35; // a month, while no other letter waits: about two a year
+
+// Local troubles (see application/day/troubles.ts): a strike or a scandal most
+// months, somewhere. How often is the difficulty's.
+export const TROUBLE_FROM_MONTH = 2;
+export const TROUBLE_STABILITY_HIT = 14; // points off a province's order, which climbs back as it drifts
 export const CRISIS_WEIGHTS = { flood: 3, seam: 2, felling: 2, fever: 3, fishing: 1 }; // how likely each kind is, among those a country is open to
 export const CRISIS_UNREST = 8; // how far below the nation's a province's mood sits while a crisis lasts
 export const CROWDED_SHARE = 0.05; // a province with this share of its people homeless is crowded: fever finds it
@@ -570,7 +575,7 @@ export const SALT_TRADE_PER_DAY = 6; // Crowns a day from an island's salt pans
 export const LOAN_BATCH_SIZE = 2000; // treasury received (and added to debt) per "Take Loan" click
 export const LOAN_REPAY_BATCH_SIZE = 1000; // debt paid down per "Repay" click, capped by treasury and remaining debt
 export const LOAN_MAX_DEBT = 12000; // hard cap on outstanding debt
-export const LOAN_INTEREST_RATE_PER_DAY = 0.002; // compounds daily — roughly 6%/month if left untouched
+export const LOAN_INTEREST_RATE_PER_DAY = 0.001; // compounds daily â€” roughly 3%/month if left untouched
 export const DEBT_DANGER_THRESHOLD = 8000; // beyond this, debt itself starts costing stability/popularity every day
 export const DEBT_STABILITY_PENALTY_PER_DAY = 0.15;
 export const DEBT_POPULARITY_PENALTY_PER_DAY = 0.1;
@@ -589,7 +594,7 @@ export const PRESSURE_MAX = 12;
 export const FOREIGN_SUPPORT_DRIFT = 0.06; // monthly: fraction of the gap to 50/50 that support relaxes back
 export const FOREIGN_SUPPORT_NOISE = 3; // monthly: random swing, +/- this much
 export const FOREIGN_TAKEOVER_THRESHOLD = 55; // a challenger at or above this support takes power at the next monthly check
-// Neighbours meddle back: each month, each one may lean on your elections —
+// Neighbours meddle back: each month, each one may lean on your elections â€”
 // for you if it's ruled by the party you backed, against you otherwise.
 export const FOREIGN_MEDDLING_CHANCE_PER_MONTH = 0.2;
 export const FOREIGN_MEDDLING_SUPPORT = 3; // support swing from one push
@@ -613,7 +618,7 @@ export const ADVISOR_ELECTION_WARN_MONTHS = 6; // losing with an election this c
 export const ADVISOR_ELECTION_CRITICAL_MONTHS = 2;
 // One-click fixes on the advisor's chips (see application/getQuickFix.ts).
 export const QUICK_FIX_COAL_DAYS = 30; // buy enough coal to heat the homes this long
-export const QUICK_FIX_FOOD_BATCHES = 5; // food bought in one click (×2,000)
+export const QUICK_FIX_FOOD_BATCHES = 5; // food bought in one click (Ã—2,000)
 export const QUICK_FIX_CONFIRM_SHARE = 0.2; // a fix costing more than this share of the treasury asks twice
 
 // Top bar: a building material comes out of the Stores list when the
@@ -629,4 +634,4 @@ export const REPORT_GAIN_WEIGHT = 0.75; // ...a full granary is rarely the month
 
 // --- Misc ---
 export const MAX_EVENT_LOG_LENGTH = 100;
-export const CURRENCY_SYMBOL = "Cr"; // "Crowns" — the shared continental currency
+export const CURRENCY_SYMBOL = "Cr"; // "Crowns" â€” the shared continental currency

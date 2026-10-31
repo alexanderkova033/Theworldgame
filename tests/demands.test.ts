@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { answerDemand, canAnswerDemand } from "../src/application/actions/demandActions";
 import { getDailyProductionSummary } from "../src/application/getDailyProductionSummary";
 import { simulateDay } from "../src/application/simulateDay";
-import { startNewGame } from "../src/application/startNewGame";
+import { calmStart } from "./support/calmStart";
 import { allChaptersOpen } from "../src/domain/chapters/chapterData";
 import {
   AMNESTY_POLITICAL_POWER,
@@ -25,7 +25,7 @@ beforeEach(() => seedRandom(20261018));
 // seed them too, so they don't depend on which test file ran first.
 seedRandom(20261018);
 
-const start = startNewGame("astravia", "astravia-harvest-union");
+const start = calmStart("astravia", "astravia-harvest-union");
 const base: GameState = { ...start, chapters: allChaptersOpen(), stats: { ...start.stats, treasury: 20000, politicalPower: 200 } };
 const factoryTown = Object.keys(base.provinces).find((id) => base.placedBuildings.some((b) => b.provinceId === id && b.type === "factory"))!;
 
@@ -93,9 +93,11 @@ describe("rebels' terms", () => {
 
   it("arrive two weeks after rising", () => {
     let s = risen;
-    for (let i = 0; i < REBEL_TERMS_AFTER_DAYS - 1; i++) s = day({ ...s, stats: { ...s.stats, stability: 30 } });
-    expect(s.pendingDemand).toBeNull();
-    for (let i = 0; i < 3 && !s.pendingDemand; i++) s = day({ ...s, stats: { ...s.stats, stability: 30 } });
+    // A pay demand from elsewhere can come at any time: set aside here.
+    const onward = (state: GameState) => day({ ...state, stats: { ...state.stats, stability: 30 }, pendingDemand: state.pendingDemand?.kind === "payRise" ? null : state.pendingDemand });
+    for (let i = 0; i < REBEL_TERMS_AFTER_DAYS - 1; i++) s = onward(s);
+    expect(s.pendingDemand?.kind).not.toBe("rebelTerms");
+    for (let i = 0; i < 3 && s.pendingDemand?.kind !== "rebelTerms"; i++) s = onward(s);
     expect(s.pendingDemand).toEqual({ kind: "rebelTerms", provinceId: factoryTown });
   });
 

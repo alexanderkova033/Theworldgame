@@ -48,7 +48,7 @@ const STARTING_STABILITY_BONUS: Record<string, number> = { caldenreich: 10 }; //
 // about the people there are — cutting further looked like "less free stuff" but was actually a
 // guaranteed early famine, which isn't the same thing as "costs more to
 // build." No free road, though — that bonus is easy to live without.
-function buildStartingBuildings(nationId: string, farmCount: number): PlacedBuilding[] {
+function buildStartingBuildings(nationId: string, farmCount: number, brokenCount: number): PlacedBuilding[] {
   const nation = getNation(nationId);
   const capital = nation.capitalProvinceId;
   const others = nation.provinceIds.filter((id) => id !== capital);
@@ -61,7 +61,9 @@ function buildStartingBuildings(nationId: string, farmCount: number): PlacedBuil
     type: "farm" as const,
   }));
   for (let i = 0; i < STARTING_FACTORIES; i++) buildings.push({ id: `starting-factory-${i + 1}`, provinceId: order[(farmCount + i) % order.length], type: "factory" });
-  return buildings;
+  // What the last government let fall apart: the last factory, then the last
+  // farms. The player's first job is to mend it.
+  return [...buildings].reverse().map((b, i) => (i < brokenCount ? { ...b, condition: "broken" as const } : b)).reverse();
 }
 
 export function startNewGame(nationId: string, partyId: string, difficulty: Difficulty = "normal", mode: GameMode = "terms"): GameState {
@@ -76,10 +78,10 @@ export function startNewGame(nationId: string, partyId: string, difficulty: Diff
 function createInitialState(nationId: string, partyId: string, difficulty: Difficulty): GameState {
   const nation = getNation(nationId);
   const level = getDifficulty(difficulty);
-  const farmCount = EXTRA_STARTING_FARM_NATIONS.includes(nationId) ? 5 : 4;
+  const farmCount = EXTRA_STARTING_FARM_NATIONS.includes(nationId) ? 6 : 5;
   const factoryCount = STARTING_FACTORIES;
   const roadCount = 0;
-  const stability = 60 + (STARTING_STABILITY_BONUS[nationId] ?? 0);
+  const stability = level.startingStability + (STARTING_STABILITY_BONUS[nationId] ?? 0);
 
   return {
     difficulty,
@@ -93,7 +95,7 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     outcome: null,
     gameOverReason: null,
     taxRate: 0.15,
-    debt: 0,
+    debt: level.startingDebt,
 
     farmCount,
     factoryCount,
@@ -109,7 +111,7 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
       industry: calculateIndustryOutput(factoryCount),
       stability,
       politicalPower: 0,
-      popularity: 55,
+      popularity: level.startingSupport,
     },
     unrestStage: "calm",
     resources: {
@@ -119,10 +121,10 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
       grain: STARTING_RESOURCE_STOCK,
       fish: STARTING_RESOURCE_STOCK,
     },
-    factionApproval: Object.fromEntries(FACTIONS.map((f) => [f, 55])) as Record<Ideology, number>,
+    factionApproval: Object.fromEntries(FACTIONS.map((f) => [f, level.startingSupport])) as Record<Ideology, number>,
 
     projects: [],
-    placedBuildings: [...buildStartingBuildings(nationId, farmCount), ...buildStartingHomes(nationId, STARTING_POPULATION)],
+    placedBuildings: [...buildStartingBuildings(nationId, farmCount, level.startingBroken), ...buildStartingHomes(nationId, STARTING_POPULATION * level.startingHomesShare)],
     provinces: {},
     enactedLawIds: [],
     enactedResearchIds: [],

@@ -5,9 +5,9 @@ import { describeWait, getDaysToSave } from "../src/application/getDaysToSave";
 import { getProvinceOverview } from "../src/application/getProvinceOverview";
 import { getProvinceSuggestions, MAX_SUGGESTIONS } from "../src/application/getProvinceSuggestions";
 import { getTroubledProvinces } from "../src/application/getTroubledProvinces";
-import { startNewGame } from "../src/application/startNewGame";
+import { calmStart } from "./support/calmStart";
 
-const state = takeLoan(startNewGame("astravia", "astravia-harvest-union"));
+const state = takeLoan(calmStart("astravia", "astravia-harvest-union"));
 const calm = { ...getProvinceOverview(state)[0], homeless: 0, unemployed: 0, openJobs: 0, unrestStage: "calm" as const };
 
 describe("province suggestions", () => {

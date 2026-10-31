@@ -61,7 +61,7 @@ export function createNeighbour(nationId: string): Neighbour {
     population,
     food: 400000,
     stability: nationId === "caldenreich" ? 70 : 60,
-    farms: nationId === "astravia" ? 5 : 4,
+    farms: nationId === "astravia" ? 6 : 5,
     factories: 2,
     homes: Math.ceil((population * 1.05) / PEOPLE_PER_HOME),
     stores: { wood: 0, ore: 0, coal: 0 },

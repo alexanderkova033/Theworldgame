@@ -1,6 +1,7 @@
 // Step 1 of the day: everything being built or worked on moves forward,
 // and buildings wear out.
 import { advanceProject, isProjectComplete } from "../../domain/construction/constructionRules";
+import type { ProjectType } from "../../domain/construction/types";
 import type { GameState } from "../../domain/country/types";
 import { getDifficulty } from "../../domain/difficulty/difficultyData";
 import { getIslandExpeditionData } from "../../domain/expeditions/expeditionData";
@@ -19,7 +20,16 @@ import { runTheRace } from "./race";
 import { applyProjectCompletion } from "../applyProjectCompletion";
 import { book, bookChange, log, type Day } from "./dayContext";
 
-const BUILDING_NAMES: Record<string, string> = {
+const BUILDING_NAMES: Record<ProjectType, string> = {
+  harbour: "Harbour",
+  tenement: "Tenement",
+  tower: "Apartment Block",
+  estate: "Estate",
+  modelFarm: "Model Farm",
+  foundry: "Foundry",
+  steelworks: "Steelworks",
+  mine: "Mine",
+  sawmill: "Sawmill",
   farm: "Farm",
   factory: "Factory",
   road: "Road",

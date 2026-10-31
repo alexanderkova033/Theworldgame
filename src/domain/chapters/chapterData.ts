@@ -54,8 +54,8 @@ export const CHAPTERS: ChapterData[] = [
     title: "The First Winter",
     opens: [],
     briefing:
-      "The country is yours, in the depth of winter. The granaries hold last autumn's harvest and the coal yards are stocked, but people need homes and the fields must be ready for spring. Get through to the thaw.",
-    objectives: ["Build a farm", "Build homes", "See the winter through"],
+      "The country is yours, and it is in a bad way. The last government left works standing broken and people grumbling in the streets, in the depth of winter. The granaries hold last autumn's harvest and the coal yards are stocked. Mend what you can, and get through to the thaw.",
+    objectives: ["Repair what was left broken", "Build a farm", "Build homes", "See the winter through"],
     until: "",
   },
   {

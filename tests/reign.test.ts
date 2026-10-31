@@ -52,18 +52,18 @@ describe("the long reign", () => {
     }
   });
 
-  it("outlasts Three Terms for a careful player, but not forever, and Hard ends it sooner", () => {
-    const play = (difficulty: "normal" | "hard") =>
+  it("outlasts Three Terms for a careful player on Easy, but not forever, and Normal ends it sooner", () => {
+    const play = (difficulty: "easy" | "normal") =>
       NATIONS.map(([nation, party]) => playCarefully(nation, party, { days: 20 * 360, difficulty, mode: "long-reign" }));
-    const normal = play("normal");
-    for (const end of normal) {
+    const easy = play("easy");
+    for (const end of easy) {
       expect(end.isGameOver, end.nationId).toBe(true);
       expect(end.outcome).not.toBe("victory");
       expect(end.electionsWon, end.nationId).toBeGreaterThan(3);
     }
-    const hard = play("hard");
-    const average = (ends: typeof normal) => ends.reduce((total, end) => total + years(end), 0) / ends.length;
-    expect(average(hard)).toBeLessThan(average(normal));
+    const normal = play("normal");
+    const average = (ends: typeof easy) => ends.reduce((total, end) => total + years(end), 0) / ends.length;
+    expect(average(normal)).toBeLessThan(average(easy));
   }, 120000);
 
   it("loads older saves as Three Terms with nothing carried", () => {

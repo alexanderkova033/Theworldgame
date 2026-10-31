@@ -91,13 +91,14 @@ export function getProvincesRiotingAlone(provinces: Record<string, ProvinceState
 // Where today's riot damage can land: anywhere when the whole country
 // riots; otherwise one of the provinces rioting alone (picked by how many
 // live there), at a chance scaled by their share of the people — so a few
-// rioting provinces never wreck more than a national riot would.
+// rioting provinces never wreck more than a national riot would. One that has
+// risen is held by the rebels and riots no more: its homes are left standing.
 export function pickRiotZone(
   provinces: Record<string, ProvinceState>,
   nationalStage: UnrestStage,
 ): { provinceId: string | undefined; chanceScale: number } | null {
   if (nationalStage === "riots") return { provinceId: undefined, chanceScale: 1 };
-  const alone = getProvincesRiotingAlone(provinces, nationalStage);
+  const alone = getProvincesRiotingAlone(provinces, nationalStage).filter((id) => !provinces[id].uprising);
   const total = Object.values(provinces).reduce((sum, p) => sum + p.population, 0);
   const rioting = alone.reduce((sum, id) => sum + provinces[id].population, 0);
   if (rioting <= 0 || total <= 0) return null;

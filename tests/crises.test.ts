@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { answerCrisis, canAnswerCrisis, getCrisisAnswers } from "../src/application/actions/crisisActions";
 import { runCrises, strikeCrisis } from "../src/application/day/crises";
 import { simulateDay } from "../src/application/simulateDay";
-import { startNewGame } from "../src/application/startNewGame";
+import { calmStart } from "./support/calmStart";
 import { allChaptersOpen } from "../src/domain/chapters/chapterData";
 import {
   CRISIS_FROM_MONTH,
@@ -30,8 +30,8 @@ import { seedRandom } from "./support/seededRandom";
 beforeEach(() => seedRandom(20261022));
 
 const rich = (s: GameState): GameState => ({ ...s, chapters: allChaptersOpen(), stats: { ...s.stats, treasury: 20000 }, resources: { ...s.resources, wood: 200 } });
-const astravia = rich(startNewGame("astravia", "astravia-harvest-union"));
-const caldenreich = rich(startNewGame("caldenreich", "caldenreich-crown-loyalists"));
+const astravia = rich(calmStart("astravia", "astravia-harvest-union"));
+const caldenreich = rich(calmStart("caldenreich", "caldenreich-crown-loyalists"));
 const provinceOf = (s: GameState, terrain: string) => getNation(s.nationId).provinceIds.find((id) => getPlace(id)?.terrain === terrain)!;
 const coast = provinceOf(astravia, "coast");
 const forest = provinceOf(astravia, "forest");
@@ -124,11 +124,12 @@ describe("a worked-out seam", () => {
   it("closing the pits shuts a works there; retooling keeps it", () => {
     const withWorks: GameState = { ...worked, placedBuildings: [...worked.placedBuildings, { id: "works", provinceId: hills, type: "factory" }], factoryCount: worked.factoryCount + 1 };
     const closed = answerCrisis(withWorks, "close");
-    expect(closed.placedBuildings.some((b) => b.id === "works")).toBe(false);
+    const worksIn = (s: GameState) => s.placedBuildings.filter((b) => b.provinceId === hills && b.type === "factory").length;
+    expect(worksIn(closed)).toBe(worksIn(withWorks) - 1);
     expect(closed.factoryCount).toBe(withWorks.factoryCount - 1);
     expect(closed.provinces[hills].seamYield).toBe(0);
     const retooled = answerCrisis(withWorks, "retool");
-    expect(retooled.placedBuildings.some((b) => b.id === "works")).toBe(true);
+    expect(worksIn(retooled)).toBe(worksIn(withWorks));
     expect(retooled.provinces[hills].crisis).toBeNull();
   });
 });
@@ -168,22 +169,23 @@ describe("a fever", () => {
 });
 
 describe("crises in a played country", () => {
-  it("strike now and then, and never before the first summer", () => {
-    let s: GameState = { ...astravia, isPaused: false };
+  it("strike now and then, and never in the first winter", () => {
     let struck = 0;
-    let first: GameState["date"] | null = null;
-    for (let day = 0; day < 3 * 360; day++) {
-      s = simulateDay({ ...s, isPaused: false, pendingDecisionId: null, pendingDemand: null, pendingOffer: null });
-      if (s.pendingCrisis) {
-        struck += 1;
-        first ??= s.date;
-        const answers = getCrisisAnswers(s);
-        s = answerCrisis(s, answers[answers.length - 1]);
+    // Nobody is governing here, so one country may fall before any crisis comes.
+    for (const seed of [20261022, 1, 2, 3, 4, 5]) {
+      seedRandom(seed);
+      let s: GameState = { ...astravia, isPaused: false };
+      for (let day = 0; day < 3 * 360 && !s.isGameOver; day++) {
+        s = simulateDay({ ...s, isPaused: false, pendingDecisionId: null, pendingDemand: null, pendingOffer: null });
+        if (s.pendingCrisis) {
+          struck += 1;
+          expect(monthNumber(s.date)).toBeGreaterThanOrEqual(CRISIS_FROM_MONTH);
+          const answers = getCrisisAnswers(s);
+          s = answerCrisis(s, answers[answers.length - 1]);
+        }
       }
     }
     expect(struck).toBeGreaterThan(0);
-    // The first day of summer at the earliest (it can be that very day).
-    expect(monthNumber(first!)).toBeGreaterThanOrEqual(CRISIS_FROM_MONTH);
   });
 
   it("are remembered by saves, and older saves have none", () => {

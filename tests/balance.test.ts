@@ -36,7 +36,7 @@ describe("a careful player", { timeout: 30000 }, () => {
     const left = LAW_PATHS.map((path) => {
       seedRandom(20261015);
       const [nation, party] = NATIONS[path.key.length % NATIONS.length];
-      return playCarefully(nation, party, { days: THREE_YEARS, follow: { tree: "law", pathKey: path.key } }).stats.politicalPower;
+      return playCarefully(nation, party, { days: THREE_YEARS, difficulty: "normal", follow: { tree: "law", pathKey: path.key } }).stats.politicalPower;
     });
     expect(left.reduce((a, b) => a + b, 0) / left.length).toBeLessThan(350);
   });
@@ -86,9 +86,13 @@ describe("following one path", () => {
   ];
   it.each(paths)("%s path %s leaves the country standing", (tree, pathKey) => {
     const [nation, party] = NATIONS[pathKey.length % NATIONS.length];
-    const end = playCarefully(nation, party, { days: THREE_YEARS, follow: { tree, pathKey } });
-    expect(end.isGameOver).toBe(false);
-    for (const [stat, value] of Object.entries(end.stats)) expect(Number.isFinite(value), stat).toBe(true);
+    // A country can fall to bad luck on any path now: wrecked means most games.
+    const ends = [20261015, 7, 99].map((seed) => {
+      seedRandom(seed);
+      return playCarefully(nation, party, { days: THREE_YEARS, follow: { tree, pathKey } });
+    });
+    expect(ends.filter((end) => !end.isGameOver).length).toBeGreaterThanOrEqual(2);
+    for (const end of ends) for (const [stat, value] of Object.entries(end.stats)) expect(Number.isFinite(value), stat).toBe(true);
   });
 });
 
@@ -118,27 +122,30 @@ describe("difficulty", { timeout: 180000 }, () => {
     return won;
   };
 
-  it("Easy: a sloppy player wins about half its games", () => {
+  it("Easy: a careful player always wins, a sloppy one some of the time", () => {
+    expect(wins("easy", "careful")).toBeGreaterThanOrEqual(25);
     const sloppy = wins("easy", "sloppy");
-    expect(sloppy).toBeGreaterThanOrEqual(12);
-    expect(sloppy).toBeLessThanOrEqual(21);
+    expect(sloppy).toBeGreaterThanOrEqual(6);
+    expect(sloppy).toBeLessThanOrEqual(16);
   });
 
-  it("Normal: a careful player nearly always wins, a sloppy one seldom", () => {
-    expect(wins("normal", "careful")).toBeGreaterThanOrEqual(23);
-    expect(wins("normal", "sloppy")).toBeLessThanOrEqual(9);
+  it("Normal: a careful player wins more often than not, a sloppy one hardly ever", () => {
+    const careful = wins("normal", "careful");
+    expect(careful).toBeGreaterThanOrEqual(12);
+    expect(careful).toBeLessThanOrEqual(22);
+    expect(wins("normal", "sloppy")).toBeLessThanOrEqual(3);
   });
 
-  it("Hard: a careful player wins about half its games, a sloppy one hardly ever", () => {
+  it("Hard: a careful player wins about a third of its games, a sloppy one never", () => {
     const careful = wins("hard", "careful");
-    expect(careful).toBeGreaterThanOrEqual(9);
-    expect(careful).toBeLessThanOrEqual(20);
-    expect(wins("hard", "sloppy")).toBeLessThanOrEqual(3);
+    expect(careful).toBeGreaterThanOrEqual(5);
+    expect(careful).toBeLessThanOrEqual(14);
+    expect(wins("hard", "sloppy")).toBe(0);
   });
 
   it("Ruthless: not every country can be saved, but some can", () => {
     const careful = wins("ruthless", "careful");
     expect(careful).toBeGreaterThanOrEqual(1);
-    expect(careful).toBeLessThanOrEqual(9);
+    expect(careful).toBeLessThanOrEqual(6);
   });
 });

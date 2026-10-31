@@ -41,7 +41,7 @@ import { focusResearch } from "../../src/application/actions/researchActions";
 import { resolveDecision } from "../../src/application/actions/resolveDecision";
 import { setTaxRate } from "../../src/application/actions/setTaxRate";
 import { FOOD_PER_FARM } from "../../src/domain/constants";
-import { canHireScientist, hireScientist } from "../../src/application/actions/workforceActions";
+import { canHirePolice, canHireScientist, hirePolice, hireScientist } from "../../src/application/actions/workforceActions";
 import { getDailyProductionSummary } from "../../src/application/getDailyProductionSummary";
 import { simulateDay } from "../../src/application/simulateDay";
 import { startNewGame } from "../../src/application/startNewGame";
@@ -144,7 +144,7 @@ function chooseBurden(offer: string[], sloppy: boolean): string {
   return [...offer].sort((a, b) => rank(a) - rank(b))[0];
 }
 
-export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty, skill = "careful", mode, settle = false, trade = false, treaties = false, army = false, war = false, neglect = false }: PlayOptions): GameState {
+export function playCarefully(nation: string, party: string, { days, follow, onDay, difficulty = "easy", skill = "careful", mode, settle = false, trade = false, treaties = false, army = false, war = false, neglect = false }: PlayOptions): GameState {
   const sloppy = skill === "sloppy";
   let s = takeLoan(startNewGame(nation, party, difficulty, mode));
   if (!sloppy) s = setTaxRate(s, 0.12);
@@ -180,6 +180,8 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
       if (s.factionApproval[biggest] < 70) s = courtGroup(s, biggest);
     }
     if (!sloppy && (s.unrestStage === "strikes" || s.unrestStage === "riots") && canCrackDown(s)) s = crackDown(s);
+    // Police hold off the wear of office, for very little: one hired as soon as it can spare the fee.
+    if (!sloppy && isFeatureOpen(s, "unrest") && s.stats.treasury > 200 && canHirePolice(s)) s = hirePolice(s);
     // A neighbour's trade offer: put aside (it costs nothing), or with the
     // trade habit, taken when it is a good deal for a country in its place.
     if (s.pendingOffer) {

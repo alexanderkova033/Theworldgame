@@ -3,7 +3,7 @@
 // start screen in plain words (`changes`). The levels are measured by the
 // scripted players in tests/balance.test.ts, so each means something. Out
 // of 27 five-year games, a sloppy player (late, never ahead of trouble) and
-// a careful one win: Easy 15 and 27, Normal 4 and 26, Hard 0 and 13,
+// a careful one win: Easy 9 and 27, Normal 0 and 14, Hard 0 and 7,
 // Ruthless 0 and 3 (measured 2026-10-31). The scripted players build none of
 // the larger buildings, mines or sawmills, so a good human player should do
 // better. Not every country can be saved on Ruthless, but some can.
@@ -29,6 +29,16 @@ export interface DifficultySettings {
   uprisingRiotDays: number; // days a province riots on its own before it rises (see domain/uprising)
   crisisChance: number; // how often a crisis strikes a province, against Normal (see domain/crises)
   retries: number; // times a lost game can go back to its last checkpoint
+  // The country as the last government left it (see startNewGame).
+  startingStability: number;
+  startingSupport: number;
+  startingDebt: number;
+  startingBroken: number; // works standing broken: a factory, then a farm, then another farm
+  startingHomesShare: number; // homes for this share of the people, against what they need
+  // What never lets up.
+  wearPerDay: number; // stability a government loses each day, however well it does...
+  wearFloor: number; // ...down to here: the edge of trouble, where only real failures push it further
+  troubleChance: number; // chance each month of a strike or a scandal in some province
 }
 
 export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
@@ -36,7 +46,7 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     name: "Easy",
     title: "Steward",
     summary: "Room to learn. Mistakes cost less, and you can go back more often.",
-    changes: ["Start with 1,500 Cr", "Elections need 50%, 53%, 56%", "Voters are easy to please: support settles 1 point above neutral", "15% more political power", "The rival campaigns less, and softer", "Bad years take half as much", "Buildings break down a quarter as often", "A province rises only after two months of rioting on its own", "Crises strike half as often", "5 retries from a checkpoint"],
+    changes: ["Start with 1,500 Cr", "A factory left broken", "Trouble in a province about one month in five", "Elections need 50%, 53%, 56%", "Voters are easy to please: support settles 1 point above neutral", "15% more political power", "The rival campaigns less, and softer", "Bad years take half as much", "Buildings break down a quarter as often", "A province rises only after two months of rioting on its own", "Crises strike half as often", "5 retries from a checkpoint"],
     electionThresholds: [50, 53, 56],
     expectations: 1,
     politicalPowerMultiplier: 1.15,
@@ -49,14 +59,22 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     uprisingRiotDays: 60,
     crisisChance: 0.5,
     retries: 5,
+    startingStability: 60,
+    startingSupport: 55,
+    startingDebt: 0,
+    startingBroken: 1,
+    startingHomesShare: 1,
+    wearPerDay: 0.03,
+    wearFloor: 50,
+    troubleChance: 0.2,
   },
   normal: {
     name: "Normal",
     title: "Minister",
-    summary: "The game as designed. A careful player wins.",
-    changes: ["Elections need 52%, 56%, 60%", "Voters expect more: support settles 5 points below neutral", "10% less political power", "A tenth less of the usual food in store", "3 retries from a checkpoint"],
+    summary: "The game as designed. A careful player wins about half the time.",
+    changes: ["You inherit 1,000 Cr of debt, broken works and too few homes", "Trouble in a province about every other month", "Elections need 52%, 56%, 60%", "Voters expect more: support settles 4 points below neutral", "10% less political power", "A tenth less of the usual food in store", "3 retries from a checkpoint"],
     electionThresholds: [52, 56, 60],
-    expectations: -5,
+    expectations: -4,
     politicalPowerMultiplier: 0.9,
     startingTreasury: 0,
     startingFoodShare: 0.9,
@@ -67,17 +85,25 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     uprisingRiotDays: 30,
     crisisChance: 1,
     retries: 3,
+    startingStability: 45,
+    startingSupport: 49,
+    startingDebt: 1000,
+    startingBroken: 2,
+    startingHomesShare: 0.85,
+    wearPerDay: 0.08,
+    wearFloor: 42,
+    troubleChance: 0.5,
   },
   hard: {
     name: "Hard",
     title: "Chancellor",
-    summary: "A careful player wins about half the time. Every season counts.",
-    changes: ["A third less of the usual food in store", "Elections need 54%, 58%, 62%", "Voters expect a lot: support settles 8 points below neutral", "25% less political power", "The rival campaigns more, and harder", "Bad years take half as much again", "Buildings break down 1.5 times as often", "A province rises after 25 days of rioting on its own", "Crises strike a quarter more often", "1 retry from a checkpoint"],
-    electionThresholds: [54, 58, 62],
-    expectations: -8,
+    summary: "A careful player wins about one game in four. Every season counts.",
+    changes: ["You inherit 1,500 Cr of debt, broken works and too few homes", "Trouble in a province more than every other month", "15% less of the usual food in store", "Elections need 52%, 57%, 61%", "Voters expect a lot: support settles 5 points below neutral", "25% less political power", "The rival campaigns more, and harder", "Bad years take half as much again", "Buildings break down 1.5 times as often", "A province rises after 25 days of rioting on its own", "Crises strike a quarter more often", "1 retry from a checkpoint"],
+    electionThresholds: [52, 57, 61],
+    expectations: -5,
     politicalPowerMultiplier: 0.75,
     startingTreasury: 0,
-    startingFoodShare: 0.67,
+    startingFoodShare: 0.85,
     rivalSwing: 1.3,
     rivalChance: 1.25,
     badEventScale: 1.5,
@@ -85,24 +111,40 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     uprisingRiotDays: 25,
     crisisChance: 1.25,
     retries: 1,
+    startingStability: 44,
+    startingSupport: 48,
+    startingDebt: 1500,
+    startingBroken: 2,
+    startingHomesShare: 0.85,
+    wearPerDay: 0.09,
+    wearFloor: 40,
+    troubleChance: 0.55,
   },
   ruthless: {
     name: "Ruthless",
     title: "Iron Chancellor",
     summary: "Not every country can be saved. Win here and it means something.",
-    changes: ["Half the usual food stores", "Elections need 56%, 59%, 62%", "Voters expect even more: support settles 9 points below neutral", "35% less political power", "The rival campaigns often, and hard", "Bad years take twice as much", "Buildings break down twice as often", "A province rises after 20 days of rioting on its own", "Crises strike half as often again", "No retries"],
-    electionThresholds: [56, 59, 62],
-    expectations: -9,
-    politicalPowerMultiplier: 0.65,
+    changes: ["You inherit 2,000 Cr of debt, broken works and too few homes", "Trouble in a province about two months in three", "A fifth less of the usual food in store", "Elections need 53%, 57%, 61%", "Voters expect even more: support settles 6 points below neutral", "30% less political power", "The rival campaigns often, and hard", "Bad years take twice as much", "Buildings break down 1.6 times as often", "A province rises after 20 days of rioting on its own", "Crises strike half as often again", "No retries"],
+    electionThresholds: [53, 57, 61],
+    expectations: -6,
+    politicalPowerMultiplier: 0.7,
     startingTreasury: 0,
-    startingFoodShare: 0.5,
-    rivalSwing: 1.6,
+    startingFoodShare: 0.8,
+    rivalSwing: 1.4,
     rivalChance: 1.5,
     badEventScale: 2,
-    breakdownMultiplier: 2,
+    breakdownMultiplier: 1.6,
     uprisingRiotDays: 20,
     crisisChance: 1.5,
     retries: 0,
+    startingStability: 42,
+    startingSupport: 47,
+    startingDebt: 2000,
+    startingBroken: 2,
+    startingHomesShare: 0.85,
+    wearPerDay: 0.1,
+    wearFloor: 38,
+    troubleChance: 0.65,
   },
 };
 

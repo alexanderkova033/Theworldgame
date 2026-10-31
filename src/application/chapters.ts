@@ -64,7 +64,7 @@ const TRIGGERS: Record<SystemChapterId, Trigger> = {
 
 // Each chapter's objectives, in the order of its words (chapterData.ts).
 export const OBJECTIVE_CHECKS: Record<SystemChapterId, Check[]> = {
-  "first-winter": [(s) => builtByYou(s, "farm"), (s) => builtByYou(s, "housing"), (s) => monthNumber(s.date) >= 3],
+  "first-winter": [(s) => !s.placedBuildings.some((b) => b.id.startsWith("starting-") && b.condition), (s) => builtByYou(s, "farm"), (s) => builtByYou(s, "housing"), (s) => monthNumber(s.date) >= 3],
   exchange: [(s) => s.chapters.deeds.includes("traded")],
   assembly: [(s) => s.enactedLawIds.length > 0 || s.activeLaw !== null],
   society: [(s) => s.enactedResearchIds.length > 0 || Object.values(s.researchFocus).some(Boolean), (s) => builtByYou(s, "education")],
