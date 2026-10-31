@@ -10,7 +10,7 @@
 // in another province, in the same order. The rest stay unemployed, which
 // weighs on public opinion (see politicsRules.ts) — so homes belong near
 // the jobs. National figures are the sums over provinces.
-import { COMMUTE_SHARE, JOBS_PER_BUILDING, LABOUR_SHARE } from "../constants";
+import { COMMUTE_SHARE, FACTORIES_PER_FOUNDRY, FACTORIES_PER_STEELWORKS, FARMS_PER_ESTATE, FARMS_PER_MODEL_FARM, JOBS_PER_BUILDING, LABOUR_SHARE } from "../constants";
 import type { ProjectType } from "../construction/types";
 import type { GameState } from "../country/types";
 import { isWorking } from "../maintenance/maintenanceRules";
@@ -28,6 +28,10 @@ export function getJobsPerBuilding(state: GameState): Record<JobBuilding, number
     ...JOBS_PER_BUILDING,
     farm: Math.round(JOBS_PER_BUILDING.farm * mods.farmJobsMultiplier),
     factory: Math.round(JOBS_PER_BUILDING.factory * mods.factoryJobsMultiplier),
+    estate: Math.round(JOBS_PER_BUILDING.estate * mods.farmJobsMultiplier),
+    modelFarm: Math.round(JOBS_PER_BUILDING.modelFarm * mods.farmJobsMultiplier),
+    foundry: Math.round(JOBS_PER_BUILDING.foundry * mods.factoryJobsMultiplier),
+    steelworks: Math.round(JOBS_PER_BUILDING.steelworks * mods.factoryJobsMultiplier),
   };
 }
 
@@ -45,6 +49,12 @@ const SECTOR_OF: Partial<Record<ProjectType, Sector>> = {
   cannery: "food",
   education: "school",
   factory: "industry",
+  estate: "food",
+  modelFarm: "food",
+  foundry: "industry",
+  steelworks: "industry",
+  mine: "industry",
+  sawmill: "industry",
 };
 
 export interface ProvinceLabour {
@@ -147,11 +157,12 @@ export function getLabourSituation(state: GameState): LabourSituation {
     };
     provinces[id] = p;
     const here = buildings[id];
-    staffed.farms += (here.farm ?? 0) * p.foodStaffing;
+    // A larger building counts as the plain ones it does the work of.
+    staffed.farms += ((here.farm ?? 0) + (here.estate ?? 0) * FARMS_PER_ESTATE + (here.modelFarm ?? 0) * FARMS_PER_MODEL_FARM) * p.foodStaffing;
     staffed.granaries += (here.granary ?? 0) * p.foodStaffing;
     staffed.canneries += (here.cannery ?? 0) * p.foodStaffing;
     staffed.schools += (here.education ?? 0) * p.schoolStaffing;
-    staffed.factories += (here.factory ?? 0) * p.industryStaffing;
+    staffed.factories += ((here.factory ?? 0) + (here.foundry ?? 0) * FACTORIES_PER_FOUNDRY + (here.steelworks ?? 0) * FACTORIES_PER_STEELWORKS) * p.industryStaffing;
     totals.workers += p.workers;
     totals.unemployed += p.unemployed;
     for (const sector of SECTORS) {

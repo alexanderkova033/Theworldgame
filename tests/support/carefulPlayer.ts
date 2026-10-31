@@ -40,6 +40,7 @@ import { getOwnedProvinceIds } from "../../src/domain/provinces/provinceRules";
 import { focusResearch } from "../../src/application/actions/researchActions";
 import { resolveDecision } from "../../src/application/actions/resolveDecision";
 import { setTaxRate } from "../../src/application/actions/setTaxRate";
+import { FOOD_PER_FARM } from "../../src/domain/constants";
 import { canHireScientist, hireScientist } from "../../src/application/actions/workforceActions";
 import { getDailyProductionSummary } from "../../src/application/getDailyProductionSummary";
 import { simulateDay } from "../../src/application/simulateDay";
@@ -166,7 +167,7 @@ export function playCarefully(nation: string, party: string, { days, follow, onD
       s = repairBuilding(ensure(s, building.type === "factory" || building.type === "road" || building.type === "cannery" ? "ore" : "wood", 6), building.id);
     }
     const farmsPlanned = s.farmCount + s.projects.filter((p) => p.type === "farm").length;
-    if (farmsPlanned < Math.ceil((s.stats.population * (sloppy ? 0.95 : 1.1)) / 2650)) s = tryBuild(s, buildFarm);
+    if (farmsPlanned < Math.ceil((s.stats.population * (sloppy ? 0.95 : 1.1)) / (FOOD_PER_FARM * 0.98))) s = tryBuild(s, buildFarm);
     if (s.stats.population > production.housingCapacity * (sloppy ? 1.02 : 0.97) && !s.projects.some((p) => p.type === "housing")) s = tryBuild(s, buildHousing);
     if (s.stats.food < (sloppy ? 3000 : 20000) && canBuyGood(s, "food", 5)) s = buyGood(s, "food", 5);
     if (s.debt > 0 && s.stats.treasury > 2500 && canRepayLoan(s)) s = repayLoan(s);

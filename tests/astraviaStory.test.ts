@@ -53,7 +53,7 @@ describe("Astravia's story, played", () => {
 
   it("tells every beat in order over five years, one sixth beat or the other, and ends on what was chosen", () => {
     seen = [];
-    const end = playCarefully("astravia", "astravia-harvest-union", { days: 5 * 360, mode: "long-reign", onDay: told });
+    const end = playCarefully("astravia", "astravia-harvest-union", { days: 5 * 360, mode: "long-reign", difficulty: "easy", onDay: told });
     const order = ASTRAVIA_CHAPTERS.map((c) => c.id).filter((id) => seen.includes(id));
     expect(seen).toEqual(order);
     expect(seen.filter((id) => id === "astravia:new-farmers" || id === "astravia:thornwick-rises")).toHaveLength(1);

@@ -326,3 +326,18 @@
 .foreign-card__feeling.is-hostile strong {
   color: var(--danger);
 }
+
+/* Under a party's name: what it would bring you, and how far it is from power. */
+.foreign-card__party-brings {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--success);
+  cursor: help;
+}
+
+.foreign-card__party-pushes {
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: var(--text-muted);
+  cursor: help;
+}

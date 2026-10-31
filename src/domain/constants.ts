@@ -6,16 +6,16 @@ export const DAYS_PER_MONTH = 30;
 export const MONTHS_PER_YEAR = 12;
 
 // --- Food ---
-export const FOOD_PER_FARM = 2700; // food produced per farm per in-game day (before the season — see FARM_SEASON_MULTIPLIER)
+export const FOOD_PER_FARM = 1900; // food produced per farm per in-game day (before the season — see FARM_SEASON_MULTIPLIER)
 export const FOOD_PER_POP_CONSUMPTION = 1; // food eaten per person per in-game day
-export const FARM_COST = 800;
+export const FARM_COST = 650;
 export const FARM_BUILD_DAYS = 60;
-export const MAX_FARMS_PER_PROVINCE = 3;
+export const MAX_FARMS_PER_PROVINCE = 4;
 
 // --- Resources (Catan-inspired: terrain produces, provinces trade) ---
-export const RESOURCE_PER_PROVINCE = 0.6; // units of matching resource produced per owned province per day
-export const COAL_PER_HILLS_PROVINCE = 0.4; // hills mine coal as well as ore — the fuel homes burn in winter
-export const STARTING_RESOURCE_STOCK = 0; // nothing in the stores — every log and ingot has to be produced or bought
+export const RESOURCE_PER_PROVINCE = 0.3; // units of matching resource the land gives per owned province per day; mines and sawmills add to it
+export const COAL_PER_HILLS_PROVINCE = 0.25; // hills mine coal as well as ore — the fuel homes burn in winter
+export const STARTING_RESOURCE_STOCK = 15; // a little in the stores, for the first orders; the rest has to be produced or bought
 // ...except coal: the game opens on 1 January, sixty days of winter ahead, and
 // the starting homes burn about 50 coal getting through it. With none in
 // the cellar the only way to keep them warm was a loan on day one; this
@@ -39,6 +39,54 @@ export const MARKET_OUTLOOK_SWING = 0.1; // monthly random step in each good's w
 export const MARKET_OUTLOOK_MIN = 0.7;
 export const MARKET_OUTLOOK_MAX = 1.3;
 
+// --- The larger buildings. Each does the work of several of the plain kind
+// for fewer hands and far less room, at a higher price per unit of output: worth
+// it once workers or a province's slots run short, not before. The first step
+// is open from the start; the second takes research.
+export const ESTATE_COST = 1900;
+export const ESTATE_WOOD_COST = 40;
+export const ESTATE_BUILD_DAYS = 90;
+export const MAX_ESTATES_PER_PROVINCE = 2;
+export const FARMS_PER_ESTATE = 2.5;
+export const MODEL_FARM_COST = 3800;
+export const MODEL_FARM_WOOD_COST = 70;
+export const MODEL_FARM_BUILD_DAYS = 120;
+export const MAX_MODEL_FARMS_PER_PROVINCE = 1;
+export const FARMS_PER_MODEL_FARM = 5;
+export const FOUNDRY_COST = 5300;
+export const FOUNDRY_ORE_COST = 60;
+export const FOUNDRY_BUILD_DAYS = 160;
+export const MAX_FOUNDRIES_PER_PROVINCE = 2;
+export const FACTORIES_PER_FOUNDRY = 3.5;
+export const STEELWORKS_COST = 10300;
+export const STEELWORKS_ORE_COST = 100;
+export const STEELWORKS_BUILD_DAYS = 200;
+export const MAX_STEELWORKS_PER_PROVINCE = 1;
+export const FACTORIES_PER_STEELWORKS = 7;
+export const TENEMENT_COST = 1150;
+export const TENEMENT_WOOD_COST = 30;
+export const TENEMENT_BUILD_DAYS = 70;
+export const MAX_TENEMENTS_PER_PROVINCE = 3;
+export const HOMES_PER_TENEMENT = 3;
+export const TOWER_COST = 3000;
+export const TOWER_ORE_COST = 45;
+export const TOWER_BUILD_DAYS = 110;
+export const MAX_TOWERS_PER_PROVINCE = 2;
+export const HOMES_PER_TOWER = 7;
+
+// --- Mines and sawmills: what gets more out of the land than it gives alone ---
+export const MINE_COST = 1800;
+export const MINE_WOOD_COST = 12; // pit props
+export const MINE_BUILD_DAYS = 70;
+export const MAX_MINES_PER_PROVINCE = 2;
+export const ORE_PER_MINE = 0.35;
+export const COAL_PER_MINE = 0.25;
+export const SAWMILL_COST = 1000;
+export const SAWMILL_WOOD_COST = 8;
+export const SAWMILL_BUILD_DAYS = 50;
+export const MAX_SAWMILLS_PER_PROVINCE = 2;
+export const WOOD_PER_SAWMILL = 0.4;
+
 // --- Food processing (Granary/Cannery — research-gated, see domain/research)
 // Grain/fish trickle in at ~1/province/day (see RESOURCE_PER_PROVINCE above),
 // so these buildings convert whatever small surplus you actually have into a
@@ -50,29 +98,32 @@ export const GRANARY_WOOD_COST = 14;
 export const GRANARY_BUILD_DAYS = 55;
 export const MAX_GRANARIES_PER_PROVINCE = 2;
 export const GRAIN_PROCESSED_PER_GRANARY = 3; // max grain one granary can process per day
-export const FOOD_PER_GRAIN = 500; // food produced per unit of grain processed
+export const FOOD_PER_GRAIN = 1000; // food produced per unit of grain processed
 
 export const CANNERY_COST = 1100;
 export const CANNERY_ORE_COST = 16;
 export const CANNERY_BUILD_DAYS = 65;
 export const MAX_CANNERIES_PER_PROVINCE = 2;
 export const FISH_PROCESSED_PER_CANNERY = 3; // max fish one cannery can process per day
-export const FOOD_PER_FISH = 500; // food produced per unit of fish processed
+export const FOOD_PER_FISH = 1000; // food produced per unit of fish processed
 
 // --- Industry ---
-export const INDUSTRY_PER_FACTORY = 4;
-export const INCOME_PER_INDUSTRY = 2;
-export const FACTORY_COST = 1600;
+export const INDUSTRY_PER_FACTORY = 3;
+export const INCOME_PER_INDUSTRY = 2.5;
+export const FACTORY_COST = 1300;
 export const FACTORY_BUILD_DAYS = 120;
-export const MAX_FACTORIES_PER_PROVINCE = 2;
+export const MAX_FACTORIES_PER_PROVINCE = 3;
 
 // --- Construction stalls (see simulateDay.ts step 1) ---
 export const STALLED_PROJECT_REGRESS_FACTOR = 0.5; // a stalled project slips backward at this fraction of its normal daily pace
 
 // --- Roads (economic efficiency) ---
-export const ROAD_EFFICIENCY_BONUS = 0.05; // +5% income & construction speed per road, for the first few
-export const ROAD_FULL_BONUS_COUNT = 10; // past this many, a road adds only ROAD_LATE_BONUS: the main ways are built
-export const ROAD_LATE_BONUS = 0.01;
+export const ROAD_EFFICIENCY_BONUS = 0.02; // +2% income & construction speed per road, for the first few
+export const ROAD_FULL_BONUS_COUNT = 10; // past this many, a road adds a fifth as much: the main ways are built
+export const ROAD_LATE_SHARE = 0.2;
+export const ROAD_PRODUCTION_BONUS = 0.04; // +4% goods from the land and its works, per road
+export const ROAD_MIGRATION_BONUS = 0.08; // +8% people moving between provinces, per road
+export const ROAD_MARKET_DISCOUNT = 0.01; // 1% off what the market charges, per road
 export const ROAD_COST = 350;
 export const ROAD_BUILD_DAYS = 45;
 export const MAX_ROADS_PER_PROVINCE = 5;
@@ -81,7 +132,7 @@ export const MAX_ROADS_PER_PROVINCE = 5;
 // Buildings need workers from the population; short-staffed buildings run
 // below capacity, and people without work weigh on public opinion.
 export const LABOUR_SHARE = 0.25; // share of the population that works
-export const JOBS_PER_BUILDING = { farm: 450, factory: 1000, granary: 300, cannery: 300, education: 250 } as const;
+export const JOBS_PER_BUILDING = { farm: 300, factory: 650, granary: 300, cannery: 300, education: 250, estate: 470, modelFarm: 640, foundry: 1170, steelworks: 1700, mine: 300, sawmill: 250 } as const;
 export const UNEMPLOYMENT_POPULARITY_PENALTY = 30; // times the share of workers without a job
 // Each province is its own job market; of the people left without work in
 // theirs, this share will travel to fill open jobs in another.
@@ -228,7 +279,7 @@ export const RIVAL_CAMPAIGN_POPULARITY_SWING = 2.5; // base popularity swing fro
 export const FACTION_SENSITIVITY = 3;
 
 // --- Economy / taxes ---
-export const BASE_TAX_INCOME_PER_POP = 0.016; // tax per person at a 100% rate, per day — kept low so the treasury is always tight
+export const BASE_TAX_INCOME_PER_POP = 0.019; // tax per person at a 100% rate, per day — kept low so the treasury is always tight
 export const COMFORTABLE_TAX_RATE = 0.15; // the rate people accept without complaint
 export const MIN_TAX_RATE = -0.2; // below zero the state pays people: a handout (see economyRules)
 export const MAX_TAX_RATE = 0.9;
@@ -542,7 +593,6 @@ export const FOREIGN_TAKEOVER_THRESHOLD = 55; // a challenger at or above this s
 // for you if it's ruled by the party you backed, against you otherwise.
 export const FOREIGN_MEDDLING_CHANCE_PER_MONTH = 0.2;
 export const FOREIGN_MEDDLING_SUPPORT = 3; // support swing from one push
-export const FRIENDLY_GOVERNMENT_INCOME_BONUS = 0.05; // +5% income per neighbor ruled by the party you backed
 
 // --- Advisor strip (see application/getAdvisorOutlook.ts) ---
 // When a problem is worth flagging under the top bar, and when it turns red.

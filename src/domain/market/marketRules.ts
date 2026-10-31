@@ -40,8 +40,9 @@ export const GOOD_SPECS: Record<MarketGood, GoodSpec> = {
   wood: { basePrice: 25, equilibrium: 120, batch: 5 },
   ore: { basePrice: 28, equilibrium: 120, batch: 5 },
   coal: { basePrice: 22, equilibrium: 120, batch: 5 },
-  grain: { basePrice: 20, equilibrium: 120, batch: 5 },
-  fish: { basePrice: 20, equilibrium: 120, batch: 5 },
+  // Raw grain and fish fetch little: their worth is in the food they make.
+  grain: { basePrice: 8, equilibrium: 120, batch: 5 },
+  fish: { basePrice: 8, equilibrium: 120, batch: 5 },
   // Food moves in cartloads and is cheap per unit — but the market only
   // absorbs so much before the price collapses.
   // A food glut can drive the price almost to nothing, and the market only

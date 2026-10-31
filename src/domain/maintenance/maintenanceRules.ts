@@ -24,6 +24,24 @@ import {
   ROAD_ORE_COST,
   HARBOUR_COST,
   HARBOUR_WOOD_COST,
+  ESTATE_COST,
+  ESTATE_WOOD_COST,
+  FOUNDRY_COST,
+  FOUNDRY_ORE_COST,
+  HOMES_PER_TENEMENT,
+  HOMES_PER_TOWER,
+  MINE_COST,
+  MINE_WOOD_COST,
+  MODEL_FARM_COST,
+  MODEL_FARM_WOOD_COST,
+  SAWMILL_COST,
+  SAWMILL_WOOD_COST,
+  STEELWORKS_COST,
+  STEELWORKS_ORE_COST,
+  TENEMENT_COST,
+  TENEMENT_WOOD_COST,
+  TOWER_COST,
+  TOWER_ORE_COST,
 } from "../constants";
 import type { ProjectType } from "../construction/types";
 import type { GameState } from "../country/types";
@@ -39,6 +57,14 @@ const BUILD_PRICES: Record<ProjectType, { treasury: number; resourceType: Resour
   cannery: { treasury: CANNERY_COST, resourceType: "ore", resourceAmount: CANNERY_ORE_COST },
   housing: { treasury: HOUSING_COST, resourceType: "wood", resourceAmount: HOUSING_WOOD_COST },
   harbour: { treasury: HARBOUR_COST, resourceType: "wood", resourceAmount: HARBOUR_WOOD_COST },
+  tenement: { treasury: TENEMENT_COST, resourceType: "wood", resourceAmount: TENEMENT_WOOD_COST },
+  tower: { treasury: TOWER_COST, resourceType: "ore", resourceAmount: TOWER_ORE_COST },
+  estate: { treasury: ESTATE_COST, resourceType: "wood", resourceAmount: ESTATE_WOOD_COST },
+  modelFarm: { treasury: MODEL_FARM_COST, resourceType: "wood", resourceAmount: MODEL_FARM_WOOD_COST },
+  foundry: { treasury: FOUNDRY_COST, resourceType: "ore", resourceAmount: FOUNDRY_ORE_COST },
+  steelworks: { treasury: STEELWORKS_COST, resourceType: "ore", resourceAmount: STEELWORKS_ORE_COST },
+  mine: { treasury: MINE_COST, resourceType: "wood", resourceAmount: MINE_WOOD_COST },
+  sawmill: { treasury: SAWMILL_COST, resourceType: "wood", resourceAmount: SAWMILL_WOOD_COST },
 };
 
 export interface RepairCost {
@@ -55,6 +81,11 @@ export function getRepairCost(type: ProjectType, costMultiplier = 1): RepairCost
     resourceType: price.resourceType,
     resourceAmount: Math.ceil(price.resourceAmount * REPAIR_COST_SHARE * costMultiplier),
   };
+}
+
+// How many ordinary homes a building is worth: what it shelters, and burns.
+export function getHomeWeight(type: ProjectType): number {
+  return type === "housing" ? 1 : type === "tenement" ? HOMES_PER_TENEMENT : type === "tower" ? HOMES_PER_TOWER : 0;
 }
 
 export function isWorking(building: PlacedBuilding): boolean {
@@ -85,8 +116,8 @@ export function getWorkingCounts(state: GameState): WorkingCounts {
     canneries: Math.max(0, state.canneryCount - broken("cannery")),
     schools: Math.max(0, state.educationLevel - broken("education")),
     // Homes have no aggregate count on GameState — they're counted straight
-    // from the map.
-    homes: state.placedBuildings.filter((b) => b.type === "housing" && isWorking(b)).length,
+    // from the map, a tenement or a tower as the ordinary homes it's worth.
+    homes: state.placedBuildings.reduce((sum, b) => sum + (isWorking(b) ? getHomeWeight(b.type) : 0), 0),
   };
 }
 

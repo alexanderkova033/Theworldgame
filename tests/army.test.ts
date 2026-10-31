@@ -276,6 +276,7 @@ describe("taking back a province that broke away", () => {
     let before: string[] = [];
     playCarefully("astravia", "astravia-harvest-union", {
       days: 900,
+      difficulty: "easy", // a sloppy player lasts long enough to win it back
       skill: "sloppy",
       neglect: true,
       army: true,

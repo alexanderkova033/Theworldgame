@@ -1,6 +1,6 @@
 import type { ResourceType } from "../resources/types";
 
-export type ProjectType = "farm" | "factory" | "road" | "education" | "granary" | "cannery" | "housing" | "harbour";
+export type ProjectType = "farm" | "factory" | "road" | "education" | "granary" | "cannery" | "housing" | "harbour" | "tenement" | "tower" | "estate" | "modelFarm" | "foundry" | "steelworks" | "mine" | "sawmill";
 
 export interface Project {
   id: string;

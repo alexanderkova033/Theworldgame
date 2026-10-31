@@ -35,6 +35,7 @@ const STARTING_FOOD = 400000;
 // capital, no research. Surviving the first winter — keeping people fed,
 // housed and warm with nothing in hand — is the opening challenge.
 const STARTING_POPULATION = 10000;
+const STARTING_FACTORIES = 2;
 
 // One-time starting-stat nudges that back up each nation's Nation.startingBonus
 // blurb (nationData.ts) — keep the two in sync when tuning. Veldoria's bonus
@@ -42,9 +43,9 @@ const STARTING_POPULATION = 10000;
 const EXTRA_STARTING_FARM_NATIONS = ["astravia"]; // "balancing farmland and ambition"
 const STARTING_STABILITY_BONUS: Record<string, number> = { caldenreich: 10 }; // "steady administration"
 
-// Lean, but not starved: two farms keep food production close to what a
-// 10,000-strong population actually eats (FOOD_PER_FARM × 2 ≈ consumption)
-// — cutting to one farm looked like "less free stuff" but was actually a
+// Lean, but not starved: the farms keep food production close to what a
+// 10,000-strong population actually eats, and with two factories they employ
+// about the people there are — cutting further looked like "less free stuff" but was actually a
 // guaranteed early famine, which isn't the same thing as "costs more to
 // build." No free road, though — that bonus is easy to live without.
 function buildStartingBuildings(nationId: string, farmCount: number): PlacedBuilding[] {
@@ -59,7 +60,7 @@ function buildStartingBuildings(nationId: string, farmCount: number): PlacedBuil
     provinceId: order[i % order.length],
     type: "farm" as const,
   }));
-  buildings.push({ id: "starting-factory-1", provinceId: order[farmCount % order.length], type: "factory" });
+  for (let i = 0; i < STARTING_FACTORIES; i++) buildings.push({ id: `starting-factory-${i + 1}`, provinceId: order[(farmCount + i) % order.length], type: "factory" });
   return buildings;
 }
 
@@ -75,8 +76,8 @@ export function startNewGame(nationId: string, partyId: string, difficulty: Diff
 function createInitialState(nationId: string, partyId: string, difficulty: Difficulty): GameState {
   const nation = getNation(nationId);
   const level = getDifficulty(difficulty);
-  const farmCount = EXTRA_STARTING_FARM_NATIONS.includes(nationId) ? 4 : 3;
-  const factoryCount = 1;
+  const farmCount = EXTRA_STARTING_FARM_NATIONS.includes(nationId) ? 5 : 4;
+  const factoryCount = STARTING_FACTORIES;
   const roadCount = 0;
   const stability = 60 + (STARTING_STABILITY_BONUS[nationId] ?? 0);
 

@@ -1,7 +1,6 @@
 // Step 3 of the day: taxes and industry come in, wages go out. Staff who
 // can't be paid walk out.
 import type { GameState } from "../../domain/country/types";
-import { getDiplomacyIncomeMultiplier } from "../../domain/diplomacy/diplomacyRules";
 import { getDailyIncomeParts } from "../../domain/economy/economyRules";
 import { getTaxedPopulation } from "../../domain/uprising/uprisingRules";
 import { getPayRiseBill } from "../../domain/uprising/demandRules";
@@ -25,7 +24,7 @@ export function payTheBills(day: Day, working: GameState): Takings {
   const parts = getDailyIncomeParts(
     { ...working.stats, population: getTaxedPopulation(working.provinces, working.stats.population, working.date) },
     working.taxRate,
-    day.efficiency * day.mods.incomeMultiplier * getDiplomacyIncomeMultiplier(working.foreignPolitics),
+    day.efficiency * day.mods.incomeMultiplier,
   );
   const { industryIncome } = parts;
   const colonies = getColonyAccounts(working);

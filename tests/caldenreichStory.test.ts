@@ -50,6 +50,7 @@ describe("Caldenreich's story, played", () => {
     const end = playCarefully("caldenreich", "caldenreich-crown-loyalists", {
       days: 5 * 360,
       mode: "long-reign",
+      difficulty: "easy", // long enough to hear the whole story
       onDay: (s) => {
         for (const id of s.chapters.opened) if (id.startsWith("caldenreich:") && !seen.includes(id)) seen.push(id);
         if (s.provinces["province-6-west"]?.crisis?.kind === "seam" || (s.provinces["province-6-west"]?.seamYield ?? 1) < 1) seam = true;

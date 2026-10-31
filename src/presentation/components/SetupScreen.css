@@ -1,6 +1,6 @@
 /* Starting a game, on one screen (see SetupScreen.tsx): the chart, where a
-   nation is chosen by clicking it; everything else on a green morocco plate
-   lying on it, with the one button at its foot. */
+   nation is chosen by clicking it; everything else on a green morocco band
+   along the bottom, with the one button at its end. */
 .setup {
   display: flex;
   height: 100vh;
@@ -370,8 +370,8 @@
   }
 }
 
-/* Narrow: the chart on top, the panel under it. */
-@media (max-width: 900px) {
+/* Narrow: the chart on top, the choices scrolling under it. */
+@media (max-width: 1100px) {
   .setup {
     flex-direction: column;
   }
@@ -397,9 +397,9 @@
   }
 }
 
-/* --- The plate: the chart fills the screen, framed like the map in play, and
-   the choices lie on it, ringed in gilt, with their seal on the top edge. --- */
-@media (min-width: 901px) {
+/* --- The band: the chart fills the screen above it, and the choices run
+   along the bottom in four columns, with the one button at their end. --- */
+@media (min-width: 1101px) {
   .setup {
     position: relative;
     display: block;
@@ -408,7 +408,7 @@
   .setup__map {
     position: absolute;
     inset: 0;
-    border-right: none;
+    border: none;
   }
 
   .setup__map::after {
@@ -428,42 +428,107 @@
   }
 
   .setup__slot {
-    left: 2.3rem;
-    bottom: 1.9rem;
+    top: 2.5rem;
+    right: 2.3rem;
+    bottom: auto;
+    left: auto;
   }
 
   .setup__panel {
     position: absolute;
-    top: 1.1rem;
-    right: 3rem;
-    bottom: 0.9rem;
-    width: 33rem;
+    right: 1.4rem;
+    bottom: 1.2rem;
+    left: 1.4rem;
+    flex-direction: row;
+    width: auto;
+    max-height: calc(100dvh - 10rem);
     border: 1px solid var(--bar-edge);
     outline: 3px double var(--gilt);
     outline-offset: -9px;
-    box-shadow: 0 16px 40px rgba(12, 22, 16, 0.5);
+    box-shadow: 0 -8px 30px rgba(12, 22, 16, 0.4);
   }
 
   .setup__choices {
-    gap: 0.55rem;
-    padding: 1.2rem 1.6rem 0.5rem;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1.2rem;
+    padding: 1.15rem 1.3rem;
+  }
+
+  .setup__choices > .setup__section {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* The nation's column is the narrowest; the party's has the most to say. */
+  .setup__choices > .setup__section:nth-child(2) {
+    flex: 1.15;
+  }
+
+  .setup__nation-name {
+    font-size: 1.8rem;
+  }
+
+  .setup__nation-head {
+    flex-wrap: wrap;
+    gap: 0.4rem 0.8rem;
+  }
+
+  .setup button.setup__seal {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
+  .setup__blurb {
+    font-size: 0.9rem;
+  }
+
+  .setup button.setup__party {
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem;
+  }
+
+  .setup__party-seal {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+
+  .setup__party-name {
+    font-size: 1rem;
+  }
+
+  .setup__perk {
+    font-size: 0.78rem;
+  }
+
+  .setup__ranks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .setup__foot {
-    padding: 0.7rem 1.6rem 1.3rem;
+    display: flex;
+    align-items: center;
+    width: 12.5rem;
+    padding: 1rem 1.2rem 1rem 1rem;
+    border-top: none;
+    border-left: 3px double rgba(226, 194, 122, 0.45);
+  }
+
+  .setup button.setup__start {
+    padding: 1rem 0.5rem;
+    white-space: nowrap;
   }
 
   .setup__plate-seal {
     position: absolute;
-    top: -0.95rem;
-    left: 50%;
+    top: -1.1rem;
+    left: 1.6rem;
     z-index: 1;
     display: block;
-    transform: translateX(-50%);
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .setup__plate-seal {
     display: none;
   }

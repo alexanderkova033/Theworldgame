@@ -12,6 +12,8 @@ import { getResearchOutcomeFactor } from "../research/researchOutcomes";
 import { getActiveSynergies } from "../synergy/synergyRules";
 import { addModifiers, neutralModifiers, type Modifiers } from "./modifiers";
 import { getDifficulty } from "../difficulty/difficultyData";
+import { getFriendEffects } from "../diplomacy/diplomacyRules";
+import { getRoadMarketMultiplier } from "../roads/roadsRules";
 import type { BurdenId } from "../reign/reignData";
 import { getBurdenEffects } from "../reign/reignRules";
 
@@ -20,6 +22,8 @@ export function getModifiers(
     burdens?: BurdenId[];
     lasting?: LastingEffect[];
     date?: GameDate;
+    foreignPolitics?: GameState["foreignPolitics"];
+    roadCount?: number;
   },
 ): Modifiers {
   let mods = neutralModifiers();
@@ -37,6 +41,10 @@ export function getModifiers(
   // A story's choices, for as long as they last (application/storyOutcome.ts).
   const date = state.date;
   if (date) for (const l of state.lasting ?? []) if (dayNumber(date) < dayNumber(l.until)) mods = addModifiers(mods, l.effects);
+  // Neighbours ruled by the party you backed (domain/diplomacy).
+  for (const effects of getFriendEffects(state.foreignPolitics)) mods = addModifiers(mods, effects);
+  // Roads bring the market's prices down (domain/roads).
+  if (state.roadCount) mods = { ...mods, buyPriceMultiplier: mods.buyPriceMultiplier * getRoadMarketMultiplier(state.roadCount) };
   // The difficulty level sets how fast political power comes (domain/difficulty).
   mods = { ...mods, politicalPowerMultiplier: mods.politicalPowerMultiplier * getDifficulty(state.difficulty).politicalPowerMultiplier };
   return mods;

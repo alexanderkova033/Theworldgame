@@ -134,7 +134,7 @@ export function placeBuildings(provinceId: string, types: ProjectType[]): Array<
   const between = [...near.slice(start), ...near.slice(0, start)];
   const taken = new Set<number>();
   return types.map((type) => {
-    const order = type === "housing" ? near : type === "farm" || type === "harbour" ? far : between;
+    const order = type === "housing" || type === "tenement" || type === "tower" ? near : type === "farm" || type === "estate" || type === "modelFarm" || type === "harbour" ? far : between;
     const index = order.find((i) => !taken.has(i));
     if (index === undefined) return null;
     taken.add(index);

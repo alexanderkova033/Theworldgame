@@ -19,7 +19,7 @@ export interface UnderwayBuilding {
   provinceId: string;
 }
 
-const BUILDING_SIZE: Partial<Record<ProjectType, number>> = { housing: 6, factory: 7, farm: 5.5 };
+const BUILDING_SIZE: Partial<Record<ProjectType, number>> = { housing: 6, factory: 7, farm: 5.5, tenement: 6, tower: 6, estate: 6, modelFarm: 6, foundry: 7, steelworks: 7, mine: 6, sawmill: 6 };
 const BUILDING_SCALE = 1.1; // fits BUILDING_ROOM in mapSlots.ts, which keeps pictures from touching
 const CROWD_SCALE = 1.2;
 
@@ -51,9 +51,9 @@ function Building({ type, at, idle, underway, more }: { type: ProjectType; at: P
   const [x, y] = at;
   return (
     <g transform={`translate(${x} ${y}) scale(${BUILDING_SCALE})`} className={`map-settle__building ${idle ? "is-idle" : ""} ${underway ? "is-underway" : ""}`}>
-      {type === "farm" && <Field />}
+      {(type === "farm" || type === "estate" || type === "modelFarm") && <Field />}
       {underway && <ellipse cx={0} cy={7} rx={10} ry={3.5} className="map-settle__ground" />}
-      <BuildingIcon type={type} x={0} y={type === "farm" ? -3 : 0} size={BUILDING_SIZE[type] ?? 6} />
+      <BuildingIcon type={type} x={0} y={type === "farm" || type === "estate" || type === "modelFarm" ? -3 : 0} size={BUILDING_SIZE[type] ?? 6} />
       {more > 0 && (
         <g transform="translate(9 -9)">
           <circle r={5.2} className="map-settle__more" />

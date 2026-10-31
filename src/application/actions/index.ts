@@ -17,6 +17,7 @@ export { canRepairBuilding, repairBuilding } from "./repairBuilding";
 export { canPressureGovernment, pressureGovernment } from "./pressureGovernment";
 export { resolveDecision, dismissDecision } from "./resolveDecision";
 export { setTaxRate } from "./setTaxRate";
+export { buildEstate, buildFoundry, buildMine, buildModelFarm, buildSawmill, buildSteelworks, buildTenement, buildTower } from "./buildLarger";
 export { canCourtGroup, canCrackDown, canHoldRally, courtGroup, crackDown, holdRally } from "./politicalActions";
 export { canDisbandMilitia, canRaiseMilitia, canRecallMilitia, canSendMilitia, disbandMilitia, raiseMilitia, recallMilitia, sendMilitia } from "./militiaActions";
 export { answerDemand, canAnswerDemand, getDemandAnswers } from "./demandActions";

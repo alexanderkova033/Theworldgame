@@ -2,14 +2,13 @@
 // lean on them. Pressuring a neighbor shifts its electorate toward the party
 // you back — harder when your own government is popular and stable, and it
 // can backfire when it isn't. A neighbor ruled by the party you backed is
-// "friendly" and opens up better trade (an income bonus).
+// "friendly", and what that brings depends on the party: see FRIEND_EFFECTS.
 import {
   FOREIGN_MEDDLING_CHANCE_PER_MONTH,
   FOREIGN_MEDDLING_SUPPORT,
   FOREIGN_SUPPORT_DRIFT,
   FOREIGN_SUPPORT_NOISE,
   FOREIGN_TAKEOVER_THRESHOLD,
-  FRIENDLY_GOVERNMENT_INCOME_BONUS,
   PRESSURE_BASE,
   PRESSURE_MAX,
   RELATIONS_HOSTILE,
@@ -20,7 +19,9 @@ import {
 } from "../constants";
 import type { CountryStats } from "../country/types";
 import { NATIONS } from "../nations/nationData";
-import { getPartiesForNation } from "../parties/partyRules";
+import { getPartiesForNation, getParty } from "../parties/partyRules";
+import type { Ideology } from "../parties/types";
+import type { ModifierEffects } from "../policy/modifiers";
 import type { ForeignGovernment } from "./types";
 
 function clampSupport(value: number): number {
@@ -66,12 +67,22 @@ export function isFriendly(gov: ForeignGovernment): boolean {
   return gov.backedPartyId !== null && gov.rulingPartyId === gov.backedPartyId;
 }
 
-export function getFriendlyCount(foreignPolitics: Record<string, ForeignGovernment>): number {
-  return Object.values(foreignPolitics).filter(isFriendly).length;
-}
+// What each kind of party does for you once it rules next door because of
+// you, so the choice between the two matters.
+export const FRIEND_EFFECTS: Record<Ideology, ModifierEffects> = {
+  Agrarian: { buyPriceMultiplier: 0.93 }, // its farmers sell to you cheaply
+  Commercial: { incomeMultiplier: 1.05 }, // its merchants trade with yours
+  Traditionalist: { stabilityPerDay: 0.03 }, // a steady crown next door steadies yours
+  Progressive: { researchMultiplier: 1.1 }, // its scholars share their findings
+  Labor: { hardshipMultiplier: 0.9 }, // its unions tell yours to hold on
+  Nationalist: { buildCostMultiplier: 0.95 }, // its ironmasters supply you at a discount
+};
 
-export function getDiplomacyIncomeMultiplier(foreignPolitics: Record<string, ForeignGovernment>): number {
-  return 1 + getFriendlyCount(foreignPolitics) * FRIENDLY_GOVERNMENT_INCOME_BONUS;
+// All the friends you have, as one set of effects.
+export function getFriendEffects(foreignPolitics: Record<string, ForeignGovernment> | undefined): ModifierEffects[] {
+  return Object.values(foreignPolitics ?? {})
+    .filter(isFriendly)
+    .map((gov) => FRIEND_EFFECTS[getParty(gov.rulingPartyId).ideology]);
 }
 
 // Monthly: every neighbor's electorate relaxes a little toward an even split

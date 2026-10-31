@@ -257,6 +257,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Steam presses replace whole shifts of hand work. Production soars and the floor empties out.",
     effects: { industryMultiplier: 1.15, factoryJobsMultiplier: 0.75, supportTarget: -2 },
     icon: "industry",
+    unlocksBuildingType: "steelworks",
   },
   {
     id: "industry-hot-blast",
@@ -540,6 +541,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Two engines at the ends of a field haul the plough between them on a cable. A day's work for a team of horses done in an hour.",
     effects: { farmJobsMultiplier: 0.88, farmYieldMultiplier: 1.06, treasuryDelta: -1000 },
     icon: "industry",
+    unlocksBuildingType: "modelFarm",
   },
   {
     id: "agriculture-reaping-machines",
@@ -933,6 +935,7 @@ export const RESEARCH_NODES: ResearchNode[] = [
     description: "Two rows of houses built against one shared back wall. Twice as many homes on the same street, and no air in any of them.",
     effects: { housingCapacityMultiplier: 1.2, hardshipMultiplier: 1.08, supportTarget: -1 },
     icon: "population",
+    unlocksBuildingType: "tower",
   },
   {
     id: "housing-fire-brigades",

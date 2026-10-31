@@ -48,6 +48,14 @@ const BUILDING_LABELS: Record<ProjectType, string> = {
   cannery: "Cannery",
   housing: "Homes",
   harbour: "Harbour",
+  tenement: "Tenement",
+  tower: "Apartment Block",
+  estate: "Estate",
+  modelFarm: "Model Farm",
+  foundry: "Foundry",
+  steelworks: "Steelworks",
+  mine: "Mine",
+  sawmill: "Sawmill",
 };
 
 interface MapPanelProps {

@@ -36,6 +36,7 @@ export function planMigration(
   capacityByProvince: Record<string, number>,
   labour: Record<string, ProvinceLabour>,
   linkedIslands: ReadonlySet<string> = new Set(),
+  roadMultiplier = 1, // roads make moving easier (domain/roads)
 ): Record<string, number> {
   // By land, or across the sea between harbours: an island not linked to
   // the mainland keeps its people, and nobody reaches it (domain/islands).
@@ -50,8 +51,8 @@ export function planMigration(
     const capacity = capacityByProvince[id] ?? 0;
     const l = labour[id];
     room[id] = Math.max(0, capacity - p.population);
-    homeless[id] = Math.max(0, p.population - capacity) * MIGRATION_SHARE_PER_DAY;
-    jobless[id] = l ? (l.unemployed / LABOUR_SHARE) * MIGRATION_SHARE_PER_DAY : 0;
+    homeless[id] = Math.max(0, p.population - capacity) * MIGRATION_SHARE_PER_DAY * roadMultiplier;
+    jobless[id] = l ? (l.unemployed / LABOUR_SHARE) * MIGRATION_SHARE_PER_DAY * roadMultiplier : 0;
     openJobs[id] = l ? Math.max(0, l.jobs - l.workers) / LABOUR_SHARE : 0;
     pull[id] = MIGRATION_UNREST_PULL[p.unrestStage];
   }

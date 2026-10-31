@@ -10,13 +10,13 @@ import { buyBackIsland, canBuyBackIsland, canPressureGovernment, canSignAccord, 
 import {
   ACCORD_COST,
   FOREIGN_TAKEOVER_THRESHOLD,
-  FRIENDLY_GOVERNMENT_INCOME_BONUS,
   PRESSURE_POLITICAL_POWER_COST,
   RELATIONS_HOSTILE,
   RELATIONS_WARM,
 } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
-import { getPressureStrength, isFriendly } from "../../domain/diplomacy/diplomacyRules";
+import { FRIEND_EFFECTS, getPressureStrength, isFriendly } from "../../domain/diplomacy/diplomacyRules";
+import { describeEffects } from "../../domain/policy/modifiers";
 import { getModifiers } from "../../domain/policy/policyRules";
 import type { ForeignGovernment } from "../../domain/diplomacy/types";
 import { getNation } from "../../domain/nations/nationRules";
@@ -41,6 +41,11 @@ function CrownIcon() {
       <path d="M-8,5 L-8,-5 L-4,-1 L0,-7 L4,-1 L8,-5 L8,5 Z" fill="#e6c56a" stroke="#93731f" strokeWidth={0.8} />
     </svg>
   );
+}
+
+// What a party brings you as a friendly government, in a few words.
+function friendBrings(partyId: string): string {
+  return describeEffects(FRIEND_EFFECTS[getParty(partyId).ideology]).gains[0]?.text ?? "";
 }
 
 function NationCrest({ color, name }: { color: string; name: string }) {
@@ -223,9 +228,8 @@ function ForeignCard({ state, nationId, gov, strength, dispatch }: { state: Game
         <NationCrest color={nation.color} name={nation.name} />
         <span className="foreign-card__name">{nation.name}</span>
         {friendly && (
-          <span className="foreign-card__friendly" title={`Ruled by the party you backed: +${FRIENDLY_GOVERNMENT_INCOME_BONUS * 100}% income from trade`}>
+          <span className="foreign-card__friendly" title={`Ruled by the party you backed: ${friendBrings(gov.rulingPartyId).toLowerCase()}, and it campaigns for you in your elections`}>
             Friendly
-            <StatIcon type="treasury" size={14} />+{FRIENDLY_GOVERNMENT_INCOME_BONUS * 100}%
           </span>
         )}
       </div>
@@ -239,9 +243,20 @@ function ForeignCard({ state, nationId, gov, strength, dispatch }: { state: Game
         {partyIds.map((partyId) => {
           const party = getParty(partyId);
           const isRuling = partyId === gov.rulingPartyId;
+          const isBacked = partyId === gov.backedPartyId;
+          // How many pushes it would take to bring this party to power.
+          const pushes = !isRuling && strength > 0 ? Math.max(1, Math.ceil((FOREIGN_TAKEOVER_THRESHOLD - gov.support[partyId]) / strength)) : null;
           return (
             <div className="foreign-card__party" key={partyId} style={{ "--party-color": party.color } as CSSProperties}>
-              <span className="foreign-card__party-name">{party.name}</span>
+              <span className="foreign-card__party-name" title={party.platform}>{party.name}</span>
+              <span className="foreign-card__party-brings" title={`If you back this party and it rules ${nation.name}, you get this, and it campaigns for you in your elections.${isBacked ? " You are backing it." : ""}`}>
+                {friendBrings(partyId)}
+              </span>
+              {pushes !== null && (
+                <span className="foreign-card__party-pushes" title={`It takes power at ${FOREIGN_TAKEOVER_THRESHOLD}%, at the next monthly check, unless the vote drifts back first`}>
+                  {pushes} {pushes === 1 ? "push" : "pushes"} to power
+                </span>
+              )}
               <span className="foreign-card__party-share">
                 {isRuling && <CrownIcon />}
                 {Math.round(gov.support[partyId])}%
@@ -287,7 +302,7 @@ export function ForeignAffairs({ state, dispatch }: { state: GameState; dispatch
       <div className="foreign-affairs__head">
         <span
           className={`foreign-affairs__push ${strength >= 0 ? "is-gain" : "is-loss"}`}
-          title={`How far one push moves a neighbour's vote: your support (${Math.round(state.stats.popularity)}) plus stability (${Math.round(state.stats.stability)}) at home. Below zero, meddling backfires. Win them a government and it's friendly: +${FRIENDLY_GOVERNMENT_INCOME_BONUS * 100}% income from trade.`}
+          title={`How far one push moves a neighbour's vote: your support (${Math.round(state.stats.popularity)}) plus stability (${Math.round(state.stats.stability)}) at home. Below zero, meddling backfires. Win them a government and it's friendly: each party brings something different, and it campaigns for you.`}
         >
           Each push
           <strong>{formatSigned(strength, true)}</strong>

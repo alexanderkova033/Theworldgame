@@ -50,6 +50,7 @@ describe("Veldoria's story, played", () => {
     const end = playCarefully("veldoria", "veldoria-ironworkers-guild", {
       days: 5 * 360,
       mode: "long-reign",
+      difficulty: "easy", // long enough to hear the whole story
       onDay: (s) => {
         for (const id of s.chapters.opened) if (id.startsWith("veldoria:") && !seen.includes(id)) seen.push(id);
         if (s.provinces["province-1-north"]?.crisis?.kind === "fever") fever = true;

@@ -39,7 +39,10 @@ import { getProducingTerrains } from "../islands/islandRules";
 import { getOwnedProvinceIds, getPlace } from "../provinces/provinceRules";
 import type { Terrain } from "../provinces/types";
 import type { ProvinceState } from "../provinces/types";
-import { calculateDailyProduction } from "../resources/resourceRules";
+import { addResources, calculateDailyProduction, emptyResourceBundle } from "../resources/resourceRules";
+import { getWorkingCounts, isWorking } from "../maintenance/maintenanceRules";
+import { getRoadProductionMultiplier } from "../roads/roadsRules";
+import { COAL_PER_MINE, ORE_PER_MINE, RESOURCE_PER_PROVINCE, WOOD_PER_SAWMILL } from "../constants";
 import type { ResourceBundle } from "../resources/types";
 import type { CrisisAnswer, CrisisKind } from "./types";
 
@@ -115,6 +118,34 @@ export function getProvinceYield(p: ProvinceState | undefined, terrain: Terrain,
   if (!p) return made;
   for (const [good, share] of Object.entries(shares(p)) as Array<[keyof ResourceBundle, number]>) made[good] *= share;
   return made;
+}
+
+// What mines and sawmills add today: each as far as it's staffed, and a mine
+// no more than its seam and any crisis there allow.
+function getWorksProduction(state: GameState, season: Season, industryStaffing: (provinceId: string) => number): ResourceBundle {
+  const made = emptyResourceBundle();
+  for (const building of state.placedBuildings) {
+    if ((building.type !== "mine" && building.type !== "sawmill") || !isWorking(building)) continue;
+    const p = state.provinces[building.provinceId];
+    if (!p) continue;
+    const staffed = industryStaffing(building.provinceId);
+    const left = getProvinceYield(p, building.type === "mine" ? "hills" : "forest", season);
+    if (building.type === "mine") {
+      const share = left.ore / RESOURCE_PER_PROVINCE;
+      made.ore += ORE_PER_MINE * staffed * share;
+      made.coal += COAL_PER_MINE * staffed * share;
+    } else {
+      made.wood += WOOD_PER_SAWMILL * staffed * (left.wood / RESOURCE_PER_PROVINCE);
+    }
+  }
+  return made;
+}
+
+// All of today's goods: the land, its works, and what roads add to them.
+export function getGoodsProduction(state: GameState, season: Season, industryStaffing: (provinceId: string) => number): ResourceBundle {
+  const total = addResources(getLandProduction(state, season), getWorksProduction(state, season, industryStaffing));
+  const carried = getRoadProductionMultiplier(getWorkingCounts(state).roads);
+  return Object.fromEntries(Object.entries(total).map(([good, amount]) => [good, amount * carried])) as unknown as ResourceBundle;
 }
 
 // The country's day of goods from its land: every province it holds, less

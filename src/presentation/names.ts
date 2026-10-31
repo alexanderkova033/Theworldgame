@@ -22,4 +22,12 @@ export const BUILDING_NAMES: Record<ProjectType, [one: string, many: string]> = 
   granary: ["Granary", "Granaries"],
   cannery: ["Cannery", "Canneries"],
   harbour: ["Harbour", "Harbours"],
+  tenement: ["Tenement", "Tenements"],
+  tower: ["Apartment Block", "Apartment Blocks"],
+  estate: ["Estate", "Estates"],
+  modelFarm: ["Model Farm", "Model Farms"],
+  foundry: ["Foundry", "Foundries"],
+  steelworks: ["Steelworks", "Steelworks"],
+  mine: ["Mine", "Mines"],
+  sawmill: ["Sawmill", "Sawmills"],
 };

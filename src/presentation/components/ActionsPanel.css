@@ -238,8 +238,22 @@
 }
 
 button.build-row__button {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   min-width: 5.5rem;
   min-height: 2.2rem;
+}
+
+/* Buy & build: what it takes from the treasury today, in plain sight. */
+.build-row__button-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 /* Glyph helpers inside a yield label. */

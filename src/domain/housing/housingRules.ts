@@ -13,7 +13,7 @@ import {
 } from "../constants";
 import type { Season } from "../country/calendar";
 import type { GameState } from "../country/types";
-import { getWorkingCounts, isWorking } from "../maintenance/maintenanceRules";
+import { getHomeWeight, getWorkingCounts, isWorking } from "../maintenance/maintenanceRules";
 import { getNation } from "../nations/nationRules";
 import type { PlacedBuilding } from "../provinces/types";
 import { getModifiers } from "../policy/policyRules";
@@ -34,7 +34,7 @@ export function getHousingCapacityByProvince(state: GameState): Record<string, n
   const perHome = getPeoplePerHome(state);
   const capacity: Record<string, number> = Object.fromEntries(getOwnedProvinceIds(state).map((id) => [id, 0]));
   for (const building of state.placedBuildings) {
-    if (building.type === "housing" && isWorking(building) && building.provinceId in capacity) capacity[building.provinceId] += perHome;
+    if (isWorking(building) && building.provinceId in capacity) capacity[building.provinceId] += perHome * getHomeWeight(building.type);
   }
   return capacity;
 }

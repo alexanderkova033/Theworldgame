@@ -8,6 +8,7 @@ import "./ProvinceCard.css";
 import { useEffect, type ReactNode } from "react";
 import { buyAndBuild, repairBuilding } from "../../application/actions";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
+import { upfrontCost } from "../../application/actions/createBuildAction";
 import { getProvinceSuggestions, type Suggestion } from "../../application/getProvinceSuggestions";
 import { CURRENCY_SYMBOL, GARRISON_ORDER, GARRISON_ORDER_CAP, GARRISON_SUPPRESSION_PER_DAY, SUPPLY_FEE_PER_DAY } from "../../domain/constants";
 import { getGarrisonOrder } from "../../domain/military/militaryRules";
@@ -144,7 +145,7 @@ function SuggestionRow({ state, suggestion, provinceId, dispatch }: { state: Gam
           dispatch((s) => (action.canBuild(s, provinceId) ? action(s, provinceId) : buyAndBuild(s, action, provinceId)));
         }}
       >
-        {how === "buy" ? "Buy & build" : "Build"}
+        {how === "buy" ? `Buy & build: ${formatAmount(Math.round(plan!.goodsCost + upfrontCost(suggestion.cost)))} ${CURRENCY_SYMBOL}` : "Build"}
       </button>
     </li>
   );

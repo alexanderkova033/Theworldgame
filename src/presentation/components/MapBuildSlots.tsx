@@ -8,7 +8,7 @@ import { memo } from "react";
 import type { ProjectType } from "../../domain/construction/types";
 import type { PlacedBuilding } from "../../domain/provinces/types";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
-import { BUILD_ROWS } from "../buildGroups";
+import { BUILD_ROWS, LARGER_KINDS } from "../buildGroups";
 import { separatePlates } from "../mapSlots";
 import { BuildingIcon } from "./BuildingIcon";
 import type { UnderwayBuilding } from "./MapSettlements";
@@ -17,7 +17,7 @@ const SLOT = { size: 4.6, gap: 1.2 };
 const ICON_WIDTH = 11;
 const ROW_HEIGHT = 10.5;
 const PAD = 3;
-const ICON_SIZE: Partial<Record<ProjectType, number>> = { factory: 2.9, farm: 2.7, road: 3.2, education: 3.4 };
+const ICON_SIZE: Partial<Record<ProjectType, number>> = { factory: 2.9, farm: 2.7, road: 3.2, education: 3.4, tenement: 2.8, tower: 2.5, estate: 2.8, modelFarm: 2.8, foundry: 2.8, steelworks: 2.8, mine: 3, sawmill: 3 };
 
 interface Kind {
   type: ProjectType;
@@ -59,7 +59,8 @@ export const MapBuildSlots = memo(function MapBuildSlots({
           max: maxPerProvince,
           built: config.type === "road" ? (roadCountByProvince.get(provinceId) ?? 0) : built.filter((b) => b.type === config.type).length,
           going: going.filter((u) => u.type === config.type).length,
-        })),
+        }))
+        .filter((kind) => !LARGER_KINDS.includes(kind.type) || kind.built + kind.going > 0),
     })).filter((group) => group.kinds.length > 0);
     if (groups.length === 0) return [];
     const rows = groups.flatMap((group) => group.kinds.length);

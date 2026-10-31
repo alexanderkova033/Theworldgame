@@ -2,6 +2,8 @@
 // workers and jobs, order and who's moving in or out — for the map's
 // tooltip and info bar and the People panel. Read-only; the same rules
 // the daily tick runs (labourRules, provinceMigration, provinceOrder).
+import { getWorkingCounts } from "../domain/maintenance/maintenanceRules";
+import { getRoadMigrationMultiplier } from "../domain/roads/roadsRules";
 import {
   PROVINCE_FLAG_FULL_SHARE,
   PROVINCE_FLAG_HOMELESS_SHARE,
@@ -69,7 +71,7 @@ export function getProvinceOverview(state: GameState): ProvinceOverview[] {
   const nation = getNation(state.nationId);
   const capacity = getHousingCapacityByProvince(state);
   const labour = getLabourSituation(state);
-  const migration = planMigration(state.provinces, capacity, labour.provinces, getLinkedIslands(state));
+  const migration = planMigration(state.provinces, capacity, labour.provinces, getLinkedIslands(state), getRoadMigrationMultiplier(getWorkingCounts(state).roads));
   const garrisons = getGarrisons(state.regiments, state.nationId);
   return getOwnedProvinceIds(state).map((id) => {
     const p = state.provinces[id];

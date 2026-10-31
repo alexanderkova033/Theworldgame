@@ -1,5 +1,5 @@
 import "./SetupScreen.css";
-import { useState, type CSSProperties } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { DIFFICULTIES, DIFFICULTY_SETTINGS, type Difficulty } from "../../domain/difficulty/difficultyData";
 import type { Nation } from "../../domain/nations/types";
 import { getPartiesForNation } from "../../domain/parties/partyRules";
@@ -23,8 +23,10 @@ interface SetupScreenProps {
   onStart: (nationId: string, partyId: string, difficulty: Difficulty, mode: GameMode) => void;
 }
 
-// The chart's frame: the land to the left of the plate, with sea round it.
-const CHART_VIEW = "-90 -40 2050 1150";
+// The continent and every island, with their shallows: what the chart must
+// show. It's fitted to the space the band leaves, with the sea running on under.
+const LAND = { x: 0, y: -15, width: 1310, height: 960 };
+const FIRST_VIEW = `${LAND.x} ${LAND.y} ${LAND.width} ${LAND.height}`;
 
 // What a chart with no game behind it holds.
 const NO_BUILDINGS = new Map<string, PlacedBuilding[]>();
@@ -36,12 +38,33 @@ const NO_STATUS: Record<string, ProvinceStatus> = {};
 const ignore = () => {};
 
 // Starting a game, on one screen. The chart fills it and chooses the nation
-// (click its land, or its seal on the plate); a plate lying on it holds the party, how
+// (click its land, or its seal on the band); a band along the bottom holds the party, how
 // the game ends and how hard it is. Everything has a choice made already, so
 // "Take office" is always ready. The game doesn't exist until it's pressed.
 export function SetupScreen({ nations, slotName, onBack, onStart }: SetupScreenProps) {
   const [nationId, setNationId] = useState(nations[0].id);
   const nation = nations.find((n) => n.id === nationId) ?? nations[0];
+  const mapRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [chartView, setChartView] = useState(FIRST_VIEW);
+  useLayoutEffect(() => {
+    const map = mapRef.current;
+    const panel = panelRef.current;
+    if (!map || !panel) return;
+    const fit = () => {
+      const { width, height } = map.getBoundingClientRect();
+      // Narrow, the choices sit under the chart rather than over it.
+      const covered = getComputedStyle(panel).position === "absolute" ? height - panel.getBoundingClientRect().top + map.getBoundingClientRect().top : 0;
+      const scale = Math.min(width / LAND.width, (height - covered) / LAND.height);
+      if (scale <= 0) return;
+      setChartView(`${LAND.x + LAND.width / 2 - width / scale / 2} ${LAND.y} ${width / scale} ${height / scale}`);
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(map);
+    observer.observe(panel);
+    return () => observer.disconnect();
+  }, []);
   const parties = getPartiesForNation(nation.id);
   const [wantedPartyId, setPartyId] = useState<string | null>(null);
   // A party belongs to one nation: choosing another nation starts on its first.
@@ -57,14 +80,13 @@ export function SetupScreen({ nations, slotName, onBack, onStart }: SetupScreenP
 
   return (
     <div className="setup">
-      <div className="setup__map">
+      <div className="setup__map" ref={mapRef}>
         {/* The chart the game is played on, not a drawing of it. MapLayers
             shows the chosen nation as your own; these clear shapes on top
             catch the clicks for all three. */}
         <div className="setup__chart-frame map-panel" data-season="winter">
           <svg
-            viewBox={CHART_VIEW}
-            preserveAspectRatio="xMinYMid slice"
+            viewBox={chartView}
             className="setup__chart"
             style={{ "--nation-color": washColor(nation.color) } as CSSProperties}
             role="img"
@@ -112,7 +134,7 @@ export function SetupScreen({ nations, slotName, onBack, onStart }: SetupScreenP
         <p className="setup__slot">New game in {slotName}</p>
       </div>
 
-      <div className="setup__panel">
+      <div className="setup__panel" ref={panelRef}>
         <svg className="setup__plate-seal" width={36} height={36} viewBox="-18 -18 36 36" aria-hidden="true">
           <circle r={16} fill="var(--oxblood)" stroke="var(--gilt)" strokeWidth={1.5} />
           <polygon points={starPoints(0, 0, 9, 3.8)} fill="var(--gilt-bright)" />

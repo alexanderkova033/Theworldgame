@@ -118,24 +118,27 @@ describe("difficulty", { timeout: 180000 }, () => {
     return won;
   };
 
-  it("Easy lets even a sloppy player win most games", () => {
-    expect(wins("easy", "sloppy")).toBeGreaterThanOrEqual(18);
+  it("Easy: a sloppy player wins about half its games", () => {
+    const sloppy = wins("easy", "sloppy");
+    expect(sloppy).toBeGreaterThanOrEqual(12);
+    expect(sloppy).toBeLessThanOrEqual(21);
   });
 
-  it("Normal isn't a walkover for a sloppy player", () => {
-    expect(wins("normal", "sloppy")).toBeLessThanOrEqual(18);
+  it("Normal: a careful player nearly always wins, a sloppy one seldom", () => {
+    expect(wins("normal", "careful")).toBeGreaterThanOrEqual(23);
+    expect(wins("normal", "sloppy")).toBeLessThanOrEqual(9);
   });
 
-  it("Hard: a careful player wins most games, but not all", () => {
+  it("Hard: a careful player wins about half its games, a sloppy one hardly ever", () => {
     const careful = wins("hard", "careful");
-    expect(careful).toBeGreaterThanOrEqual(18);
-    expect(careful).toBeLessThan(27);
-    expect(wins("hard", "sloppy")).toBeLessThanOrEqual(9);
+    expect(careful).toBeGreaterThanOrEqual(9);
+    expect(careful).toBeLessThanOrEqual(20);
+    expect(wins("hard", "sloppy")).toBeLessThanOrEqual(3);
   });
 
   it("Ruthless: not every country can be saved, but some can", () => {
     const careful = wins("ruthless", "careful");
-    expect(careful).toBeGreaterThanOrEqual(6);
-    expect(careful).toBeLessThanOrEqual(18);
+    expect(careful).toBeGreaterThanOrEqual(1);
+    expect(careful).toBeLessThanOrEqual(9);
   });
 });

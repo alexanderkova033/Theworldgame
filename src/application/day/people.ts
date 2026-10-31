@@ -3,6 +3,8 @@
 // province's own order follows the nation's, minus its own homeless and
 // jobless.
 import { isFeatureOpen } from "../../domain/chapters/chapterData";
+import { getWorkingCounts } from "../../domain/maintenance/maintenanceRules";
+import { getRoadMigrationMultiplier } from "../../domain/roads/roadsRules";
 import type { CountryStats, GameState } from "../../domain/country/types";
 import { getHomelessTotal } from "../../domain/housing/housingRules";
 import type { LabourSituation } from "../../domain/labour/labourRules";
@@ -53,7 +55,7 @@ export function movePeople(
       },
     ]),
   );
-  const migrated = applyMigration(grown, planMigration(grown, today.capacityByProvince, today.labour.provinces, getLinkedIslands(working)));
+  const migrated = applyMigration(grown, planMigration(grown, today.capacityByProvince, today.labour.provinces, getLinkedIslands(working), getRoadMigrationMultiplier(getWorkingCounts(working).roads)));
   const capacity = today.capacityByProvince;
   const population = getProvincePopulationTotal(migrated);
 

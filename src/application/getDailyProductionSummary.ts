@@ -9,7 +9,6 @@ import { getTaxedPopulation } from "../domain/uprising/uprisingRules";
 import { getPayRiseBill } from "../domain/uprising/demandRules";
 import { getSeason, type Season } from "../domain/country/calendar";
 import type { GameState } from "../domain/country/types";
-import { getDiplomacyIncomeMultiplier } from "../domain/diplomacy/diplomacyRules";
 import { consumeFood, produceFood, produceProcessedFood } from "../domain/food/foodRules";
 import { burnHeatingFuel, getHeatingDemand, getHomelessTotal, getHousingCapacity } from "../domain/housing/housingRules";
 import { getLabourSituation } from "../domain/labour/labourRules";
@@ -18,7 +17,7 @@ import { getModifiers } from "../domain/policy/policyRules";
 import { calculateDailyPoliticalPower } from "../domain/politics/politicsRules";
 import { getResearchRates } from "../domain/research/researchRules";
 import type { ResearchCategory } from "../domain/research/types";
-import { getLandProduction } from "../domain/crises/crisisRules";
+import { getGoodsProduction } from "../domain/crises/crisisRules";
 import type { ResourceBundle } from "../domain/resources/types";
 import { calculateEfficiencyMultiplier } from "../domain/roads/roadsRules";
 import { getDailySalaries } from "../domain/workforce/workforceRules";
@@ -53,11 +52,12 @@ export interface DailyProductionSummary {
 
 export function getDailyProductionSummary(state: GameState): DailyProductionSummary {
   const working = getWorkingCounts(state);
-  const { staffed } = getLabourSituation(state);
+  const labour = getLabourSituation(state);
+  const { staffed } = labour;
   const season = getSeason(state.date);
   const efficiencyMultiplier = calculateEfficiencyMultiplier(working.roads);
   const mods = getModifiers(state);
-  const incomeMultiplier = efficiencyMultiplier * mods.incomeMultiplier * getDiplomacyIncomeMultiplier(state.foreignPolitics);
+  const incomeMultiplier = efficiencyMultiplier * mods.incomeMultiplier;
 
   const taxBase = getTaxedPopulation(state.provinces, state.stats.population, state.date) * BASE_TAX_INCOME_PER_POP * incomeMultiplier;
   const taxIncome = taxBase * getCollectedTaxRate(state.taxRate);
@@ -70,7 +70,7 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const foodProduced = farmFood + processedFood;
   const foodConsumed = consumeFood(state.stats, mods);
 
-  const rawProduction = getLandProduction(state, season);
+  const rawProduction = getGoodsProduction(state, season, (id) => labour.provinces[id]?.industryStaffing ?? 0);
   const colonies = getColonyAccounts(state);
   const colonyIncome = colonies.supply + colonies.salt;
   const armyPay = getArmyPay(state.regiments, state.nationId);

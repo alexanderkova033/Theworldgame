@@ -14,6 +14,14 @@ export const BUILDING_COLORS: Record<ProjectType, string> = {
   cannery: "#6ea3c9",
   housing: "#e0a87a",
   harbour: "#5b7f99",
+  tenement: "#c98d62",
+  tower: "#a9805f",
+  estate: "#b8432f",
+  modelFarm: "#b8432f",
+  foundry: "#c9743a",
+  steelworks: "#8d6a52",
+  mine: "#6b6258",
+  sawmill: "#a6804e",
 };
 
 interface BuildingIconProps {
@@ -123,6 +131,82 @@ export function BuildingIcon({ type, x, y, size = 5 }: BuildingIconProps) {
           <rect x={x - size * 0.85} y={y - size * 0.1} width={size * 1.7} height={size * 1.2} fill={color} stroke="#4a2a14" strokeWidth={0.6} />
           <rect x={x - size * 0.6} y={y + size * 0.15} width={size * 0.45} height={size * 0.4} fill="#f0c869" stroke="#4a2a14" strokeWidth={0.3} />
           <rect x={x + size * 0.15} y={y + size * 0.3} width={size * 0.42} height={size * 0.8} fill="#4a2a14" />
+        </g>
+      );
+    case "tenement":
+      // A tall brick row: three floors of lit windows under a flat roof.
+      return (
+        <g>
+          <rect x={x - size} y={y - size * 1.45} width={size * 2} height={size * 2.55} fill={color} stroke="#4a2a14" strokeWidth={0.6} />
+          <rect x={x - size * 1.1} y={y - size * 1.6} width={size * 2.2} height={size * 0.25} fill="#7a4a2e" stroke="#4a2a14" strokeWidth={0.4} />
+          {[-1, -0.3, 0.4].map((row) => [-0.65, 0.2].map((col) => <rect key={`${row}${col}`} x={x + size * col} y={y + size * row} width={size * 0.45} height={size * 0.42} fill="#f0c869" stroke="#4a2a14" strokeWidth={0.25} />))}
+        </g>
+      );
+    case "tower":
+      // An apartment block: a tall iron-framed slab, floor upon floor.
+      return (
+        <g>
+          <rect x={x - size * 0.85} y={y - size * 1.9} width={size * 1.7} height={size * 3} fill={color} stroke="#3a2a1c" strokeWidth={0.6} />
+          {[-1.65, -1.1, -0.55, 0, 0.55].map((row) => (
+            <rect key={row} x={x - size * 0.62} y={y + size * row} width={size * 1.24} height={size * 0.3} fill="#f0c869" stroke="#3a2a1c" strokeWidth={0.25} />
+          ))}
+        </g>
+      );
+    case "estate":
+    case "modelFarm":
+      // A barn with a tall silo beside it; a model farm has a second silo and
+      // a gilt weathervane.
+      return (
+        <g>
+          <rect x={x + size * 0.6} y={y - size * 1.2} width={size * 0.7} height={size * 2.3} rx={size * 0.3} fill="#d9d2bd" stroke="#4f1a12" strokeWidth={0.5} />
+          {type === "modelFarm" && <rect x={x - size * 1.3} y={y - size * 1.2} width={size * 0.7} height={size * 2.3} rx={size * 0.3} fill="#d9d2bd" stroke="#4f1a12" strokeWidth={0.5} />}
+          <rect x={x - size * 0.75} y={y - size * 0.1} width={size * 1.5} height={size * 1.2} fill={color} stroke="#4f1a12" strokeWidth={0.6} />
+          <polygon points={`${x - size * 0.85},${y - size * 0.1} ${x},${y - size * 1} ${x + size * 0.85},${y - size * 0.1}`} fill="#8e2d20" stroke="#4f1a12" strokeWidth={0.6} />
+          <rect x={x - size * 0.35} y={y + size * 0.35} width={size * 0.7} height={size * 0.75} fill="#f4ead0" stroke="#4f1a12" strokeWidth={0.4} />
+          <path d={`M${x - size * 0.35},${y + size * 0.35} L${x + size * 0.35},${y + size * 1.1} M${x + size * 0.35},${y + size * 0.35} L${x - size * 0.35},${y + size * 1.1}`} stroke={color} strokeWidth={size * 0.1} />
+          {type === "modelFarm" && <path d={`M${x},${y - size} L${x},${y - size * 1.5} M${x - size * 0.25},${y - size * 1.4} L${x + size * 0.25},${y - size * 1.4}`} stroke="#b08a3e" strokeWidth={size * 0.12} />}
+        </g>
+      );
+    case "foundry":
+      // A long shed with two stacks and a furnace glow.
+      return (
+        <g>
+          <rect x={x - size * 0.9} y={y - size * 1.4} width={size * 0.45} height={size * 1.2} fill={color} stroke="#5c3414" strokeWidth={0.5} />
+          <rect x={x + size * 0.4} y={y - size * 1.4} width={size * 0.45} height={size * 1.2} fill={color} stroke="#5c3414" strokeWidth={0.5} />
+          <rect x={x - size * 1.25} y={y - size * 0.3} width={size * 2.5} height={size * 1.4} fill={color} stroke="#5c3414" strokeWidth={0.6} />
+          <rect x={x - size * 0.45} y={y + size * 0.15} width={size * 0.9} height={size * 0.95} fill="#e8843a" stroke="#5c3414" strokeWidth={0.4} />
+        </g>
+      );
+    case "steelworks":
+      // A blast furnace: a tapering tower, a pipe, a stack and a white-hot mouth.
+      return (
+        <g>
+          <rect x={x + size * 0.7} y={y - size * 1.7} width={size * 0.42} height={size * 2.8} fill="#6d5442" stroke="#3a2a1c" strokeWidth={0.5} />
+          <path d={`M${x + size * 0.2},${y - size * 1.2} H${x + size * 0.7}`} stroke="#3a2a1c" strokeWidth={size * 0.22} />
+          <polygon points={`${x - size * 1.15},${y + size * 1.1} ${x - size * 0.5},${y - size * 1.5} ${x + size * 0.2},${y - size * 1.5} ${x + size * 0.55},${y + size * 1.1}`} fill={color} stroke="#3a2a1c" strokeWidth={0.6} />
+          <rect x={x - size * 0.5} y={y + size * 0.4} width={size * 0.6} height={size * 0.7} fill="#f6d27a" stroke="#3a2a1c" strokeWidth={0.4} />
+        </g>
+      );
+    case "mine":
+      // A pithead: a timber headframe with its wheel over a dark shaft.
+      return (
+        <g>
+          <path d={`M${x - size * 1.15},${y + size * 1.1} A${size * 1.15},${size * 1.15} 0 0 1 ${x + size * 1.15},${y + size * 1.1} Z`} fill={color} stroke="#2e2822" strokeWidth={0.6} />
+          <rect x={x - size * 0.4} y={y + size * 0.3} width={size * 0.8} height={size * 0.8} fill="#1f1a16" />
+          <path d={`M${x - size * 0.6},${y + size * 0.1} L${x},${y - size * 1.2} L${x + size * 0.6},${y + size * 0.1}`} fill="none" stroke="#8a6a3e" strokeWidth={size * 0.2} />
+          <circle cx={x} cy={y - size * 1.25} r={size * 0.32} fill="#d9d2bd" stroke="#2e2822" strokeWidth={0.5} />
+        </g>
+      );
+    case "sawmill":
+      // A saw blade over a stack of logs.
+      return (
+        <g>
+          <circle cx={x} cy={y - size * 0.5} r={size * 0.85} fill="#d9d2bd" stroke="#4a3a24" strokeWidth={0.6} strokeDasharray={`${size * 0.28} ${size * 0.16}`} />
+          <circle cx={x} cy={y - size * 0.5} r={size * 0.2} fill="#4a3a24" />
+          <g fill={color} stroke="#4a3a24" strokeWidth={0.5}>
+            <rect x={x - size * 1.15} y={y + size * 0.2} width={size * 2.3} height={size * 0.42} rx={size * 0.2} />
+            <rect x={x - size * 1.15} y={y + size * 0.65} width={size * 2.3} height={size * 0.42} rx={size * 0.2} />
+          </g>
         </g>
       );
     case "road":

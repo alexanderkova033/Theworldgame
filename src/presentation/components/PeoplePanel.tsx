@@ -66,9 +66,9 @@ function Meter({
 // Where the workers work, by kind of job, in the order they're hired:
 // food (farms, granaries, canneries), then schools, then factories.
 const SECTORS: Array<{ key: Sector; label: string; types: ProjectType[]; icon: ReactNode }> = [
-  { key: "food", label: "Farms & food", types: ["farm", "granary", "cannery"], icon: <BuildingGlyph type="farm" size={30} /> },
+  { key: "food", label: "Farms & food", types: ["farm", "estate", "modelFarm", "granary", "cannery"], icon: <BuildingGlyph type="farm" size={30} /> },
   { key: "school", label: "Schools", types: ["education"], icon: <BuildingGlyph type="education" size={30} /> },
-  { key: "industry", label: "Factories", types: ["factory"], icon: <BuildingGlyph type="factory" size={30} /> },
+  { key: "industry", label: "Factories", types: ["factory", "foundry", "steelworks", "mine", "sawmill"], icon: <BuildingGlyph type="factory" size={30} /> },
 ];
 
 const TYPE_NAMES: Partial<Record<ProjectType, [string, string]>> = {
@@ -77,6 +77,12 @@ const TYPE_NAMES: Partial<Record<ProjectType, [string, string]>> = {
   cannery: ["cannery", "canneries"],
   education: ["school", "schools"],
   factory: ["factory", "factories"],
+  estate: ["estate", "estates"],
+  modelFarm: ["model farm", "model farms"],
+  foundry: ["foundry", "foundries"],
+  steelworks: ["steelworks", "steelworks"],
+  mine: ["mine", "mines"],
+  sawmill: ["sawmill", "sawmills"],
 };
 
 const staffedTone = (share: number) => (share >= 100 ? "good" : share >= 60 ? "warn" : "bad");

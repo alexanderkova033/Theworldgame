@@ -3,11 +3,10 @@
 // start screen in plain words (`changes`). The levels are measured by the
 // scripted players in tests/balance.test.ts, so each means something. Out
 // of 27 five-year games, a sloppy player (late, never ahead of trouble) and
-// a careful one win: Easy 19 and 27, Normal 6 and 27, Hard 4 and 24,
-// Ruthless 0 and 10 (measured 2026-10-25, with crises and the nations'
-// stories; Hard starts with a fifth less food since). Not every country can be saved on
-// Ruthless, but some can. A careful player never sees a province rise; a
-// sloppy one does in about half its games, more on the harder levels.
+// a careful one win: Easy 15 and 27, Normal 4 and 26, Hard 0 and 13,
+// Ruthless 0 and 3 (measured 2026-10-31). The scripted players build none of
+// the larger buildings, mines or sawmills, so a good human player should do
+// better. Not every country can be saved on Ruthless, but some can.
 
 export type Difficulty = "easy" | "normal" | "hard" | "ruthless";
 
@@ -37,16 +36,16 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     name: "Easy",
     title: "Steward",
     summary: "Room to learn. Mistakes cost less, and you can go back more often.",
-    changes: ["Start with 2,000 Cr", "Elections need 50%, 52%, 54%", "Voters are easy to please: support settles 3 points above neutral", "15% more political power", "The rival campaigns less, and softer", "Bad years take half as much", "Buildings break down half as often", "A province rises only after two months of rioting on its own", "Crises strike half as often", "5 retries from a checkpoint"],
-    electionThresholds: [50, 52, 54],
-    expectations: 3,
+    changes: ["Start with 1,500 Cr", "Elections need 50%, 53%, 56%", "Voters are easy to please: support settles 1 point above neutral", "15% more political power", "The rival campaigns less, and softer", "Bad years take half as much", "Buildings break down a quarter as often", "A province rises only after two months of rioting on its own", "Crises strike half as often", "5 retries from a checkpoint"],
+    electionThresholds: [50, 53, 56],
+    expectations: 1,
     politicalPowerMultiplier: 1.15,
-    startingTreasury: 2000,
+    startingTreasury: 1500,
     startingFoodShare: 1,
     rivalSwing: 0.6,
     rivalChance: 0.7,
     badEventScale: 0.5,
-    breakdownMultiplier: 0.5,
+    breakdownMultiplier: 0.25,
     uprisingRiotDays: 60,
     crisisChance: 0.5,
     retries: 5,
@@ -55,12 +54,12 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     name: "Normal",
     title: "Minister",
     summary: "The game as designed. A careful player wins.",
-    changes: ["Elections need 50%, 54%, 58%", "Voters expect more: support settles 3 points below neutral", "3 retries from a checkpoint"],
-    electionThresholds: [50, 54, 58],
-    expectations: -3,
-    politicalPowerMultiplier: 1,
+    changes: ["Elections need 52%, 56%, 60%", "Voters expect more: support settles 5 points below neutral", "10% less political power", "A tenth less of the usual food in store", "3 retries from a checkpoint"],
+    electionThresholds: [52, 56, 60],
+    expectations: -5,
+    politicalPowerMultiplier: 0.9,
     startingTreasury: 0,
-    startingFoodShare: 1,
+    startingFoodShare: 0.9,
     rivalSwing: 1,
     rivalChance: 1,
     badEventScale: 1,
@@ -72,13 +71,13 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
   hard: {
     name: "Hard",
     title: "Chancellor",
-    summary: "A careful player only just wins. Every season counts.",
-    changes: ["A fifth less of the usual food in store", "Elections need 52%, 56%, 60%", "Voters expect a lot: support settles 6 points below neutral", "15% less political power", "The rival campaigns more, and harder", "Bad years take half as much again", "Buildings break down 1.5 times as often", "A province rises after 25 days of rioting on its own", "Crises strike a quarter more often", "1 retry from a checkpoint"],
-    electionThresholds: [52, 56, 60],
-    expectations: -6,
-    politicalPowerMultiplier: 0.85,
+    summary: "A careful player wins about half the time. Every season counts.",
+    changes: ["A third less of the usual food in store", "Elections need 54%, 58%, 62%", "Voters expect a lot: support settles 8 points below neutral", "25% less political power", "The rival campaigns more, and harder", "Bad years take half as much again", "Buildings break down 1.5 times as often", "A province rises after 25 days of rioting on its own", "Crises strike a quarter more often", "1 retry from a checkpoint"],
+    electionThresholds: [54, 58, 62],
+    expectations: -8,
+    politicalPowerMultiplier: 0.75,
     startingTreasury: 0,
-    startingFoodShare: 0.8,
+    startingFoodShare: 0.67,
     rivalSwing: 1.3,
     rivalChance: 1.25,
     badEventScale: 1.5,
@@ -91,10 +90,10 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
     name: "Ruthless",
     title: "Iron Chancellor",
     summary: "Not every country can be saved. Win here and it means something.",
-    changes: ["Half the usual food stores", "Elections need 54%, 58%, 62%", "Voters expect even more: support settles 8 points below neutral", "30% less political power", "The rival campaigns often, and hard", "Bad years take twice as much", "Buildings break down twice as often", "A province rises after 20 days of rioting on its own", "Crises strike half as often again", "No retries"],
-    electionThresholds: [54, 58, 62],
-    expectations: -8,
-    politicalPowerMultiplier: 0.7,
+    changes: ["Half the usual food stores", "Elections need 56%, 59%, 62%", "Voters expect even more: support settles 9 points below neutral", "35% less political power", "The rival campaigns often, and hard", "Bad years take twice as much", "Buildings break down twice as often", "A province rises after 20 days of rioting on its own", "Crises strike half as often again", "No retries"],
+    electionThresholds: [56, 59, 62],
+    expectations: -9,
+    politicalPowerMultiplier: 0.65,
     startingTreasury: 0,
     startingFoodShare: 0.5,
     rivalSwing: 1.6,

@@ -7,11 +7,44 @@ import "./ActionsPanel.css";
 import { getModifiers } from "../../domain/policy/policyRules";
 import type { ReactNode } from "react";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
-import { buildCannery, buildEducation, buildFactory, buildFarm, buildGranary, buildHarbour, buildHousing, buildRoad, buyAndBuild, countBuildingsInProvince, planBuyAndBuild } from "../../application/actions";
+import { buildCannery, buildEducation, buildEstate, buildFactory, buildFarm, buildFoundry, buildGranary, buildHarbour, buildHousing, buildMine, buildModelFarm, buildRoad, buildSawmill, buildSteelworks, buildTenement, buildTower, buyAndBuild, countBuildingsInProvince, planBuyAndBuild } from "../../application/actions";
 import { getBuildCostIn, type BuildAction } from "../../application/actions/createBuildAction";
 import { describeWait, getDaysToSave } from "../../application/getDaysToSave";
 import {
   CANNERY_BUILD_DAYS,
+  COAL_PER_MINE,
+  ESTATE_BUILD_DAYS,
+  ESTATE_COST,
+  ESTATE_WOOD_COST,
+  FACTORIES_PER_FOUNDRY,
+  FACTORIES_PER_STEELWORKS,
+  FARMS_PER_ESTATE,
+  FARMS_PER_MODEL_FARM,
+  FOUNDRY_BUILD_DAYS,
+  FOUNDRY_COST,
+  FOUNDRY_ORE_COST,
+  HOMES_PER_TENEMENT,
+  HOMES_PER_TOWER,
+  MINE_BUILD_DAYS,
+  MINE_COST,
+  MINE_WOOD_COST,
+  MODEL_FARM_BUILD_DAYS,
+  MODEL_FARM_COST,
+  MODEL_FARM_WOOD_COST,
+  ORE_PER_MINE,
+  SAWMILL_BUILD_DAYS,
+  SAWMILL_COST,
+  SAWMILL_WOOD_COST,
+  STEELWORKS_BUILD_DAYS,
+  STEELWORKS_COST,
+  STEELWORKS_ORE_COST,
+  TENEMENT_BUILD_DAYS,
+  TENEMENT_COST,
+  TENEMENT_WOOD_COST,
+  TOWER_BUILD_DAYS,
+  TOWER_COST,
+  TOWER_ORE_COST,
+  WOOD_PER_SAWMILL,
   CANNERY_COST,
   CANNERY_ORE_COST,
   CURRENCY_SYMBOL,
@@ -46,7 +79,10 @@ import {
   ROAD_COST,
   ROAD_EFFICIENCY_BONUS,
   ROAD_FULL_BONUS_COUNT,
-  ROAD_LATE_BONUS,
+  ROAD_LATE_SHARE,
+  ROAD_MARKET_DISCOUNT,
+  ROAD_MIGRATION_BONUS,
+  ROAD_PRODUCTION_BONUS,
   ROAD_ORE_COST,
   SUPPLY_FEE_PER_DAY,
 } from "../../domain/constants";
@@ -120,6 +156,148 @@ interface BuildItem {
 
 const BUILD_ITEMS: BuildItem[] = [
   {
+    type: "tenement",
+    group: "people",
+    summary: `Houses as many as ${HOMES_PER_TENEMENT} homes on one plot. Burns as much too.`,
+    name: "Tenement",
+    action: buildTenement,
+    cost: TENEMENT_COST,
+    resourceCost: TENEMENT_WOOD_COST,
+    resourceType: "wood",
+    buildDays: TENEMENT_BUILD_DAYS,
+    yields: (
+      <>
+        <StatIcon type="population" size={16} />+{formatAmount(PEOPLE_PER_HOME * HOMES_PER_TENEMENT)}
+      </>
+    ),
+    hint: `Houses ${formatAmount(PEOPLE_PER_HOME * HOMES_PER_TENEMENT)} people. Burns ${Math.round(HEATING_FUEL_PER_HOME * HOMES_PER_TENEMENT * 100) / 100} coal (or wood) a day in winter`,
+  },
+  {
+    type: "tower",
+    group: "people",
+    summary: `Houses as many as ${HOMES_PER_TOWER} homes. Iron-framed, and costs ore.`,
+    name: "Apartment Block",
+    action: buildTower,
+    cost: TOWER_COST,
+    resourceCost: TOWER_ORE_COST,
+    resourceType: "ore",
+    buildDays: TOWER_BUILD_DAYS,
+    yields: (
+      <>
+        <StatIcon type="population" size={16} />+{formatAmount(PEOPLE_PER_HOME * HOMES_PER_TOWER)}
+      </>
+    ),
+    hint: `Houses ${formatAmount(PEOPLE_PER_HOME * HOMES_PER_TOWER)} people. Burns ${Math.round(HEATING_FUEL_PER_HOME * HOMES_PER_TOWER * 100) / 100} coal (or wood) a day in winter`,
+    unlockedBy: "housing-back-to-backs",
+  },
+  {
+    type: "estate",
+    group: "food",
+    summary: `Grows as much as ${FARMS_PER_ESTATE} farms, with far fewer hands.`,
+    name: "Estate",
+    action: buildEstate,
+    cost: ESTATE_COST,
+    resourceCost: ESTATE_WOOD_COST,
+    resourceType: "wood",
+    buildDays: ESTATE_BUILD_DAYS,
+    yields: (season, mods) => (
+      <>
+        <StatIcon type="food" size={16} />+{formatAmount(produceFood(FARMS_PER_ESTATE, season, mods))}
+        {season === "winter" && <span className="build-tile__season">❄</span>}
+      </>
+    ),
+    hint: `Produces ${formatAmount(FOOD_PER_FARM * FARMS_PER_ESTATE)} food per day, more at harvest and far less in winter`,
+  },
+  {
+    type: "modelFarm",
+    group: "food",
+    summary: `Grows as much as ${FARMS_PER_MODEL_FARM} farms.`,
+    name: "Model Farm",
+    action: buildModelFarm,
+    cost: MODEL_FARM_COST,
+    resourceCost: MODEL_FARM_WOOD_COST,
+    resourceType: "wood",
+    buildDays: MODEL_FARM_BUILD_DAYS,
+    yields: (season, mods) => (
+      <>
+        <StatIcon type="food" size={16} />+{formatAmount(produceFood(FARMS_PER_MODEL_FARM, season, mods))}
+        {season === "winter" && <span className="build-tile__season">❄</span>}
+      </>
+    ),
+    hint: `Produces ${formatAmount(FOOD_PER_FARM * FARMS_PER_MODEL_FARM)} food per day, more at harvest and far less in winter`,
+    unlockedBy: "agriculture-steam-ploughs",
+  },
+  {
+    type: "foundry",
+    group: "industry",
+    summary: `Makes as much as ${FACTORIES_PER_FOUNDRY} factories, with far fewer hands.`,
+    name: "Foundry",
+    action: buildFoundry,
+    cost: FOUNDRY_COST,
+    resourceCost: FOUNDRY_ORE_COST,
+    resourceType: "ore",
+    buildDays: FOUNDRY_BUILD_DAYS,
+    yields: (
+      <>
+        <StatIcon type="industry" size={16} />+{INDUSTRY_PER_FACTORY * FACTORIES_PER_FOUNDRY}
+      </>
+    ),
+    hint: `Produces ${INDUSTRY_PER_FACTORY * FACTORIES_PER_FOUNDRY} industry per day, worth about ${INDUSTRY_PER_FACTORY * FACTORIES_PER_FOUNDRY * INCOME_PER_INDUSTRY} ${CURRENCY_SYMBOL}/day`,
+  },
+  {
+    type: "steelworks",
+    group: "industry",
+    summary: `Makes as much as ${FACTORIES_PER_STEELWORKS} factories.`,
+    name: "Steelworks",
+    action: buildSteelworks,
+    cost: STEELWORKS_COST,
+    resourceCost: STEELWORKS_ORE_COST,
+    resourceType: "ore",
+    buildDays: STEELWORKS_BUILD_DAYS,
+    yields: (
+      <>
+        <StatIcon type="industry" size={16} />+{INDUSTRY_PER_FACTORY * FACTORIES_PER_STEELWORKS}
+      </>
+    ),
+    hint: `Produces ${INDUSTRY_PER_FACTORY * FACTORIES_PER_STEELWORKS} industry per day, worth about ${INDUSTRY_PER_FACTORY * FACTORIES_PER_STEELWORKS * INCOME_PER_INDUSTRY} ${CURRENCY_SYMBOL}/day`,
+    unlockedBy: "industry-automated-foundries",
+  },
+  {
+    type: "mine",
+    group: "land",
+    summary: "Gets more ore and coal out of the hills.",
+    name: "Mine",
+    action: buildMine,
+    cost: MINE_COST,
+    resourceCost: MINE_WOOD_COST,
+    resourceType: "wood",
+    buildDays: MINE_BUILD_DAYS,
+    yields: (
+      <>
+        <ResourceGlyph type="ore" />+{ORE_PER_MINE}
+        <ResourceGlyph type="coal" />+{COAL_PER_MINE}
+      </>
+    ),
+    hint: `+${ORE_PER_MINE} ore and +${COAL_PER_MINE} coal a day, in the hills, as long as the seam lasts`,
+  },
+  {
+    type: "sawmill",
+    group: "land",
+    summary: "Gets more wood out of the forest.",
+    name: "Sawmill",
+    action: buildSawmill,
+    cost: SAWMILL_COST,
+    resourceCost: SAWMILL_WOOD_COST,
+    resourceType: "wood",
+    buildDays: SAWMILL_BUILD_DAYS,
+    yields: (
+      <>
+        <ResourceGlyph type="wood" />+{WOOD_PER_SAWMILL}
+      </>
+    ),
+    hint: `+${WOOD_PER_SAWMILL} wood a day, in the forest`,
+  },
+  {
     type: "housing",
     group: "people",
     summary: "Homes for your people. Burns coal or wood in winter.",
@@ -185,10 +363,10 @@ const BUILD_ITEMS: BuildItem[] = [
     buildDays: ROAD_BUILD_DAYS,
     yields: (_season, _mods, roads) => (
       <>
-        <StatIcon type="treasury" size={16} />+{(roads < ROAD_FULL_BONUS_COUNT ? ROAD_EFFICIENCY_BONUS : ROAD_LATE_BONUS) * 100}%
+        <StatIcon type="treasury" size={16} />+{Math.round((roads < ROAD_FULL_BONUS_COUNT ? ROAD_EFFICIENCY_BONUS : ROAD_EFFICIENCY_BONUS * ROAD_LATE_SHARE) * 1000) / 10}%
       </>
     ),
-    hint: `+${ROAD_EFFICIENCY_BONUS * 100}% income and construction speed nationwide for each of your first ${ROAD_FULL_BONUS_COUNT} roads, +${ROAD_LATE_BONUS * 100}% for each after that`,
+    hint: `Each of your first ${ROAD_FULL_BONUS_COUNT} roads, nationwide: +${ROAD_EFFICIENCY_BONUS * 100}% income and building speed, +${ROAD_PRODUCTION_BONUS * 100}% goods, +${ROAD_MIGRATION_BONUS * 100}% people moving between provinces, and ${ROAD_MARKET_DISCOUNT * 100}% off market prices. Later roads add ${ROAD_LATE_SHARE * 100}% of that.`,
   },
   {
     type: "education",
@@ -267,6 +445,9 @@ const BUILD_ITEMS: BuildItem[] = [
   },
 ];
 
+// Plain first, then larger, then what's only useful later.
+const ORDER_IN_GROUP: ProjectType[] = ["housing", "tenement", "tower", "education", "farm", "estate", "modelFarm", "granary", "cannery", "factory", "foundry", "steelworks", "road", "mine", "sawmill", "harbour"];
+
 // Why this building can't go up right now — the first thing in the way,
 // in words. Null when it can.
 function blockedReason(item: BuildItem, cost: number, state: GameState, provinceId: string, provinceName: string, count: number, max: number, unlockName: string | undefined, isLocked: boolean, netPerDay: number, shutUntil?: string): string | null {
@@ -328,7 +509,9 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, n
       {BUILD_GROUPS.map((group) => (
         <div key={group.key} className="build-group" data-rail={group.key} role="group" aria-label={group.title}>
           <ul className="build-list">
-            {BUILD_ITEMS.filter((item) => item.group === group.key).map((item) => {
+            {BUILD_ITEMS.filter((item) => item.group === group.key)
+              .sort((a, b) => ORDER_IN_GROUP.indexOf(a.type) - ORDER_IN_GROUP.indexOf(b.type))
+              .map((item) => {
               // Shut until a research step (granaries, canneries) or a chapter (schools) opens it.
               const feature = item.action.config.feature;
               const shutUntil = feature && !isFeatureOpen(state, feature) ? chapterFor(feature).until : undefined;
@@ -352,7 +535,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, n
               const reason = state.provinces[selectedProvinceId]?.uprising
                 ? `Rebels hold ${provinceName}. Nothing can be built there until the uprising ends.`
                 : plan
-                ? `Need ${Math.ceil(upfront(item.resourceCost) - state.resources[item.resourceType])} more ${item.resourceType}. Buy & build gets ${Math.round(plan.amount)} for ${formatAmount(Math.round(plan.goodsCost))} ${CURRENCY_SYMBOL}.`
+                ? `Short of ${item.resourceType}: buys ${Math.round(plan.amount)} for ${formatAmount(Math.round(plan.goodsCost))} ${CURRENCY_SYMBOL}, plus ${formatAmount(upfront(cost))} ${CURRENCY_SYMBOL} to start.`
                 : blockedReason(item, cost, state, selectedProvinceId, provinceName, count, max, unlockName, isLocked, netPerDay, shutUntil);
               const workers = item.type in jobsPer ? jobsPer[item.type as JobBuilding] : 0;
 
@@ -440,13 +623,19 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, n
                       className="btn-primary build-row__button"
                       disabled={!canBuild && !plan}
                       aria-label={canBuild ? `Build ${item.name} in ${provinceName}` : plan ? `Buy ${item.resourceType} and build ${item.name} in ${provinceName}` : `${item.name}: ${reason}`}
-                      title={plan ? `Buys ${Math.round(plan.amount)} ${item.resourceType} for ${formatAmount(Math.round(plan.goodsCost))} ${CURRENCY_SYMBOL}, then orders the ${item.name.toLowerCase()}` : undefined}
+                      title={plan ? `${formatAmount(Math.round(plan.goodsCost))} ${CURRENCY_SYMBOL} for ${Math.round(plan.amount)} ${item.resourceType} on the market, and ${formatAmount(upfront(cost))} ${CURRENCY_SYMBOL} down on the ${item.name.toLowerCase()}. The rest of its price comes out daily as it goes up.` : undefined}
                       onClick={() => {
                         playBuild();
                         dispatch((s) => (item.action.canBuild(s, selectedProvinceId) ? item.action(s, selectedProvinceId) : buyAndBuild(s, item.action, selectedProvinceId)));
                       }}
                     >
                       {isLocked ? "Locked" : plan ? "Buy & build" : "Build"}
+                      {plan && (
+                        <span className="build-row__button-price">
+                          <StatIcon type="treasury" size={14} />
+                          {formatAmount(Math.round(plan.goodsCost + upfront(cost)))} now
+                        </span>
+                      )}
                     </button>
                   </span>
                 </li>
