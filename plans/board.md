@@ -10,8 +10,8 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 |---|------|--------|--------|---------|----------|
 | 01 | [Precise warnings](tasks/01-precise-warnings.md) | merged | `task/01-precise-warnings` | day messages, advisor alerts, one chapter line, comment encoding | 02, 03 |
 | 02 | [The first minute](tasks/02-first-minute.md) | merged | `task/02-first-minute` | Objectives panel | 01, 03 |
-| 03 | [Fewer interruptions](tasks/03-fewer-interruptions.md) | ready | `task/03-fewer-interruptions` | `App.tsx`, how briefings and letters follow each other | 01, 02 |
-| 04 | [Warning before a breakdown](tasks/04-worn-buildings.md) | ready, after 01 to 03 are merged | `task/04-worn-buildings` | maintenance rules, Repairs, map, balance | alone |
+| 03 | [Fewer interruptions](tasks/03-fewer-interruptions.md) | merged | `task/03-fewer-interruptions` | `App.tsx`, how briefings and letters follow each other | 01, 02 |
+| 04 | [Warning before a breakdown](tasks/04-worn-buildings.md) | running | `task/04-worn-buildings` | maintenance rules, Repairs, map, balance | alone |
 
 Work branch: `setup-screen-flags`, which holds the latest game (`main` is two commits behind it). Task branches start from it and merge back into it, with 04 last. After each merge, the manager reruns all the checks. The owner plays the result before anything is pushed, and decides when it goes to `main`.
 
@@ -29,6 +29,18 @@ Owner's decisions, 2026-10-31: buildings warn before breaking, and a new game's 
 8. More comfortable trading: more automatic buying and selling, including sell when the price is above X and buy when it is below X.
 9. Heating: the owner asks how it works now, and suggests wood is five times less efficient than coal and better buildings have better insulation.
 10. The red lines under items in the top bar are slightly annoying.
+
+Planned order: the look (1, 2, 3, 5, 10), then the numbers one at a time (4, 6, 9), then trading (8), then workers (7) alone and last. Item 3 gets real screenshots of options for the owner to pick from.
+
+## Watch
+
+- One test failed once in `npm test` after task 02 merged, while another agent was running, and passed in 4 more full runs. It was not identified. If it recurs, save the name.
+
+## Small follow-ups from task 03
+
+- A burden offer opens over the window rather than holding it back.
+- The "more waiting" sign shows on briefings only.
+- A held window stays hidden for the day while a story letter is queued.
 
 ## Small follow-ups from task 01
 
