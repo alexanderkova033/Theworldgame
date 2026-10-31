@@ -170,8 +170,8 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     const critical = days < ADVISOR_FOOD_CRITICAL_DAYS;
     alerts.push({
       kind: "food",
-      text: `Food: ${dayCount(days)}`,
-      detail: `If nothing changes, the food runs out around ${formatDate(date)}. Build farms${market ? ", or buy food" : ""}.`,
+      text: days === 0 ? "Food exhausted" : `Food: ${dayCount(days)}`,
+      detail: `${days === 0 ? "The food is gone and the people are going hungry" : `If nothing changes, the food runs out around ${formatDate(date)}`}. Build farms${market ? ", or buy food" : ""}.`,
       critical,
     });
   }

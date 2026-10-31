@@ -136,6 +136,7 @@ function WhyChip({
 }) {
   const { open, setOpen, ref } = usePopover();
   const previewed = useLetterPreview()?.[metric];
+  const gone = runOut?.days === 0;
   return (
     <div className="resource-ticker__why" ref={ref}>
       <button
@@ -143,8 +144,8 @@ function WhyChip({
         className={`resource-ticker__chip resource-ticker__why-button ${danger ? "is-danger" : warn ? "is-warn" : ""} ${open ? "is-open" : ""} ${previewed !== undefined ? "is-previewed" : ""}`}
         aria-expanded={open}
         aria-haspopup="true"
-        aria-label={`${label}${runOut ? `. Runs out in ${runOut.days} days if nothing changes` : ""}. Show why it changed.`}
-        title={`${label}${runOut ? `. Runs out around ${formatDate(runOut.date)} if nothing changes` : ""}. Click to see why it's moving.`}
+        aria-label={`${label}${gone ? ". None left" : runOut ? `. Runs out in ${runOut.days} days if nothing changes` : ""}. Show why it changed.`}
+        title={`${label}${gone ? ". None left" : runOut ? `. Runs out around ${formatDate(runOut.date)} if nothing changes` : ""}. Click to see why it's moving.`}
         onClick={() => setOpen((v) => !v)}
       >
         {children}
@@ -165,7 +166,13 @@ function WhyChip({
               <span className="resource-ticker__alert" aria-hidden="true">
                 !
               </span>
-              Runs out around <strong>{formatDate(runOut.date)}</strong> ({runOut.days} days) if nothing changes, counting the lean winter harvests.
+              {gone ? (
+                "None left, and less comes in each day than goes out."
+              ) : (
+                <>
+                  Runs out around <strong>{formatDate(runOut.date)}</strong> ({runOut.days} days) if nothing changes, counting the lean winter harvests.
+                </>
+              )}
             </p>
           )}
           <div className="resource-ticker__why-month">
