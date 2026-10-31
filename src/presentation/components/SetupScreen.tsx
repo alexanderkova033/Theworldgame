@@ -109,7 +109,7 @@ export function SetupScreen({ nations, slotName, onBack, onStart }: SetupScreenP
   const [wantedPartyId, setPartyId] = useState<string | null>(null);
   // A party belongs to one nation: choosing another nation starts on its first.
   const party = parties.find((p) => p.id === wantedPartyId) ?? parties[0];
-  const [difficulty, setDifficulty] = useState<Difficulty>("normal");
+  const [difficulty, setDifficulty] = useState<Difficulty>("easy");
   const level = DIFFICULTY_SETTINGS[difficulty];
   const [mode, setMode] = useState<GameMode>("terms");
   const best = mode === "long-reign" ? getBestReign(difficulty) : null;
