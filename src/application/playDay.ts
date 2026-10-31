@@ -4,7 +4,7 @@
 // homes go cold, the food runs out or debt turns dangerous, the game
 // pauses with a notice saying why — once per danger per season, and never
 // at 1x speed, where the player is already watching every day.
-import { getSeason } from "../domain/country/calendar";
+import { dayNumber, getSeason } from "../domain/country/calendar";
 import { generateId } from "../domain/country/id";
 import type { EventTopic, GameDate, GameState } from "../domain/country/types";
 import { getHeatingDemand } from "../domain/housing/housingRules";
@@ -58,6 +58,10 @@ export function applyDangerPause(before: GameState, after: GameState): GameState
   // At 1x the player sees every day go by: note it, don't stop the clock.
   if (after.speed === 1 || after.isPaused) return { ...after, dangerPauses };
   const reasons = fresh.map((d) => d.reason).join(", and ");
+  // The pause tells of the food running out, so today's shortage notice would
+  // only say it twice. Without a pause, that notice stays.
+  const hunger = fresh.some((d) => d.kind === "hunger");
+  const events = hunger ? after.events.filter((e) => !(e.topic === "hunger" && dayNumber(e.date) === dayNumber(before.date))) : after.events;
   return {
     ...after,
     dangerPauses,
@@ -71,7 +75,7 @@ export function applyDangerPause(before: GameState, after: GameState): GameState
         topic: "paused",
         about: fresh[0].topic,
       },
-      ...after.events,
+      ...events,
     ],
   };
 }

@@ -371,7 +371,7 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
               <StatIcon type="population" size={14} />
               {formatSigned(-eaten)}
             </span>
-            {runOut && <span className="people-meter__fuel-rate">lasts {runOut.days} days</span>}
+            {runOut && <span className="people-meter__fuel-rate">{runOut.days === 0 ? "none left" : `lasts ${runOut.days} days`}</span>}
           </span>
         }
         action={

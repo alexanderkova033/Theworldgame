@@ -1,5 +1,5 @@
 /* The counters, HOI4-style: one sunk strip ruled in gilt, each number a
-   cell parted from the next by a hairline â€” rather than a row of separate
+   cell parted from the next by a hairline — rather than a row of separate
    pills, each with its own frame. */
 .resource-ticker {
   display: inline-flex;
@@ -34,7 +34,7 @@
   flex-shrink: 0;
 }
 
-/* A per-day rate riding alongside a chip's current total â€” see
+/* A per-day rate riding alongside a chip's current total — see
    getDailyProductionSummary.ts. */
 .resource-ticker__delta {
   font-size: 0.8125rem;
@@ -50,7 +50,7 @@
   color: var(--danger);
 }
 
-/* In trouble: the cell's lettering turns, and a bar runs along its foot â€”
+/* In trouble: the cell's lettering turns, and a bar runs along its foot —
    with a "!" beside the number for danger, so it never rests on colour. */
 .resource-ticker__chip.is-danger {
   color: var(--danger);
@@ -96,7 +96,7 @@
   display: flex;
 }
 
-/* A cell you can open: no frame of its own â€” it lights on hover, and
+/* A cell you can open: no frame of its own — it lights on hover, and
    stays lit while its dropdown is open. */
 .resource-ticker button.resource-ticker__chip {
   min-height: 2.3rem;

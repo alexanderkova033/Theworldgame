@@ -11,7 +11,7 @@ import { getModifiers } from "../domain/policy/policyRules";
 import type { DailyProductionSummary } from "./getDailyProductionSummary";
 
 export interface RunOut {
-  days: number; // from today
+  days: number; // from today; 0: already gone and still falling
   date: GameDate;
 }
 
@@ -28,7 +28,7 @@ export function getForecasts(state: GameState, production: DailyProductionSummar
 
   let food = state.stats.food;
   let treasury = state.stats.treasury;
-  let foodOut: RunOut | null = null;
+  let foodOut: RunOut | null = state.stats.food <= 0 && production.netFood < 0 ? { days: 0, date: state.date } : null;
   let treasuryOut: RunOut | null = null; // stays null if the treasury is already in the red
   let date = state.date;
   for (let day = 1; day <= FORECAST_DAYS && (!foodOut || !treasuryOut); day++) {

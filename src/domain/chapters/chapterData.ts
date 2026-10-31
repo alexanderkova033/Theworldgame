@@ -115,7 +115,7 @@ export const CHAPTERS: ChapterData[] = [
     briefing:
       "The neighbouring nations have taken notice. Their parties meddle in your politics, and you may now meddle in theirs. A friendly government next door means better trade.",
     objectives: ["Back a party abroad"],
-    until: "Opens when a neighbour first meddles in your affairs",
+    until: "Opens when a neighbour meddles in your affairs from June of the first year, or in March of the second year at the latest",
     by: 15,
   },
   {

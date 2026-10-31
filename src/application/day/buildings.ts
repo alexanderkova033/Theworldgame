@@ -1,7 +1,8 @@
 // Step 1 of the day: everything being built or worked on moves forward,
 // and buildings wear out.
 import { advanceProject, isProjectComplete } from "../../domain/construction/constructionRules";
-import type { ProjectType } from "../../domain/construction/types";
+import { CURRENCY_SYMBOL } from "../../domain/constants";
+import type { Project, ProjectType } from "../../domain/construction/types";
 import type { GameState } from "../../domain/country/types";
 import { getDifficulty } from "../../domain/difficulty/difficultyData";
 import { getIslandExpeditionData } from "../../domain/expeditions/expeditionData";
@@ -39,6 +40,16 @@ const BUILDING_NAMES: Record<ProjectType, string> = {
   housing: "Homes",
 };
 
+// What ran out, and what a day's work takes, rounded up so that having the
+// amount named is always enough to resume.
+function describeStall(project: Project, hasMoney: boolean, hasGood: boolean): string {
+  const money = `${Math.ceil(project.treasuryCostPerDay).toLocaleString()} ${CURRENCY_SYMBOL}`;
+  const good = `${Math.ceil(project.resourceCostPerDay * 10 - 1e-9) / 10} ${project.resourceType}`;
+  const short = [!hasMoney && "money", !hasGood && project.resourceType].filter(Boolean).join(" and ");
+  const needed = [!hasMoney && money, !hasGood && good].filter(Boolean).join(" and ");
+  return `short of ${short}. It needs ${needed} a day to resume.`;
+}
+
 export function advanceBuildings(day: Day): GameState {
   const state = day.start;
 
@@ -65,7 +76,7 @@ export function advanceBuildings(day: Day): GameState {
 
     const advanced = advanceProject(project, day.efficiency, canAffordToday);
     if (advanced.isStalled && !project.isStalled) {
-      log(day, { date: state.date, message: `${project.label} construction has stalled: there isn't enough to pay for it.`, severity: "warning", topic: "stall" });
+      log(day, { date: state.date, message: `${project.label} construction has stalled: ${describeStall(project, canAffordTreasury, canAffordResource)}`, severity: "warning", topic: "stall" });
     } else if (!advanced.isStalled && project.isStalled) {
       log(day, { date: state.date, message: `${project.label} construction resumes.`, severity: "info", topic: "stall" });
     }
