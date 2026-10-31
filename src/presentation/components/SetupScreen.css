@@ -1,30 +1,38 @@
 /* Starting a game, on one screen (see SetupScreen.tsx): the chart, where a
-   nation is chosen by clicking it; everything else on a green morocco band
-   along the bottom, with the one button at its end. */
+   nation is chosen by clicking it or its flag; everything else on a green
+   shore to the right of it, with the one button at its foot. */
 .setup {
-  display: flex;
+  position: relative;
   height: 100vh;
   height: 100dvh;
+  overflow: hidden;
   background: var(--bar);
+  color: #f4ead0;
 }
 
 /* --- The chart: the one the game is played on (MapLayers). --- */
 .setup__map {
-  position: relative;
-  flex: 1;
-  min-width: 0;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
 }
 
+/* The chart's own sea stops at its edge; a wide window sees past that. */
 .setup__chart-frame {
   position: absolute;
   inset: 0;
+  background: #9fb096;
 }
 
 .setup__chart {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.setup__chosen-land {
+  opacity: 0.2;
+  pointer-events: none;
 }
 
 /* Clear shapes over each nation, to catch the click. */
@@ -36,9 +44,17 @@
 .setup__frontier {
   fill: none;
   stroke: var(--gilt-bright);
-  stroke-width: 4;
+  stroke-width: 3.5;
   stroke-linecap: round;
   pointer-events: none;
+}
+
+/* The land the choices stand on: chrome where the sea meets it. */
+.setup__shore {
+  fill: var(--bar);
+  stroke: var(--gilt);
+  stroke-width: 2.6;
+  stroke-linejoin: round;
 }
 
 @media (hover: hover) {
@@ -47,30 +63,134 @@
   }
 }
 
-.setup__map button.setup__back {
+/* --- The way back, and which save this game goes in. --- */
+.setup__top {
   position: absolute;
-  top: 1.25rem;
-  left: 1.25rem;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: stretch;
+  background: var(--bar);
+  border-right: 1px solid var(--gilt);
+  border-bottom: 1px solid var(--gilt);
+}
+
+.setup button.setup__back {
+  min-height: 0;
+  padding: 0.5rem 0.9rem;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  color: #f4ead0;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
 }
 
 .setup__slot {
-  position: absolute;
-  left: 1.25rem;
-  bottom: 1.1rem;
-  margin: 0;
-  font-family: var(--font-display);
+  display: flex;
+  align-items: center;
+  padding: 0 0.9rem;
+  border-left: 1px solid var(--bar-rule);
+  font-size: 0.9rem;
   font-style: italic;
-  color: var(--ink);
+  color: #d6c7a0;
 }
 
-/* --- The panel --- */
-.setup__panel {
+@media (hover: hover) {
+  .setup button.setup__back:hover:not(:disabled) {
+    background: var(--bar-raised);
+    border: none;
+    color: var(--gilt-bright);
+  }
+}
+
+/* --- The nations, as flags flying from the frame. --- */
+.setup__flags {
+  position: absolute;
+  top: 4.4rem;
+  left: 0;
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-  width: 34rem;
-  background: var(--damask) 0 0/48px 64px repeat, var(--bar);
-  color: #f4ead0;
+  align-items: flex-start;
+  gap: 0.55rem;
+  width: 18rem;
+}
+
+.setup button.setup__flag {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  width: 12.5rem;
+  min-height: 0;
+  padding: 0.5rem 1.8rem 0.5rem 0.9rem;
+  background: color-mix(in srgb, var(--nation-color) 72%, var(--bar));
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 1.1rem) 50%, 100% 100%, 0 100%);
+  color: #fff6dc;
+  font-family: var(--font-body);
+  font-weight: 400;
+  text-align: left;
+}
+
+/* The notch cuts off an outline drawn outside the flag. */
+.setup button.setup__flag:focus-visible {
+  outline-offset: -4px;
+}
+
+.setup button.setup__flag.is-active {
+  width: 100%;
+  padding: 0.8rem 2.4rem 1rem 1rem;
+  background: color-mix(in srgb, var(--nation-color) 85%, var(--bar));
+  clip-path: polygon(0 0, 100% 0, calc(100% - 1.4rem) 50%, 100% 100%, 0 100%);
+}
+
+@media (hover: hover) {
+  .setup button.setup__flag:hover:not(:disabled) {
+    background: var(--nation-color);
+    border: none;
+    color: #fff6dc;
+  }
+}
+
+.setup__flag-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.setup__flag-name {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.setup__flag.is-active .setup__flag-name {
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.setup__flag-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+/* --- The choices, on the shore. --- */
+.setup__panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  width: 24rem;
+  background: var(--bar);
 }
 
 .setup__choices {
@@ -79,163 +199,98 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
-  padding: 1.5rem 1.75rem 1.25rem;
+  gap: 1.1rem;
+  padding: 1.25rem 1.25rem 1rem 0.5rem;
 }
 
 .setup__section {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.45rem;
 }
 
-.setup__label-line {
+/* Centred on a tall screen; from the top, and scrolling, on a short one. */
+.setup__choices > .setup__section:first-child {
+  margin-top: auto;
+}
+
+.setup__choices > .setup__section:last-child {
+  margin-bottom: auto;
+}
+
+.setup__label {
   margin: 0;
   padding: 0;
-  font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-align: left;
   text-transform: uppercase;
   color: var(--gilt-bright);
   text-shadow: none;
 }
 
-.setup__label-line::after {
+.setup__label::after {
   display: none;
 }
 
 .setup__note {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-style: italic;
-  line-height: 1.4;
-  color: #e6d6ae;
+  line-height: 1.35;
+  color: #d6c7a0;
 }
 
-/* The nation: its name large, and a wax seal for each to choose between. */
-.setup__nation-head {
+/* The party: its seal, its name, and what governing as it changes. */
+.setup__parties {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  flex-direction: column;
 }
 
-.setup__nation-name {
-  margin: 0;
-  padding: 0;
-  font-size: 2.3rem;
-  line-height: 1.1;
-  text-align: left;
-  color: var(--gilt-bright);
-  text-shadow: none;
-}
-
-.setup__nation-name::after {
-  display: none;
-}
-
-.setup__seals {
+.setup button.setup__party {
   display: flex;
-  gap: 0.55rem;
-}
-
-.setup button.setup__seal {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.9rem;
-  height: 2.9rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.15rem;
   min-height: 0;
-  padding: 0;
-  border: 2px solid var(--bar-rule);
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.28), transparent 55%),
-    radial-gradient(circle at 70% 76%, rgba(43, 29, 18, 0.3), transparent 60%),
-    var(--nation-color);
+  padding: 0.5rem 0.7rem 0.6rem;
+  background: none;
+  border: none;
+  border-top: 3px solid transparent;
+  border-radius: 0;
   box-shadow: none;
-  filter: saturate(0.6) brightness(0.8);
-  transition: filter 0.15s ease;
-}
-
-.setup button.setup__seal.is-active {
-  border-color: var(--gilt-bright);
-  box-shadow: 0 0 0 2px var(--bar), 0 0 0 4px var(--gilt-bright);
-  filter: none;
-}
-
-@media (hover: hover) {
-  .setup button.setup__seal:hover:not(:disabled) {
-    background:
-      radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.28), transparent 55%),
-      radial-gradient(circle at 70% 76%, rgba(43, 29, 18, 0.3), transparent 60%),
-      var(--nation-color);
-    border-color: var(--gilt-bright);
-    filter: none;
-  }
-}
-
-.setup__seal-hole {
-  fill: var(--nation-color);
-}
-
-.setup__blurb {
-  margin: 0;
-  line-height: 1.4;
-}
-
-.setup__bonus {
-  align-self: flex-start;
-  padding: 0.15rem 0.55rem;
-  border: 1px solid rgba(169, 207, 134, 0.6);
-  border-radius: 3px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #b9db98;
-}
-
-/* Everything chosen here: a dark tile, lit in gilt when it's the one. */
-.setup button.setup__party,
-.setup button.mode-tile,
-.setup button.rank-badge {
-  min-height: 0;
-  background: var(--bar-deep);
-  border: 1px solid var(--bar-rule);
-  border-radius: 4px;
   color: #e6d6ae;
   font-family: var(--font-body);
-  box-shadow: none;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  font-weight: 400;
+  text-align: left;
 }
 
-.setup button.setup__party.is-active,
-.setup button.mode-tile.is-active,
-.setup button.rank-badge.is-active {
+.setup button.setup__party.is-active {
   background: var(--bar-raised);
-  border-color: var(--gilt-bright);
-  box-shadow: inset 0 -3px 0 var(--gilt-bright);
+  border-top-color: var(--gilt-bright);
   color: #f4ead0;
 }
 
 @media (hover: hover) {
-  .setup button.setup__party:hover:not(:disabled),
-  .setup button.mode-tile:hover:not(:disabled),
-  .setup button.rank-badge:hover:not(:disabled) {
+  .setup button.setup__party:hover:not(:disabled) {
     background: var(--bar-raised);
-    border-color: var(--gilt-bright);
+    border: none;
+    border-top: 3px solid var(--bar-rule);
     color: #f4ead0;
+  }
+
+  .setup button.setup__party.is-active:hover:not(:disabled) {
+    border-top-color: var(--gilt-bright);
   }
 }
 
-/* The party: its seal, its name, and what governing as it changes. */
-.setup button.setup__party {
+.setup__party-head {
   display: flex;
-  align-items: flex-start;
-  gap: 0.8rem;
-  padding: 0.65rem 0.8rem;
-  text-align: left;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
 }
 
 .setup__party-seal {
@@ -243,23 +298,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 1px solid var(--gilt);
+  width: 1.8rem;
+  height: 1.8rem;
   border-radius: 50%;
   background: var(--party-color);
 }
 
-.setup__party-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  min-width: 0;
-}
-
 .setup__party-name {
   font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 700;
 }
 
@@ -271,8 +318,7 @@
   display: flex;
   align-items: baseline;
   gap: 0.4rem;
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.84rem;
   line-height: 1.3;
 }
 
@@ -286,106 +332,180 @@
 
 .setup__mark {
   flex-shrink: 0;
-  font-size: 0.65rem;
+  font-size: 0.6rem;
 }
 
-/* How it ends: two tiles, each with its emblem. */
-.setup__modes {
+/* How it ends and how hard: one joined scale each, the choice lit in gilt. */
+.setup__scale {
   display: grid;
+  border: 1px solid var(--bar-rule);
+  background: var(--bar-deep);
+}
+
+.setup__scale--modes {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
 }
 
-.setup button.mode-tile,
-.setup button.rank-badge {
+.setup__scale--levels {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.setup button.setup__step {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
-  padding: 0.45rem 0.4rem 0.5rem;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 0;
+  padding: 0.45rem 0.2rem;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  color: #d6c7a0;
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.mode-tile__emblem,
-.rank-badge__shield {
+.setup__scale--levels button.setup__step {
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.setup button.setup__step + .setup__step {
+  border-left: 1px solid var(--bar-rule);
+}
+
+.setup button.setup__step.is-active {
+  background: var(--bar-raised);
+  box-shadow: inset 0 0 0 2px var(--gilt-bright);
+  color: var(--gilt-bright);
+  font-weight: 700;
+}
+
+@media (hover: hover) {
+  .setup button.setup__step:hover:not(:disabled) {
+    background: var(--bar-raised);
+    border-top: none;
+    border-right: none;
+    border-bottom: none;
+    color: #f4ead0;
+  }
+
+  .setup button.setup__step.is-active:hover:not(:disabled) {
+    color: var(--gilt-bright);
+  }
+}
+
+.setup__emblem {
+  flex-shrink: 0;
   display: block;
 }
 
-.mode-tile__name,
-.rank-badge__name {
-  font-family: var(--font-display);
-  font-weight: 700;
-}
+.setup__step--easy { --rank-color: #4f7a3a; }
+.setup__step--normal { --rank-color: #8a6a2a; }
+.setup__step--hard { --rank-color: #7b2121; }
+.setup__step--ruthless { --rank-color: #3d4a52; }
 
-.mode-tile__name {
-  font-size: 1.05rem;
-}
-
-.mode-tile.is-active .mode-tile__name,
-.rank-badge.is-active .rank-badge__name {
-  color: var(--gilt-bright);
-}
-
-/* How hard: four rank badges, a chevron more each step. */
-.setup__ranks {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
-}
-
-.rank-badge--easy { --rank-color: #4f7a3a; }
-.rank-badge--normal { --rank-color: #8a6a2a; }
-.rank-badge--hard { --rank-color: #7b2121; }
-.rank-badge--ruthless { --rank-color: #3d4a52; }
-
-.rank-badge__name {
-  font-size: 1rem;
-}
-
-/* The one way in, always on screen however far the choices scroll. */
-.setup__foot {
-  flex-shrink: 0;
-  padding: 0.9rem 1.75rem 1.25rem;
-  border-top: 3px double rgba(226, 194, 122, 0.45);
-}
-
+/* The one way in: a flag of its own, flying from the other side of the frame. */
 .setup button.setup__start {
-  width: 100%;
-  padding: 0.75rem;
+  flex-shrink: 0;
+  min-height: 0;
+  margin-left: -1.5rem;
+  padding: 0.9rem 0.9rem 0.9rem 2.4rem;
   background: var(--oxblood);
-  border: 1px solid var(--gilt-bright);
-  border-radius: 4px;
-  box-shadow: 0 0 0 1px var(--oxblood-dark);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 1.4rem 50%);
   color: #f4ead0;
   font-family: var(--font-display);
-  font-size: 1.35rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
 }
 
 @media (hover: hover) {
   .setup button.setup__start:hover:not(:disabled) {
     background: #8e2828;
-    border-color: var(--gilt-bright);
+    border: none;
     color: #fff6dc;
   }
 }
 
-/* Narrow: the chart on top, the choices scrolling under it. */
+.setup button.setup__start:focus-visible {
+  outline-offset: -4px;
+}
+
+/* A laptop: slimmer flags and choices, and no compass, to leave room for the
+   land. The width matches COMPASS_MIN_WIDTH in SetupScreen.tsx. */
+@media (max-width: 1499.98px) {
+  .setup .map-panel__compass-ring,
+  .setup .map-panel__compass-dark,
+  .setup .map-panel__compass-light,
+  .setup .map-panel__compass-hub,
+  .setup .map-panel__compass-north {
+    display: none;
+  }
+
+  .setup__flags {
+    width: 16rem;
+  }
+
+  .setup__panel {
+    width: 22rem;
+  }
+}
+
+/* Narrow: the chart on top, its shore along the foot, and the flags and the
+   choices under it. The chosen flag takes a line of its own. */
 @media (max-width: 1100px) {
   .setup {
+    display: flex;
     flex-direction: column;
   }
 
   .setup__map {
-    flex: 0 0 34vh;
-    border-right: none;
-    border-bottom: 3px double var(--gilt);
+    position: relative;
+    inset: auto;
+    flex: 0 0 36vh;
+  }
+
+  .setup__flags {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    width: auto;
+    padding: 0 1.25rem 0.25rem 0;
+  }
+
+  .setup button.setup__flag {
+    flex: 1;
+    width: auto;
+  }
+
+  .setup button.setup__flag.is-active {
+    order: -1;
+    flex-basis: 100%;
+    width: auto;
   }
 
   .setup__panel {
+    position: static;
     flex: 1;
     width: auto;
     min-height: 0;
+  }
+
+  .setup__choices {
+    padding: 0.75rem 1.25rem;
+  }
+
+  .setup button.setup__start {
+    margin-left: 0;
+    padding: 0.7rem;
+    clip-path: none;
   }
 }
 
@@ -394,142 +514,5 @@
 @media (pointer: coarse) {
   .setup__mark {
     font-size: 0.8125rem;
-  }
-}
-
-/* --- The band: the chart fills the screen above it, and the choices run
-   along the bottom in four columns, with the one button at their end. --- */
-@media (min-width: 1101px) {
-  .setup {
-    position: relative;
-    display: block;
-  }
-
-  .setup__map {
-    position: absolute;
-    inset: 0;
-    border: none;
-  }
-
-  .setup__map::after {
-    content: "";
-    position: absolute;
-    inset: 0.7rem;
-    border: 7px solid var(--bar);
-    outline: 1px solid var(--gilt);
-    outline-offset: -4px;
-    pointer-events: none;
-  }
-
-  .setup__map button.setup__back {
-    top: 2rem;
-    left: 2.2rem;
-    z-index: 1;
-  }
-
-  .setup__slot {
-    top: 2.5rem;
-    right: 2.3rem;
-    bottom: auto;
-    left: auto;
-  }
-
-  .setup__panel {
-    position: absolute;
-    right: 1.4rem;
-    bottom: 1.2rem;
-    left: 1.4rem;
-    flex-direction: row;
-    width: auto;
-    max-height: calc(100dvh - 10rem);
-    border: 1px solid var(--bar-edge);
-    outline: 3px double var(--gilt);
-    outline-offset: -9px;
-    box-shadow: 0 -8px 30px rgba(12, 22, 16, 0.4);
-  }
-
-  .setup__choices {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 1.2rem;
-    padding: 1.15rem 1.3rem;
-  }
-
-  .setup__choices > .setup__section {
-    flex: 1;
-    min-width: 0;
-  }
-
-  /* The nation's column is the narrowest; the party's has the most to say. */
-  .setup__choices > .setup__section:nth-child(2) {
-    flex: 1.15;
-  }
-
-  .setup__nation-name {
-    font-size: 1.8rem;
-  }
-
-  .setup__nation-head {
-    flex-wrap: wrap;
-    gap: 0.4rem 0.8rem;
-  }
-
-  .setup button.setup__seal {
-    width: 2.2rem;
-    height: 2.2rem;
-  }
-
-  .setup__blurb {
-    font-size: 0.9rem;
-  }
-
-  .setup button.setup__party {
-    gap: 0.5rem;
-    padding: 0.4rem 0.5rem;
-  }
-
-  .setup__party-seal {
-    width: 1.8rem;
-    height: 1.8rem;
-  }
-
-  .setup__party-name {
-    font-size: 1rem;
-  }
-
-  .setup__perk {
-    font-size: 0.78rem;
-  }
-
-  .setup__ranks {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .setup__foot {
-    display: flex;
-    align-items: center;
-    width: 12.5rem;
-    padding: 1rem 1.2rem 1rem 1rem;
-    border-top: none;
-    border-left: 3px double rgba(226, 194, 122, 0.45);
-  }
-
-  .setup button.setup__start {
-    padding: 1rem 0.5rem;
-    white-space: nowrap;
-  }
-
-  .setup__plate-seal {
-    position: absolute;
-    top: -1.1rem;
-    left: 1.6rem;
-    z-index: 1;
-    display: block;
-  }
-}
-
-@media (max-width: 1100px) {
-  .setup__plate-seal {
-    display: none;
   }
 }

@@ -7,6 +7,7 @@ import { describeEffects } from "../../domain/policy/modifiers";
 import type { PlacedBuilding } from "../../domain/provinces/types";
 import type { ProvinceStatus } from "../../application/getProvinceOverview";
 import "./MapPanel.css";
+import { Waterlines } from "./MapDecor";
 import { MapLayers } from "./MapLayers";
 import type { UnderwayBuilding } from "./MapSettlements";
 import { cogPoints, starPoints } from "./iconShapes";
@@ -23,10 +24,27 @@ interface SetupScreenProps {
   onStart: (nationId: string, partyId: string, difficulty: Difficulty, mode: GameMode) => void;
 }
 
-// The continent and every island, with their shallows: what the chart must
-// show. It's fitted to the space the band leaves, with the sea running on under.
-const LAND = { x: 0, y: -15, width: 1310, height: 960 };
+// The continent and every island, with their shallows and the compass: what
+// the chart must show, fitted to the sea the flags and the choices leave.
+const LAND = { x: 0, y: -15, width: 1400, height: 960 };
 const FIRST_VIEW = `${LAND.x} ${LAND.y} ${LAND.width} ${LAND.height}`;
+// A smaller window has no compass (SetupScreen.css), so the land has its room.
+const LAND_NO_COMPASS = { ...LAND, width: 1310 };
+const COMPASS_MIN_WIDTH = 1500;
+// West of here is open sea north of the islands, so the land can slide under
+// the flags this far without touching them.
+const CONTINENT_WEST = 175;
+// Narrow, there's only room for what's being chosen between: the three nations.
+const CONTINENT = { x: 165, y: 70, width: 700, height: 565 };
+
+// The shore of the land the choices stand on, as "how far in, how far along":
+// 0 to 100 across its depth, 0 to 1000 along its length. It runs off both ends
+// of the chart, and is stretched to fit whatever the window is.
+const SHORE =
+  "M58,-30 C78,40 86,90 72,150 C62,195 40,205 34,255 C29,300 52,330 70,365 C84,395 88,440 74,490 C62,535 48,545 52,600 C56,650 78,670 82,720 C85,765 60,790 44,825 C34,850 36,895 52,930 C60,955 64,990 60,1030";
+const SHORE_DEPTH = 56; // screen pixels
+const SHORE_REACH = 26; // what its shallows take of the sea, in screen pixels
+const SEA_MARGIN = 16;
 
 // What a chart with no game behind it holds.
 const NO_BUILDINGS = new Map<string, PlacedBuilding[]>();
@@ -38,30 +56,52 @@ const NO_STATUS: Record<string, ProvinceStatus> = {};
 const ignore = () => {};
 
 // Starting a game, on one screen. The chart fills it and chooses the nation
-// (click its land, or its seal on the band); a band along the bottom holds the party, how
-// the game ends and how hard it is. Everything has a choice made already, so
-// "Take office" is always ready. The game doesn't exist until it's pressed.
+// (click its land, or its flag); the choices stand on a green shore to the
+// right of it, with no straight edge between them and the sea. Everything has
+// a choice made already, so "Take office" is always ready. The game doesn't
+// exist until it's pressed.
 export function SetupScreen({ nations, slotName, onBack, onStart }: SetupScreenProps) {
   const [nationId, setNationId] = useState(nations[0].id);
   const nation = nations.find((n) => n.id === nationId) ?? nations[0];
   const mapRef = useRef<HTMLDivElement>(null);
+  const flagsRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const [chartView, setChartView] = useState(FIRST_VIEW);
+  const [chart, setChart] = useState({ view: FIRST_VIEW, shore: "" });
   useLayoutEffect(() => {
     const map = mapRef.current;
+    const flags = flagsRef.current;
     const panel = panelRef.current;
-    if (!map || !panel) return;
+    if (!map || !flags || !panel) return;
     const fit = () => {
-      const { width, height } = map.getBoundingClientRect();
-      // Narrow, the choices sit under the chart rather than over it.
-      const covered = getComputedStyle(panel).position === "absolute" ? height - panel.getBoundingClientRect().top + map.getBoundingClientRect().top : 0;
-      const scale = Math.min(width / LAND.width, (height - covered) / LAND.height);
+      const box = map.getBoundingClientRect();
+      // Narrow, the choices sit under the chart and the shore runs along its foot.
+      const beside = getComputedStyle(panel).position === "absolute";
+      const shoreAt = beside ? panel.getBoundingClientRect().left - box.left - SHORE_DEPTH : box.height - SHORE_DEPTH;
+      const sail = beside ? flags.getBoundingClientRect().right - box.left : 0;
+      const east = beside ? shoreAt - SHORE_REACH : box.width - SEA_MARGIN;
+      const south = beside ? box.height - SEA_MARGIN : shoreAt - SHORE_REACH;
+      const west = beside ? CONTINENT_WEST : 0;
+      const shown = !beside ? CONTINENT : box.width >= COMPASS_MIN_WIDTH ? LAND : LAND_NO_COMPASS;
+      const scale = Math.min((south - SEA_MARGIN) / shown.height, (east - Math.max(sail, SEA_MARGIN)) / (shown.width - west));
       if (scale <= 0) return;
-      setChartView(`${LAND.x + LAND.width / 2 - width / scale / 2} ${LAND.y} ${width / scale} ${height / scale}`);
+      const spare = east - Math.max(sail, SEA_MARGIN) - (shown.width - west) * scale;
+      const landLeft = Math.max(SEA_MARGIN, Math.max(sail, SEA_MARGIN) - west * scale + spare / 2);
+      const landTop = SEA_MARGIN + (south - SEA_MARGIN - shown.height * scale) / 2;
+      const viewX = shown.x - landLeft / scale;
+      const viewY = shown.y - landTop / scale;
+      const point = (across: number, along: number) => {
+        const inward = shoreAt + (across / 100) * SHORE_DEPTH;
+        const [x, y] = beside ? [inward, (along / 1000) * box.height] : [(along / 1000) * box.width, inward];
+        return `${viewX + x / scale},${viewY + y / scale}`;
+      };
+      const shore = SHORE.replace(/(-?\d+),(-?\d+)/g, (_, across, along) => point(Number(across), Number(along)));
+      // Closed off behind the panel, so the land is filled right up to it.
+      setChart({ view: `${viewX} ${viewY} ${box.width / scale} ${box.height / scale}`, shore: `${shore} L${point(600, 1030)} L${point(600, -30)} Z` });
     };
     fit();
     const observer = new ResizeObserver(fit);
     observer.observe(map);
+    observer.observe(flags);
     observer.observe(panel);
     return () => observer.disconnect();
   }, []);
@@ -77,6 +117,8 @@ export function SetupScreen({ nations, slotName, onBack, onStart }: SetupScreenP
   const changes = level.changes.filter((change) => mode !== "long-reign" || !/retr/i.test(change));
   // What most sets a level apart stays on screen; all of it is in the tip.
   const keyChanges = changes.filter((change) => /^Elections need|retr/i.test(change));
+  const shapes = nationShapes([]);
+  const chosen = shapes.find((shape) => shape.nationId === nation.id);
 
   return (
     <div className="setup">
@@ -84,9 +126,9 @@ export function SetupScreen({ nations, slotName, onBack, onStart }: SetupScreenP
         {/* The chart the game is played on, not a drawing of it. MapLayers
             shows the chosen nation as your own; these clear shapes on top
             catch the clicks for all three. */}
-        <div className="setup__chart-frame map-panel" data-season="winter">
+        <div className="setup__chart-frame map-panel" data-season="summer">
           <svg
-            viewBox={chartView}
+            viewBox={chart.view}
             className="setup__chart"
             style={{ "--nation-color": washColor(nation.color) } as CSSProperties}
             role="img"
@@ -117,59 +159,63 @@ export function SetupScreen({ nations, slotName, onBack, onStart }: SetupScreenP
               settledIslandIds={NOTHING_IDS}
               foreignIslands={NO_RULERS}
             />
-            {nationShapes([]).map((shape) => (
+            {chosen && <path d={chosen.outline} className="setup__chosen-land" fill={nation.color} />}
+            {shapes.map((shape) => (
               <path key={shape.nationId} d={shape.outline} className="setup__hit" onClick={() => setNationId(shape.nationId)} data-tip={shape.name} />
             ))}
             {/* The chosen nation's frontier, in gilt. */}
-            {nationShapes([])
-              .filter((shape) => shape.nationId === nation.id)
-              .map((shape) => (
-                <path key={shape.nationId} d={shape.frontier} className="setup__frontier" />
-              ))}
+            {chosen && <path d={chosen.frontier} className="setup__frontier" />}
+            {/* The land the choices stand on, with the shore every island has. */}
+            {chart.shore && (
+              <g pointerEvents="none">
+                <Waterlines d={chart.shore} />
+                <path d={chart.shore} className="map-panel__shallows" />
+                <path d={chart.shore} className="setup__shore" />
+              </g>
+            )}
           </svg>
         </div>
-        <button type="button" className="setup__back" onClick={onBack}>
-          ← Back to saves
-        </button>
-        <p className="setup__slot">New game in {slotName}</p>
+        <div className="setup__top">
+          <button type="button" className="setup__back" onClick={onBack}>
+            ← Back to saves
+          </button>
+          <span className="setup__slot">{slotName}</span>
+        </div>
+      </div>
+
+      {/* The nations fly from the frame; the chosen one's flag says what it is. */}
+      <div className="setup__flags" role="radiogroup" aria-label="Nation" ref={flagsRef}>
+        {nations.map((n) => (
+          <button
+            key={n.id}
+            type="button"
+            role="radio"
+            aria-checked={n.id === nation.id}
+            className={`setup__flag ${n.id === nation.id ? "is-active" : ""}`}
+            style={{ "--nation-color": n.color } as CSSProperties}
+            onClick={() => setNationId(n.id)}
+          >
+            <span className="setup__flag-head">
+              <CrestEmblem nationId={n.id} />
+              <span className="setup__flag-name">{n.name}</span>
+            </span>
+            {n.id === nation.id && (
+              <span className="setup__flag-text">
+                <span>{n.blurb}</span>
+                <strong>{n.startingBonus}</strong>
+              </span>
+            )}
+          </button>
+        ))}
       </div>
 
       <div className="setup__panel" ref={panelRef}>
-        <svg className="setup__plate-seal" width={36} height={36} viewBox="-18 -18 36 36" aria-hidden="true">
-          <circle r={16} fill="var(--oxblood)" stroke="var(--gilt)" strokeWidth={1.5} />
-          <polygon points={starPoints(0, 0, 9, 3.8)} fill="var(--gilt-bright)" />
-        </svg>
         <div className="setup__choices">
-          <section className="setup__section">
-            <div className="setup__nation-head">
-              <h1 className="setup__nation-name">{nation.name}</h1>
-              <div className="setup__seals" role="radiogroup" aria-label="Nation">
-                {nations.map((n) => (
-                  <button
-                    key={n.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={n.id === nation.id}
-                    aria-label={n.name}
-                    title={n.name}
-                    className={`setup__seal ${n.id === nation.id ? "is-active" : ""}`}
-                    style={{ "--nation-color": n.color } as CSSProperties}
-                    onClick={() => setNationId(n.id)}
-                  >
-                    <CrestEmblem nationId={n.id} />
-                  </button>
-                ))}
-              </div>
-            </div>
-            <p className="setup__blurb">{nation.blurb}</p>
-            <span className="setup__bonus">{nation.startingBonus}</span>
-          </section>
-
           <section className="setup__section" aria-labelledby="setup-party">
-            <h2 className="setup__label-line" id="setup-party">
+            <h2 className="setup__label" id="setup-party">
               Your party
             </h2>
-            <div className="setup__section" role="radiogroup" aria-labelledby="setup-party">
+            <div className="setup__parties" role="radiogroup" aria-labelledby="setup-party">
               {parties.map((p) => {
                 const creed = describeEffects(p.creed);
                 return (
@@ -183,26 +229,26 @@ export function SetupScreen({ nations, slotName, onBack, onStart }: SetupScreenP
                     onClick={() => setPartyId(p.id)}
                     title={p.description}
                   >
-                    <span className="setup__party-seal" aria-hidden="true">
-                      <PartyCrestEmblem ideology={p.ideology} />
-                    </span>
                     {/* What governing as this party changes: a button holds
                         only inline content, so the lists are spans. */}
-                    <span className="setup__party-body">
+                    <span className="setup__party-head">
+                      <span className="setup__party-seal" aria-hidden="true">
+                        <PartyCrestEmblem ideology={p.ideology} />
+                      </span>
                       <span className="setup__party-name">{p.name}</span>
-                      {creed.gains.map((line) => (
-                        <span key={line.key} className="setup__perk is-gain">
-                          <span className="setup__mark" aria-label="Gain">▲</span>
-                          {line.text}
-                        </span>
-                      ))}
-                      {creed.costs.map((line) => (
-                        <span key={line.key} className="setup__perk is-loss">
-                          <span className="setup__mark" aria-label="Cost">▼</span>
-                          {line.text}
-                        </span>
-                      ))}
                     </span>
+                    {creed.gains.map((line) => (
+                      <span key={line.key} className="setup__perk is-gain">
+                        <span className="setup__mark" aria-label="Gain">▲</span>
+                        {line.text}
+                      </span>
+                    ))}
+                    {creed.costs.map((line) => (
+                      <span key={line.key} className="setup__perk is-loss">
+                        <span className="setup__mark" aria-label="Cost">▼</span>
+                        {line.text}
+                      </span>
+                    ))}
                   </button>
                 );
               })}
@@ -210,22 +256,22 @@ export function SetupScreen({ nations, slotName, onBack, onStart }: SetupScreenP
           </section>
 
           <section className="setup__section" aria-labelledby="setup-mode">
-            <h2 className="setup__label-line" id="setup-mode">
+            <h2 className="setup__label" id="setup-mode">
               How it ends
             </h2>
-            <div className="setup__modes" role="radiogroup" aria-labelledby="setup-mode">
+            <div className="setup__scale setup__scale--modes" role="radiogroup" aria-labelledby="setup-mode">
               {MODES.map((key) => (
                 <button
                   key={key}
                   type="button"
                   role="radio"
                   aria-checked={mode === key}
-                  className={`mode-tile ${mode === key ? "is-active" : ""}`}
+                  className={`setup__step ${mode === key ? "is-active" : ""}`}
                   onClick={() => setMode(key)}
                   title={MODE_SETTINGS[key].summary}
                 >
                   <ModeEmblem mode={key} />
-                  <span className="mode-tile__name">{MODE_SETTINGS[key].name}</span>
+                  {MODE_SETTINGS[key].name}
                 </button>
               ))}
             </div>
@@ -241,22 +287,22 @@ export function SetupScreen({ nations, slotName, onBack, onStart }: SetupScreenP
           </section>
 
           <section className="setup__section" aria-labelledby="setup-level">
-            <h2 className="setup__label-line" id="setup-level">
+            <h2 className="setup__label" id="setup-level">
               How hard
             </h2>
-            <div className="setup__ranks" role="radiogroup" aria-labelledby="setup-level">
+            <div className="setup__scale setup__scale--levels" role="radiogroup" aria-labelledby="setup-level">
               {DIFFICULTIES.map((key, i) => (
                 <button
                   key={key}
                   type="button"
                   role="radio"
                   aria-checked={difficulty === key}
-                  className={`rank-badge rank-badge--${key} ${difficulty === key ? "is-active" : ""}`}
+                  className={`setup__step setup__step--${key} ${difficulty === key ? "is-active" : ""}`}
                   onClick={() => setDifficulty(key)}
                   title={`${DIFFICULTY_SETTINGS[key].title}. ${DIFFICULTY_SETTINGS[key].summary}`}
                 >
                   <RankInsignia chevrons={i + 1} />
-                  <span className="rank-badge__name">{DIFFICULTY_SETTINGS[key].name}</span>
+                  {DIFFICULTY_SETTINGS[key].name}
                 </button>
               ))}
             </div>
@@ -266,11 +312,10 @@ export function SetupScreen({ nations, slotName, onBack, onStart }: SetupScreenP
           </section>
         </div>
 
-        <div className="setup__foot">
-          <button type="button" className="setup__start" onClick={() => onStart(nation.id, party.id, difficulty, mode)}>
-            Take office
-          </button>
-        </div>
+        {/* The one way in, always on screen however far the choices scroll. */}
+        <button type="button" className="setup__start" onClick={() => onStart(nation.id, party.id, difficulty, mode)}>
+          Take office
+        </button>
       </div>
     </div>
   );
@@ -326,7 +371,7 @@ function CrestEmblem({ nationId }: { nationId: string }) {
 // for a reign that runs until it runs out.
 function ModeEmblem({ mode }: { mode: GameMode }) {
   return (
-    <svg className="mode-tile__emblem" viewBox="-20 -14 40 28" width={46} height={32} aria-hidden="true">
+    <svg className="setup__emblem" viewBox="-20 -14 40 28" width={32} height={22} aria-hidden="true">
       {mode === "terms" ? (
         <g fill="var(--gilt-bright)" stroke="#93731f" strokeWidth={0.8} strokeLinejoin="round">
           <polygon points={starPoints(-12, 3, 6.5, 2.8)} />
@@ -350,7 +395,7 @@ function ModeEmblem({ mode }: { mode: GameMode }) {
 // A difficulty as a rank: a shield with one chevron per step up.
 function RankInsignia({ chevrons }: { chevrons: number }) {
   return (
-    <svg className="rank-badge__shield" viewBox="-10 -11 20 22" width={28} height={31} aria-hidden="true">
+    <svg className="setup__emblem" viewBox="-10 -11 20 22" width={20} height={22} aria-hidden="true">
       <path d="M-8,-9 H8 V0.5 C8,6 0,10 0,10 C0,10 -8,6 -8,0.5 Z" fill="var(--rank-color)" stroke="var(--gilt-bright)" strokeWidth={1.1} />
       <g fill="none" stroke="#f4ead0" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
         {Array.from({ length: chevrons }, (_, i) => {
