@@ -12,12 +12,19 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 02 | [The first minute](tasks/02-first-minute.md) | merged | `task/02-first-minute` | Objectives panel | 01, 03 |
 | 03 | [Fewer interruptions](tasks/03-fewer-interruptions.md) | merged | `task/03-fewer-interruptions` | `App.tsx`, how briefings and letters follow each other | 01, 02 |
 | 04 | [Warning before a breakdown](tasks/04-worn-buildings.md) | running | `task/04-worn-buildings` | maintenance rules, Repairs, map, balance | alone |
+| 05 | [Winter, the Build list, top bar lines](tasks/05-look.md) | waiting on 04 | `task/05-look` | map season CSS, Build rows, top bar CSS | 06 |
+| 06 | [Country titles](tasks/06-country-titles.md) | waiting on 04, stops for the owner to pick | `task/06-country-titles` | map names | 05 |
+| 07 | [Starting populations and wood](tasks/07-starting-countries.md) | waiting on 05 and 06 | `task/07-starting-countries` | starting state, balance | alone |
+| 08 | [Earlier scouting](tasks/08-earlier-scouting.md) | waiting on 07 | `task/08-earlier-scouting` | chapters, balance | alone |
+| 09 | [Heating](tasks/09-heating.md) | waiting on 08 | `task/09-heating` | housing rules, balance | alone |
+| 10 | [Trading orders](tasks/10-trading-orders.md) | waiting on 09 | `task/10-trading-orders` | market, a day step | alone |
+| 11 | [Trained workers](tasks/11-trained-workers.md) | waiting on 10, stops for the owner to agree a design | `task/11-trained-workers` | labour, balance, People | alone |
 
 Work branch: `setup-screen-flags`, which holds the latest game (`main` is two commits behind it). Task branches start from it and merge back into it, with 04 last. After each merge, the manager reruns all the checks. The owner plays the result before anything is pushed, and decides when it goes to `main`.
 
 Owner's decisions, 2026-10-31: buildings warn before breaking, and a new game's level defaults to Easy (done).
 
-## Owner's list, 2026-10-31 (starts after tasks 01 to 04; not yet written up as tasks)
+## Owner's list, 2026-10-31 (starts after tasks 01 to 04, as tasks 05 to 11; item 5 is not in a task yet)
 
 1. Winter's white effect on the map should be weaker.
 2. Too much text under each building in Build, and nothing says the first payment is only half the total.
@@ -29,6 +36,12 @@ Owner's decisions, 2026-10-31: buildings warn before breaking, and a new game's 
 8. More comfortable trading: more automatic buying and selling, including sell when the price is above X and buy when it is below X.
 9. Heating: the owner asks how it works now, and suggests wood is five times less efficient than coal and better buildings have better insulation.
 10. The red lines under items in the top bar are slightly annoying.
+
+Owner's decisions on this list, 2026-10-31:
+
+- Untrained workers improve with time in the job (about a year to reach full efficiency).
+- Workers are assigned across the whole country, not per province. People moved keep working in their previous job until the month ends.
+- Caldenreich and Veldoria get some starting wood.
 
 Planned order: the look (1, 2, 3, 5, 10), then the numbers one at a time (4, 6, 9), then trading (8), then workers (7) alone and last. Item 3 gets real screenshots of options for the owner to pick from.
 
