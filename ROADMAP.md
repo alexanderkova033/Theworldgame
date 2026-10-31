@@ -83,6 +83,17 @@ Alongside the road, whenever they fit:
 - [ ] Later production chains: steel or similar goods made from ore and coal.
 - [ ] A setting for starting country size.
 
+## Next: ready for players (from the first outside playtest, 2026-10-31)
+
+No new systems until players understand their decisions and want another session. Tasks and their status are in [plans/board.md](plans/board.md).
+
+- [ ] Warnings that say exactly what is wrong.
+- [ ] A first minute that shows what to do next.
+- [ ] Briefings and letters that don't take away the window in use.
+- [ ] A warning before a building breaks down (to be decided).
+- [ ] A small test with 5 to 10 people, labelled as an alpha, watching a couple of them start cold.
+- [ ] Then: fresh players reach the first election, saves hold across sessions, and the devices to support are checked.
+
 ## Long-term dream version
 
 - [ ] AI countries with distinct personalities.
