@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { previewOf, setLetterPreview } from "../letterPreview";
 import type { GameState } from "../../domain/country/types";
 import { getDecision } from "../../domain/decisions/decisionRules";
-import type { DecisionEffects } from "../../domain/decisions/types";
+import type { DecisionDefinition, DecisionEffects } from "../../domain/decisions/types";
 import { playSeal } from "../audio/sound";
 import { BuildingGlyph } from "./CauseIcon";
 import { Modal } from "./Modal";
@@ -57,14 +57,45 @@ export function DecisionIcon({ icon, size }: { icon: string; size: number }) {
   return <StatIcon type={icon as StatIconType} size={size} />;
 }
 
+// A letter's answers: pointing at one marks what it would move on the top
+// bar, and the marks go when the letter does.
+export function LetterAnswers({ state, decision, onAnswer }: { state: GameState; decision: DecisionDefinition; onAnswer: (optionId: string) => void }) {
+  useEffect(() => () => setLetterPreview(null), [decision.id]);
+  return (
+    <div className="decision-modal__options">
+      {decision.options.map((option) => (
+        <button
+          key={option.id}
+          className={`decision-modal__option ${decision.story ? "decision-modal__option--stacked" : ""}`}
+          onClick={() => {
+            playSeal();
+            setLetterPreview(null);
+            onAnswer(option.id);
+          }}
+          onMouseEnter={() => setLetterPreview(previewOf(state, option))}
+          onMouseLeave={() => setLetterPreview(null)}
+          onFocus={() => setLetterPreview(previewOf(state, option))}
+          onBlur={() => setLetterPreview(null)}
+        >
+          <span className="decision-modal__option-label">{option.label}</span>
+          <span className="decision-modal__option-effect">
+            <span className="decision-modal__option-icons">
+              {effectIcons(option.effects).map((icon, i) => (
+                <StatIcon type={icon} size={16} key={`${icon}-${i}`} />
+              ))}
+            </span>
+            <OutcomeParts parts={[...describeEffects(option.effects), ...describeOutcomeParts(option.outcome, state)]} />
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // A decision that popped up on its own (see simulateDay.ts step 14) rather
 // than one the player opened — rendered unconditionally in App.tsx and
 // self-guards on there being nothing pending, so it's a no-op most ticks.
 export function DecisionModal({ state, onResolve, onDismiss }: DecisionModalProps) {
-  // Pointing at an answer marks what it would move on the top bar; the
-  // marks go when the letter does.
-  const pending = state.pendingDecisionId;
-  useEffect(() => () => setLetterPreview(null), [pending]);
   if (!state.pendingDecisionId) return null;
   const decision = getDecision(state.pendingDecisionId);
   if (!decision) return null;
@@ -82,33 +113,7 @@ export function DecisionModal({ state, onResolve, onDismiss }: DecisionModalProp
           </div>
         )}
         <p className="decision-modal__prompt">{decision.prompt}</p>
-        <div className="decision-modal__options">
-          {decision.options.map((option) => (
-            <button
-              key={option.id}
-              className={`decision-modal__option ${decision.story ? "decision-modal__option--stacked" : ""}`}
-              onClick={() => {
-                playSeal();
-                setLetterPreview(null);
-                onResolve(decision.id, option.id);
-              }}
-              onMouseEnter={() => setLetterPreview(previewOf(state, option))}
-              onMouseLeave={() => setLetterPreview(null)}
-              onFocus={() => setLetterPreview(previewOf(state, option))}
-              onBlur={() => setLetterPreview(null)}
-            >
-              <span className="decision-modal__option-label">{option.label}</span>
-              <span className="decision-modal__option-effect">
-                <span className="decision-modal__option-icons">
-                  {effectIcons(option.effects).map((icon, i) => (
-                    <StatIcon type={icon} size={16} key={`${icon}-${i}`} />
-                  ))}
-                </span>
-                <OutcomeParts parts={[...describeEffects(option.effects), ...describeOutcomeParts(option.outcome, state)]} />
-              </span>
-            </button>
-          ))}
-        </div>
+        <LetterAnswers state={state} decision={decision} onAnswer={(optionId) => onResolve(decision.id, optionId)} />
       </div>
     </Modal>
   );

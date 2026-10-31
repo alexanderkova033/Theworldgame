@@ -2,7 +2,7 @@
 // app: it owns the live GameState (via useGameClock) and wires it into the
 // UI panels. It never computes simulation values itself.
 import "./App.css";
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Activity, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArmyPanel, BuildPanel, EventLog, ExpeditionPanel, GameEndScreen, LawsPanel, MoneyPanel, PoliticsPanel, preloadWindows, ReportsPanel, ResearchPanel, SetupScreen } from "./presentation/lazyWindows";
 import { emptyLedger, mergeLedgers } from "./domain/ledger/ledgerRules";
 import { getNation } from "./domain/nations/nationRules";
@@ -43,12 +43,13 @@ import { SeasonTurn } from "./presentation/components/SeasonTurn";
 import { useSeasonTurn } from "./presentation/hooks/useSeasonTurn";
 import { getSeason } from "./domain/country/calendar";
 import { TopBar } from "./presentation/components/TopBar";
+import { chooseWindow, giveWindowBack, holdWindowBack, NO_WINDOW } from "./presentation/windowHold";
 import { FIRST_SECTIONS, lockedReason, politicsSectionFor, reachable, type PanelKey, type Section, type Sections } from "./presentation/navigation";
 import { getOpenBuildKinds, type BuildRail } from "./presentation/buildGroups";
 import type { ProjectType } from "./domain/construction/types";
 import { isLetterWaiting, useGameClock } from "./presentation/hooks/useGameClock";
 import { isFeatureOpen } from "./domain/chapters/chapterData";
-import { readBriefing } from "./application/chapters";
+import { readAndAnswer, readBriefing } from "./application/chapters";
 import { ChapterBriefing } from "./presentation/components/ChapterBriefing";
 import { Objectives } from "./presentation/components/Objectives";
 import { getChapter } from "./domain/chapters/chapterData";
@@ -93,7 +94,7 @@ function App() {
       }
       // One that broke away has no card: the Army window shows it.
       if (latestState.current?.freeProvinces[provinceId]) {
-        if (latestState.current && isFeatureOpen(latestState.current, "army")) setOpenModal("army");
+        if (latestState.current && isFeatureOpen(latestState.current, "army")) setWindows(chooseWindow("army"));
         return;
       }
       setSelectedProvinceId(provinceId);
@@ -140,7 +141,10 @@ function App() {
   // occasional lookup, not an always-on dashboard, so it lives in an
   // on-demand overlay (HOI4-style tabs) instead of a permanent sidebar —
   // see Modal.tsx and TopBar.tsx.
-  const [openModal, setOpenModal] = useState<PanelKey | null>(null);
+  // A letter holds the open window back rather than closing it, so it comes
+  // back as it was (see windowHold.ts).
+  const [windows, setWindows] = useState(NO_WINDOW);
+  const openModal = windows.heldBack ? null : windows.open;
   // Which section each window shows: remembered between visits, and set
   // directly when an advisor chip or toast points somewhere.
   const [sections, setSections] = useState<Sections>(FIRST_SECTIONS);
@@ -247,7 +251,7 @@ function App() {
         return;
       }
       setSelectedIslandId(islandId);
-      setOpenModal("ventures");
+      setWindows(chooseWindow("ventures"));
     },
     [marchFrom, selectProvinceOnMap],
   );
@@ -325,7 +329,11 @@ function App() {
   // The reign just ended — a distinct sting, once.
   const wasGameOver = useRef(false);
   useEffect(() => {
-    if (state?.isGameOver && !wasGameOver.current) playGameOver(state.outcome === "victory");
+    if (state?.isGameOver && !wasGameOver.current) {
+      playGameOver(state.outcome === "victory");
+      // Nothing carries over to a retry from a checkpoint.
+      setWindows(NO_WINDOW);
+    }
     wasGameOver.current = state?.isGameOver ?? false;
   }, [state?.isGameOver]);
 
@@ -340,21 +348,21 @@ function App() {
   const season = useSeasonTurn(state ? getSeason(state.date) : null, !!state && isLetterWaiting(state));
 
   // A chapter opened (see application/chapters.ts): its letter arrives, and
-  // whatever tab is open closes for it.
+  // whatever tab is open steps aside for it.
   const unreadBriefings = state?.chapters.unread.length ?? 0;
   useEffect(() => {
     if (unreadBriefings === 0) return;
     playLetter();
-    setOpenModal(null);
+    setWindows(holdWindowBack);
   }, [unreadBriefings]);
 
   // A decision popped up (see simulateDay.ts step 14): a letter arrives,
-  // and whatever tab is open closes so it isn't competing with the popup
-  // for attention.
+  // and whatever tab is open steps aside so it isn't competing with the
+  // popup for attention.
   useEffect(() => {
     if (!state?.pendingDecisionId) return;
     playLetter();
-    setOpenModal(null);
+    setWindows(holdWindowBack);
   }, [state?.pendingDecisionId]);
 
   // A neighbour's ultimatum, the same way (see UltimatumLetter).
@@ -362,7 +370,7 @@ function App() {
   useEffect(() => {
     if (!ultimatumKey) return;
     playLetter();
-    setOpenModal(null);
+    setWindows(holdWindowBack);
   }, [ultimatumKey]);
 
   // A province's letter, the same way (see DemandLetter).
@@ -370,7 +378,7 @@ function App() {
   useEffect(() => {
     if (!demandKey) return;
     playLetter();
-    setOpenModal(null);
+    setWindows(holdWindowBack);
   }, [demandKey]);
 
   // A province's crisis letter, the same way (see CrisisLetter).
@@ -378,8 +386,15 @@ function App() {
   useEffect(() => {
     if (!crisisKey) return;
     playLetter();
-    setOpenModal(null);
+    setWindows(holdWindowBack);
   }, [crisisKey]);
+
+  // The last letter dealt with, including a story letter still on its way:
+  // the window a letter held back comes back.
+  const lettersWaiting = !!state && (isLetterWaiting(state) || state.chapters.letters.length > 0);
+  useEffect(() => {
+    if (!lettersWaiting) setWindows(giveWindowBack);
+  }, [lettersWaiting]);
 
   // No game yet: pick a save slot, then the nation, party and terms, then the
   // game itself starts. Nation/party are permanent — there is no
@@ -431,6 +446,8 @@ function App() {
   // Non-null past the `!state` guard above — it's memoized from that same value.
   const dailyProduction = production!;
 
+  const closeWindow = () => setWindows(NO_WINDOW);
+
   function openPanel(wanted: PanelKey, wantedSection?: Section, wantedRail?: BuildRail) {
     // A shut window or section opens somewhere open instead (see navigation.ts).
     const { panel, section, rail } = reachable(state!, { panel: wanted, section: wantedSection, rail: wantedRail });
@@ -446,7 +463,7 @@ function App() {
     // for real) immediately re-close whatever you just opened. Closing has
     // its own unambiguous affordances: the modal's X, Escape, or clicking
     // the backdrop.
-    setOpenModal(panel);
+    setWindows(chooseWindow(panel));
     if (panel === "reports" && state) setSeenEventCount(state.events.length);
   }
 
@@ -525,16 +542,18 @@ function App() {
         </div>
       </main>
 
-      {/* The windows load on first use (lazyWindows.ts). */}
+      {/* The windows load on first use (lazyWindows.ts). Held back behind a
+          letter, one keeps its place: tab, selection and all. */}
+      <Activity mode={windows.heldBack ? "hidden" : "visible"}>
       <Suspense fallback={null}>
-      {openModal === "politics" && (
-        <Modal title="Politics" window="politics" icon={<NavIcon type="politics" size={22} />} onClose={() => setOpenModal(null)}>
+      {windows.open === "politics" && (
+        <Modal title="Politics" window="politics" icon={<NavIcon type="politics" size={22} />} onClose={closeWindow}>
           <PoliticsPanel state={state} dispatch={dispatch} onOpenPanel={openPanel} section={sections.politics} onSection={(section) => setSection("politics", section)} />
         </Modal>
       )}
 
-      {openModal === "build" && (
-        <Modal title="Build" window="build" icon={<NavIcon type="build" size={22} />} onClose={() => setOpenModal(null)} side={sections.build === "buildings"} wide>
+      {windows.open === "build" && (
+        <Modal title="Build" window="build" icon={<NavIcon type="build" size={22} />} onClose={closeWindow} side={sections.build === "buildings"} wide>
           <BuildPanel
             state={state}
             dispatch={dispatch}
@@ -550,8 +569,8 @@ function App() {
         </Modal>
       )}
 
-      {openModal === "money" && (
-        <Modal title="Money" window="money" icon={<StatIcon type="treasury" size={22} />} onClose={() => setOpenModal(null)} wide>
+      {windows.open === "money" && (
+        <Modal title="Money" window="money" icon={<StatIcon type="treasury" size={22} />} onClose={closeWindow} wide>
           <MoneyPanel
             state={state}
             production={dailyProduction}
@@ -563,8 +582,8 @@ function App() {
         </Modal>
       )}
 
-      {openModal === "reports" && (
-        <Modal title="Reports" window="reports" icon={<NavIcon type="reports" size={22} />} onClose={() => setOpenModal(null)} wide>
+      {windows.open === "reports" && (
+        <Modal title="Reports" window="reports" icon={<NavIcon type="reports" size={22} />} onClose={closeWindow} wide>
           <div className="reports-modal">
             {/* Active projects already live on the Build tab, right next to
                 the Build actions that create them — showing the same list
@@ -576,30 +595,31 @@ function App() {
         </Modal>
       )}
 
-      {openModal === "laws" && (
-        <Modal title="Laws" window="laws" icon={<NavIcon type="laws" size={22} />} onClose={() => setOpenModal(null)} wide>
+      {windows.open === "laws" && (
+        <Modal title="Laws" window="laws" icon={<NavIcon type="laws" size={22} />} onClose={closeWindow} wide>
           <LawsPanel state={state} alerts={advisor?.alerts ?? []} dispatch={dispatch} />
         </Modal>
       )}
 
-      {openModal === "research" && (
-        <Modal title="Research" window="research" icon={<NavIcon type="research" size={22} />} onClose={() => setOpenModal(null)} wide>
+      {windows.open === "research" && (
+        <Modal title="Research" window="research" icon={<NavIcon type="research" size={22} />} onClose={closeWindow} wide>
           <ResearchPanel state={state} alerts={advisor?.alerts ?? []} dispatch={dispatch} />
         </Modal>
       )}
 
-      {openModal === "army" && (
-        <Modal title="Army" window="army" icon={<NavIcon type="army" size={22} />} onClose={() => setOpenModal(null)}>
+      {windows.open === "army" && (
+        <Modal title="Army" window="army" icon={<NavIcon type="army" size={22} />} onClose={closeWindow}>
           <ArmyPanel state={state} dispatch={dispatch} />
         </Modal>
       )}
 
-      {openModal === "ventures" && (
-        <Modal title="Ventures" window="ventures" icon={<NavIcon type="ventures" size={22} />} onClose={() => setOpenModal(null)}>
+      {windows.open === "ventures" && (
+        <Modal title="Ventures" window="ventures" icon={<NavIcon type="ventures" size={22} />} onClose={closeWindow}>
           <ExpeditionPanel state={state} selectedIslandId={selectedIslandId} dispatch={dispatch} />
         </Modal>
       )}
       </Suspense>
+      </Activity>
 
       <SeasonTurn turning={season.turning} />
       <Toasts events={state.events} monthlyReports={state.monthlyReports} isPaused={state.isPaused} onOpenPanel={openPanel} />
@@ -611,6 +631,10 @@ function App() {
           dispatch((s) => readBriefing(s, id));
           // The opening letter is read before the clock first starts.
           if (id !== "first-winter") resume();
+        }}
+        onAnswer={(id, optionId) => {
+          dispatch((s) => readAndAnswer(s, id, optionId));
+          resume();
         }}
       />
       {/* A new term's burden is chosen before any other letter is read. */}

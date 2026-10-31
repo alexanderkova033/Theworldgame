@@ -63,6 +63,58 @@
   background: var(--paper-raised);
 }
 
+/* How many more stops wait behind this one. */
+.briefing__waiting {
+  align-self: flex-end;
+  margin: 0;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--gilt);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--window-ink);
+}
+
+.briefing__story {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+/* The chapter's letter on the briefing's page, beside it so that its answers
+   are in sight without scrolling. */
+.briefing--joined {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem 1.4rem;
+  align-items: start;
+}
+
+.briefing--joined .briefing__waiting {
+  grid-column: 1 / -1;
+  justify-self: end;
+}
+
+.briefing__joined {
+  padding-left: 1.4rem;
+  border-left: 1px solid var(--rule);
+}
+
+.briefing__joined .briefing__head {
+  margin-bottom: 0.4rem;
+}
+
+@media (max-width: 820px) {
+  .briefing--joined {
+    grid-template-columns: 1fr;
+  }
+
+  .briefing__joined {
+    padding: 0.8rem 0 0;
+    border-left: none;
+    border-top: 1px solid var(--rule);
+  }
+}
+
 .briefing__go {
   align-self: flex-end;
   padding: 0.45rem 1.4rem;
