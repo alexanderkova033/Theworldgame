@@ -17,8 +17,8 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 07 | [Starting populations and wood](tasks/07-starting-countries.md) | merged | `task/07-starting-countries` | starting state, balance | alone |
 | 07b | [Law requirements and Caldenreich's lead](tasks/07b-nation-balance.md) | merged | `task/07b-nation-balance` | laws, starting state, balance | alone |
 | 08 | [Earlier scouting](tasks/08-earlier-scouting.md) | merged | `task/08-earlier-scouting` | chapters, balance | alone |
-| 09 | [Heating](tasks/09-heating.md) | running: owner chose 120 extra coal for Astravia, plus an earlier warning | `task/09-heating` | housing rules, balance | alone |
-| 08b | [Scouting opens when workers run short](tasks/08b-worker-ceiling.md) | waiting on 09 | `task/08b-worker-ceiling` | chapters, balance | alone |
+| 09 | [Heating](tasks/09-heating.md) | merged, with 120 extra coal for Astravia and an earlier warning | `task/09-heating` | housing rules, balance | alone |
+| 08b | [Scouting opens when workers run short](tasks/08b-worker-ceiling.md) | running | `task/08b-worker-ceiling` | chapters, balance | alone |
 | 10 | [Trading orders](tasks/10-trading-orders.md) | running | `task/10-trading-orders` | market, a day step | alone |
 | 11 | [Trained workers](tasks/11-trained-workers.md) | waiting on 10, stops for the owner to agree a design | `task/11-trained-workers` | labour, balance, People | alone |
 
@@ -58,6 +58,12 @@ Planned order: the look (1, 2, 3, 5, 10), then the numbers one at a time (4, 6, 
 - Hard's test title in `balance.test.ts` says "about a third", which no longer fits.
 
 - One test failed once in `npm test` after task 02 merged, and was not identified. Task 04 then saw `tests/interruptions.test.ts` time out at 5 seconds and an unexplained failure in `tests/balance.test.ts`. The limit is now 30 seconds. If a failure recurs, save the name and the error.
+
+## Small follow-ups from task 09
+
+- Veldoria digs no coal either and got none extra. Careful on Normal it goes cold in 8 of 16 second winters and 7 of 9 third winters, and its wins over 18 seeds fell from 4 to 2. The autumn warning shows every year there. Waiting on the owner.
+- Heat shares 0.8 and 0.65 have unit tests only, as no scripted game builds tenements or apartment blocks.
+- Nobody has checked that a person acts on the warning in time.
 
 ## Small follow-ups from task 08
 

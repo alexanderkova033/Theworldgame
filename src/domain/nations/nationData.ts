@@ -18,7 +18,7 @@ export const NATIONS: Nation[] = [
       "province-2-west", "province-2-east", // Marrow Coast
     ],
     blurb: "A young republic in the continent's heartland, balancing farmland and ambition.",
-    startingBonus: "Starts with an extra farm.",
+    startingBonus: "Starts with an extra farm and more coal.",
     startingPopulation: 12000,
     startingFarms: 7,
   },
