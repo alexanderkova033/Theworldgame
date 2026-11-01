@@ -20,7 +20,7 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 09 | [Heating](tasks/09-heating.md) | merged, with 120 extra coal for Astravia and an earlier warning | `task/09-heating` | housing rules, balance | alone |
 | 09b | [Veldoria's extra coal](tasks/09b-veldoria-coal.md) | waiting on 08b | `task/09b-veldoria-coal` | starting state, balance | alone |
 | 08b | [Scouting opens when workers run short](tasks/08b-worker-ceiling.md) | running | `task/08b-worker-ceiling` | chapters, balance | alone |
-| 10 | [Trading orders](tasks/10-trading-orders.md) | running | `task/10-trading-orders` | market, a day step | alone |
+| 10 | [Trading orders](tasks/10-trading-orders.md) | merged | `task/10-trading-orders` | market, a day step | alone |
 | 11 | [Trained workers](tasks/11-trained-workers.md) | waiting on 10, stops for the owner to agree a design | `task/11-trained-workers` | labour, balance, People | alone |
 
 Work branch: `setup-screen-flags`, which holds the latest game (`main` is two commits behind it). Task branches start from it and merge back into it, with 04 last. After each merge, the manager reruns all the checks. The owner plays the result before anything is pushed, and decides when it goes to `main`.
@@ -59,6 +59,13 @@ Planned order: the look (1, 2, 3, 5, 10), then the numbers one at a time (4, 6, 
 - Hard's test title in `balance.test.ts` says "about a third", which no longer fits.
 
 - One test failed once in `npm test` after task 02 merged, and was not identified. Task 04 then saw `tests/interruptions.test.ts` time out at 5 seconds and an unexplained failure in `tests/balance.test.ts`. The limit is now 30 seconds. If a failure recurs, save the name and the error.
+
+## Small follow-ups from task 10
+
+- Coal order figures were measured before the 5 to 1 heating landed, so rerun them.
+- Nothing tells a player that a coal order with a low price limit will fall short by winter.
+- Orders make selling a surplus effortless (Caldenreich's coal, up to +2,171 Cr a year). Goods are being made, so this is allowed, but worth watching.
+- The 500 Cr reserve can be seen but not set.
 
 ## Small follow-ups from task 09
 
