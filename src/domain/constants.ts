@@ -5,6 +5,11 @@
 export const DAYS_PER_MONTH = 30;
 export const MONTHS_PER_YEAR = 12;
 
+// --- Building ---
+// The share of a building's price, in money and in goods, charged when it is
+// ordered. The rest comes out daily during the build (see createBuildAction.ts).
+export const BUILD_UPFRONT_SHARE = 0.6;
+
 // --- Food ---
 export const FOOD_PER_FARM = 1900; // food produced per farm per in-game day (before the season — see FARM_SEASON_MULTIPLIER)
 export const FOOD_PER_POP_CONSUMPTION = 1; // food eaten per person per in-game day
