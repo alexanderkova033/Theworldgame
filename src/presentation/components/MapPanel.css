@@ -266,14 +266,13 @@
 
 .map-panel__nation-name {
   font-family: var(--font-display);
-  font-size: 34px;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-anchor: middle;
-  fill: rgba(43, 29, 18, 0.72);
+  fill: rgba(43, 29, 18, 0.78);
   paint-order: stroke;
-  stroke: rgba(218, 197, 155, 0.45);
-  stroke-width: 3px;
+  stroke: rgba(188, 206, 206, 0.55);
+  stroke-width: 2.5px;
   stroke-linejoin: round;
   user-select: none;
 }
@@ -284,12 +283,12 @@
 
 .map-panel__nation-party {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: 13px;
   font-style: italic;
   font-weight: 700;
   text-anchor: middle;
   paint-order: stroke;
-  stroke: rgba(218, 197, 155, 0.5);
+  stroke: rgba(188, 206, 206, 0.6);
   stroke-width: 2.5px;
   stroke-linejoin: round;
   user-select: none;

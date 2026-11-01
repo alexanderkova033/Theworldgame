@@ -1,6 +1,6 @@
 // The map's small drawn pieces: water-lining round the coasts, the compass
 // rose, the nations' names, the capital's star and the province flags.
-import { useLayoutEffect, useRef, useState } from "react";
+import { SEA_NAME_SIZE, SEA_PARTY_DROP } from "../nationSeaNames";
 import { starPoints } from "./iconShapes";
 
 // Water-lining, as engravers drew it: rings of fine lines following the
@@ -58,63 +58,31 @@ export function CompassRose() {
   );
 }
 
-// The capital marker: a drawn five-point star (not the "★" glyph — that
-// renders as a flat, font-dependent blob at the small sizes the map uses),
-// using the same star math as BuildingIcon/StatIcon/StartScreen's crests.
-const NATION_NAME_SIZE = 34;
-const NATION_NAME_MIN_SIZE = 20;
-const NATION_NAME_SPACING = 0.16; // em, as in .map-panel__nation-name
-const NATION_NAME_FILL = 0.86; // share of the land's width the name may take
-
-// A nation's name across its land, shrunk to fit if the country is narrow,
-// with the ruling party underneath; the pair is centred on (x, y). Letter
-// spacing adds a gap after the last letter too, so the name is nudged
-// right by half a gap to sit truly in the middle.
-export function NationName({ x, y, width, name, isYou, party }: { x: number; y: number; width: number; name: string; isYou: boolean; party: { name: string; fill: string } | null }) {
-  const ref = useRef<SVGTextElement>(null);
-  const [size, setSize] = useState(NATION_NAME_SIZE);
-  useLayoutEffect(() => {
-    const fit = () => {
-      const text = ref.current;
-      if (!text) return;
-      const shown = text.style.fontSize;
-      text.style.fontSize = `${NATION_NAME_SIZE}px`;
-      const natural = text.getComputedTextLength();
-      text.style.fontSize = shown;
-      const room = width * NATION_NAME_FILL;
-      setSize(natural > room ? Math.max(NATION_NAME_MIN_SIZE, (NATION_NAME_SIZE * room) / natural) : NATION_NAME_SIZE);
-    };
-    fit();
-    // The display face may still be loading; measure again once it has.
-    let live = true;
-    document.fonts?.ready.then(() => live && fit());
-    return () => {
-      live = false;
-    };
-  }, [name, width]);
-  const nameY = party ? y - 9 : y;
+// A nation's name out at sea, along a line following its coast (see
+// nationSeaNames.ts), with the ruling party under it.
+export function NationName({ id, path, name, isYou, party }: { id: string; path: string; name: string; isYou: boolean; party: { name: string; fill: string } | null }) {
   return (
     <g>
-      <text
-        ref={ref}
-        x={x}
-        y={nameY}
-        dx={(size * NATION_NAME_SPACING) / 2}
-        dominantBaseline="central"
-        className={`map-panel__nation-name ${isYou ? "is-you" : ""}`}
-        style={{ fontSize: size }}
-      >
-        {name}
+      <path id={id} d={path} fill="none" />
+      <text className={`map-panel__nation-name ${isYou ? "is-you" : ""}`} style={{ fontSize: SEA_NAME_SIZE }}>
+        <textPath href={`#${id}`} startOffset="50%">
+          {name}
+        </textPath>
       </text>
       {party && (
-        <text x={x} y={nameY + size * 0.5 + 10} dominantBaseline="central" className="map-panel__nation-party" style={{ fill: party.fill }}>
-          {party.name}
+        <text className="map-panel__nation-party" dy={SEA_PARTY_DROP} style={{ fill: party.fill }}>
+          <textPath href={`#${id}`} startOffset="50%">
+            {party.name}
+          </textPath>
         </text>
       )}
     </g>
   );
 }
 
+// The capital marker: a drawn five-point star (not the "★" glyph — that
+// renders as a flat, font-dependent blob at the small sizes the map uses),
+// using the same star math as BuildingIcon/StatIcon/StartScreen's crests.
 export function CapitalBadge({ x, y }: { x: number; y: number }) {
   return (
     <g pointerEvents="none">

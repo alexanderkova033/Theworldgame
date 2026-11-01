@@ -12,6 +12,7 @@ import type { ProjectType } from "../../domain/construction/types";
 import { MapBuildSlots } from "./MapBuildSlots";
 import { MapSettlements, type UnderwayBuilding } from "./MapSettlements";
 import { nationShapes } from "../nationFrontiers";
+import { seaNames } from "../nationSeaNames";
 import type { ProvinceStatus } from "../../application/getProvinceOverview";
 import { UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
@@ -19,7 +20,7 @@ import { StatIcon } from "./StatIcon";
 import { CrisisIcon } from "./CrisisIcon";
 import { SeasonLand, SeasonSea } from "./MapSeasons";
 
-import { TERRAIN_PATTERN, TERRAIN_TINT, inkier, washColor, roadLineWidth, OCEAN_RECT, type MapMode, MODE_COLORS, getModeLevel } from "./mapCommon";
+import { TERRAIN_PATTERN, TERRAIN_TINT, inkOnWater, washColor, roadLineWidth, OCEAN_RECT, type MapMode, MODE_COLORS, getModeLevel } from "./mapCommon";
 import { Waterlines, CompassRose, NationName, CapitalBadge, StatusFlag } from "./MapDecor";
 
 interface MapLayersProps {
@@ -91,6 +92,7 @@ export const MapLayers = memo(function MapLayers({
   );
   // Frontiers and nation names follow the land each nation holds today.
   const shapes = nationShapes(lostProvinceIds);
+  const names = seaNames(lostProvinceIds);
 
   return (
     <>
@@ -461,30 +463,24 @@ export const MapLayers = memo(function MapLayers({
         Build window open) its building slots. */}
     {!buildKinds && !showIcons && <MapSettlements provinceIds={ownedIds} buildingsByProvince={buildingsByProvince} underway={underway} provinceStatus={provinceStatus} />}
 
-    {/* Big, spaced-out nation names across each country (EU4-style),
-        with the party currently ruling each neighbor underneath. */}
-    {(
-      <g pointerEvents="none">
-        {shapes.map((shape) => {
-          const isYou = shape.nationId === nation.id;
-          // With the Build window open your own land shows its slots instead.
-          if (isYou && buildKinds) return null;
-          const rulerId = foreignRulers[shape.nationId];
-          const ruler = rulerId ? getParty(rulerId) : null;
-          return (
-            <NationName
-              key={`${shape.nationId}-name`}
-              x={shape.labelX}
-              y={shape.labelY}
-              width={shape.labelWidth}
-              name={shape.name}
-              isYou={isYou}
-              party={ruler ? { name: ruler.name, fill: inkier(ruler.color, 0.3) } : null}
-            />
-          );
-        })}
-      </g>
-    )}
+    {/* Each nation's name out at sea along its coast, so nothing lies on the
+        land, with the party currently ruling each neighbour underneath. */}
+    <g pointerEvents="none">
+      {names.map((sea) => {
+        const rulerId = foreignRulers[sea.nationId];
+        const ruler = rulerId ? getParty(rulerId) : null;
+        return (
+          <NationName
+            key={`${sea.nationId}-name`}
+            id={`sea-name-${sea.nationId}`}
+            path={sea.path}
+            name={getNation(sea.nationId).name}
+            isYou={sea.nationId === nation.id}
+            party={ruler ? { name: ruler.name, fill: inkOnWater(ruler.color) } : null}
+          />
+        );
+      })}
+    </g>
 
     {/* No province names on the map: they crowd it, and the hover card and the
         province card both give them. The capital keeps its star. */}
