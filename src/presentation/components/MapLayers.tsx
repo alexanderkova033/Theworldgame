@@ -1,7 +1,7 @@
 // Everything drawn on the map itself (see MapLayers below), apart from the
 // panel that holds it, pans and zooms it (MapPanel).
 import { memo, useMemo, type Dispatch, type SetStateAction } from "react";
-import { isWorking } from "../../domain/maintenance/maintenanceRules";
+import { isWorking, isWorn } from "../../domain/maintenance/maintenanceRules";
 import { getNation, getNationForProvince } from "../../domain/nations/nationRules";
 import type { Nation } from "../../domain/nations/types";
 import { getParty } from "../../domain/parties/partyRules";
@@ -504,6 +504,7 @@ export const MapLayers = memo(function MapLayers({
       const buildings = buildingsByProvince.get(province.id) ?? [];
       // Held by rebels is not broken: the banner says why they stand idle.
       const brokenCount = buildings.filter((b) => !isWorking(b) && b.condition !== "seized" && b.condition !== "ruined").length;
+      const wornCount = buildings.filter(isWorn).length;
       // Only what's wrong gets a flag: tight or overflowing homes, short
       // or idle hands, unrest. A quiet province shows none.
       const status = provinceStatus[province.id];
@@ -514,11 +515,12 @@ export const MapLayers = memo(function MapLayers({
       if (status && status.stage !== "calm") flags.push("stage");
 
       const showDetail = zoomedIn || province.id === selectedProvinceId || province.id === hoveredProvinceId;
-      if (!showDetail && flags.length === 0 && brokenCount === 0) return null;
+      if (!showDetail && flags.length === 0 && brokenCount === 0 && wornCount === 0) return null;
       const lead = showDetail ? 1 : 0; // the resource slot, when shown
 
       const itemWidth = 20;
-      const itemCount = lead + (brokenCount > 0 ? 1 : 0) + flags.length; // resource + a broken marker + the flags
+      const markers = lead + (brokenCount > 0 ? 1 : 0) + (wornCount > 0 ? 1 : 0); // resource + a broken marker + a worn one
+      const itemCount = markers + flags.length;
       const barWidth = itemCount * itemWidth + 6;
       const barX = province.labelX - barWidth / 2;
       const barY = province.labelY + 10;
@@ -543,8 +545,16 @@ export const MapLayers = memo(function MapLayers({
               </text>
             </g>
           )}
+          {wornCount > 0 && (
+            <g>
+              <circle cx={barX + itemWidth * (markers - 1) + itemWidth / 2 + 3} cy={itemCenterY} r={7} className="map-panel__worn-marker" />
+              <text x={barX + itemWidth * (markers - 1) + itemWidth / 2 + 3} y={itemCenterY + 3.5} className="map-panel__worn-count">
+                !
+              </text>
+            </g>
+          )}
           {flags.map((flag, index) => {
-            const cx = barX + itemWidth * (lead + (brokenCount > 0 ? 1 : 0) + index) + itemWidth / 2 + 3;
+            const cx = barX + itemWidth * (markers + index) + itemWidth / 2 + 3;
             if (flag === "crisis") return <CrisisIcon key={flag} kind={status.crisis!} size={15} x={cx} y={itemCenterY} />;
             if (flag === "stage") {
               return (

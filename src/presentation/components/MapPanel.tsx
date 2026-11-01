@@ -4,7 +4,7 @@ import { MapLayers } from "./MapLayers";
 import { flushSync } from "react-dom";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { ProjectType } from "../../domain/construction/types";
-import { isWorking } from "../../domain/maintenance/maintenanceRules";
+import { isWorking, isWorn } from "../../domain/maintenance/maintenanceRules";
 import type { Nation } from "../../domain/nations/types";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
 import type { PlacedBuilding, Terrain } from "../../domain/provinces/types";
@@ -677,6 +677,11 @@ export const MapPanel = memo(function MapPanel({
                 {buildings.some((b) => !isWorking(b)) && (
                   <div className="map-panel__tooltip-row map-panel__tooltip-broken">
                     {buildings.filter((b) => !isWorking(b)).length} broken. Repair from the Build tab.
+                  </div>
+                )}
+                {buildings.some(isWorn) && (
+                  <div className="map-panel__tooltip-row map-panel__tooltip-broken">
+                    {buildings.filter(isWorn).length} worn. Service from the Build tab.
                   </div>
                 )}
                 {buildings.length === 0 && roads === 0 && <div className="map-panel__tooltip-empty">No buildings yet.</div>}

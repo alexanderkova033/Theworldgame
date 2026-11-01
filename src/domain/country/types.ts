@@ -79,6 +79,7 @@ export type EventTopic =
   | "built"
   | "stall"
   | "breakdown"
+  | "worn" // a building showing wear, with time to service it (see domain/maintenance)
   | "repaired"
   | "venture"
   | "army" // regiments fighting, a province taken back, a regiment lost (see domain/military)

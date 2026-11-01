@@ -317,6 +317,19 @@
   stroke-width: 1;
 }
 
+.map-panel__worn-marker {
+  fill: #c98a1e;
+  stroke: #2b1d12;
+  stroke-width: 1;
+}
+
+.map-panel__worn-count {
+  font-size: 11px;
+  font-weight: 800;
+  text-anchor: middle;
+  fill: #2b1d12;
+}
+
 .map-panel__broken-count {
   font-size: 11px;
   font-weight: 800;

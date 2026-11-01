@@ -8,7 +8,7 @@ import "./MapSettlements.css";
 import { memo } from "react";
 import type { ProvinceStatus } from "../../application/getProvinceOverview";
 import type { ProjectType } from "../../domain/construction/types";
-import { isWorking } from "../../domain/maintenance/maintenanceRules";
+import { isWorking, isWorn } from "../../domain/maintenance/maintenanceRules";
 import type { PlacedBuilding } from "../../domain/provinces/types";
 import { placeBuildings, placeCrowds } from "../mapSlots";
 import type { Point } from "../nationFrontiers";
@@ -47,13 +47,22 @@ function Field() {
   );
 }
 
-function Building({ type, at, idle, underway, more }: { type: ProjectType; at: Point; idle: boolean; underway: boolean; more: number }) {
+function Building({ type, at, idle, worn, underway, more }: { type: ProjectType; at: Point; idle: boolean; worn: boolean; underway: boolean; more: number }) {
   const [x, y] = at;
   return (
     <g transform={`translate(${x} ${y}) scale(${BUILDING_SCALE})`} className={`map-settle__building ${idle ? "is-idle" : ""} ${underway ? "is-underway" : ""}`}>
       {(type === "farm" || type === "estate" || type === "modelFarm") && <Field />}
       {underway && <ellipse cx={0} cy={7} rx={10} ry={3.5} className="map-settle__ground" />}
       <BuildingIcon type={type} x={0} y={type === "farm" || type === "estate" || type === "modelFarm" ? -3 : 0} size={BUILDING_SIZE[type] ?? 6} />
+      {/* The corner opposite the count, and no further out than it. */}
+      {worn && (
+        <g transform="translate(-9 -9)">
+          <circle r={4.4} className="map-settle__worn" />
+          <text y={2.6} className="map-settle__worn-mark">
+            !
+          </text>
+        </g>
+      )}
       {more > 0 && (
         <g transform="translate(9 -9)">
           <circle r={5.2} className="map-settle__more" />
@@ -151,8 +160,8 @@ export const MapSettlements = memo(function MapSettlements({
         const going = underway.filter((u) => u.provinceId === provinceId);
         const spots = placeBuildings(provinceId, [...built.map((b) => b.type), ...going.map((u) => u.type)]);
         const items = [
-          ...built.map((b, i) => ({ key: b.id, type: b.type, at: spots[i], idle: !isWorking(b), underway: false })),
-          ...going.map((u, i) => ({ key: `underway-${i}`, type: u.type, at: spots[built.length + i], idle: false, underway: true })),
+          ...built.map((b, i) => ({ key: b.id, type: b.type, at: spots[i], idle: !isWorking(b), worn: isWorn(b), underway: false })),
+          ...going.map((u, i) => ({ key: `underway-${i}`, type: u.type, at: spots[built.length + i], idle: false, worn: false, underway: true })),
         ];
         // More of a kind than the province has plots: counted on one that stands.
         const unplaced = new Map<ProjectType, number>();
@@ -170,7 +179,7 @@ export const MapSettlements = memo(function MapSettlements({
               .map((item) => {
                 const first = !countedOn.has(item.type);
                 countedOn.add(item.type);
-                return <Building key={item.key} type={item.type} at={item.at!} idle={item.idle} underway={item.underway} more={first ? (unplaced.get(item.type) ?? 0) : 0} />;
+                return <Building key={item.key} type={item.type} at={item.at!} idle={item.idle} worn={item.worn} underway={item.underway} more={first ? (unplaced.get(item.type) ?? 0) : 0} />;
               })}
             {crowds && status.homelessLevel > 0 && <Camp at={crowds.camp} level={status.homelessLevel} />}
             {crowds && status.stage === "strikes" && <Strike at={crowds.square} />}

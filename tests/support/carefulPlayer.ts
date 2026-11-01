@@ -11,6 +11,9 @@ import { buyGood, canBuyGood, canSellGood, sellGood } from "../../src/applicatio
 import { canCourtGroup, canCrackDown, canHoldRally, courtGroup, crackDown, holdRally } from "../../src/application/actions/politicalActions";
 import { getFactionWeights } from "../../src/domain/parties/factionRules";
 import { repairBuilding } from "../../src/application/actions/repairBuilding";
+import { serviceBuilding } from "../../src/application/actions/serviceBuilding";
+import { getServiceCost, isWorn } from "../../src/domain/maintenance/maintenanceRules";
+import { getModifiers } from "../../src/domain/policy/policyRules";
 import { canRaiseMilitia, canSendMilitia, raiseMilitia, sendMilitia } from "../../src/application/actions/militiaActions";
 import { answerDemand, canAnswerDemand } from "../../src/application/actions/demandActions";
 import { answerCrisis, canAnswerCrisis, getCrisisAnswers } from "../../src/application/actions/crisisActions";
@@ -122,6 +125,7 @@ export interface PlayOptions {
   treaties?: boolean; // also signs island accords, and buys back the islands neighbours hold, when it can spare the money
   army?: boolean; // also raises regiments, stands them in the most troubled provinces, and marches them in to win back a province that broke away
   war?: boolean; // also goes to war for the islands the neighbours hold, once it has three regiments, keeping a garrison on its own islands
+  service?: boolean; // also services every worn building whenever it can pay, buying the good if it must
   neglect?: boolean; // leaves uprisings alone: sends no militia and refuses the rebels' terms, so a province can break away
 }
 
@@ -150,7 +154,7 @@ function chooseBurden(offer: string[], sloppy: boolean): string {
   return [...offer].sort((a, b) => rank(a) - rank(b))[0];
 }
 
-export function playCarefully(nation: string, party: string, { days, onStop, follow, onDay, difficulty = "easy", skill = "careful", mode, settle = false, trade = false, treaties = false, army = false, war = false, neglect = false }: PlayOptions): GameState {
+export function playCarefully(nation: string, party: string, { days, onStop, follow, onDay, difficulty = "easy", skill = "careful", mode, settle = false, trade = false, treaties = false, army = false, war = false, neglect = false, service = false }: PlayOptions): GameState {
   const sloppy = skill === "sloppy";
   let s = takeLoan(startNewGame(nation, party, difficulty, mode));
   if (!sloppy) s = setTaxRate(s, 0.12);
@@ -177,6 +181,12 @@ export function playCarefully(nation: string, party: string, { days, onStop, fol
     const broken = s.placedBuildings.filter((b) => b.condition === "broken");
     for (const building of sloppy && broken.length < 3 ? [] : broken) {
       s = repairBuilding(ensure(s, building.type === "factory" || building.type === "road" || building.type === "cannery" ? "ore" : "wood", 6), building.id);
+    }
+    if (service) {
+      for (const building of s.placedBuildings.filter(isWorn)) {
+        const cost = getServiceCost(building.type, getModifiers(s).repairCostMultiplier);
+        if (s.stats.treasury >= cost.treasury) s = serviceBuilding(ensure(s, cost.resourceType as Good, cost.resourceAmount), building.id);
+      }
     }
     const farmsPlanned = s.farmCount + s.projects.filter((p) => p.type === "farm").length;
     if (farmsPlanned < Math.ceil((s.stats.population * (sloppy ? 0.95 : 1.1)) / (FOOD_PER_FARM * 0.98))) s = tryBuild(s, buildFarm);

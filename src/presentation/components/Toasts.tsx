@@ -45,6 +45,11 @@ function toastFromEvent(event: GameEvent): Toast | null {
       action: action ?? { label: "Repair", ...REPAIRS },
     };
   }
+  // Worn buildings share one notice, so any more while it shows fold into it
+  // (by the message: see below). The log says which they are.
+  if (kind === "worn") {
+    return { key: event.id, kind: "warning", title: "Wear and tear", message: "Service worn buildings before they break down.", action: action ?? { label: "Service", ...REPAIRS } };
+  }
   // A technology that came out better than projected gets its own moment.
   if (event.tier === "breakthrough") {
     return { key: event.id, kind: "breakthrough", title: "Breakthrough", message: event.message, action: action ?? { label: "Research", panel: "research" } };
@@ -148,7 +153,7 @@ export function Toasts({ events, monthlyReports, isPaused, onOpenPanel }: Toasts
     if (fresh.length === 0) return;
 
     setToasts((current) => {
-      const merged = [...fresh.filter((t) => !current.some((c) => c.message === t.message)), ...current];
+      const merged = [...fresh.filter((t, i) => !current.some((c) => c.message === t.message) && fresh.findIndex((f) => f.message === t.message) === i), ...current];
       return merged.slice(0, MAX_TOASTS);
     });
   }, [events, monthlyReports]);

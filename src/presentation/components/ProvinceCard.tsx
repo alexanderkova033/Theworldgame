@@ -20,7 +20,7 @@ import type { ProjectType } from "../../domain/construction/types";
 import { formatDate, getSeason } from "../../domain/country/calendar";
 import type { GameState } from "../../domain/country/types";
 import type { Sector } from "../../domain/labour/labourRules";
-import { isWorking } from "../../domain/maintenance/maintenanceRules";
+import { isWorking, isWorn } from "../../domain/maintenance/maintenanceRules";
 import { getPlace } from "../../domain/provinces/provinceRules";
 import { RESOURCE_BY_TERRAIN } from "../../domain/resources/resourceRules";
 import { getProvinceYield } from "../../domain/crises/crisisRules";
@@ -346,11 +346,13 @@ export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }
                 const seized = ofType.filter((b) => b.condition === "seized").length;
                 const ruined = ofType.filter((b) => b.condition === "ruined").length;
                 const broken = ofType.filter((b) => !isWorking(b)).length - seized - ruined;
+                const worn = ofType.filter(isWorn).length;
                 return (
                   <span key={type}>
                     {i > 0 && " · "}
                     {plural(ofType.length, type)}
                     {broken > 0 && <span className="province-card__bad"> ({broken} broken)</span>}
+                    {worn > 0 && <span className="province-card__bad"> ({worn} worn)</span>}
                     {seized > 0 && <span className="province-card__bad"> (held by rebels)</span>}
                     {ruined > 0 && <span className="province-card__bad"> (under water)</span>}
                   </span>

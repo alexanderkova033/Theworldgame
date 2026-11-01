@@ -10,6 +10,7 @@ import "./BuildPanel.css";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
 import type { GameState } from "../../domain/country/types";
+import { isWorn } from "../../domain/maintenance/maintenanceRules";
 import type { BuildSection, OpenPanel } from "../navigation";
 import { useEffect, useRef } from "react";
 import { ActionsPanel } from "./ActionsPanel";
@@ -42,6 +43,7 @@ const MATERIAL_NAMES: Partial<Record<ResourceType, string>> = { wood: "Wood", or
 
 function sectionTabs(state: GameState, production: DailyProductionSummary, provinces: ProvinceOverview[]): SubTab[] {
   const broken = state.placedBuildings.filter((b) => b.condition === "broken").length;
+  const worn = state.placedBuildings.filter(isWorn).length;
   const stalled = state.projects.filter((p) => p.isStalled).length;
   const peopleTrouble = provinces.some((p) => {
     const status = getProvinceStatus(p);
@@ -52,8 +54,8 @@ function sectionTabs(state: GameState, production: DailyProductionSummary, provi
       key: "buildings",
       label: "Buildings",
       icon: <NavIcon type="build" size={22} />,
-      alert: broken > 0 || stalled > 0,
-      hint: `${state.projects.length} projects underway${broken > 0 ? `, ${broken} broken buildings to repair` : ""}${stalled > 0 ? `, ${stalled} stalled` : ""}`,
+      alert: broken > 0 || worn > 0 || stalled > 0,
+      hint: `${state.projects.length} projects underway${broken > 0 ? `, ${broken} broken buildings to repair` : ""}${worn > 0 ? `, ${worn} worn buildings to service` : ""}${stalled > 0 ? `, ${stalled} stalled` : ""}`,
     },
     {
       key: "people",
@@ -72,8 +74,7 @@ export function BuildPanel({ state, dispatch, production, provinces, selectedPro
   useEffect(() => {
     if (rail && section === "buildings") list.current?.querySelector(`[data-rail="${rail}"]`)?.scrollIntoView({ block: "start" });
   }, [rail, section]);
-  const broken = state.placedBuildings.filter((b) => b.condition === "broken").length;
-  const damaged = broken + state.placedBuildings.filter((b) => b.condition === "repairing").length;
+  const needsCare = state.placedBuildings.some((b) => b.condition === "broken" || b.condition === "repairing" || isWorn(b));
   return (
     <div className="window-panel">
       <SubTabs label="Build sections" tabs={sectionTabs(state, production, provinces)} active={section} onSelect={(key) => onSection(key as BuildSection)} />
@@ -97,7 +98,7 @@ export function BuildPanel({ state, dispatch, production, provinces, selectedPro
               anything needs mending. */}
           <div className="production__main" ref={list}>
             <ActionsPanel state={state} selectedProvinceId={selectedProvinceId} dispatch={dispatch} provinces={provinces} netPerDay={production.netTreasury} />
-            {damaged > 0 && (
+            {needsCare && (
               <div className="production__repairs" data-rail="repairs">
                 <RepairsPanel state={state} dispatch={dispatch} />
               </div>

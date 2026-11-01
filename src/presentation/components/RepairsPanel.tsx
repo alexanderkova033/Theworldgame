@@ -1,10 +1,11 @@
-// Broken buildings, and the ones a repair crew is already working on. Only
-// shown when there's something to fix — a quiet economy tab otherwise.
+// Broken buildings, the ones a repair crew is already working on, and the worn
+// ones still to be serviced. Only shown when there's something to fix — a quiet
+// economy tab otherwise.
 import "./RepairsPanel.css";
-import { canRepairBuilding, repairBuilding } from "../../application/actions";
+import { canRepairBuilding, canServiceBuilding, repairBuilding, serviceBuilding } from "../../application/actions";
 import { REPAIR_DAYS } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
-import { getRepairCost } from "../../domain/maintenance/maintenanceRules";
+import { getRepairCost, getServiceCost, getWornDaysLeft, isWorn } from "../../domain/maintenance/maintenanceRules";
 import { getModifiers } from "../../domain/policy/policyRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { playRepair } from "../audio/sound";
@@ -25,7 +26,9 @@ export function WrenchIcon({ size = 14 }: { size?: number }) {
 export function RepairsPanel({ state, dispatch }: { state: GameState; dispatch: (action: (state: GameState) => GameState) => void }) {
   // Broken or under repair; not held by rebels or ruined by a crisis, which come back by themselves.
   const damaged = state.placedBuildings.filter((b) => b.condition === "broken" || b.condition === "repairing");
-  if (damaged.length === 0) return null;
+  // Soonest to break first.
+  const worn = state.placedBuildings.filter(isWorn).sort((a, b) => a.wornUntilDay! - b.wornUntilDay!);
+  if (damaged.length === 0 && worn.length === 0) return null;
   const repairCostMultiplier = getModifiers(state).repairCostMultiplier;
 
   return (
@@ -76,6 +79,40 @@ export function RepairsPanel({ state, dispatch }: { state: GameState; dispatch: 
                   </CostChips>
                 </button>
               )}
+            </li>
+          );
+        })}
+        {worn.map((building) => {
+          const cost = getServiceCost(building.type, repairCostMultiplier);
+          const daysLeft = getWornDaysLeft(building, state.date);
+          return (
+            <li key={building.id} className="repairs-panel__item is-worn">
+              <span className="repairs-panel__icon" aria-hidden="true">
+                <svg viewBox="-12 -16 24 24">
+                  <BuildingIcon type={building.type} x={0} y={0} size={7} />
+                </svg>
+                <span className="repairs-panel__badge">!</span>
+              </span>
+              <span className="repairs-panel__where">{getProvinceName(building.provinceId)}</span>
+              <span className="repairs-panel__days" title={`Worn: breaks down in ${daysLeft} days unless serviced`}>
+                {daysLeft}d
+              </span>
+              <button
+                type="button"
+                className="btn-primary repairs-panel__button"
+                disabled={!canServiceBuilding(state, building.id)}
+                title="Service: the wear is gone at once, and it never stops working"
+                onClick={() => {
+                  playRepair();
+                  dispatch((s) => serviceBuilding(s, building.id));
+                }}
+              >
+                Service
+                <CostChips>
+                  <TreasuryChip amount={cost.treasury} />
+                  <ResourceChip type={cost.resourceType} amount={cost.resourceAmount} />
+                </CostChips>
+              </button>
             </li>
           );
         })}
