@@ -62,7 +62,7 @@ Systems arrive as they matter, and not before. A game opens with only building, 
 | Know Your Voters | courting factions, when support runs close to the line | 13 |
 | Trouble in the Streets | police and crackdowns, at the first unrest | 14 |
 | Envoys Arrive | pressure abroad, once a neighbour campaigns | 15 |
-| A Captain's Offer | ventures to the islands | 20 |
+| A Captain's Offer | ventures to the islands | 12 |
 | A Standing Army | regiments, once a province has risen, a neighbour's settlers are at sea, or a neighbour turns hostile (from month 18) | 24 |
 
 Open chapters and their objectives sit in a slip at the top right of the map; an objective still to do opens the window where it is done. Letters about a later system (a border incident, a general strike) wait for its chapter, and the advisor only suggests what is open.
