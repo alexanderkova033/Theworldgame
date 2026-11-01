@@ -194,9 +194,13 @@ export const HOMELESS_STABILITY_PENALTY = 1.5; // per day, times the share of pe
 export const HOMELESS_PENALTY_CAP = 0.4; // ...capped
 export const HOMELESS_GROWTH_FACTOR = 0.5; // past capacity, population still grows, at half the usual rate
 
-// Heating: every working home burns coal each winter day — or firewood
-// once the coal runs out. Run out of both and people freeze.
-export const HEATING_FUEL_PER_HOME = 0.12; // coal (or wood) per home per winter day
+// Heating: every working home burns coal each winter day, or firewood once the
+// coal runs out. Run out of both and people freeze. Need is reckoned in coal.
+export const HEATING_FUEL_PER_HOME = 0.12; // coal per home per winter day
+export const WOOD_PER_COAL_HEAT = 5; // wood it takes to give the heat of one coal
+export const HEAT_SHARE_HOME = 1; // what each home's worth of a building burns, against an ordinary home
+export const HEAT_SHARE_TENEMENT = 0.8; // shared walls hold the heat
+export const HEAT_SHARE_TOWER = 0.65;
 export const COLD_STABILITY_PENALTY = 0.5; // per winter day, times the unheated share of homes
 export const COLD_POPULATION_DECLINE_RATE = 0.0004; // per winter day, times the unheated share
 
@@ -409,7 +413,7 @@ export const MAX_DECISION_HISTORY = 20;
 export const SITUATIONAL_DECISION_CHANCE_PER_MONTH = 0.4; // the monthly roll, while any situational decision applies
 export const SITUATIONAL_DECISION_SHARE = 0.75; // share of picks that go to an applicable situational decision
 export const DECISION_REPEAT_COOLDOWN = 3; // a decision doesn't come back while it's among the last few answered
-export const DECISION_COAL_SHORTAGE_DAYS = 15; // winter: coal and wood last fewer days than this
+export const DECISION_COAL_SHORTAGE_DAYS = 15; // winter: coal and wood, at what each is worth in heat, last fewer days than this
 export const DECISION_HOUSING_PROTEST_SHARE = 0.05; // homeless share
 export const DECISION_STRIKE_FACTORY_STAFFING = 0.75; // factories this short of hands...
 export const DECISION_STRIKE_UNEMPLOYMENT = 0.1; // ...or this many workers without a job

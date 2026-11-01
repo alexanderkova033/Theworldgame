@@ -159,7 +159,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     alerts.push({
       kind: "coal",
       text: `Winter coal: ${percent(heating.fuelNeeded > 0 ? heating.fuel / heating.fuelNeeded : 1)}`,
-      detail: `Winter starts in ${heating.daysUntilWinter} days. You have ${Math.floor(heating.fuel)} of the ${Math.ceil(heating.fuelNeeded)} coal and wood the homes will burn.`,
+      detail: `Winter starts in ${heating.daysUntilWinter} days. Your coal and wood last ${Math.floor(heating.daysOfFuel)} of its ${heating.winterDaysLeft} days.`,
       critical: heating.daysUntilWinter <= ADVISOR_WINTER_PREP_CRITICAL_DAYS,
     });
   }

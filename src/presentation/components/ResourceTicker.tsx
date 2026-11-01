@@ -8,7 +8,7 @@
 // Research), where they're spent.
 import "./ResourceTicker.css";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ADVISOR_WINTER_PREP_DAYS, CURRENCY_SYMBOL } from "../../domain/constants";
+import { ADVISOR_WINTER_PREP_DAYS, CURRENCY_SYMBOL, WOOD_PER_COAL_HEAT } from "../../domain/constants";
 import type { CountryStats } from "../../domain/country/types";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import type { HeatingOutlook } from "../../application/getHeatingOutlook";
@@ -281,8 +281,8 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, producti
         <Chip
           label={
             heating.isWinter
-              ? `Heating: ${Math.floor(heating.fuel)} coal + wood in stock, homes burn ${heating.fuelPerDay.toFixed(1)} a day, enough for ${Math.floor(heating.daysOfFuel)} days`
-              : `Winter in ${heating.daysUntilWinter} days: ${Math.floor(heating.fuel)} of the ${Math.ceil(heating.fuelNeeded)} coal and wood the homes will burn`
+              ? `Heating: homes burn ${heating.fuelPerDay.toFixed(1)} coal a day, or ${WOOD_PER_COAL_HEAT} times that in wood. Your coal and wood last ${Math.floor(heating.daysOfFuel)} days`
+              : `Winter in ${heating.daysUntilWinter} days: your coal and wood last ${Math.floor(heating.daysOfFuel)} of its ${heating.winterDaysLeft} days`
           }
           danger={heatingDanger}
           warn={!heatingDanger}

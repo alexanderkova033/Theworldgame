@@ -46,6 +46,7 @@ import { setTaxRate } from "../../src/application/actions/setTaxRate";
 import { FOOD_PER_FARM } from "../../src/domain/constants";
 import { canHirePolice, canHireScientist, hirePolice, hireScientist } from "../../src/application/actions/workforceActions";
 import { getDailyProductionSummary } from "../../src/application/getDailyProductionSummary";
+import { getHeatInStock } from "../../src/domain/housing/housingRules";
 import { simulateDay } from "../../src/application/simulateDay";
 import { startNewGame } from "../../src/application/startNewGame";
 import type { GameState } from "../../src/domain/country/types";
@@ -177,7 +178,7 @@ export function playCarefully(nation: string, party: string, { days, onStop, fol
     for (const project of s.projects) if (project.resourceType && s.resources[project.resourceType] < 2) s = ensure(s, project.resourceType, 3);
     for (const good of ["grain", "fish"] as const) if (s.resources[good] >= 10 + keep(good) && canSellGood(s, good)) s = sellGood(s, good);
     if (s.stats.treasury < 100 && s.debt < 4000) s = takeLoan(s);
-    if (production.heatingFuel > 0 && s.resources.coal + s.resources.wood < production.heatingFuel * 3) s = ensure(s, "coal", 5);
+    if (production.heatingFuel > 0 && getHeatInStock(s.resources) < production.heatingFuel * 3) s = ensure(s, "coal", 5);
     const broken = s.placedBuildings.filter((b) => b.condition === "broken");
     for (const building of sloppy && broken.length < 3 ? [] : broken) {
       s = repairBuilding(ensure(s, building.type === "factory" || building.type === "road" || building.type === "cannery" ? "ore" : "wood", 6), building.id);

@@ -2,15 +2,21 @@
 // housing research). Population doesn't stop at that number — it keeps
 // growing, more slowly — and the share of people without a roof drags on
 // stability every day. In winter every working home also burns coal, then
-// firewood once the coal is gone; whatever can't be heated is a second,
-// harsher penalty (people freezing).
+// firewood once the coal is gone, at WOOD_PER_COAL_HEAT wood for each coal's
+// worth; whatever can't be heated is a second, harsher penalty (people
+// freezing). Larger buildings hold their heat better (getHeatShare).
 import {
+  HEAT_SHARE_HOME,
+  HEAT_SHARE_TENEMENT,
+  HEAT_SHARE_TOWER,
   HEATING_FUEL_PER_HOME,
   HOMELESS_PENALTY_CAP,
   HOMELESS_STABILITY_PENALTY,
   COLD_STABILITY_PENALTY,
   PEOPLE_PER_HOME,
+  WOOD_PER_COAL_HEAT,
 } from "../constants";
+import type { ProjectType } from "../construction/types";
 import type { Season } from "../country/calendar";
 import type { GameState } from "../country/types";
 import { getHomeWeight, getWorkingCounts, isWorking } from "../maintenance/maintenanceRules";
@@ -65,11 +71,27 @@ export function getHomelessStabilityPenalty(homelessShare: number): number {
   return Math.min(HOMELESS_PENALTY_CAP, homelessShare * HOMELESS_STABILITY_PENALTY);
 }
 
-// Fuel the working homes need today — nothing outside winter.
+// What each home's worth of a building burns, against an ordinary home.
+export function getHeatShare(type: ProjectType): number {
+  return type === "tenement" ? HEAT_SHARE_TENEMENT : type === "tower" ? HEAT_SHARE_TOWER : HEAT_SHARE_HOME;
+}
+
+// Coal one building burns on a winter day, before laws and research.
+export function getBuildingHeatDemand(type: ProjectType): number {
+  return getHomeWeight(type) * getHeatShare(type) * HEATING_FUEL_PER_HOME;
+}
+
+// Coal the working homes need today (nothing outside winter). Once the coal
+// is gone, wood meets the rest (burnHeatingFuel).
 export function getHeatingDemand(state: GameState, season: Season): number {
   if (season !== "winter") return 0;
   const multiplier = getModifiers(state).heatingMultiplier;
-  return getWorkingCounts(state).homes * HEATING_FUEL_PER_HOME * multiplier;
+  return state.placedBuildings.reduce((sum, b) => sum + (isWorking(b) ? getBuildingHeatDemand(b.type) : 0), 0) * multiplier;
+}
+
+// The heat in store, in coal: what to hold against a demand.
+export function getHeatInStock(resources: ResourceBundle): number {
+  return resources.coal + resources.wood / WOOD_PER_COAL_HEAT;
 }
 
 export interface HeatingResult {
@@ -79,12 +101,13 @@ export interface HeatingResult {
   unheatedShare: number; // 0..1 of the demand that couldn't be met
 }
 
-// Coal first; firewood once the coal is gone.
+// Coal first; firewood once the coal is gone. Demand is in coal.
 export function burnHeatingFuel(resources: ResourceBundle, demand: number): HeatingResult {
   if (demand <= 0) return { resources, coalBurned: 0, woodBurned: 0, unheatedShare: 0 };
   const coalBurned = Math.min(resources.coal, demand);
-  const woodBurned = Math.min(resources.wood, demand - coalBurned);
-  const shortfall = demand - coalBurned - woodBurned;
+  const woodNeeded = (demand - coalBurned) * WOOD_PER_COAL_HEAT;
+  const woodBurned = Math.min(resources.wood, woodNeeded);
+  const shortfall = (woodNeeded - woodBurned) / WOOD_PER_COAL_HEAT;
   return {
     resources: { ...resources, coal: resources.coal - coalBurned, wood: resources.wood - woodBurned },
     coalBurned,

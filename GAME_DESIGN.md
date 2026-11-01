@@ -148,7 +148,7 @@ Construction pays part of the price when ordered and the rest during the build. 
 
 ## Resources and the market
 
-Each province's terrain produces a raw resource daily: forest gives **wood**, hills **ore**, plains **grain**, coast **fish**. **Coal** heats homes in winter. No nation has every terrain, so you trade.
+Each province's terrain produces a raw resource daily: forest gives **wood**, hills **ore**, plains **grain**, coast **fish**. **Coal** heats homes in winter, and burns first; once it is gone, wood does the same work at five wood for each coal. An ordinary home burns 0.12 coal a winter day. A tenement holds its heat better, at 0.8 of that for each home it is worth, and an apartment block at 0.65. No nation has every terrain, so you trade.
 
 The market holds a stock of every good, and prices follow how scarce it is. Buying pays a markup over the mid price (less while you hold a coastal province on the mainland); selling gets a little over half of it. Daily taxes and industry are meant to be your living; the market fills gaps.
 

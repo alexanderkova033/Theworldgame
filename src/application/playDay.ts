@@ -7,7 +7,7 @@
 import { dayNumber, getSeason } from "../domain/country/calendar";
 import { generateId } from "../domain/country/id";
 import type { EventTopic, GameDate, GameState } from "../domain/country/types";
-import { getHeatingDemand } from "../domain/housing/housingRules";
+import { getHeatInStock, getHeatingDemand } from "../domain/housing/housingRules";
 import { isDebtDangerous } from "../domain/loans/loanRules";
 import { getProvincesRiotingAlone } from "../domain/provinces/provinceOrder";
 import { getProvinceName } from "../domain/provinces/provinceRules";
@@ -23,7 +23,7 @@ function seasonKey(date: GameDate): string {
 
 function isCold(state: GameState): boolean {
   const demand = getHeatingDemand(state, getSeason(state.date));
-  return demand > 0 && state.resources.coal + state.resources.wood < demand;
+  return demand > 0 && getHeatInStock(state.resources) < demand;
 }
 
 // Dangers that appeared between yesterday and today, with why it matters.

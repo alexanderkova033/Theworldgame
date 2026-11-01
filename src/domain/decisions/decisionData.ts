@@ -9,7 +9,7 @@ import {
 } from "../constants";
 import { getSeason } from "../country/calendar";
 import type { GameState } from "../country/types";
-import { getHeatingDemand, getNationalHomelessShare } from "../housing/housingRules";
+import { getHeatInStock, getHeatingDemand, getNationalHomelessShare } from "../housing/housingRules";
 import { getLabourSituation } from "../labour/labourRules";
 import { isDebtDangerous } from "../loans/loanRules";
 import type { DecisionDefinition } from "./types";
@@ -21,7 +21,7 @@ import { VELDORIA_LETTERS } from "../chapters/stories/veldoria";
 function coalRunningOut(state: GameState): boolean {
   if (getSeason(state.date) !== "winter") return false;
   const demand = getHeatingDemand(state, "winter");
-  return demand > 0 && (state.resources.coal + state.resources.wood) / demand < DECISION_COAL_SHORTAGE_DAYS;
+  return demand > 0 && getHeatInStock(state.resources) / demand < DECISION_COAL_SHORTAGE_DAYS;
 }
 
 function manyHomeless(state: GameState): boolean {
