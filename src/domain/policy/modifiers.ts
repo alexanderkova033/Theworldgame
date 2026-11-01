@@ -13,7 +13,7 @@ export const MULTIPLIER_KEYS = [
   "incomeMultiplier", // taxes and industry income
   "industryMultiplier", // factory output
   "housingCapacityMultiplier", // people per home
-  "heatingMultiplier", // coal (or wood) each home burns in winter
+  "heatingMultiplier", // coal (or its worth in wood) each home burns in winter
   "farmJobsMultiplier", // workers each farm needs
   "factoryJobsMultiplier", // workers each factory needs
   "farmYieldMultiplier", // food each farm grows, all year

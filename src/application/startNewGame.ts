@@ -2,7 +2,7 @@
 // GameState, with starting infrastructure placed within that nation's own
 // provinces (so different nations feel at least slightly different from day
 // one, even though the underlying economy math is the same for everyone).
-import { STARTING_COAL, STARTING_FOOD_PER_PERSON, STARTING_RESOURCE_STOCK, STARTING_WOOD_NO_FOREST } from "../domain/constants";
+import { STARTING_COAL, STARTING_EXTRA_COAL, STARTING_FOOD_PER_PERSON, STARTING_RESOURCE_STOCK, STARTING_WOOD_NO_FOREST } from "../domain/constants";
 import { getSeason } from "../domain/country/calendar";
 import { getDifficulty, type Difficulty } from "../domain/difficulty/difficultyData";
 import { createForeignPolitics } from "../domain/diplomacy/diplomacyRules";
@@ -112,7 +112,7 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     resources: {
       wood: landYield(nationId).wood > 0 ? STARTING_RESOURCE_STOCK : STARTING_WOOD_NO_FOREST,
       ore: STARTING_RESOURCE_STOCK,
-      coal: STARTING_COAL,
+      coal: STARTING_COAL + (STARTING_EXTRA_COAL[nationId] ?? 0),
       grain: STARTING_RESOURCE_STOCK,
       fish: STARTING_RESOURCE_STOCK,
     },

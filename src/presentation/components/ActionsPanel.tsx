@@ -69,7 +69,7 @@ import {
   HARBOUR_BUILD_DAYS,
   HARBOUR_COST,
   HARBOUR_WOOD_COST,
-  HEATING_FUEL_PER_HOME,
+  WOOD_PER_COAL_HEAT,
   HOUSING_BUILD_DAYS,
   HOUSING_COST,
   HOUSING_WOOD_COST,
@@ -88,6 +88,7 @@ import {
   SUPPLY_FEE_PER_DAY,
 } from "../../domain/constants";
 import type { ProjectType } from "../../domain/construction/types";
+import { getBuildingHeatDemand } from "../../domain/housing/housingRules";
 import { getSeason, type Season } from "../../domain/country/calendar";
 import type { GameState } from "../../domain/country/types";
 import { produceFood, type FoodModifiers } from "../../domain/food/foodRules";
@@ -146,11 +147,17 @@ interface BuildItem {
   unlockedBy?: string; // research node name, for buildings still locked behind the Research tree
 }
 
+// What a building burns on a winter day, with the country's laws and research.
+function winterBurn(type: ProjectType, heatingMultiplier: number): string {
+  const coal = getBuildingHeatDemand(type) * heatingMultiplier;
+  return `Burns ${Math.round(coal * 100) / 100} coal a day in winter, or ${Math.round(coal * WOOD_PER_COAL_HEAT * 100) / 100} wood`;
+}
+
 const BUILD_ITEMS: BuildItem[] = [
   {
     type: "tenement",
     group: "people",
-    summary: `Houses as many as ${HOMES_PER_TENEMENT} homes on one plot. Burns as much too.`,
+    summary: `Houses as many as ${HOMES_PER_TENEMENT} homes on one plot, and burns less than they would.`,
     name: "Tenement",
     action: buildTenement,
     cost: TENEMENT_COST,
@@ -162,12 +169,12 @@ const BUILD_ITEMS: BuildItem[] = [
         <StatIcon type="population" size={16} />+{formatAmount(PEOPLE_PER_HOME * HOMES_PER_TENEMENT)}
       </>
     ),
-    hint: `Houses ${formatAmount(PEOPLE_PER_HOME * HOMES_PER_TENEMENT)} people. Burns ${Math.round(HEATING_FUEL_PER_HOME * HOMES_PER_TENEMENT * 100) / 100} coal (or wood) a day in winter`,
+    hint: `Houses ${formatAmount(PEOPLE_PER_HOME * HOMES_PER_TENEMENT)} people.`,
   },
   {
     type: "tower",
     group: "people",
-    summary: `Houses as many as ${HOMES_PER_TOWER} homes. Iron-framed, and costs ore.`,
+    summary: `Houses as many as ${HOMES_PER_TOWER} homes. Iron-framed, costs ore, and holds its heat best.`,
     name: "Apartment Block",
     action: buildTower,
     cost: TOWER_COST,
@@ -179,7 +186,7 @@ const BUILD_ITEMS: BuildItem[] = [
         <StatIcon type="population" size={16} />+{formatAmount(PEOPLE_PER_HOME * HOMES_PER_TOWER)}
       </>
     ),
-    hint: `Houses ${formatAmount(PEOPLE_PER_HOME * HOMES_PER_TOWER)} people. Burns ${Math.round(HEATING_FUEL_PER_HOME * HOMES_PER_TOWER * 100) / 100} coal (or wood) a day in winter`,
+    hint: `Houses ${formatAmount(PEOPLE_PER_HOME * HOMES_PER_TOWER)} people.`,
     unlockedBy: "housing-back-to-backs",
   },
   {
@@ -304,7 +311,7 @@ const BUILD_ITEMS: BuildItem[] = [
         <StatIcon type="population" size={16} />+{formatAmount(PEOPLE_PER_HOME)}
       </>
     ),
-    hint: `Houses ${formatAmount(PEOPLE_PER_HOME)} people (more with Homes research). Burns ${HEATING_FUEL_PER_HOME} coal (or wood) a day in winter`,
+    hint: `Houses ${formatAmount(PEOPLE_PER_HOME)} people (more with Homes research).`,
   },
   {
     type: "farm",
@@ -562,7 +569,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, n
                         {item.name}
                       </span>
                       {!isLocked && (
-                        <span className="build-row__yield" data-tip={item.hint}>
+                        <span className="build-row__yield" data-tip={getBuildingHeatDemand(item.type) > 0 ? `${item.hint} ${winterBurn(item.type, mods.heatingMultiplier)}` : item.hint}>
                           {typeof item.yields === "function" ? item.yields(season, mods, state.placedBuildings.filter((b) => b.type === "road").length) : item.yields}
                         </span>
                       )}

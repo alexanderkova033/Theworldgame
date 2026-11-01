@@ -3,7 +3,7 @@
 import { isFirstDayOfMonth } from "../../domain/country/calendar";
 import type { GameState } from "../../domain/country/types";
 import { produceProcessedFood } from "../../domain/food/foodRules";
-import { burnHeatingFuel, getHeatingDemand } from "../../domain/housing/housingRules";
+import { burnHeatingFuel, getHeatInStock, getHeatingDemand } from "../../domain/housing/housingRules";
 import type { LabourSituation } from "../../domain/labour/labourRules";
 import { accrueInterest, isDebtDangerous } from "../../domain/loans/loanRules";
 import { updateMarket } from "../../domain/market/marketRules";
@@ -48,7 +48,7 @@ export function produceGoods(day: Day, working: GameState, labour: LabourSituati
   // Logged once when the fuel first runs out, and again at the start of
   // each winter month it's still out.
   const heating = burnHeatingFuel(processedResources, getHeatingDemand(working, day.season));
-  const wasHeatedYesterday = working.resources.coal + working.resources.wood >= getHeatingDemand(working, day.season);
+  const wasHeatedYesterday = getHeatInStock(working.resources) >= getHeatingDemand(working, day.season);
   if (heating.unheatedShare > 0 && (wasHeatedYesterday || isFirstDayOfMonth(date))) {
     log(day, { date, message: "No coal or wood left to heat homes, and people are freezing.", severity: "danger", topic: "cold" });
   }

@@ -8,7 +8,7 @@ import { getHeatingOutlook } from "../../application/getHeatingOutlook";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import type { GameState } from "../../domain/country/types";
 import { getLabourSituation, type Sector, type SectorJobs } from "../../domain/labour/labourRules";
-import { ADVISOR_FOOD_CRITICAL_DAYS, ADVISOR_FOOD_WARN_DAYS, COMMUTE_SHARE, LABOUR_SHARE } from "../../domain/constants";
+import { ADVISOR_FOOD_CRITICAL_DAYS, ADVISOR_FOOD_WARN_DAYS, ADVISOR_WINTER_PREP_DAYS, COMMUTE_SHARE, LABOUR_SHARE, WOOD_PER_COAL_HEAT } from "../../domain/constants";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import type { ProjectType } from "../../domain/construction/types";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
@@ -228,6 +228,8 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
 
   const heating = getHeatingOutlook(state);
   const fuelShort = heating.fuel < heating.fuelNeeded;
+  const fuelDays = Number.isFinite(heating.daysOfFuel) ? Math.floor(heating.daysOfFuel) : "∞";
+  const fuelAgainst = `${heating.winterDaysLeft} ${heating.isWinter ? "days of winter left" : "days of next winter"}`;
   // Buying only once the market is open (see domain/chapters).
   const market = isFeatureOpen(state, "market");
 
@@ -299,32 +301,28 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
               },
             ]}
             size="lg"
-            label={`${Math.floor(heating.fuel)} coal and wood of ${Math.ceil(heating.fuelNeeded)} needed for ${heating.isWinter ? "the rest of this winter" : "next winter"}`}
+            label={`Coal and wood for ${fuelDays} of the ${fuelAgainst}`}
           />
         }
-        danger={fuelShort && (heating.isWinter || heating.daysUntilWinter < 60)}
-        value={
-          heating.isWinter
-            ? `fuel for ${Number.isFinite(heating.daysOfFuel) ? Math.floor(heating.daysOfFuel) : "∞"} days`
-            : `${Math.floor(heating.fuel)} in stock · winter needs ${Math.ceil(heating.fuelNeeded)}`
-        }
+        danger={fuelShort && (heating.isWinter || heating.daysUntilWinter <= ADVISOR_WINTER_PREP_DAYS)}
+        value={`fuel for ${fuelDays} of ${heating.winterDaysLeft} days`}
         detail={
           <span className="people-meter__fuel">
-            <span title="Coal, burned first">
+            <span title={`Coal, burned first. Lasts ${Number.isFinite(heating.coalDays) ? Math.floor(heating.coalDays) : "∞"} days.`}>
               <svg viewBox="-10 -10 20 20" width={14} height={14}>
                 <ResourceIcon type="coal" size={8} />
               </svg>
               {Math.floor(state.resources.coal)}
             </span>
             <span>+</span>
-            <span title="Firewood, burned once the coal runs out">
+            <span title={`Firewood, burned once the coal runs out. ${WOOD_PER_COAL_HEAT} wood do the work of 1 coal, so it lasts ${Number.isFinite(heating.woodDays) ? Math.floor(heating.woodDays) : "∞"} days.`}>
               <svg viewBox="-10 -10 20 20" width={14} height={14}>
                 <ResourceIcon type="wood" size={8} />
               </svg>
               {Math.floor(state.resources.wood)}
             </span>
             <span className="people-meter__fuel-rate">
-              {formatRate(-heating.fuelPerDay)} in winter{heating.isWinter ? "" : ` · in ${heating.daysUntilWinter} days`}
+              {formatRate(-heating.fuelPerDay)} coal or {formatRate(-heating.fuelPerDay * WOOD_PER_COAL_HEAT)} wood{heating.isWinter ? "" : ` · winter in ${heating.daysUntilWinter} days`}
             </span>
           </span>
         }
