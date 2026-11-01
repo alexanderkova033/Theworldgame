@@ -150,6 +150,11 @@
   flex-shrink: 0;
 }
 
+/* The first payment: what comes out on the day it's ordered. */
+.build-row__first {
+  font-weight: 600;
+}
+
 /* Enough to start, not enough to finish from what's in store today. */
 .build-row__cost.is-partial {
   color: var(--warning);
@@ -163,17 +168,13 @@
   text-underline-offset: 3px;
 }
 
-.build-row__reason,
-.build-row__broken {
+.build-row__reason {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
   margin-top: 0.2rem;
   font-size: 0.8125rem;
   font-weight: 600;
-}
-
-.build-row__reason {
   color: var(--danger);
 }
 
@@ -204,7 +205,13 @@
   background: var(--ink-muted);
 }
 
+/* How many of these are broken here: the wrench and a number. */
 .build-row__broken {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
   color: var(--warning);
 }
 

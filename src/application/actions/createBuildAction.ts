@@ -2,6 +2,7 @@
 // same shape: spend treasury, spend a matching resource, respect a
 // per-province cap, queue a project. This factory captures that shape once
 // so each action file is just its numbers, not a repeated implementation.
+import { BUILD_UPFRONT_SHARE } from "../../domain/constants";
 import { canAfford } from "../../domain/economy/economyRules";
 import { generateId } from "../../domain/country/id";
 import { canAffordResource, deductResource } from "../../domain/resources/resourceRules";
@@ -56,7 +57,7 @@ export function countBuildingsInProvince(state: GameState, type: ProjectType, pr
   return completed + inProgress;
 }
 
-// Cost is split 60/40: 60% is charged the moment construction starts, the
+// Cost is split by BUILD_UPFRONT_SHARE: that much is charged the moment construction starts, the
 // rest is drained in equal daily installments for the rest of the build (see
 // Project.treasuryCostPerDay/resourceCostPerDay and simulateDay.ts step 1).
 // Weighted toward the upfront share (rather than an even split) so starting
@@ -65,7 +66,7 @@ export function countBuildingsInProvince(state: GameState, type: ProjectType, pr
 // share, but that also means starting a project commits you to an ongoing
 // cost you might not be able to fully afford if you overbuild.
 export function upfrontCost(cost: number): number {
-  return Math.round(cost * 0.6);
+  return Math.round(cost * BUILD_UPFRONT_SHARE);
 }
 
 // What a building costs in money today, after laws and the party's creed

@@ -34,10 +34,10 @@
 
 .map-panel[data-season="winter"] {
   --season-land: #a9bdd0;
-  --season-land-opacity: 0.36;
-  --season-frost-opacity: 0.34;
+  --season-land-opacity: 0.26;
+  --season-frost-opacity: 0.1;
   --season-sea: #8197a8;
-  --season-sea-opacity: 0.28;
+  --season-sea-opacity: 0.22;
 }
 
 .map-season__wash,
@@ -70,9 +70,12 @@
 }
 
 .map-panel[data-season="spring"] .map-season__mark--spring,
-.map-panel[data-season="autumn"] .map-season__mark--autumn,
-.map-panel[data-season="winter"] .map-season__mark--winter {
+.map-panel[data-season="autumn"] .map-season__mark--autumn {
   opacity: 0.85;
+}
+
+.map-panel[data-season="winter"] .map-season__mark--winter {
+  opacity: 0.7;
 }
 
 .map-panel[data-season="summer"] .map-season__mark--summer {
