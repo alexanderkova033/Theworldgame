@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import { NATIONS } from "../src/domain/nations/nationData";
 import { PARTIES } from "../src/domain/parties/partyData";
 import { MAP_GEOMETRY } from "../src/domain/provinces/provinceData";
-import { contrast, inkOnWater } from "../src/presentation/components/mapCommon";
+import { contrast, homeView, inkOnWater } from "../src/presentation/components/mapCommon";
 import { distanceToSegment, edges, parsePolygon, type Point } from "../src/presentation/nationFrontiers";
-import { SEA_NAME_LOWEST_TOP, SEA_NAME_RISE, seaNames, type SeaName } from "../src/presentation/nationSeaNames";
+import { SEA_NAME_LOWEST_TOP, SEA_NAME_RISE, SEA_PARTY_DROP, seaNames, type SeaName } from "../src/presentation/nationSeaNames";
 
 const shore = edges(parsePolygon(MAP_GEOMETRY.coastPath));
 
@@ -60,6 +60,23 @@ describe("nations' names at sea", () => {
       const tilt = (Math.abs(Math.atan2(last[1] - first[1], last[0] - first[0])) * 180) / Math.PI;
       expect(tilt, name.nationId).toBeLessThanOrEqual(35);
       expect(Math.min(...name.points.map((p) => p[1])) - SEA_NAME_RISE, name.nationId).toBeGreaterThanOrEqual(SEA_NAME_LOWEST_TOP);
+    }
+  });
+
+  // The map panel at a 1440x900 and a 1000x760 window, as measured in a browser.
+  it.each([[1440, 746], [1000, 572]])("shows every name and all your own land in the opening view of a %ix%i panel", (stageWidth, stageHeight) => {
+    for (const nation of NATIONS) {
+      const view = homeView(nation);
+      const scale = Math.min(stageWidth / view.width, stageHeight / view.height);
+      const [cx, cy] = [view.x + view.width / 2, view.y + view.height / 2];
+      const [halfWidth, halfHeight] = [stageWidth / 2 / scale, stageHeight / 2 / scale];
+      const within = ([x, y]: Point, up: number, down: number) => x >= cx - halfWidth && x <= cx + halfWidth && y - up >= cy - halfHeight && y + down <= cy + halfHeight;
+      for (const name of seaNames([])) {
+        const below = name.nationId === nation.id ? 0 : SEA_PARTY_DROP + 2; // only a neighbour shows a party line
+        for (const point of name.points) expect(within(point, SEA_NAME_RISE, below), `${name.nationId}'s name playing ${nation.id} at ${point}`).toBe(true);
+      }
+      const land = MAP_GEOMETRY.provinces.filter((p) => nation.provinceIds.includes(p.id)).flatMap((p) => parsePolygon(p.path));
+      for (const point of land) expect(within(point, 0, 0), `${nation.id}'s own land at ${point}`).toBe(true);
     }
   });
 

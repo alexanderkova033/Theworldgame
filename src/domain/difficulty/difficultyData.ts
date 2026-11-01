@@ -3,11 +3,11 @@
 // start screen in plain words (`changes`). The levels are measured by the
 // scripted players in tests/balance.test.ts, so each means something. Out
 // of 27 five-year games, a sloppy player (late, never ahead of trouble) and
-// a careful one win: Easy 12 and 27, Normal 0 and 15, Hard 0 and 7,
-// Ruthless 0 and 3 (measured 2026-10-31). The scripted players build none of
-// the larger buildings, mines or sawmills and service nothing, so a good human
-// player should do better. Not every country can be saved on Ruthless, but
-// some can.
+// a careful one win: Easy 12 and 27, Normal 0 and 17, Hard 0 and 5,
+// Ruthless 0 and 3 (measured 2026-11-01). The scripted players build none of
+// the larger buildings, mines or sawmills, service nothing and pass no laws, so
+// a good human player should do better. Not every country can be saved on
+// Ruthless, but some can.
 
 export type Difficulty = "easy" | "normal" | "hard" | "ruthless";
 

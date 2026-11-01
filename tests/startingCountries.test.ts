@@ -66,6 +66,7 @@ describe("three countries, three populations", () => {
     expect(neighbour.population).toBe(played.stats.population);
     expect(neighbour.farms).toBe(played.farmCount);
     expect(neighbour.food).toBe(played.stats.food);
+    expect(neighbour.stability).toBe(played.stats.stability);
   });
 
   it("leaves an old save's people as they were", () => {

@@ -35,7 +35,8 @@ export const LAW_PATHS: TreePath[] = [
 ];
 
 // What must be true of the country before a law in each row can be put to
-// a vote.
+// a vote. Population rows are for a country of 10,000 people, and scale with
+// each nation's own size: read them through getQuotaThreshold (lawsRules.ts).
 const QUOTAS: Record<LawCategory, Record<TreeTier, LawQuota>> = {
   labor: {
     1: { stat: "population", threshold: 10000 },

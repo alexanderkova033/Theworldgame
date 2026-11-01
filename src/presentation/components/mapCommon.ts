@@ -2,6 +2,7 @@
 // road widths, the camera (the viewBox and its limits) and the map modes.
 // Plain values and functions, kept apart from the components (MapDecor,
 // MapLayers, MapPanel) so each of those files exports components only.
+import type { Nation } from "../../domain/nations/types";
 import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
 import type { Terrain } from "../../domain/provinces/types";
 import type { ProvinceStatus } from "../../application/getProvinceOverview";
@@ -137,13 +138,18 @@ export function clampViewBox(vb: ViewBox): ViewBox {
 // enough that the whole continent and the nearest islands stay in view.
 export const HOME_ZOOM = 1.35;
 
-// The view the map opens on (and Reset returns to): centred on your own
-// provinces at HOME_ZOOM.
-export function homeView(provinceIds: readonly string[]): ViewBox {
+// Map units a nation's opening view sits south of the middle of its land.
+// Caldenreich lies in the far north with open sea above it, and centring on it
+// cuts off Astravia's name at the foot of the view (see nationSeaNames.ts).
+const HOME_VIEW_SOUTH: Record<string, number> = { caldenreich: 60 };
+
+// The view the map opens on (and Reset returns to): on your own provinces at
+// HOME_ZOOM, centred but for HOME_VIEW_SOUTH.
+export function homeView(nation: Pick<Nation, "id" | "provinceIds">): ViewBox {
   const xs: number[] = [];
   const ys: number[] = [];
   for (const province of MAP_GEOMETRY.provinces) {
-    if (!provinceIds.includes(province.id)) continue;
+    if (!nation.provinceIds.includes(province.id)) continue;
     for (const [, x, y] of province.path.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)) {
       xs.push(Number(x));
       ys.push(Number(y));
@@ -151,7 +157,7 @@ export function homeView(provinceIds: readonly string[]): ViewBox {
   }
   if (xs.length === 0) return BASE_VIEW;
   const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-  const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+  const cy = (Math.min(...ys) + Math.max(...ys)) / 2 + (HOME_VIEW_SOUTH[nation.id] ?? 0);
   const width = BASE_VIEW.width / HOME_ZOOM;
   const height = BASE_VIEW.height / HOME_ZOOM;
   return clampViewBox({ x: cx - width / 2, y: cy - height / 2, width, height });

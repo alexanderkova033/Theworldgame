@@ -17,7 +17,7 @@ export type QuotaStat = "treasury" | "population" | "food" | "industry" | "stabi
 
 export interface LawQuota {
   stat: QuotaStat;
-  threshold: number;
+  threshold: number; // as listed: read it through getQuotaThreshold, as population rows scale by nation
 }
 
 // Ongoing modifiers plus one-time deltas, the same shape research uses.
