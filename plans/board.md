@@ -16,8 +16,9 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 06 | [Country titles](tasks/06-country-titles.md) | merged (names at sea) | `task/06-country-titles` | map names | 05 |
 | 07 | [Starting populations and wood](tasks/07-starting-countries.md) | merged | `task/07-starting-countries` | starting state, balance | alone |
 | 07b | [Law requirements and Caldenreich's lead](tasks/07b-nation-balance.md) | merged | `task/07b-nation-balance` | laws, starting state, balance | alone |
-| 08 | [Earlier scouting](tasks/08-earlier-scouting.md) | merged, the owner to say which ceiling they meant | `task/08-earlier-scouting` | chapters, balance | alone |
-| 09 | [Heating](tasks/09-heating.md) | built on its branch, not merged: Hard falls to 3 of 27, waiting on owner | `task/09-heating` | housing rules, balance | alone |
+| 08 | [Earlier scouting](tasks/08-earlier-scouting.md) | merged | `task/08-earlier-scouting` | chapters, balance | alone |
+| 09 | [Heating](tasks/09-heating.md) | running: owner chose 120 extra coal for Astravia, plus an earlier warning | `task/09-heating` | housing rules, balance | alone |
+| 08b | [Scouting opens when workers run short](tasks/08b-worker-ceiling.md) | waiting on 09 | `task/08b-worker-ceiling` | chapters, balance | alone |
 | 10 | [Trading orders](tasks/10-trading-orders.md) | running | `task/10-trading-orders` | market, a day step | alone |
 | 11 | [Trained workers](tasks/11-trained-workers.md) | waiting on 10, stops for the owner to agree a design | `task/11-trained-workers` | labour, balance, People | alone |
 
@@ -60,7 +61,7 @@ Planned order: the look (1, 2, 3, 5, 10), then the numbers one at a time (4, 6, 
 
 ## Small follow-ups from task 08
 
-- `isAtJobCeiling` (no building slots left) never fired in 216 measured games, and would need about 170,000 people in Astravia, so month 12 opens scouting every time. The owner may have meant another ceiling. Until then the `until` line's "from June" promises something that doesn't happen in play.
+- `isAtJobCeiling` (no building slots left) never fired in 216 measured games. The owner meant not enough workers: task 08b replaces it.
 - The 2,500 Cr rule in the scripted player holds back its scouting more than the date does.
 
 ## Small follow-ups from task 06
