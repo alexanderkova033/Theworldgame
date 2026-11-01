@@ -464,6 +464,7 @@ export const NEIGHBOUR_GROWTH_PER_MONTH = POPULATION_GROWTH_RATE * DAYS_PER_MONT
 // settlers to an island nobody holds, when it can spare the price and its
 // temper wants it (see domain/neighbours); whoever lands first keeps it.
 export const RACE_FROM_MONTH = 27; // months since the start before any neighbour sails
+export const CAPTAIN_FROM_MONTH = 6; // the first month a country out of room for jobs brings the captain's offer (it comes by month 12 anyway)
 export const NEIGHBOUR_VOYAGE_GAP_MONTHS = 8; // a neighbour sails at most this often
 
 // Relations (see domain/neighbours/relationsRules.ts): -100 to 100.

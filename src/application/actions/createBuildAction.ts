@@ -81,19 +81,27 @@ export function getBuildCostIn(state: GameState, config: BuildActionConfig, prov
   return getBuildCost(state, config.cost) * (config.costShareIn?.(provinceId) ?? 1);
 }
 
+// Whether this building could go up in this province, money and materials
+// aside: open to the country today, under its cap, and allowed there.
+export function hasBuildingSlot(state: GameState, config: BuildActionConfig, provinceId: string): boolean {
+  return (
+    (!config.feature || isFeatureOpen(state, config.feature)) &&
+    (!config.requiresResearch || isBuildingUnlocked(state.enactedResearchIds, config.type)) &&
+    countBuildingsInProvince(state, config.type, provinceId) < config.maxPerProvince &&
+    (!config.allowedIn || config.allowedIn.test(provinceId)) &&
+    // Only in a province the country holds, and not where rebels hold the
+    // ground (see domain/uprising).
+    state.provinces[provinceId] !== undefined &&
+    !state.provinces[provinceId].uprising
+  );
+}
+
 export function createBuildAction(config: BuildActionConfig): BuildAction {
   function canBuild(state: GameState, provinceId: string): boolean {
     return (
-      (!config.feature || isFeatureOpen(state, config.feature)) &&
-      (!config.requiresResearch || isBuildingUnlocked(state.enactedResearchIds, config.type)) &&
+      hasBuildingSlot(state, config, provinceId) &&
       canAfford(state.stats, upfrontCost(getBuildCostIn(state, config, provinceId))) &&
-      canAffordResource(state.resources, config.resourceType, upfrontCost(config.resourceCost)) &&
-      countBuildingsInProvince(state, config.type, provinceId) < config.maxPerProvince &&
-      (!config.allowedIn || config.allowedIn.test(provinceId)) &&
-      // Only in a province the country holds, and not where rebels hold the
-      // ground (see domain/uprising).
-      state.provinces[provinceId] !== undefined &&
-      !state.provinces[provinceId].uprising
+      canAffordResource(state.resources, config.resourceType, upfrontCost(config.resourceCost))
     );
   }
 
