@@ -108,6 +108,8 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     workforce: raw.workforce ? { ...emptyWorkforce(), ...raw.workforce, scientists: { ...emptyWorkforce().scientists, ...raw.workforce.scientists } } : emptyWorkforce(),
     foreignPolitics: raw.foreignPolitics ?? createForeignPolitics(raw.nationId!),
     market: hydrateMarket(raw),
+    marketOrders: raw.marketOrders ?? {},
+    orderTally: raw.orderTally ?? null,
     // Pre-coalition saves have no per-faction breakdown — start every faction
     // exactly where the old flat popularity number already was, so resuming
     // doesn't jar the player with a sudden shift.

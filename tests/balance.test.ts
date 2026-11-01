@@ -4,8 +4,16 @@
 // any one path of the trees doesn't wreck a country on its own.
 import { beforeEach, describe, expect, it } from "vitest";
 import { completeLaw } from "../src/application/actions/enactLaw";
+import { changeBuyOrder, changeSellOrder, toggleBuyOrder, toggleSellOrder } from "../src/application/actions/marketOrderActions";
+import { runMarketOrders } from "../src/application/day/marketOrders";
 import { startNewGame } from "../src/application/startNewGame";
+import { allChaptersOpen } from "../src/domain/chapters/chapterData";
+import { MARKET_SELL_FACTOR } from "../src/domain/constants";
+import { addDays, getSeason } from "../src/domain/country/calendar";
+import type { GameState } from "../src/domain/country/types";
 import type { Difficulty } from "../src/domain/difficulty/difficultyData";
+import { GOOD_SPECS, updateMarket } from "../src/domain/market/marketRules";
+import type { MarketGood } from "../src/domain/market/types";
 import { getElectionThreshold } from "../src/domain/parties/electionRules";
 import { LAW_PATHS } from "../src/domain/laws/lawData";
 import { RESEARCH_PATHS } from "../src/domain/research/researchData";
@@ -93,6 +101,52 @@ describe("following one path", () => {
     });
     expect(ends.filter((end) => !end.isGameOver).length).toBeGreaterThanOrEqual(2);
     for (const end of ends) for (const [stat, value] of Object.entries(end.stats)) expect(Number.isFinite(value), stat).toBe(true);
+  });
+});
+
+// The scripted players set no orders, so these are the only games that use them.
+describe("standing orders", { timeout: 30000 }, () => {
+  // A shop in an empty world: nobody eats, burns or makes anything, and only the
+  // market moves, so whatever it ends with is trading and nothing else. Astravia
+  // has a port, the cheapest buying there is. Unsold stock counts at what selling
+  // at the normal price would bring. A country's income is about 12,000 Cr a year.
+  function shopProfitPerYear(good: MarketGood, buyBelow: number, sellAbove: number): number {
+    const years = 5;
+    let s: GameState = { ...startNewGame("astravia", "astravia-harvest-union", "easy"), chapters: allChaptersOpen() };
+    s = { ...s, stats: { ...s.stats, treasury: 100000, food: 0 }, resources: { ...s.resources, [good === "food" ? "wood" : good]: 0 } };
+    const base = GOOD_SPECS[good].basePrice;
+    s = changeBuyOrder(toggleBuyOrder(s, good), good, { below: buyBelow * base });
+    s = changeSellOrder(toggleSellOrder(s, good), good, { above: sellAbove * base, keep: 0 });
+    for (let d = 0; d < years * 360; d++) {
+      s = runMarketOrders(s);
+      const date = addDays(s.date, 1);
+      s = { ...s, date, events: [], market: updateMarket(s.market, getSeason(s.date), date.day === 1) };
+    }
+    const held = good === "food" ? s.stats.food : s.resources[good];
+    return (s.stats.treasury - 100000 + held * base * MARKET_SELL_FACTOR) / years;
+  }
+
+  it.each(["wood", "ore", "coal", "grain", "fish", "food"] as const)("make no money from trading alone in %s", (good) => {
+    for (const [buyBelow, sellAbove] of [[0.6, 1.4], [0.7, 1.4], [0.8, 1.6], [0.8, 2], [0.9, 2.4]]) {
+      seedRandom(20261015);
+      expect(shopProfitPerYear(good, buyBelow, sellAbove)).toBeLessThan(120);
+    }
+  });
+
+  it("lay in coal ahead of winter, up to the stock asked for", () => {
+    const decembers: number[] = [];
+    playCarefully("astravia", "astravia-harvest-union", {
+      days: 2 * 360,
+      orders: (s) => changeBuyOrder(toggleBuyOrder(s, "coal"), "coal", { below: 1.15 * GOOD_SPECS.coal.basePrice, stockUnder: 150 }),
+      onDay: (s) => {
+        if (s.date.month === 12 && s.date.day === 1) decembers.push(s.resources.coal);
+      },
+    });
+    expect(decembers.length).toBeGreaterThan(0);
+    for (const coal of decembers) {
+      expect(coal).toBeGreaterThanOrEqual(150);
+      expect(coal).toBeLessThan(150 + GOOD_SPECS.coal.batch * 2);
+    }
   });
 });
 

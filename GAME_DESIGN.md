@@ -152,6 +152,8 @@ Each province's terrain produces a raw resource daily: forest gives **wood**, hi
 
 The market holds a stock of every good, and prices follow how scarce it is. Buying pays a markup over the mid price (less while you hold a coastal province on the mainland); selling gets a little over half of it. Daily taxes and industry are meant to be your living; the market fills gaps.
 
+Each good can carry standing orders: buy below a price (and, if you like, only while your stock is under a figure), and sell above a price (always keeping a stock). Each trades a batch a day at the usual prices, and orders leave 500 Cr in the treasury. Trading alone makes no money, since buying costs so much more than selling: they are for laying in coal ahead of winter and selling what you make when it is dear.
+
 You can also take loans in batches. Interest compounds daily, and heavy debt costs stability and support.
 
 ## Islands

@@ -4,6 +4,7 @@
 // day/, sharing the day's log and ledger (see day/dayContext.ts). Never
 // mutates the state it's given; always returns a new GameState.
 //
+//   0 orders      the standing orders trade at the prices the Market showed
 //   1 buildings   projects, ventures, laws and research, repairs, breakdowns
 //   2 goods       resources, the market, processing, heating, debt interest
 //   3 money       taxes and industry in, wages out
@@ -36,6 +37,7 @@ import { beginDay } from "./day/dayContext";
 import { holdElection } from "./day/election";
 import { feedThePeople } from "./day/food";
 import { produceGoods } from "./day/goods";
+import { runMarketOrders } from "./day/marketOrders";
 import { payTheBills } from "./day/money";
 import { turnOfTheMonth } from "./day/newMonth";
 import { keepOrder } from "./day/order";
@@ -60,7 +62,8 @@ import { runCrises } from "./day/crises";
 import { runTroubles } from "./day/troubles";
 import { getOwnedProvinceIds } from "../domain/provinces/provinceRules";
 
-export function simulateDay(state: GameState): GameState {
+export function simulateDay(dawn: GameState): GameState {
+  const state = runMarketOrders(dawn);
   const day = beginDay(state);
   const { mods } = day;
 

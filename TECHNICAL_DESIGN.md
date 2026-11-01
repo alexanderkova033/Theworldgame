@@ -29,7 +29,7 @@ The whole game is one plain, serialisable object, `GameState` (`domain/country/t
 - **The country's figures**: `stats` (treasury, population, food, industry, stability, political power, popularity), `resources` (wood, ore, coal, grain, fish), `taxRate`, `debt`, `unrestStage`, `factionApproval`, and the building counts (`farmCount`, `factoryCount` and the rest).
 - **Places**: `provinces` (each province's own people, order, uprising, crisis, dike and seam), `placedBuildings` (every finished building and where it stands, with its condition: broken, repairing, seized or ruined), `projects` under way, `lostProvinceIds` and `freeProvinces` (provinces that broke away, and their rebels), and the islands (`settlements`, `settledIslandIds`, `expeditions`, `scoutedIslandIds`).
 - **Policy**: enacted laws and research, `activeLaw`, `researchFocus`, `researchProgress`, `researchOutcomes`, `researchPathsFinished`, the `workforce` (scientists and police), and `lasting` effects laid on by a story's choices.
-- **The world**: `neighbours` (each a country run by the computer), `foreignPolitics`, `foreignIslands` and `foreignIslandsSince`, `foreignVoyages`, `market`, `regiments` (every country's), `wars`, `sieges` and `ultimatum`.
+- **The world**: `neighbours` (each a country run by the computer), `foreignPolitics`, `foreignIslands` and `foreignIslandsSince`, `foreignVoyages`, `market`, `marketOrders` and `orderTally` (the player's standing orders and this month's total), `regiments` (every country's), `wars`, `sieges` and `ultimatum`.
 - **Letters waiting**: `pendingDecisionId`, `pendingDemand`, `pendingCrisis`, `ultimatum` (until answered), `burdenOffer`, and unread chapter briefings in `chapters.unread`. A neighbour's trade offer (`pendingOffer`) is no letter: it stands in Money, Market until answered or until its `until` day.
 - **The story so far**: `chapters` (opened, done, unread, the deeds and choices made, and story letters still to send), `decisionHistory`, `burdens`, `electionsWon`, `retriesUsed`, `crisisQuietUntil` and `dangerPauses`.
 - **The record**: `events`, `monthlyReports`, `history` (the days since the last report), `pendingLedger` and `lastDayLedger`.
@@ -44,6 +44,7 @@ What is not in `GameState`: anything only the screen cares about, such as which 
 
 In order:
 
+0. **orders** (`day/marketOrders.ts`): standing orders trade at the prices the Market showed overnight. With none on, the state passes through untouched.
 1. **buildings**: projects, ventures, laws and research advance; repairs and breakdowns.
 2. **goods**: resources from the land (less what crises take), the market, processing, heating, debt interest.
 3. **money**: taxes and industry in, wages out.
@@ -87,6 +88,8 @@ Buildings are built through `application/actions/createBuildAction.ts`. Each bui
 Each terrain gives a resource (`domain/resources`). `getLandProduction` (`domain/crises/crisisRules.ts`) is the country's day of goods from every province it holds, less what crises take.
 
 The continental market (`domain/market`) holds a stock of every good, and prices come from that stock against its seasonal equilibrium. Selling into it lowers the price, buying raises it, and buying always costs more than selling. `holdsPort(state)` asks whether the country still holds a mainland coast today, not whether it started with one; a port buys cheaper. A settled island's coast doesn't count: it trades through its harbour.
+
+**Standing orders** (`actions/marketOrderActions.ts`, `day/marketOrders.ts`): for each good, a buy order (below a price, optionally only while stock is under a figure) and a sell order (above a price, keeping a stock). Prices are the mid price the Market shows. Each trades `MARKET_ORDER_BATCHES` a day through `buyGood` and `sellGood`, sales first, and never takes the treasury below `MARKET_ORDER_RESERVE`. `whyBuyOrderWaits` and `whySellOrderWaits` are the one test, used by the day's step and the screen's tips. The log keeps one line a month, rewritten as it goes.
 
 ## Neighbours
 

@@ -48,6 +48,9 @@ export const MARKET_PRICE_CEILING = 4; // ...or above this × base
 export const MARKET_OUTLOOK_SWING = 0.1; // monthly random step in each good's world outlook
 export const MARKET_OUTLOOK_MIN = 0.7;
 export const MARKET_OUTLOOK_MAX = 1.3;
+// Standing orders (see application/day/marketOrders.ts).
+export const MARKET_ORDER_BATCHES = 1; // each order trades this many of the good's batches a day (5 of a good, 2,000 food)
+export const MARKET_ORDER_RESERVE = 500; // an order never takes the treasury below this
 
 // --- The larger buildings. Each does the work of several of the plain kind
 // for fewer hands and far less room, at a higher price per unit of output: worth
