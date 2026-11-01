@@ -125,8 +125,8 @@ export const CHAPTERS: ChapterData[] = [
     briefing:
       "A ship's captain offers to charter ventures to the uncharted islands off the coast. Each venture costs money and time, and brings back whatever the island holds.",
     objectives: ["Charter a venture"],
-    until: "Opens when a captain offers to sail for you, in the second year",
-    by: 20,
+    until: "Opens in December of the first year, or from June if idle people have no building left to work in",
+    by: 12,
   },
   {
     id: "army",

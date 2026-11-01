@@ -1,9 +1,8 @@
 // Use case: the chapters of a game (see domain/chapters). Once a day, after
 // the simulation: any chapter whose moment has come opens, with its
 // briefing, and the game pauses so the player reads it; any chapter whose
-// objectives are all met is marked done. Chance triggers (a petition, a
-// captain's offer) are rolled once a month, and every chapter opens by its
-// date at the latest.
+// objectives are all met is marked done. A chance trigger (a petition) is
+// rolled once a month, and every chapter opens by its date at the latest.
 //
 // A nation's story chapters (STORY_CHAPTERS) open by their own rules
 // (STORY_RULES, filled campaign by campaign), each only once the chapter
@@ -27,7 +26,8 @@ import { getDecision } from "../domain/decisions/decisionRules";
 import { resolveDecision } from "./actions/resolveDecision";
 import type { GameState } from "../domain/country/types";
 import { getElectionThreshold } from "../domain/parties/electionRules";
-import { RELATIONS_HOSTILE } from "../domain/constants";
+import { CAPTAIN_FROM_MONTH, RELATIONS_HOSTILE } from "../domain/constants";
+import { isAtJobCeiling } from "./getJobCeiling";
 
 export { monthNumber };
 
@@ -56,7 +56,7 @@ const TRIGGERS: Record<SystemChapterId, Trigger> = {
   streets: (s) => s.unrestStage !== "calm" || Object.values(s.provinces).some((p) => p.unrestStage !== "calm"),
   voters: (s, month) => month >= 10 && s.stats.popularity < getElectionThreshold(s) + 5,
   envoys: (s, month) => month >= 6 && s.lastDayLedger.support.foreign !== undefined,
-  captain: (_s, month, monthStart) => monthStart && month >= 13 && Math.random() < 0.3,
+  captain: (s, month) => month >= CAPTAIN_FROM_MONTH && isAtJobCeiling(s),
   // Trouble the army would answer: a province risen, a neighbour's
   // settlers at sea, or a neighbour turned hostile.
   army: (s, month) =>
