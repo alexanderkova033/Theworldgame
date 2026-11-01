@@ -69,6 +69,11 @@ const MONTH_NAMES = [
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
+// The first of next month, in words: "March 1".
+export function nextMonthStartName(date: GameDate): string {
+  return `${MONTH_NAMES[date.month % MONTH_NAMES.length]} 1`;
+}
+
 export function formatDate(date: GameDate): string {
   return `${MONTH_NAMES[date.month - 1]} ${date.day}, Year ${date.year}`;
 }

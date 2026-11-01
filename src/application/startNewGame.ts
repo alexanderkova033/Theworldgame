@@ -2,7 +2,7 @@
 // GameState, with starting infrastructure placed within that nation's own
 // provinces (so different nations feel at least slightly different from day
 // one, even though the underlying economy math is the same for everyone).
-import { STARTING_COAL, STARTING_EXTRA_COAL, STARTING_FOOD_PER_PERSON, STARTING_RESOURCE_STOCK, STARTING_WOOD_NO_FOREST } from "../domain/constants";
+import { JOBS_PER_BUILDING, STARTING_COAL, STARTING_EXTRA_COAL, STARTING_FOOD_PER_PERSON, STARTING_RESOURCE_STOCK, STARTING_WOOD_NO_FOREST } from "../domain/constants";
 import { getSeason } from "../domain/country/calendar";
 import { getDifficulty, type Difficulty } from "../domain/difficulty/difficultyData";
 import { createForeignPolitics } from "../domain/diplomacy/diplomacyRules";
@@ -10,6 +10,7 @@ import { createMarket } from "../domain/market/marketRules";
 import { buildStartingHomes, getHousingCapacityByProvince } from "../domain/housing/housingRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getNation } from "../domain/nations/nationRules";
+import { getStartingTrained } from "../domain/labour/trainingRules";
 import type { GameState } from "../domain/country/types";
 import { FACTIONS } from "../domain/parties/factionData";
 import type { Ideology } from "../domain/parties/types";
@@ -152,6 +153,9 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     orderTally: null,
     expeditions: [],
     scoutedIslandIds: [],
+    trained: getStartingTrained(population, farmCount * JOBS_PER_BUILDING.farm, factoryCount * JOBS_PER_BUILDING.factory),
+    workPlan: null,
+    workPlanNext: null,
     daysShortOfWorkers: 0,
     events: [
       {

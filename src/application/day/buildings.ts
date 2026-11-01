@@ -175,6 +175,14 @@ export function advanceBuildings(day: Day): GameState {
       topic: "worn",
     });
   }
+  for (const building of breakdowns.serviced) {
+    log(day, {
+      date: state.date,
+      message: `Service finished on ${BUILDING_NAMES[building.type]} in ${getProvinceName(building.provinceId)}.`,
+      severity: "info",
+      topic: "repaired",
+    });
+  }
   working = { ...working, placedBuildings: breakdowns.placedBuildings };
   // Rioting mobs wreck buildings too, through the same repair system —
   // anywhere when the whole country riots, or in a province rioting alone.

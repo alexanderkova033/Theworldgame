@@ -18,6 +18,7 @@
 //   8 newMonth    world events, the rival, the neighbours, the season
 //   7c army      every country's regiments drill or march
 //   8b neighbours the computer-run neighbours live a month, build, and recruit
+//   8c workers   at a month's end, people learn and the player's moves take effect
 //   9 election    a general election, every so often
 //   - a decision may arrive (here)
 //   - a chapter may open, or be completed (chapters.ts)
@@ -25,6 +26,7 @@ import { advanceDay, isFirstDayOfMonth } from "../domain/country/calendar";
 import type { CountryStats, DailyDelta, GameState } from "../domain/country/types";
 import { MAX_EVENT_LOG_LENGTH } from "../domain/constants";
 import { getDecisionChance, pickDecision } from "../domain/decisions/decisionRules";
+import { turnOfTheWorkMonth } from "./day/workers";
 import { getHousingCapacityByProvince, getNationalHomelessShare } from "../domain/housing/housingRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
 import { getLabourSituation, isShortOfWorkers } from "../domain/labour/labourRules";
@@ -268,6 +270,7 @@ export function simulateDay(dawn: GameState): GameState {
     taxRate: takings.taxRate,
     foreignPolitics: month.foreignPolitics,
     daysShortOfWorkers: isShortOfWorkers(labour) ? working.daysShortOfWorkers + 1 : 0,
+    ...turnOfTheWorkMonth(day, working, date, labour),
     ...neighbourMonth,
     debt: goods.debt,
     events: day.events.slice(0, MAX_EVENT_LOG_LENGTH),

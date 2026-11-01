@@ -279,3 +279,131 @@ Schools could shorten the learning time, which would give them a job in this sys
 
 Run at `94b26bb` on uncommitted throwaway code, since reverted. About 7,000 games. Saved outside the repository in `C:\Users\lorta\AppData\Local\Temp\claude\c--Users-lorta-Documents-repos-Theworldgame\e368a804-c798-48e1-adaa-e1b647feed00\scratchpad\t11\`: `prototype.diff` is the throwaway code, and the `.json` files are the games. No checks were run on this commit, as it changes only this file.
 
+
+### Stage 2: built
+
+The owner agreed the note. No stop condition was hit: every level is inside its bound in `balance.test.ts`, and no level moved by more than 1 win of 27.
+
+#### The owner's decisions
+
+1. Everyone working on day one is trained (Astravia 2,100 farm and 900 factory, Caldenreich 1,500 and 1,000, Veldoria 1,200 and 800). Not the 90% option.
+2. Using the choice well may win more games. Accepted as earned.
+3. Building ahead of your people is not softened. A tip on the Build row says where the workers will come from.
+4. An untrained crew means fewer than 90% of those in that trade are trained.
+
+Also accepted as proposed: the quick-at-first learning curve, old skill fading only as new is learned, Automatic filling daily with only a player's choice waiting for the month's end, a new building under a limit staying empty with the tile saying so, `isShortOfWorkers` counting heads at 45% for 14 days, schools with no trade, repairs unchanged, service crews as designed, and old saves loading fully trained on Automatic.
+
+#### What was built
+
+- **Rules:** `src/domain/labour/trainingRules.ts` (skill, learning, starting counts, crew test). `labourRules.ts` fills against limits, takes crews out, and scales `staffed` and the new `industryOutput` by skill. Head counts are unchanged.
+- **The month's turn:** `src/application/day/workers.ts`. People learn, and a waiting change takes effect, with one folded log line and no notice.
+- **Actions:** `src/application/actions/workPlanActions.ts`, and `serviceBuilding.ts` with `getServiceOrder`. `src/application/getWorkerSource.ts` writes the Build tip.
+- **State:** `trained`, `workPlan`, `workPlanNext` on `GameState`, and `serviceUntilDay` on a building, with defaults in `hydrateGameState`. Numbers are in `constants.ts`.
+- **Screens:** the "Where people work" row in Build's People section, and the Repairs list. No new window or tab.
+- **Scripted player:** a `habit` option, off in the balance games, for anything extra it does each day. `service` follows the new rules.
+- **Tests:** new `tests/trainedWorkers.test.ts` (45 tests). `tests/economy.test.ts` gives one test enough trained people, and `tests/wornBuildings.test.ts` no longer expects wear to clear at once.
+- **Records:** the ladder in `difficultyData.ts` and `TODO.md`, plus `GAME_DESIGN.md` and `TECHNICAL_DESIGN.md`. The bounds in `balance.test.ts` are unchanged.
+
+#### What differs from the design
+
+1. **A limit is looser than the note suggested, and it can pay by itself.** The note said a choice "may not be met exactly". On Astravia's opening, a limit of 1,800 on 2,100 farm jobs gives 2,014 on farms, not 1,800, and factories go from 707 to 943. Factories gain more than farms lose, because the jobless who wouldn't travel take the farm jobs freed near home. So the tile shows who will really work there as well as the limit. Its tip explains why they differ.
+2. **A new building under a limit doesn't stay wholly empty,** for the same reason. With two new farms and a limit of 2,100, 2,276 work the 2,700 farm jobs, and the tile says 424 jobs empty. The rule "never makes anyone jobless" wins over "stays empty". The owner agreed both, so the owner should know they pull against each other.
+3. **An untrained crew on a farm costs 292 Cr, not 293,** from rounding. A factory is 585 as noted.
+4. **A service in progress shows "Crew at work, 3d" and no progress bar.** The building doesn't store which crew it had, so a bar couldn't know its length.
+5. **No `STARTING_TRAINED_SHARE` constant,** since the owner chose everyone.
+6. **Dates read "Mar 1", not "1 March",** matching the game's format.
+7. **The scripted option is a general `habit`,** rather than one only for limits.
+
+#### The ladder, real build
+
+Sloppy and careful wins of 27. "Before" is `94b26bb`. Sloppy won nothing above Easy on any seed.
+
+| Level | Ladder seeds, before | Now | Careful by nation now | Sloppy by nation now | Seeds 11 to 19, before | Now | Careful by nation now | Sloppy by nation now | Bound |
+|---|---|---|---|---|---|---|---|---|---|
+| Easy | 14 and 27 | 14 and 27 | 9, 9, 9 | 5, 9, 0 | 12 and 27 | 12 and 27 | 9, 9, 9 | 5, 6, 1 | careful at least 25, sloppy 6 to 16 |
+| Normal | 0 and 20 | 0 and 19 | 7, 8, 4 | 0, 0, 0 | 0 and 15 | 0 and 14 | 3, 9, 2 | 0, 0, 0 | careful 12 to 22 |
+| Hard | 0 and 7 | 0 and 8 | 4, 4, 0 | 0, 0, 0 | 0 and 7 | 0 and 7 | 2, 5, 0 | 0, 0, 0 | careful 5 to 14 |
+| Ruthless | 0 and 2 | 0 and 1 | 0, 1, 0 | 0, 0, 0 | 0 and 3 | 0 and 3 | 1, 2, 0 | 0, 0, 0 | careful 1 to 6 |
+
+Nations are Astravia, Caldenreich, Veldoria. These match the throwaway rules exactly. **Ruthless's 1 sits on its floor of 1,** so one more lost game fails the test. Careful by nation over both seeds, before and now: Normal 10, 17, 8 to 10, 17, 6; Hard 6, 8, 0 to 6, 9, 0; Ruthless 1, 4, 0 to 1, 3, 0.
+
+Average skill over careful games on these seeds: farms 98.1% to 99.3%, factories 98.3% to 100%. Under 95% on 2% to 14% of days on farms, and 0% to 11% in factories. The fewest trained factory hands in any careful game was 473.
+
+#### What the prototype left out, measured
+
+Careful wins of 27, ladder seeds and seeds 11 to 19. The first row is the comparison.
+
+| Script | Easy | Normal | Hard | Ruthless |
+|---|---|---|---|---|
+| Automatic, no servicing | 27, 27 | 19, 14 | 8, 7 | 1, 3 |
+| Servicing, with crews, 10 days and the dearer price | 27, 27 | **13**, 16 | 5, 8 | 3, 4 |
+| Limit on farm hands at what feeds people, with the month's delay | 27, 27 | 19, 18 | 9, 11 | 3, 2 |
+| Limit of 300 on factories | 27, 27 | 18, 16 | 7, 9 | 1, 4 |
+| Builds one school, no limit | 27, 27 | 19, 14 | 8, 7 | 1, 3 |
+| Builds one school, limit of 125 on schools | 27, 27 | 19, 14 | 8, 7 | 1, 4 |
+
+- **Servicing on Ruthless:** 7 of 54, the same as instant servicing today (7), and better than the prototype's 2. That worry doesn't hold.
+- **Servicing on Normal:** 29 of 54 against 33 for instant servicing today. On the ladder seeds it fell to 13, from 19 today, a move of 6, but on the other seeds it rose by 2. No committed test covers this run, and it isn't the recorded ladder, so I didn't stop. **The owner should see it.** Hard is 13 of 54 against 14.
+- **Crews:** 2,911 services had a trained crew and 258 an untrained one, so 8.1%, close to the note's "about 1 in 10". By level across both seeds, untrained of all: Easy 32 of 413, Normal 75 of 927, Hard 88 of 1,038, Ruthless 63 of 791.
+- **The month's delay:** the limit script gets the same wins as the prototype's limit that took effect at once.
+- **By nation, the limit on farm hands, both seeds:** Normal 12, 17, 8; Hard 8, 12, 0; Ruthless 3, 2, 0. Against Automatic, Normal goes from 33 to 37, Hard 15 to 20, Ruthless 4 to 5.
+- **Schools:** weak evidence. On Hard the results match Automatic exactly, which suggests the script never afforded a school there (it waits for 2,500 Cr). I did not count schools built. The Veldoria games on Easy clearly changed: all 9 on each seed set reached the 14-day shortage, against 1 without a school.
+- **The 20 people** were not measured apart from the rest of the service. They are about 0.7% of Astravia's workers while one service runs.
+
+#### Building ahead of your people
+
+Script building factories and farms in turn from 1,000 Cr. Wins of 27 on the ladder seeds. Normal and above are 0 in every row.
+
+| | Easy careful | Easy sloppy |
+|---|---|---|
+| Today's rules (stage 1 script) | 10 (1, 9, 0) | 6 |
+| Real build | 9 (0, 9, 0) | 7 |
+| Real build, with a limit on farm hands | 10 (1, 9, 0) | 8 |
+
+Still no measurable worsening, and median final treasury stays under 200 Cr. The tip is in: "No spare workers. Its 300 jobs would be filled from factories." Also "Only 67 people are jobless. The rest of its 300 jobs would be filled from factories", "No spare workers. Its 650 jobs would stand empty" and "Your limit of 2,100 on farms and food would leave its 300 jobs empty".
+
+#### Scouting
+
+`isShortOfWorkers` and its 45% for 14 days are unchanged, and a test shows a limit and a lack of training leave it alone. Careful scripts on Automatic or servicing reached 14 days before month 12 in 0 games on either seed set. The building-ahead script did in 63 of 108 careful games.
+
+#### Islands and armies under a choice
+
+- **Tests:** nobody crosses the sea under a limit, an island's people fill its own jobs, an island's new hands lower national skill only as they are hired, a lost island's people leave the trades, buildings held by rebels are out of the share, commuting keeps its 70%, and marching regiments don't change who works where.
+- **Whole games:** one five-year game per nation with settling, treaties, armies and war under a monthly limit. Every day it checks that everyone is counted and the figures stay sane. It asserts that colonies were held and regiments raised. Whether a war actually broke out in those games is not asserted, so **war under a limit may not have been exercised.**
+- **Measured,** careful, ladder seeds, Easy and Normal, with settling, treaties, armies and war: no limit 25 (9, 9, 7) and 9 (5, 3, 1). With the farm-hand limit 27 (9, 9, 9) and 9 (4, 4, 1). With servicing too, 27 and 9 (4, 4, 1). None failed to run.
+
+#### Old saves and cancelling
+
+Tests cover an old save loading on Automatic and fully trained, with skill at 100%, and then playing on. They also cover a new save's fields surviving a round trip, a save during a service, a change cancelled before the month's end (nobody moves, no log line), going back to Automatic waiting too, and cancelling in the running game (seen in the browser).
+
+#### Screenshots
+
+Taken in Chrome from the running game, on saves edited to show each case, with no console errors. All in `C:\Users\lorta\AppData\Local\Temp\claude\c--Users-lorta-Documents-repos-Theworldgame\e368a804-c798-48e1-adaa-e1b647feed00\scratchpad\t11\shots\`, each at 1440 and 1000:
+
+- `work-limit-pending-1440.png`, `work-limit-pending-1000.png`: a limit pending.
+- `work-building-empty-1440.png`, `work-building-empty-1000.png`: buildings left empty.
+- `service-rows-1440.png`, `service-rows-1000.png`: crew at work, untrained crew, trained crew.
+- `work-automatic-1440.png`, `work-automatic-1000.png`: Automatic.
+- `work-empty-tip-1440.png`, `work-empty-tip-1000.png`, `build-row-tip-1440.png`, `build-row-tip-1000.png`: taken while pointing at the tips. I opened the two at 1440 and the tips show. I did not open the two at 1000.
+
+`CLAUDE.md` asks that changes to the look are shown before building. The task asked for this to be built, so these are for the owner to judge.
+
+#### Checks
+
+Run on the finished code, before committing.
+
+- `npx tsc -b`: exit 0, no output.
+- `npm run lint`: exit 0, the five known warnings only.
+- `npm run build`: exit 0, "built in 503ms".
+- `npm test`: Test Files 39 passed (39), Tests 641 passed (641), 143.94s, exit 0. No intermittent failure.
+
+The measuring test was temporary and is removed. A copy is `zzmeasure.stage2.ts` beside the figures (`s2-*.json`) in the scratchpad's `t11` folder.
+
+#### Could not test, and left open
+
+- **A real player.** Everything is from scripts. Nobody has played with the control, or felt whether 1% to 2% matters.
+- **Forecasts during a pending change** stay on today's staffing, as designed. Not looked at on screen.
+- **A player following the seasons with limits.** Not tried.
+- **Laws and research that cut jobs per building** under a choice: not exercised.
+- **Why Veldoria loses most.** Not traced.
+- **Whether a limit's small free gain should stay** (difference 1 above). It follows from the agreed rules, and the owner may want to look.

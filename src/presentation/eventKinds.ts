@@ -45,6 +45,7 @@ const KINDS: Record<Exclude<EventTopic, "paused">, Omit<EventKind, "kind">> = {
   breakdown: { plural: "breakdowns", foldable: true, toast: "always", action: { label: "Repair", ...REPAIRS } },
   worn: { plural: "buildings worn", foldable: true, toast: "always", action: { label: "Service", ...REPAIRS } },
   repaired: { plural: "repairs finished", foldable: true, toast: "never" },
+  workers: { plural: "moves of workers", foldable: true, toast: "never", action: SEE_PEOPLE },
   venture: { plural: "ventures", foldable: false, toast: "always", action: { label: "Ventures", panel: "ventures" } },
   season: { plural: "seasons", foldable: false, toast: "never" },
   world: { plural: "world events", foldable: false, toast: "always" },

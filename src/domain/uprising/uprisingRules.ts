@@ -87,7 +87,7 @@ export function getRisenProvinceIds(provinces: Record<string, ProvinceState>): s
 // Homes stay with the people; every other building in the province is held
 // by the rebels and works for nobody until the uprising ends.
 export function seizeBuildings(placed: PlacedBuilding[], provinceId: string): PlacedBuilding[] {
-  return placed.map((b) => (b.provinceId === provinceId && b.type !== "housing" && b.condition === undefined ? { ...b, condition: "seized", wornUntilDay: undefined } : b));
+  return placed.map((b) => (b.provinceId === provinceId && b.type !== "housing" && b.condition === undefined ? { ...b, condition: "seized", wornUntilDay: undefined, serviceUntilDay: undefined } : b));
 }
 
 // What the rebels held comes back as it was taken: working.

@@ -22,6 +22,7 @@ import {
   REPAIR_COST_SHARE,
   REPAIR_DAYS,
   SERVICE_COST_SHARE,
+  SERVICE_UNTRAINED_COST,
   WORN_WARNING_DAYS,
   ROAD_COST,
   ROAD_ORE_COST,
@@ -91,9 +92,10 @@ export function getRepairCost(type: ProjectType, costMultiplier = 1): RepairCost
   return shareOfPrice(type, REPAIR_COST_SHARE * costMultiplier);
 }
 
-// Paid as a repair is, and made cheaper by the same things.
-export function getServiceCost(type: ProjectType, costMultiplier = 1): RepairCost {
-  return shareOfPrice(type, SERVICE_COST_SHARE * costMultiplier);
+// Paid as a repair is, and made cheaper by the same things. An untrained crew
+// costs more.
+export function getServiceCost(type: ProjectType, costMultiplier = 1, trainedCrew = true): RepairCost {
+  return shareOfPrice(type, SERVICE_COST_SHARE * costMultiplier * (trainedCrew ? 1 : SERVICE_UNTRAINED_COST));
 }
 
 // How many ordinary homes a building is worth: what it shelters, and burns.
@@ -108,6 +110,20 @@ export function isWorking(building: PlacedBuilding): boolean {
 // Worn is still working: nothing that reads isWorking treats it differently.
 export function isWorn(building: PlacedBuilding): boolean {
   return building.wornUntilDay !== undefined && isWorking(building);
+}
+
+// A crew is at work on it. It is still worn, and still working.
+export function isBeingServiced(building: PlacedBuilding): boolean {
+  return building.serviceUntilDay !== undefined && isWorn(building);
+}
+
+// Worn, and nobody has started on it.
+export function needsService(building: PlacedBuilding): boolean {
+  return isWorn(building) && !isBeingServiced(building);
+}
+
+export function getServiceDaysLeft(building: PlacedBuilding, date: GameDate): number {
+  return Math.max(0, (building.serviceUntilDay ?? 0) - dayNumber(date));
 }
 
 export function getWornDaysLeft(building: PlacedBuilding, date: GameDate): number {
@@ -144,7 +160,8 @@ export function getWorkingCounts(state: GameState): WorkingCounts {
 }
 
 // A failed roll marks a building worn; a worn one rolls no more, and breaks
-// when its time is up. Returns the same array when nothing changed, so the
+// when its time is up, unless a crew is at work on it: its clock stops, and
+// the wear goes when they finish. Returns the same array when nothing changed, so the
 // (memoized) map doesn't re-render on an ordinary day. `today` is the day
 // being played, so a building marked now shows the whole warning tomorrow.
 export function rollBreakdowns(
@@ -152,12 +169,19 @@ export function rollBreakdowns(
   today: number,
   breakdownReduction: number, // 0..1, from police — see workforceRules.ts
   breakdownMultiplier = 1, // from research (ResearchEffects.breakdownMultiplier)
-): { placedBuildings: PlacedBuilding[]; broken: PlacedBuilding[]; worn: PlacedBuilding[] } {
+): { placedBuildings: PlacedBuilding[]; broken: PlacedBuilding[]; worn: PlacedBuilding[]; serviced: PlacedBuilding[] } {
   const chance = BREAKDOWN_CHANCE_PER_DAY * (1 - breakdownReduction) * breakdownMultiplier;
   const broken: PlacedBuilding[] = [];
   const worn: PlacedBuilding[] = [];
+  const serviced: PlacedBuilding[] = [];
   const next = placedBuildings.map((building) => {
     if (!isWorking(building)) return building;
+    if (isBeingServiced(building)) {
+      if (today + 1 < building.serviceUntilDay!) return building;
+      const done: PlacedBuilding = { ...building, wornUntilDay: undefined, serviceUntilDay: undefined };
+      serviced.push(done);
+      return done;
+    }
     if (isWorn(building)) {
       if (today < building.wornUntilDay!) return building;
       const failed: PlacedBuilding = { ...building, condition: "broken", wornUntilDay: undefined };
@@ -169,7 +193,7 @@ export function rollBreakdowns(
     worn.push(failing);
     return failing;
   });
-  return broken.length === 0 && worn.length === 0 ? { placedBuildings, broken, worn } : { placedBuildings: next, broken, worn };
+  return broken.length === 0 && worn.length === 0 && serviced.length === 0 ? { placedBuildings, broken, worn, serviced } : { placedBuildings: next, broken, worn, serviced };
 }
 
 // One day of work on every repair in progress. Same identity guarantee as

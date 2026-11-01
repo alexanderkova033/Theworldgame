@@ -87,7 +87,8 @@ describe("the larger buildings", () => {
     const state = game();
     const id = getNation(state.nationId).capitalProvinceId;
     expect(getHousingCapacity(place(state, "tenement", id))).toBe(getHousingCapacity(state) + HOMES_PER_TENEMENT * PEOPLE_PER_HOME);
-    const crowded = { ...state, provinces: { ...state.provinces, [id]: { ...state.provinces[id], population: 60000 } } };
+    // With plenty of trained people: a new building's learners are another test's business.
+    const crowded = { ...state, trained: { food: 15000, industry: 15000 }, provinces: { ...state.provinces, [id]: { ...state.provinces[id], population: 60000 } } };
     const staffed = getLabourSituation(crowded).staffed;
     expect(getLabourSituation(place(crowded, "estate", id)).staffed.farms).toBeCloseTo(staffed.farms + FARMS_PER_ESTATE);
     expect(getLabourSituation(place(crowded, "foundry", id)).staffed.factories).toBeCloseTo(staffed.factories + FACTORIES_PER_FOUNDRY);
