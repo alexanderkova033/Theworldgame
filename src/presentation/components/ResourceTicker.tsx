@@ -8,10 +8,10 @@
 // Research), where they're spent.
 import "./ResourceTicker.css";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ADVISOR_WINTER_PREP_DAYS, CURRENCY_SYMBOL, WOOD_PER_COAL_HEAT } from "../../domain/constants";
+import { CURRENCY_SYMBOL, WOOD_PER_COAL_HEAT } from "../../domain/constants";
 import type { CountryStats } from "../../domain/country/types";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
-import type { HeatingOutlook } from "../../application/getHeatingOutlook";
+import { isWinterFuelShort, type HeatingOutlook } from "../../application/getHeatingOutlook";
 import type { Forecasts, RunOut } from "../../application/getForecasts";
 import type { MaterialShortage } from "../../application/getMaterialShortages";
 import { formatDate } from "../../domain/country/calendar";
@@ -205,7 +205,7 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, producti
   const stage = UNREST_INFO[unrestStage];
   const stageUrgent = unrestStage === "strikes" || unrestStage === "riots";
   // Heating: all winter, and in the run-up to it while the stock won't last.
-  const winterSoon = !heating.isWinter && heating.daysUntilWinter <= ADVISOR_WINTER_PREP_DAYS && heating.fuel < heating.fuelNeeded;
+  const winterSoon = isWinterFuelShort(heating, production.resourceProduction.coal);
   const showHeating = (heating.isWinter && heating.fuelPerDay > 0) || winterSoon;
   const heatingDanger = heating.isWinter ? heating.daysOfFuel < 10 : heating.daysUntilWinter <= 15;
 

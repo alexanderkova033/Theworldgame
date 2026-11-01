@@ -4,6 +4,8 @@
 // any one path of the trees doesn't wreck a country on its own.
 import { beforeEach, describe, expect, it } from "vitest";
 import { completeLaw } from "../src/application/actions/enactLaw";
+import { getDailyProductionSummary } from "../src/application/getDailyProductionSummary";
+import { getHeatingOutlook, isWinterFuelShort } from "../src/application/getHeatingOutlook";
 import { startNewGame } from "../src/application/startNewGame";
 import type { Difficulty } from "../src/domain/difficulty/difficultyData";
 import { getElectionThreshold } from "../src/domain/parties/electionRules";
@@ -73,6 +75,23 @@ describe("a careful player", { timeout: 30000 }, () => {
 describe("an idle player", () => {
   it.each(NATIONS)("loses %s within two years", (nation, party) => {
     expect(playIdle(nation, party, 2 * 365).isGameOver).toBe(true);
+  });
+});
+
+// Caldenreich digs its own coal: autumn's warning about winter fuel is for
+// countries that don't.
+describe("autumn's warning about winter fuel", () => {
+  it("never reaches a careful player in Caldenreich's first three years", () => {
+    let warned = 0;
+    const [nation, party] = NATIONS[1];
+    playCarefully(nation, party, {
+      days: THREE_YEARS,
+      difficulty: "normal",
+      onDay: (s) => {
+        if (isWinterFuelShort(getHeatingOutlook(s), getDailyProductionSummary(s).resourceProduction.coal)) warned++;
+      },
+    });
+    expect(warned).toBe(0);
   });
 });
 

@@ -8,7 +8,7 @@ import { getHeatingOutlook } from "../../application/getHeatingOutlook";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import type { GameState } from "../../domain/country/types";
 import { getLabourSituation, type Sector, type SectorJobs } from "../../domain/labour/labourRules";
-import { ADVISOR_FOOD_CRITICAL_DAYS, ADVISOR_FOOD_WARN_DAYS, COMMUTE_SHARE, LABOUR_SHARE, WOOD_PER_COAL_HEAT } from "../../domain/constants";
+import { ADVISOR_FOOD_CRITICAL_DAYS, ADVISOR_FOOD_WARN_DAYS, ADVISOR_WINTER_PREP_DAYS, COMMUTE_SHARE, LABOUR_SHARE, WOOD_PER_COAL_HEAT } from "../../domain/constants";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import type { ProjectType } from "../../domain/construction/types";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
@@ -304,7 +304,7 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
             label={`Coal and wood for ${fuelDays} of the ${fuelAgainst}`}
           />
         }
-        danger={fuelShort && (heating.isWinter || heating.daysUntilWinter < 60)}
+        danger={fuelShort && (heating.isWinter || heating.daysUntilWinter <= ADVISOR_WINTER_PREP_DAYS)}
         value={`fuel for ${fuelDays} of ${heating.winterDaysLeft} days`}
         detail={
           <span className="people-meter__fuel">

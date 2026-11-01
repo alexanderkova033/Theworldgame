@@ -22,11 +22,13 @@ export const RESOURCE_PER_PROVINCE = 0.3; // units of matching resource the land
 export const COAL_PER_HILLS_PROVINCE = 0.25; // hills mine coal as well as ore — the fuel homes burn in winter
 export const STARTING_RESOURCE_STOCK = 15; // a little in the stores, for the first orders; the rest has to be produced or bought
 // ...except coal: the game opens on 1 January, sixty days of winter ahead, and
-// the starting homes burn about 50 coal getting through it. With none in
-// the cellar the only way to keep them warm was a loan on day one; this
-// carries the first winter with room for a few new homes, and the next
+// the starting homes burn 38 to 60 coal getting through it, by nation and level.
+// With none in the cellar the only way to keep them warm was a loan on day one;
+// this carries the first winter with room for a few new homes, and the next
 // winter is the player's to prepare for.
 export const STARTING_COAL = 80;
+// Astravia has no hills, and wood is a poor fuel: this carries its next winter too.
+export const STARTING_EXTRA_COAL: Record<string, number> = { astravia: 120 };
 // ...and wood where the land grows none (no forest province): a farm (15) and
 // one set of homes (12), before the market opens. The works broken at the start
 // are factories, mended with ore.
@@ -623,7 +625,7 @@ export const FOREIGN_MEDDLING_SUPPORT = 3; // support swing from one push
 // When a problem is worth flagging under the top bar, and when it turns red.
 export const ADVISOR_MAX_ALERTS = 3;
 export const ADVISOR_COAL_CRITICAL_DAYS = 10; // winter: fuel left for fewer days than this
-export const ADVISOR_WINTER_PREP_DAYS = 60; // start warning about winter fuel this long before winter...
+export const ADVISOR_WINTER_PREP_DAYS = 90; // start warning about winter fuel this long before winter (1 September), while coal is still cheap...
 export const ADVISOR_WINTER_PREP_CRITICAL_DAYS = 15; // ...and urgently this close to it
 export const ADVISOR_FOOD_WARN_DAYS = 60; // food runs out within this many days at today's net
 export const ADVISOR_FOOD_CRITICAL_DAYS = 20;

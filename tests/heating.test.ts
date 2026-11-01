@@ -4,11 +4,13 @@ import { describe, expect, it } from "vitest";
 import { getAdvisorOutlook } from "../src/application/getAdvisorOutlook";
 import { getDailyProductionSummary } from "../src/application/getDailyProductionSummary";
 import { getForecasts } from "../src/application/getForecasts";
-import { getHeatingOutlook } from "../src/application/getHeatingOutlook";
+import { getHeatingOutlook, isWinterFuelShort } from "../src/application/getHeatingOutlook";
+import { startNewGame } from "../src/application/startNewGame";
+import { allChaptersOpen } from "../src/domain/chapters/chapterData";
 import { getPopularityOutlook } from "../src/application/getPopularityOutlook";
 import { applyDangerPause } from "../src/application/playDay";
 import { simulateDay } from "../src/application/simulateDay";
-import { HEAT_SHARE_HOME, HEAT_SHARE_TENEMENT, HEAT_SHARE_TOWER, HEATING_FUEL_PER_HOME, HOMES_PER_TENEMENT, HOMES_PER_TOWER, WOOD_PER_COAL_HEAT } from "../src/domain/constants";
+import { HEAT_SHARE_HOME, HEAT_SHARE_TENEMENT, HEAT_SHARE_TOWER, HEATING_FUEL_PER_HOME, HOMES_PER_TENEMENT, HOMES_PER_TOWER, STARTING_COAL, WOOD_PER_COAL_HEAT } from "../src/domain/constants";
 import type { ProjectType } from "../src/domain/construction/types";
 import type { GameState } from "../src/domain/country/types";
 import { getDecision } from "../src/domain/decisions/decisionRules";
@@ -29,6 +31,14 @@ function withHomes(types: ProjectType[], coal: number, wood: number): GameState 
     resources: stock(coal, wood),
   };
 }
+
+describe("Astravia's extra coal", () => {
+  it("goes to Astravia alone", () => {
+    expect(startNewGame("astravia", "astravia-harvest-union").resources.coal).toBe(STARTING_COAL + 120);
+    expect(startNewGame("caldenreich", "caldenreich-crown-loyalists").resources.coal).toBe(STARTING_COAL);
+    expect(startNewGame("veldoria", "veldoria-ironworkers-guild").resources.coal).toBe(STARTING_COAL);
+  });
+});
 
 describe("burning fuel", () => {
   it("burns coal first, and no wood while the coal lasts", () => {
@@ -146,6 +156,33 @@ describe("everything that reads fuel", () => {
     const production = getDailyProductionSummary(autumn);
     const alert = getAdvisorOutlook(autumn, production, getHeatingOutlook(autumn), getForecasts(autumn, production)).alerts.find((a) => a.kind === "coal");
     expect(alert?.detail).toContain("Your coal and wood last 20 of its 90 days.");
+  });
+
+  it("the outlook counts the real days to winter", () => {
+    const on = (month: number, day: number) => getHeatingOutlook({ ...withHomes(["housing"], 0, 0), date: { year: 1, month, day } }).daysUntilWinter;
+    expect(on(9, 1)).toBe(90);
+    expect(on(11, 1)).toBe(30);
+    expect(on(11, 30)).toBe(1);
+  });
+
+  it("warns from 1 September, and only of what the land won't make up", () => {
+    const short = (month: number, day: number, coal: number, coalPerDay = 0) =>
+      isWinterFuelShort(getHeatingOutlook({ ...withHomes(["housing"], coal, 0), date: { year: 1, month, day } }), coalPerDay);
+    expect(short(8, 30, 1)).toBe(false);
+    expect(short(9, 1, 1)).toBe(true);
+    expect(short(9, 1, 10.8)).toBe(false); // 90 days at 0.12
+    expect(short(9, 1, 1, 0.1)).toBe(false); // digs 18 coal by the end of winter
+    expect(short(1, 10, 1)).toBe(false); // the winter alert speaks in winter
+  });
+
+  it("says coal costs more only once the market is open", () => {
+    const autumn: GameState = { ...withHomes(["housing"], 1, 0), date: { year: 1, month: 9, day: 1 } };
+    const detail = (s: GameState) => {
+      const production = getDailyProductionSummary(s);
+      return getAdvisorOutlook(s, production, getHeatingOutlook(s), getForecasts(s, production)).alerts.find((a) => a.kind === "coal")?.detail;
+    };
+    expect(detail(autumn)).not.toMatch(/costs more/);
+    expect(detail({ ...autumn, chapters: allChaptersOpen() })).toMatch(/Coal costs more once it starts\.$/);
   });
 
   it("the shortage letter reads the wood at its worth", () => {

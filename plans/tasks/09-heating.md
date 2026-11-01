@@ -31,17 +31,112 @@ The ladder moves by more than 3 wins of 27 at any level, or a nation can't get t
 
 ## Results
 
-**Stopped here, on a "stop and ask" condition. Hard falls from 0 and 7 to 0 and 3: a move of 4, over the limit of 3, and below the bound of 5 in `tests/balance.test.ts`. So `npm test` fails on that one test.** The rules are built as written. I changed no level, bound or recorded ladder, and tuned nothing to make up for it.
+**Finished after the owner's answer: Astravia starts with 120 more coal, and wood stays at 5 to 1. The ladder is the record exactly, Hard is 7, and all tests pass.** The first pass stopped on a "stop and ask" condition, and is kept below it under "First pass".
 
-### Question for the owner
+### Owner's answer: what changed
 
-Astravia alone carries the fall. Which of these do you want?
+- `constants.ts`: `STARTING_EXTRA_COAL` is `{ astravia: 120 }`, read in `startNewGame.ts`. Astravia starts with 200 coal, the others 80.
+- **Not added to Astravia as a neighbour.** A neighbour's `stores.coal` is goods for sale, not fuel. It burns none, `NEIGHBOUR_STORE_CAP` would cut 120 to 40 in the first month, and Astravia never sells coal because `WANTS` says it wants it. So it would change nothing. It is one line if the owner wants it anyway.
+- **Earlier warning:** `ADVISOR_WINTER_PREP_DAYS` from 60 to 90, which is 1 September. New `isWinterFuelShort` in `getHeatingOutlook.ts` is read by the advisor and the top bar: the stock plus the coal the land digs before winter ends won't last it. The line reads "Winter starts in 90 days. Your coal and wood last 28 of its 90 days. Coal costs more once it starts." The last sentence shows only with the market open. No rule changes, and the scripted players read no alerts.
+- **A bug in the count, fixed because the warning needs it:** `daysUntilWinter` counted 30 days too many, so 5 October said 86 days, not 56. So the old warning really came on 1 November, 30 days out, and its urgent stage at 15 days could never come. Now it can, in the advisor and the top bar chip.
+- The People card's danger mark uses the same 90 days (was `< 60` written out).
+- `STARTING_COAL` comment: 38 to 60 coal, as measured. `GAME_DESIGN.md` line 151 and `TODO.md` rough edges updated, with a new entry on Veldoria.
+- Tests: Astravia alone gets the coal, the day count, the September edge, the land making up the difference, market wording, and in `balance.test.ts` a careful Caldenreich unwarned for three years.
+- `difficultyData.ts` and the `balance.test.ts` line in `TODO.md` needed no change: the figures are the same ones, measured the same day. The Hard bound is untouched.
 
-1. **Give Astravia more starting coal** (my suggestion, keeping 5 to 1). It mirrors `STARTING_WOOD_NO_FOREST`. 160 more came nearest the record: 13 and 27, 0 and 17, 0 and 6, 0 and 2, every level inside the limit of 3. It only delays the bill, though it reached year 3 with no cold day on Normal.
-2. **A softer rate.** 2 to 1 gives Hard 5 and 3 to 1 gives Hard 4, which is not what you asked for.
-3. **Accept the fall** and lower the bound for Hard, with Astravia winning no Hard games over these 18 seeds as the player plays now.
+### The 27-game ladder with the coal
 
-Also yours to decide: whether the scripted player should lay coal in from autumn, as a person warned by the advisor might. That alone gives Normal 18 and Hard 4 (see below).
+By nation is Astravia, Caldenreich, Veldoria. Replayed on the final code.
+
+| Level | Recorded | Now | Change | Sloppy now (recorded run) | Careful now (recorded run) |
+|---|---|---|---|---|---|
+| Easy | 14 and 27 | **14 and 27** | none | 5, 8, 1 (same) | 9, 9, 9 (same) |
+| Normal | 0 and 17 | **0 and 17** | none | 0, 0, 0 (same) | 7, 8, 2 (same) |
+| Hard | 0 and 7 | **0 and 7** | none | 0, 0, 0 (same) | 4, 3, 0 (same) |
+| Ruthless | 0 and 2 | **0 and 2** | none | 0, 0, 0 (same) | 0, 2, 0 (same) |
+
+Game by game, no win or loss on these seeds differs from the recorded run. That is partly luck: on the other seeds, 4 of 216 games change (careful Veldoria on Normal, seeds 16 and 19; careful Astravia on Hard, seed 19; sloppy Astravia on Easy, seed 19). Seeds 11 to 19:
+
+| Level | Before | Now | Sloppy now (before) | Careful now (before) |
+|---|---|---|---|---|
+| Easy | 13 and 27 | 12 and 27 | 5, 7, 0 (6, 7, 0) | 9, 9, 9 (same) |
+| Normal | 0 and 14 | 0 and 12 | 0, 0, 0 (same) | 3, 9, 0 (3, 9, 2) |
+| Hard | 0 and 8 | 0 and 7 | 0, 0, 0 (same) | 2, 5, 0 (3, 5, 0) |
+| Ruthless | 0 and 3 | 0 and 3 | 0, 0, 0 (same) | 1, 2, 0 (same) |
+
+The Normal fall on these seeds is Veldoria, which gets no extra coal.
+
+### Astravia's second winter (December of year 1 to February of year 2)
+
+Careful, both seed sets, 18 games at each level, all reaching it. Each cell is before, on 5 to 1 alone, and with the 120 coal.
+
+| Level | Games cold | Median cold days | Worst | Fell by spring |
+|---|---|---|---|---|
+| Easy | 0, 0, **0** | 0, 0, **0** | 0, 0, **0** | 0, 0, **0** |
+| Normal | 1, 12, **0** | 0, 4, **0** | 35, 34, **0** | 0, 1, **0** |
+| Hard | 1, 12, **0** | 0, 12, **0** | 57, 39, **0** | 1, 3, **1** |
+| Ruthless | 0, 16, **0** | 0, 30, **0** | 0, 52, **0** | 2, 7, **2** |
+
+With the coal, no Astravia game at any level or skill burns wood or goes cold in that winter, and careful players buy none. Those that fall by spring fall for other reasons. Lowest coal at day 60 is 140.2.
+
+**The third winter is where the bill comes.** Careful, with the coal:
+
+| Level | Reached it | Games cold | Median and worst cold days | Average wood burned | Average coal bought, and cost |
+|---|---|---|---|---|---|
+| Easy | 18 | 0 | 0, 0 | 316 | 14, 840 Cr |
+| Normal | 11 | 0 | 0, 0 | 262 | 18, 1,124 Cr |
+| Hard | 7 | 1 | 0, 2 | 229 | 30, 1,686 Cr |
+| Ruthless | 4 | 2 | 8, 9 | 186 | 31, 2,259 Cr |
+
+### Does the warning leave Caldenreich alone?
+
+It never fires in years 1 and 2, or in any sloppy game, or on Easy or Ruthless. Over both seed sets, careful, it fired in 2 of 69 autumns on Normal and 1 of 58 on Hard by the check on the 1st and 15th. A daily probe found 4 games: seeds 7, 99 and 11 on Normal in year 4, and seed 4 on Hard in year 3. In every one, coal dug per day was 0.00 with four provinces' seams worked out. The warning is true there. From a save on 1 September holding only 40 coal, Caldenreich shows nothing in Chrome, as its land digs enough.
+
+It also fires for Astravia from its second autumn (31 of 49 on Normal, for example 94 of 108 coal on 1 September of year 2), never in year 1. It fires for Veldoria in nearly every autumn, including its first: 41 of 41 careful on Normal. That is true too, but it is one more item on the bar each autumn there.
+
+### Do the start-screen summaries hold?
+
+Yes, all four.
+
+- Easy, "Room to learn": 27 careful and 14 sloppy of 27 (12 on the other seeds).
+- Normal, "A careful player wins about half the time": 17 of 27, and 12 of 27 on the other seeds, 29 of 54 together.
+- Hard, "about one game in four": 7 of 27 on both seed sets.
+- Ruthless, "Not every country can be saved": 2 and 3 of 27.
+
+Those are averages over very different nations. Caldenreich wins 17 of 18 on Normal, and Veldoria 2.
+
+### Checks, on the final code
+
+Run once, in this order. `npm test` did not fail, so there is no intermittent failure to record.
+
+- `npx tsc -b`: no output, exit 0.
+- `npm run lint`: the five known warnings only (`ResourceIcon.tsx`, `BuildingIcon.tsx`, `useGameClock.ts`, `Gauge.tsx`, `App.tsx`).
+- `npm run build`: "built in 421ms".
+- `npm test`: 37 files passed, 561 tests passed, in 114.56s.
+
+### Looked at in a browser, for the warning
+
+Chrome, Normal, market open, saves set to a date and a stock. No sideways scroll and no console errors.
+
+- Astravia, 1 September, 12 coal and 60 wood, at 1400 and 1000 wide: "Winter coal: 32%" on the bar, 32% on the chip, and both tips read as above.
+- Astravia, 30 August, same stock: nothing. Astravia, 1 September, 200 coal: nothing.
+- Caldenreich, 1 September, 40 coal: nothing. Veldoria, 1 September, 40 coal: the warning.
+
+I read tips from the attributes and did not hover to see them drawn.
+
+### Not verified, or left for the owner
+
+- Heat shares in play: no scripted game builds a tenement or apartment block.
+- Whether a person acts on the warning in time. The September scratch player ran before the 120 coal and is not in the commit. The scripted ladder players ignore the warning.
+- **Veldoria also digs no coal**, which the task did not say. It has no hills or forest and gets no extra coal. Careful on Normal it goes cold in 8 of 16 second winters and 7 of 9 third winters, and its wins over 18 seeds fell from 4 to 2. My first pass put this down to money, which is only half of it. Whether it should get coal too is the owner's.
+- Astravia's start-screen bonus still says only "Starts with an extra farm." I left the words alone, as the task did not ask, but it now has a second bonus nobody is told about.
+- `STARTING_STABILITY_BONUS` lives in `startNewGame.ts`, where the code rules would put it in `constants.ts`. Not touched.
+
+## First pass, before the owner's answer
+
+This section is the record of what stopped the task. Where it differs from the above, the above is current. One correction: it says the advisor warned 60 days before winter. It really warned 30 days before, because of the miscount above.
+
+**Stopped on a "stop and ask" condition. Hard fell from 0 and 7 to 0 and 3: a move of 4, over the limit of 3, and below the bound of 5.**
 
 ### What changed
 

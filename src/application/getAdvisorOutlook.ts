@@ -15,7 +15,6 @@ import {
   ADVISOR_MONEY_CRITICAL_DAYS,
   ADVISOR_MONEY_WARN_DAYS,
   ADVISOR_WINTER_PREP_CRITICAL_DAYS,
-  ADVISOR_WINTER_PREP_DAYS,
 } from "../domain/constants";
 import { isFeatureOpen } from "../domain/chapters/chapterData";
 import type { GameState } from "../domain/country/types";
@@ -33,7 +32,7 @@ import { RESEARCH_CATEGORIES } from "../domain/workforce/workforceRules";
 import { formatDate } from "../domain/country/calendar";
 import type { DailyProductionSummary } from "./getDailyProductionSummary";
 import type { Forecasts } from "./getForecasts";
-import type { HeatingOutlook } from "./getHeatingOutlook";
+import { isWinterFuelShort, type HeatingOutlook } from "./getHeatingOutlook";
 
 export type AdvisorAlertKind =
   | "uprising"
@@ -155,11 +154,11 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
       detail: `Coal and firewood last ${days} more days, with ${heating.winterDaysLeft} days of winter left. ${market ? "Buy coal." : "Keep the wood for burning, not building."}`,
       critical: days < ADVISOR_COAL_CRITICAL_DAYS,
     });
-  } else if (!heating.isWinter && heating.daysUntilWinter <= ADVISOR_WINTER_PREP_DAYS && heating.fuel < heating.fuelNeeded) {
+  } else if (isWinterFuelShort(heating, production.resourceProduction.coal)) {
     alerts.push({
       kind: "coal",
       text: `Winter coal: ${percent(heating.fuelNeeded > 0 ? heating.fuel / heating.fuelNeeded : 1)}`,
-      detail: `Winter starts in ${heating.daysUntilWinter} days. Your coal and wood last ${Math.floor(heating.daysOfFuel)} of its ${heating.winterDaysLeft} days.`,
+      detail: `Winter starts in ${heating.daysUntilWinter} days. Your coal and wood last ${Math.floor(heating.daysOfFuel)} of its ${heating.winterDaysLeft} days.${market ? " Coal costs more once it starts." : ""}`,
       critical: heating.daysUntilWinter <= ADVISOR_WINTER_PREP_CRITICAL_DAYS,
     });
   }
