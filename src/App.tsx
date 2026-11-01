@@ -152,8 +152,8 @@ function App() {
   // Which group of buildings a "Go" sent Build to open at: it scrolls there.
   const [buildRail, setBuildRail] = useState<BuildRail | null>(null);
   useEffect(() => {
-    buildOpen.current = openModal === "build" && sections.build === "buildings";
-  }, [openModal, sections.build]);
+    buildOpen.current = openModal === "build";
+  }, [openModal]);
 
   // How many of state.events the player has actually seen — everything past
   // that count shows up as an unread badge on the Reports tab, since the
@@ -554,7 +554,7 @@ function App() {
       )}
 
       {windows.open === "build" && (
-        <Modal title="Build" window="build" icon={<NavIcon type="build" size={22} />} onClose={closeWindow} side={sections.build === "buildings"} wide>
+        <Modal title="Build" window="build" icon={<NavIcon type="build" size={22} />} onClose={closeWindow} side>
           <BuildPanel
             state={state}
             dispatch={dispatch}

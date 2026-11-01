@@ -1,14 +1,15 @@
 // Build orders, for the province chosen on the map. Each building is a row
 // with its picture, what it gives, pips for how many stand here, and its
-// costs in green (enough), amber (enough to start) or red (not enough). What
-// it does in a sentence is in its name's tip; when it can't be built, the
-// row says exactly why.
+// costs in green (enough), amber (enough to start) or red (not enough), each
+// with the first payment beside it. What it does in a sentence is in its
+// name's tip; when it can't be built, the row says why in a few words, and
+// the whole of it is in that reason's tip.
 import "./ActionsPanel.css";
 import { getModifiers } from "../../domain/policy/policyRules";
 import type { ReactNode } from "react";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
 import { buildCannery, buildEducation, buildEstate, buildFactory, buildFarm, buildFoundry, buildGranary, buildHarbour, buildHousing, buildMine, buildModelFarm, buildRoad, buildSawmill, buildSteelworks, buildTenement, buildTower, buyAndBuild, countBuildingsInProvince, planBuyAndBuild } from "../../application/actions";
-import { getBuildCostIn, type BuildAction } from "../../application/actions/createBuildAction";
+import { getBuildCostIn, upfrontCost, type BuildAction } from "../../application/actions/createBuildAction";
 import { describeWait, getDaysToSave } from "../../application/getDaysToSave";
 import {
   CANNERY_BUILD_DAYS,
@@ -113,15 +114,6 @@ interface ActionsPanelProps {
   netPerDay: number; // the treasury's daily balance, for how long a shortfall takes to save
 }
 
-// 60% of the cost is due now, the rest is drained daily over the build (see
-// createBuildAction.ts's own upfrontCost) — mirrored here so the red
-// "can't afford" chips match what's actually charged on order.
-const UPFRONT_SHARE = 0.6;
-
-function upfront(value: number): number {
-  return Math.round(value * UPFRONT_SHARE);
-}
-
 function HourglassIcon() {
   return (
     <svg viewBox="-10 -10 20 20" width={12} height={12}>
@@ -142,7 +134,7 @@ function ResourceGlyph({ type, size = 14 }: { type: ResourceType; size?: number 
 interface BuildItem {
   type: ProjectType;
   group: BuildGroup;
-  summary: string; // what it's for, in a few plain words — always on screen
+  summary: string; // what it's for, in a few plain words: the tip on its name
   name: string;
   action: BuildAction;
   cost: number;
@@ -448,21 +440,33 @@ const BUILD_ITEMS: BuildItem[] = [
 // Plain first, then larger, then what's only useful later.
 const ORDER_IN_GROUP: ProjectType[] = ["housing", "tenement", "tower", "education", "farm", "estate", "modelFarm", "granary", "cannery", "factory", "foundry", "steelworks", "road", "mine", "sawmill", "harbour"];
 
-// Why this building can't go up right now — the first thing in the way,
-// in words. Null when it can.
-function blockedReason(item: BuildItem, cost: number, state: GameState, provinceId: string, provinceName: string, count: number, max: number, unlockName: string | undefined, isLocked: boolean, netPerDay: number, shutUntil?: string): string | null {
-  if (shutUntil) return `Locked. ${shutUntil}.`;
-  if (isLocked) return `Locked. Research “${unlockName ?? "a new technique"}” first.`;
-  if (item.action.config.allowedIn && !item.action.config.allowedIn.test(provinceId)) return item.action.config.allowedIn.reason;
-  if (count >= max) return `No room: all ${max} are built or underway in ${provinceName}.`;
-  const moneyShort = upfront(cost) - state.stats.treasury;
+// What's in the way: a few words for the row, the whole of it for the tip.
+interface Reason {
+  short: string;
+  full: string;
+}
+
+// Why this building can't go up right now: the first thing in the way. Null
+// when it can.
+function blockedReason(item: BuildItem, cost: number, state: GameState, provinceId: string, provinceName: string, count: number, max: number, unlockName: string | undefined, isLocked: boolean, netPerDay: number, shutUntil?: string): Reason | null {
+  if (shutUntil) return { short: "Not open yet.", full: `Locked. ${shutUntil}.` };
+  if (isLocked) {
+    const short = `Research “${unlockName ?? "a new technique"}” first.`;
+    return { short, full: `Locked. ${short}` };
+  }
+  if (item.action.config.allowedIn && !item.action.config.allowedIn.test(provinceId)) {
+    const reason = item.action.config.allowedIn.reason;
+    return { short: reason, full: reason };
+  }
+  if (count >= max) return { short: "No room here.", full: `No room: all ${max} are built or underway in ${provinceName}.` };
+  const moneyShort = upfrontCost(cost) - state.stats.treasury;
   if (moneyShort > 0) {
     const days = getDaysToSave(state, moneyShort, netPerDay);
-    const short = `${formatAmount(Math.ceil(moneyShort))} ${CURRENCY_SYMBOL}`;
-    return days !== null ? `Enough money ${describeWait(days)} at today's income (${short} short).` : `Need ${short} more to start.`;
+    const short = `${formatAmount(Math.ceil(moneyShort))} ${CURRENCY_SYMBOL} short`;
+    return { short: `${short}.`, full: days !== null ? `Enough money ${describeWait(days)} at today's income (${short}).` : `${short} of the first payment.` };
   }
-  const resourceShort = upfront(item.resourceCost) - state.resources[item.resourceType];
-  if (resourceShort > 0) return `Need ${Math.ceil(resourceShort)} more ${item.resourceType} to start, and the money to buy it.`;
+  const resourceShort = upfrontCost(item.resourceCost) - state.resources[item.resourceType];
+  if (resourceShort > 0) return { short: `${Math.ceil(resourceShort)} ${item.resourceType} short.`, full: `Need ${Math.ceil(resourceShort)} more ${item.resourceType} to start, and the money to buy it.` };
   return null;
 }
 
@@ -524,18 +528,18 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, n
               const stock = Math.floor(state.resources[item.resourceType]);
               // Short: can't even start. Partial: can start, but today's
               // stock won't cover the rest as the build goes on.
-              const treasuryShort = treasury < upfront(cost);
+              const treasuryShort = treasury < upfrontCost(cost);
               const treasuryPartial = !treasuryShort && treasury < cost;
-              const resourceShort = stock < upfront(item.resourceCost);
+              const resourceShort = stock < upfrontCost(item.resourceCost);
               const resourcePartial = !resourceShort && stock < item.resourceCost;
               const unlockName = item.unlockedBy ? getResearchNode(item.unlockedBy)?.name : undefined;
               const brokenHere = state.placedBuildings.filter((b) => b.type === item.type && b.provinceId === selectedProvinceId && !isWorking(b)).length;
               // Short only of material that money can cover: buy it and build in one click.
               const plan = !isLocked && !canBuild ? planBuyAndBuild(state, item.action, selectedProvinceId) : null;
-              const reason = state.provinces[selectedProvinceId]?.uprising
-                ? `Rebels hold ${provinceName}. Nothing can be built there until the uprising ends.`
+              const reason: Reason | null = state.provinces[selectedProvinceId]?.uprising
+                ? { short: `Rebels hold ${provinceName}.`, full: `Rebels hold ${provinceName}. Nothing can be built there until the uprising ends.` }
                 : plan
-                ? `Short of ${item.resourceType}: buys ${Math.round(plan.amount)} for ${formatAmount(Math.round(plan.goodsCost))} ${CURRENCY_SYMBOL}, plus ${formatAmount(upfront(cost))} ${CURRENCY_SYMBOL} to start.`
+                ? { short: `Short of ${item.resourceType}.`, full: `Short of ${item.resourceType}: buys ${Math.round(plan.amount)} for ${formatAmount(Math.round(plan.goodsCost))} ${CURRENCY_SYMBOL}, plus ${formatAmount(upfrontCost(cost))} ${CURRENCY_SYMBOL} to start.` }
                 : blockedReason(item, cost, state, selectedProvinceId, provinceName, count, max, unlockName, isLocked, netPerDay, shutUntil);
               const workers = item.type in jobsPer ? jobsPer[item.type as JobBuilding] : 0;
 
@@ -554,44 +558,54 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, n
 
                   <span className="build-row__main">
                     <span className="build-row__title">
-                      <span className="build-row__name" title={item.summary}>
+                      <span className="build-row__name" data-tip={item.summary}>
                         {item.name}
                       </span>
                       {!isLocked && (
-                        <span className="build-row__yield" title={item.hint}>
+                        <span className="build-row__yield" data-tip={item.hint}>
                           {typeof item.yields === "function" ? item.yields(season, mods, state.placedBuildings.filter((b) => b.type === "road").length) : item.yields}
                         </span>
                       )}
                       {!isLocked && (
-                        <span className="build-row__count" title={`${count} of ${max} built or underway in ${provinceName}`}>
+                        <span className="build-row__count" data-tip={`${count} of ${max} built or underway in ${provinceName}`}>
                           <Pips count={count} max={max} />
+                        </span>
+                      )}
+                      {brokenHere > 0 && (
+                        <span className="build-row__broken" data-tip={`${brokenHere} broken here. See Repairs.`}>
+                          <WrenchIcon size={12} />
+                          {brokenHere}
                         </span>
                       )}
                     </span>
 
                     {!isLocked && (
                       <span className="build-row__costs">
-                        {/* What you have against what it costs, so the gap reads at a glance. */}
+                        {/* The whole price and the first payment. These two tips stay plain
+                            titles: what you have ticks over, and only a title follows that
+                            while it's pointed at (Tooltips.tsx). */}
                         <span
                           className={`build-row__cost ${treasuryShort ? "is-short" : treasuryPartial ? "is-partial" : ""}`}
-                          title={`You have ${formatAmount(treasury)} ${CURRENCY_SYMBOL}. It costs ${formatAmount(cost)} in all: ${formatAmount(upfront(cost))} when ordered, the rest during the build.`}
+                          title={`You have ${formatAmount(treasury)} ${CURRENCY_SYMBOL}. It costs ${formatAmount(cost)} in all: ${formatAmount(upfrontCost(cost))} when ordered, the rest during the build.`}
                         >
                           <StatIcon type="treasury" size={14} />
                           {formatAmount(cost)}
+                          <span className="build-row__first">({formatAmount(upfrontCost(cost))} now)</span>
                         </span>
                         <span
                           className={`build-row__cost ${resourceShort ? "is-short" : resourcePartial ? "is-partial" : ""}`}
-                          title={`You have ${formatAmount(stock)} ${item.resourceType}. It takes ${item.resourceCost} in all: ${upfront(item.resourceCost)} when ordered, the rest during the build.`}
+                          title={`You have ${formatAmount(stock)} ${item.resourceType}. It takes ${item.resourceCost} in all: ${upfrontCost(item.resourceCost)} when ordered, the rest during the build.`}
                         >
                           <ResourceGlyph type={item.resourceType} />
                           {item.resourceCost}
+                          <span className="build-row__first">({upfrontCost(item.resourceCost)} now)</span>
                         </span>
-                        <span className="build-row__cost build-row__cost--plain" title={`${item.buildDays} days to build`}>
+                        <span className="build-row__cost build-row__cost--plain" data-tip={`${item.buildDays} days to build`}>
                           <HourglassIcon />
                           {item.buildDays}d
                         </span>
                         {workers > 0 && (
-                          <span className="build-row__cost build-row__cost--plain" title={`Needs ${formatAmount(workers)} workers from your population. Without them it runs below capacity.`}>
+                          <span className="build-row__cost build-row__cost--plain" data-tip={`Needs ${formatAmount(workers)} workers from your population. Without them it runs below capacity.`}>
                             <StatIcon type="population" size={14} />
                             {formatAmount(workers)}
                           </span>
@@ -600,19 +614,13 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, n
                     )}
 
                     {reason && (
-                      <span className={`build-row__reason ${plan ? "is-solvable" : ""}`}>
+                      <span className={`build-row__reason ${plan ? "is-solvable" : ""}`} data-tip={reason.full === reason.short ? undefined : reason.full}>
                         {!plan && (
                           <span className="build-row__reason-mark" aria-hidden="true">
                             !
                           </span>
                         )}
-                        {reason}
-                      </span>
-                    )}
-                    {brokenHere > 0 && (
-                      <span className="build-row__broken">
-                        <WrenchIcon size={12} />
-                        {brokenHere} broken here. See Repairs.
+                        {reason.short}
                       </span>
                     )}
                   </span>
@@ -622,8 +630,8 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, n
                       type="button"
                       className="btn-primary build-row__button"
                       disabled={!canBuild && !plan}
-                      aria-label={canBuild ? `Build ${item.name} in ${provinceName}` : plan ? `Buy ${item.resourceType} and build ${item.name} in ${provinceName}` : `${item.name}: ${reason}`}
-                      title={plan ? `${formatAmount(Math.round(plan.goodsCost))} ${CURRENCY_SYMBOL} for ${Math.round(plan.amount)} ${item.resourceType} on the market, and ${formatAmount(upfront(cost))} ${CURRENCY_SYMBOL} down on the ${item.name.toLowerCase()}. The rest of its price comes out daily as it goes up.` : undefined}
+                      aria-label={canBuild ? `Build ${item.name} in ${provinceName}` : plan ? `Buy ${item.resourceType} and build ${item.name} in ${provinceName}` : `${item.name}: ${reason?.full}`}
+                      data-tip={plan ? `${formatAmount(Math.round(plan.goodsCost))} ${CURRENCY_SYMBOL} for ${Math.round(plan.amount)} ${item.resourceType} on the market, and ${formatAmount(upfrontCost(cost))} ${CURRENCY_SYMBOL} down on the ${item.name.toLowerCase()}. The rest of its price comes out daily as it goes up.` : undefined}
                       onClick={() => {
                         playBuild();
                         dispatch((s) => (item.action.canBuild(s, selectedProvinceId) ? item.action(s, selectedProvinceId) : buyAndBuild(s, item.action, selectedProvinceId)));
@@ -633,7 +641,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, n
                       {plan && (
                         <span className="build-row__button-price">
                           <StatIcon type="treasury" size={14} />
-                          {formatAmount(Math.round(plan.goodsCost + upfront(cost)))} now
+                          {formatAmount(Math.round(plan.goodsCost + upfrontCost(cost)))} now
                         </span>
                       )}
                     </button>

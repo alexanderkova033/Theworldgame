@@ -182,9 +182,9 @@
   }
 }
 
-/* Docked beside the map (Build): no wash and no click-catcher, so the map
-   stays in view and a province is picked by clicking it. The panel runs
-   the height of the screen under the top bar, its sections stacked. */
+/* Docked beside the map (Build, both sections): no wash and no click-catcher,
+   so the map stays in view and a province is picked by clicking it. The panel
+   runs the height of the screen under the top bar, its sections stacked. */
 .modal-overlay.modal-overlay--side {
   justify-content: flex-end;
   padding-right: 1rem;
@@ -194,11 +194,18 @@
 
 .modal.modal--side {
   pointer-events: auto;
-  max-width: 36rem;
+  max-width: 50rem;
   height: calc(100vh - var(--top-bar-height) - 2.5rem);
   height: calc(100dvh - var(--top-bar-height) - 2.5rem);
   box-shadow: -8px 0 22px rgba(12, 22, 16, 0.35);
   animation-name: modal-slide;
+}
+
+/* A smaller screen: 50rem would leave too little map to choose a province on. */
+@media (max-width: 1100px) {
+  .modal.modal--side {
+    max-width: 36rem;
+  }
 }
 
 .modal--side .window-layout {

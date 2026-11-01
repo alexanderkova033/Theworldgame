@@ -5,6 +5,11 @@
 export const DAYS_PER_MONTH = 30;
 export const MONTHS_PER_YEAR = 12;
 
+// --- Building ---
+// The share of a building's price, in money and in goods, charged when it is
+// ordered. The rest comes out daily during the build (see createBuildAction.ts).
+export const BUILD_UPFRONT_SHARE = 0.6;
+
 // --- Food ---
 export const FOOD_PER_FARM = 1900; // food produced per farm per in-game day (before the season — see FARM_SEASON_MULTIPLIER)
 export const FOOD_PER_POP_CONSUMPTION = 1; // food eaten per person per in-game day
@@ -247,7 +252,7 @@ export const BREAKDOWN_CHANCE_PER_DAY = 0.0014; // per working building — roug
 export const REPAIR_COST_SHARE = 0.25; // a repair costs this share of the building's original price
 export const REPAIR_DAYS = 10;
 export const WORN_WARNING_DAYS = 30; // a building whose roll fails stays worn, and working, this long before it breaks
-export const SERVICE_COST_SHARE = 0.1; // servicing a worn building costs this share of its original price, and takes it out of use for no days
+export const SERVICE_COST_SHARE = 0.3; // servicing a worn building costs this share of its original price: more than a repair, but it is out of use for no days
 
 // --- Laws & political power (see domain/laws, domain/politics) ---
 // Political power trickles in daily — faster the more popular the government

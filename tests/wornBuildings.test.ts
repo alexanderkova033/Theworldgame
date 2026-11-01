@@ -141,12 +141,12 @@ describe("servicing", () => {
     expect(find(later, id).condition).toBeUndefined();
   });
 
-  it("costs a tenth of the build price, in money and the good, against a quarter for a repair", () => {
-    expect(SERVICE_COST_SHARE).toBe(0.1);
+  it("costs 30% of the build price, in money and the good, against a quarter for a repair", () => {
+    expect(SERVICE_COST_SHARE).toBe(0.3);
     expect(REPAIR_COST_SHARE).toBe(0.25);
-    expect(getServiceCost("farm")).toEqual({ treasury: Math.round(FARM_COST * 0.1), resourceType: "wood", resourceAmount: Math.ceil(FARM_WOOD_COST * 0.1) });
-    expect(getServiceCost("factory")).toEqual({ treasury: Math.round(FACTORY_COST * 0.1), resourceType: "ore", resourceAmount: Math.ceil(FACTORY_ORE_COST * 0.1) });
-    expect(getServiceCost("farm").treasury).toBeLessThan(getRepairCost("farm").treasury);
+    expect(getServiceCost("farm")).toEqual({ treasury: Math.round(FARM_COST * 0.3), resourceType: "wood", resourceAmount: Math.ceil(FARM_WOOD_COST * 0.3) });
+    expect(getServiceCost("factory")).toEqual({ treasury: Math.round(FACTORY_COST * 0.3), resourceType: "ore", resourceAmount: Math.ceil(FACTORY_ORE_COST * 0.3) });
+    expect(getServiceCost("farm").treasury).toBeGreaterThan(getRepairCost("farm").treasury);
 
     const { state, id } = withWornFarm();
     const cost = getServiceCost("farm");
@@ -156,7 +156,7 @@ describe("servicing", () => {
   });
 
   it("gets cheaper with what makes a repair cheaper", () => {
-    expect(getServiceCost("factory", 0.5).treasury).toBe(Math.round(FACTORY_COST * 0.05));
+    expect(getServiceCost("factory", 0.5).treasury).toBe(Math.round(FACTORY_COST * 0.15));
   });
 
   it("can't be paid for without the money or the good, and changes nothing", () => {
