@@ -13,7 +13,7 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 03 | [Fewer interruptions](tasks/03-fewer-interruptions.md) | merged | `task/03-fewer-interruptions` | `App.tsx`, how briefings and letters follow each other | 01, 02 |
 | 04 | [Warning before a breakdown](tasks/04-worn-buildings.md) | merged | `task/04-worn-buildings` | maintenance rules, Repairs, map, balance | alone |
 | 05 | [Winter, the Build window, top bar lines](tasks/05-look.md) | merged | `task/05-look` | map season CSS, Build rows and window size, top bar CSS | 06 |
-| 06 | [Country titles](tasks/06-country-titles.md) | options built on its branch, waiting on the owner to pick | `task/06-country-titles` | map names | 05 |
+| 06 | [Country titles](tasks/06-country-titles.md) | owner picked B (names at sea), stage 2 running | `task/06-country-titles` | map names | 05 |
 | 07 | [Starting populations and wood](tasks/07-starting-countries.md) | running | `task/07-starting-countries` | starting state, balance | alone |
 | 08 | [Earlier scouting](tasks/08-earlier-scouting.md) | waiting on 07 | `task/08-earlier-scouting` | chapters, balance | alone |
 | 09 | [Heating](tasks/09-heating.md) | waiting on 08 | `task/09-heating` | housing rules, balance | alone |
