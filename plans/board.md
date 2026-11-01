@@ -12,9 +12,9 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 02 | [The first minute](tasks/02-first-minute.md) | merged | `task/02-first-minute` | Objectives panel | 01, 03 |
 | 03 | [Fewer interruptions](tasks/03-fewer-interruptions.md) | merged | `task/03-fewer-interruptions` | `App.tsx`, how briefings and letters follow each other | 01, 02 |
 | 04 | [Warning before a breakdown](tasks/04-worn-buildings.md) | merged | `task/04-worn-buildings` | maintenance rules, Repairs, map, balance | alone |
-| 05 | [Winter, the Build window, top bar lines](tasks/05-look.md) | waiting on 04 | `task/05-look` | map season CSS, Build rows and window size, top bar CSS | 06 |
-| 06 | [Country titles](tasks/06-country-titles.md) | waiting on 04, stops for the owner to pick | `task/06-country-titles` | map names | 05 |
-| 07 | [Starting populations and wood](tasks/07-starting-countries.md) | waiting on 05 and 06 | `task/07-starting-countries` | starting state, balance | alone |
+| 05 | [Winter, the Build window, top bar lines](tasks/05-look.md) | merged | `task/05-look` | map season CSS, Build rows and window size, top bar CSS | 06 |
+| 06 | [Country titles](tasks/06-country-titles.md) | options built on its branch, waiting on the owner to pick | `task/06-country-titles` | map names | 05 |
+| 07 | [Starting populations and wood](tasks/07-starting-countries.md) | running | `task/07-starting-countries` | starting state, balance | alone |
 | 08 | [Earlier scouting](tasks/08-earlier-scouting.md) | waiting on 07 | `task/08-earlier-scouting` | chapters, balance | alone |
 | 09 | [Heating](tasks/09-heating.md) | waiting on 08 | `task/09-heating` | housing rules, balance | alone |
 | 10 | [Trading orders](tasks/10-trading-orders.md) | waiting on 09 | `task/10-trading-orders` | market, a day step | alone |
@@ -51,6 +51,11 @@ Planned order: the look (1, 2, 3, 5, 10), then the numbers one at a time (4, 6, 
 ## Watch
 
 - One test failed once in `npm test` after task 02 merged, and was not identified. Task 04 then saw `tests/interruptions.test.ts` time out at 5 seconds and an unexplained failure in `tests/balance.test.ts`. The limit is now 30 seconds. If a failure recurs, save the name and the error.
+
+## Small follow-ups from task 05
+
+- With Build docked at 50rem, only 3 of Astravia's 6 provinces can be clicked at the default map position until the map is dragged. The owner should judge this in play.
+- The money and goods cost tips stay `title`, because `Tooltips.tsx` only follows a changing `title`.
 
 ## Small follow-ups from task 03
 
