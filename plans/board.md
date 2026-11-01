@@ -17,8 +17,8 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 07 | [Starting populations and wood](tasks/07-starting-countries.md) | merged | `task/07-starting-countries` | starting state, balance | alone |
 | 07b | [Law requirements and Caldenreich's lead](tasks/07b-nation-balance.md) | merged | `task/07b-nation-balance` | laws, starting state, balance | alone |
 | 08 | [Earlier scouting](tasks/08-earlier-scouting.md) | merged, the owner to say which ceiling they meant | `task/08-earlier-scouting` | chapters, balance | alone |
-| 09 | [Heating](tasks/09-heating.md) | running | `task/09-heating` | housing rules, balance | alone |
-| 10 | [Trading orders](tasks/10-trading-orders.md) | waiting on 09 | `task/10-trading-orders` | market, a day step | alone |
+| 09 | [Heating](tasks/09-heating.md) | built on its branch, not merged: Hard falls to 3 of 27, waiting on owner | `task/09-heating` | housing rules, balance | alone |
+| 10 | [Trading orders](tasks/10-trading-orders.md) | running | `task/10-trading-orders` | market, a day step | alone |
 | 11 | [Trained workers](tasks/11-trained-workers.md) | waiting on 10, stops for the owner to agree a design | `task/11-trained-workers` | labour, balance, People | alone |
 
 Work branch: `setup-screen-flags`, which holds the latest game (`main` is two commits behind it). Task branches start from it and merge back into it, with 04 last. After each merge, the manager reruns all the checks. The owner plays the result before anything is pushed, and decides when it goes to `main`.
