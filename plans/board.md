@@ -14,7 +14,7 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 04 | [Warning before a breakdown](tasks/04-worn-buildings.md) | merged | `task/04-worn-buildings` | maintenance rules, Repairs, map, balance | alone |
 | 05 | [Winter, the Build window, top bar lines](tasks/05-look.md) | merged | `task/05-look` | map season CSS, Build rows and window size, top bar CSS | 06 |
 | 06 | [Country titles](tasks/06-country-titles.md) | owner picked B (names at sea), stage 2 running | `task/06-country-titles` | map names | 05 |
-| 07 | [Starting populations and wood](tasks/07-starting-countries.md) | running | `task/07-starting-countries` | starting state, balance | alone |
+| 07 | [Starting populations and wood](tasks/07-starting-countries.md) | merged, nation spread and law quotas waiting on owner | `task/07-starting-countries` | starting state, balance | alone |
 | 08 | [Earlier scouting](tasks/08-earlier-scouting.md) | waiting on 07 | `task/08-earlier-scouting` | chapters, balance | alone |
 | 09 | [Heating](tasks/09-heating.md) | waiting on 08 | `task/09-heating` | housing rules, balance | alone |
 | 10 | [Trading orders](tasks/10-trading-orders.md) | waiting on 09 | `task/10-trading-orders` | market, a day step | alone |
@@ -49,6 +49,9 @@ Owner's decisions on this list, 2026-10-31:
 Planned order: the look (1, 2, 3, 5, 10), then the numbers one at a time (4, 6, 9), then trading (8), then workers (7) alone and last. Item 3 gets real screenshots of options for the owner to pick from.
 
 ## Watch
+
+- Task 07 moved the ladder to Easy 10 and 27, Normal 0 and 18, Hard 0 and 7, Ruthless 0 and 3. `difficultyData.ts` and TODO.md still record the old figures until the owner settles the spread. Careful wins over 18 seeds, as Astravia, Caldenreich, Veldoria: Normal 10, 18, 5; Hard 5, 11, 0; Ruthless 5, 2, 0. Task 08 waits, as it measures from this baseline.
+- Law quotas in `src/domain/laws/lawData.ts` name fixed populations (10,000 to 14,000), so Astravia meets early ones on day one and Veldoria's Labour laws stay shut for most of a game.
 
 - One test failed once in `npm test` after task 02 merged, and was not identified. Task 04 then saw `tests/interruptions.test.ts` time out at 5 seconds and an unexplained failure in `tests/balance.test.ts`. The limit is now 30 seconds. If a failure recurs, save the name and the error.
 
