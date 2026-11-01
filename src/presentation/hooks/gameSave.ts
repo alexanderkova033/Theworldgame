@@ -114,6 +114,7 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     factionApproval: raw.factionApproval ?? (Object.fromEntries(FACTIONS.map((f) => [f, stats.popularity])) as Record<Ideology, number>),
     expeditions: raw.expeditions ?? [],
     scoutedIslandIds: raw.scoutedIslandIds ?? [],
+    daysShortOfWorkers: raw.daysShortOfWorkers ?? 0,
     events: raw.events ?? [],
     monthlyReports: raw.monthlyReports ?? [],
     history: raw.history ?? [],

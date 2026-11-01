@@ -10,7 +10,7 @@
 // in another province, in the same order. The rest stay unemployed, which
 // weighs on public opinion (see politicsRules.ts) — so homes belong near
 // the jobs. National figures are the sums over provinces.
-import { COMMUTE_SHARE, FACTORIES_PER_FOUNDRY, FACTORIES_PER_STEELWORKS, FARMS_PER_ESTATE, FARMS_PER_MODEL_FARM, JOBS_PER_BUILDING, LABOUR_SHARE } from "../constants";
+import { CAPTAIN_WORKER_SHORTAGE, COMMUTE_SHARE, FACTORIES_PER_FOUNDRY, FACTORIES_PER_STEELWORKS, FARMS_PER_ESTATE, FARMS_PER_MODEL_FARM, JOBS_PER_BUILDING, LABOUR_SHARE } from "../constants";
 import type { ProjectType } from "../construction/types";
 import type { GameState } from "../country/types";
 import { isWorking } from "../maintenance/maintenanceRules";
@@ -82,6 +82,13 @@ export interface LabourSituation {
   staffed: { farms: number; granaries: number; canneries: number; schools: number; factories: number };
   sectors: Record<Sector, SectorJobs>; // nationwide: food (farms, granaries, canneries), schools, factories
   provinces: Record<string, ProvinceLabour>;
+}
+
+// Whether the country as a whole has far more jobs than people to fill them.
+// It compares jobs with all its workers, so jobs left open while others stand
+// idle in another province don't count: more people wouldn't be the answer.
+export function isShortOfWorkers(labour: Pick<LabourSituation, "jobs" | "workers">): boolean {
+  return labour.jobs - labour.workers >= labour.workers * CAPTAIN_WORKER_SHORTAGE && labour.jobs > labour.workers;
 }
 
 function staffing(hired: number, jobs: number): number {

@@ -19,9 +19,10 @@ import { allChaptersOpen } from "../src/domain/chapters/chapterData";
 import { DECISIONS } from "../src/domain/decisions/decisionData";
 import { pickDecision } from "../src/domain/decisions/decisionRules";
 import { startNewGame } from "../src/application/startNewGame";
-import { isAtJobCeiling } from "../src/application/getJobCeiling";
+import { simulateDay } from "../src/application/simulateDay";
 import { CHAPTERS, getChapter, isFeatureOpen, isStoryChapter, type Feature } from "../src/domain/chapters/chapterData";
-import { CAPTAIN_FROM_MONTH, JOBS_PER_BUILDING } from "../src/domain/constants";
+import { CAPTAIN_FROM_MONTH, CAPTAIN_SHORTAGE_DAYS, CAPTAIN_WORKER_SHORTAGE, JOBS_PER_BUILDING, LABOUR_SHARE } from "../src/domain/constants";
+import { getLabourSituation, isShortOfWorkers } from "../src/domain/labour/labourRules";
 import { getOwnedProvinceIds } from "../src/domain/provinces/provinceRules";
 import { LAW_NODES } from "../src/domain/laws/lawData";
 import { getNation } from "../src/domain/nations/nationRules";
@@ -73,14 +74,15 @@ describe("chapters", () => {
 
   describe("the captain's offer", () => {
     const opened = (s: typeof start, month: number, day = 1) => advanceChapters({ ...s, date: { year: 1, month, day } }).chapters.opened.includes("captain");
-    // Every province full of every building that employs anyone, and far more
-    // people than those jobs: the ceiling. A building type shut to this
-    // country has no slot to count, so filling it too does no harm.
-    const atCeiling = (s: typeof start): typeof start => {
-      const types = Object.keys(JOBS_PER_BUILDING) as Array<keyof typeof JOBS_PER_BUILDING>;
-      const placedBuildings = getOwnedProvinceIds(s).flatMap((provinceId) => types.flatMap((type) => Array.from({ length: 4 }, (_, i) => ({ ...s.placedBuildings[0], id: `${provinceId}-${type}-${i}`, type, provinceId, condition: undefined }))));
-      return { ...s, placedBuildings, provinces: Object.fromEntries(Object.entries(s.provinces).map(([id, p]) => [id, { ...p, population: 1000000 }])) };
+    // A country with exactly this many jobs, and people to give it `workers`.
+    const staffedBy = (s: typeof start, jobs: number, workers: number): typeof start => {
+      const ids = getOwnedProvinceIds(s);
+      const placedBuildings = Array.from({ length: jobs / JOBS_PER_BUILDING.farm }, (_, i) => ({ ...s.placedBuildings[0], id: `farm-${i}`, type: "farm" as const, provinceId: ids[0], condition: undefined }));
+      const population = workers / LABOUR_SHARE / ids.length;
+      return { ...s, placedBuildings, stats: { ...s.stats, population: workers / LABOUR_SHARE }, provinces: Object.fromEntries(Object.entries(s.provinces).map(([id, p]) => [id, { ...p, population }])) };
     };
+    // The next day's count of days short of workers, simulated.
+    const nextDay = (s: typeof start) => simulateDay({ ...s, isPaused: false }).daysShortOfWorkers;
 
     it("comes in December of the first year at the latest", () => {
       expect(getChapter("captain").by).toBe(12);
@@ -88,31 +90,58 @@ describe("chapters", () => {
       expect(opened(start, 12)).toBe(true);
     });
 
-    it("comes from June once people stand idle with no building left to employ them", () => {
-      const full = atCeiling(start);
-      expect(isAtJobCeiling(full)).toBe(true);
-      expect(opened(full, CAPTAIN_FROM_MONTH - 1, 30)).toBe(false);
-      expect(opened(full, CAPTAIN_FROM_MONTH, 15)).toBe(true); // any day of the month
+    it("comes from June once the country has been short of workers long enough", () => {
+      const short = { ...start, daysShortOfWorkers: CAPTAIN_SHORTAGE_DAYS };
+      expect(opened(short, CAPTAIN_FROM_MONTH - 1, 30)).toBe(false);
+      expect(opened(short, CAPTAIN_FROM_MONTH, 15)).toBe(true); // any day of the month
     });
 
-    it("isn't brought by a ceiling with one slot left, or with nobody idle", () => {
-      const full = atCeiling(start);
-      const oneFree = { ...full, placedBuildings: full.placedBuildings.filter((b) => !(b.type === "factory" && b.provinceId === province)) };
-      expect(isAtJobCeiling(oneFree)).toBe(false);
-      expect(opened(oneFree, 11)).toBe(false);
-      const empty = { ...full, provinces: Object.fromEntries(Object.entries(full.provinces).map(([id, p]) => [id, { ...p, population: 0 }])) };
-      expect(isAtJobCeiling(empty)).toBe(false);
-      expect(opened(empty, 11)).toBe(false);
+    it("doesn't come for a shortage that hasn't lasted", () => {
+      expect(opened({ ...start, daysShortOfWorkers: CAPTAIN_SHORTAGE_DAYS - 1 }, 11)).toBe(false);
     });
 
-    it("isn't held back by a building the country can't build yet, or brought on by want of money", () => {
-      // Only what research or a chapter would still open is free: no slot today.
-      const locked = ["granary", "cannery", "modelFarm", "steelworks", "education"];
-      const full = atCeiling(start);
-      expect(isAtJobCeiling({ ...full, placedBuildings: full.placedBuildings.filter((b) => !locked.includes(b.type)) })).toBe(true);
-      // A slot it has no money for is still a slot.
-      const broke = { ...full, placedBuildings: full.placedBuildings.filter((b) => b.type !== "factory"), stats: { ...full.stats, treasury: 0 } };
-      expect(isAtJobCeiling(broke)).toBe(false);
+    it("counts a real shortage, day by day, and starts again when it ends", () => {
+      const short = staffedBy(start, 3000, 1000);
+      expect(isShortOfWorkers(getLabourSituation(short))).toBe(true);
+      expect(nextDay(short)).toBe(1);
+      expect(nextDay({ ...short, daysShortOfWorkers: 5 })).toBe(6);
+      const eased = staffedBy(start, 3000, 3000);
+      expect(nextDay({ ...eased, daysShortOfWorkers: CAPTAIN_SHORTAGE_DAYS - 1 })).toBe(0);
+    });
+
+    it("starts counting from nothing in a save from before the count", () => {
+      const { daysShortOfWorkers: _count, ...old } = start;
+      expect(hydrateGameState(JSON.parse(JSON.stringify(old))).daysShortOfWorkers).toBe(0);
+    });
+
+    it("needs a meaningful shortage, not jobs just beyond the workers", () => {
+      const workers = 2000;
+      const line = workers * (1 + CAPTAIN_WORKER_SHORTAGE);
+      expect(isShortOfWorkers({ jobs: line, workers })).toBe(true);
+      expect(isShortOfWorkers({ jobs: line - 1, workers })).toBe(false);
+      // What a country that only feeds itself reaches, measured: 39% at the most.
+      expect(isShortOfWorkers({ jobs: workers * 1.39, workers })).toBe(false);
+      expect(isShortOfWorkers({ jobs: workers, workers })).toBe(false);
+      expect(isShortOfWorkers({ jobs: 0, workers: 0 })).toBe(false);
+    });
+
+    it("isn't brought by a broken factory, whose jobs nobody can fill", () => {
+      // Just under the line, with one factory broken: mended, it would pass it.
+      const under = staffedBy(start, 2700, 2000);
+      const broken = { ...under, placedBuildings: [...under.placedBuildings, { ...under.placedBuildings[0], id: "broken", type: "factory" as const, condition: "broken" as const }] };
+      expect(isShortOfWorkers(getLabourSituation(broken))).toBe(false);
+      expect(isShortOfWorkers(getLabourSituation({ ...broken, placedBuildings: broken.placedBuildings.map((b) => ({ ...b, condition: undefined })) }))).toBe(true);
+    });
+
+    it("doesn't count people idle in one province while jobs stand open in another", () => {
+      // Every job in one province and all the people in another: some stay
+      // home, so jobs go unfilled, yet the country has the people.
+      const [here, there] = getOwnedProvinceIds(start);
+      const apart = staffedBy(start, 3000, 3000);
+      const provinces = Object.fromEntries(Object.entries(apart.provinces).map(([id, p]) => [id, { ...p, population: id === there ? 3000 / LABOUR_SHARE : 0 }]));
+      const labour = getLabourSituation({ ...apart, provinces });
+      expect(labour.provinces[here].openJobs).toBeGreaterThan(0);
+      expect(isShortOfWorkers(labour)).toBe(false);
     });
 
     // Later rules keep their own dates: the race (RACE_FROM_MONTH, tests/islands.test.ts)

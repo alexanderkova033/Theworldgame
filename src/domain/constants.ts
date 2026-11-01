@@ -470,7 +470,13 @@ export const NEIGHBOUR_GROWTH_PER_MONTH = POPULATION_GROWTH_RATE * DAYS_PER_MONT
 // settlers to an island nobody holds, when it can spare the price and its
 // temper wants it (see domain/neighbours); whoever lands first keeps it.
 export const RACE_FROM_MONTH = 27; // months since the start before any neighbour sails
-export const CAPTAIN_FROM_MONTH = 6; // the first month a country out of room for jobs brings the captain's offer (it comes by month 12 anyway)
+export const CAPTAIN_FROM_MONTH = 6; // the first month a country short of workers brings the captain's offer (it comes by month 12 anyway)
+// Short of workers: jobs beyond the country's workers, as a share of those
+// workers. A country that only keeps its people fed holds at 41% at the most
+// before December; one factory more than that puts it past this line in every
+// nation (2026-11-01, plans/tasks/08b-worker-ceiling.md).
+export const CAPTAIN_WORKER_SHORTAGE = 0.45;
+export const CAPTAIN_SHORTAGE_DAYS = 14; // days in a row it must last, so a few bad days don't bring the captain
 export const NEIGHBOUR_VOYAGE_GAP_MONTHS = 8; // a neighbour sails at most this often
 
 // Relations (see domain/neighbours/relationsRules.ts): -100 to 100.

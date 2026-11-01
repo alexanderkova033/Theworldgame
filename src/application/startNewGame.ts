@@ -150,6 +150,7 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     market: createMarket(getSeason(STARTING_DATE)),
     expeditions: [],
     scoutedIslandIds: [],
+    daysShortOfWorkers: 0,
     events: [
       {
         id: "event-start",

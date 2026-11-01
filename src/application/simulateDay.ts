@@ -26,7 +26,7 @@ import { MAX_EVENT_LOG_LENGTH } from "../domain/constants";
 import { getDecisionChance, pickDecision } from "../domain/decisions/decisionRules";
 import { getHousingCapacityByProvince, getNationalHomelessShare } from "../domain/housing/housingRules";
 import { calculateIndustryOutput } from "../domain/industry/industryRules";
-import { getLabourSituation } from "../domain/labour/labourRules";
+import { getLabourSituation, isShortOfWorkers } from "../domain/labour/labourRules";
 import { emptyLedger, isLedgerEmpty, mergeLedgers } from "../domain/ledger/ledgerRules";
 import { calculateDailyPoliticalPower } from "../domain/politics/politicsRules";
 import { reconcileProvinces } from "../domain/provinces/provincePopulation";
@@ -264,6 +264,7 @@ export function simulateDay(state: GameState): GameState {
     workforce: takings.workforce,
     taxRate: takings.taxRate,
     foreignPolitics: month.foreignPolitics,
+    daysShortOfWorkers: isShortOfWorkers(labour) ? working.daysShortOfWorkers + 1 : 0,
     ...neighbourMonth,
     debt: goods.debt,
     events: day.events.slice(0, MAX_EVENT_LOG_LENGTH),
