@@ -1,6 +1,7 @@
 // Buildings on the map never touch: each has its own plot, inside its
 // province, and stays put as others go up. See src/presentation/mapSlots.ts.
 import { describe, expect, it } from "vitest";
+import { getNation } from "../src/domain/nations/nationRules";
 import { MAP_GEOMETRY } from "../src/domain/provinces/provinceData";
 import { BUILDING_ROOM, getProvincePlots, placeBuildings, placeCrowds, separatePlates } from "../src/presentation/mapSlots";
 
@@ -35,6 +36,18 @@ describe("plots on the map", () => {
         expect(clear).toBe(true);
       }
     }
+  });
+
+  it("uses the middle of the land: no room is kept for a name now they lie at sea", () => {
+    // Every province has a plot near its middle.
+    for (const place of MAP_GEOMETRY.provinces) {
+      const { plots } = getProvincePlots(place.id)!;
+      expect(Math.min(...plots.map(([x, y]) => Math.hypot(x - place.labelX, y - place.labelY))), place.name).toBeLessThan(35);
+    }
+    // And plots stand where Astravia's name used to lie across its land.
+    const middle = { x: 341, y: 454, halfWidth: 60, halfHeight: 20 };
+    const standing = getNation("astravia").provinceIds.flatMap((id) => getProvincePlots(id)!.plots);
+    expect(standing.some(([x, y]) => Math.abs(x - middle.x) < middle.halfWidth && Math.abs(y - middle.y) < middle.halfHeight)).toBe(true);
   });
 
   it("has room for the buildings most provinces hold in play", () => {

@@ -26,19 +26,30 @@ export const TERRAIN_TINT: Record<Terrain, string> = {
   plains: "#c79a2e",
 };
 
-// Each road built thickens the single line to its province (instead of
-// fanning out extra parallel lines) — a "×N" badge carries the exact count
-// so the line itself never has to turn into a tangle to stay informative.
-// A colour pushed toward the ink, so a pale party colour still reads as
-// lettering on the paper.
-export function inkier(hex: string, amount: number): string {
+// Darkened until it reads on the open sea: a party's colour was chosen to sit
+// beside other colours, and some are as pale as the water.
+const WATER = [0x9f, 0xb0, 0x96]; // .map-panel__sea
+const READABLE_ON_WATER = 5; // contrast: WCAG asks 4.5 of text, and the seasons' washes darken the water a little
+
+const luminance = (rgb: number[]) => {
+  const [r, g, b] = rgb.map((c) => (c / 255 <= 0.03928 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+export function contrast(a: number[], b: number[]): number {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+export function inkOnWater(hex: string): string {
   const n = parseInt(hex.slice(1), 16);
-  const ink = [0x2b, 0x1d, 0x12];
-  const channel = (shift: number, i: number) => {
-    const c = (n >> shift) & 0xff;
-    return Math.round(c + (ink[i] - c) * amount);
-  };
-  return `rgb(${channel(16, 0)}, ${channel(8, 1)}, ${channel(0, 2)})`;
+  const own = [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+  let mixed = own;
+  // Towards black, not the map's brown ink, so a party keeps its own hue.
+  for (let amount = 0; amount <= 1 && contrast(mixed, WATER) < READABLE_ON_WATER; amount += 0.05) {
+    mixed = own.map((c) => Math.round(c * (1 - amount)));
+  }
+  return `rgb(${mixed.join(", ")})`;
 }
 
 // The watercolour a nation is washed in: its own hue at a soft, faded

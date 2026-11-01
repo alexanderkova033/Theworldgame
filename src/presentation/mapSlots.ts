@@ -1,12 +1,11 @@
 // Where things stand inside a province on the map: building plots worked out
 // once from its outline, far enough apart that no two pictures touch, clear
-// of the capital's star and the nation's name. A province with more buildings
+// of the capital's star. A province with more buildings
 // than plots counts the rest on one of their kind, rather than stacking them.
 // Crowds (a camp, a square) find open ground round whatever stands.
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
 import type { ProjectType } from "../domain/construction/types";
-import { distanceToSegment, edges, nationShapes, parsePolygon, type Point } from "./nationFrontiers";
-import { TITLE_OPTION } from "./titleOption";
+import { distanceToSegment, edges, parsePolygon, type Point } from "./nationFrontiers";
 
 export interface ProvincePlots {
   plots: Point[]; // building plots, nearest the province's middle first
@@ -29,7 +28,6 @@ const FEWEST_PLOTS = 3; // a home, a farm and a factory: a province with less gi
 const EDGE_MARGINS = [14, 10, 6]; // a picture stays on its own side of a border, as far as it can
 const JITTER = 0.03; // a small steady wobble, so the plots don't read as a grid
 const CAPITAL_ROOM = { halfWidth: 16, above: 30, below: 6 }; // the star, just above the province's middle
-const NATION_NAME_ROOM = { maxHalfWidth: 112, halfHeight: 28 };
 const CROWD_REACH = { across: 28, above: 36, below: 14 }; // the ground a crowd covers round its point
 const CROWD_EDGE_MARGIN = 13;
 const CROWD_GRID = 7;
@@ -93,20 +91,14 @@ export function getProvincePlots(provinceId: string): ProvincePlots | null {
   const polygon = parsePolygon(place.path);
   const middle: Point = [place.labelX, place.labelY];
   const capitalRoom: Room = { left: place.labelX - CAPITAL_ROOM.halfWidth, right: place.labelX + CAPITAL_ROOM.halfWidth, top: place.labelY - CAPITAL_ROOM.above, bottom: place.labelY + CAPITAL_ROOM.below };
-  const nameRooms: Room[] = nationShapes([]).map((shape) => {
-    const halfWidth = Math.min(shape.labelWidth * 0.5, NATION_NAME_ROOM.maxHalfWidth);
-    return { left: shape.labelX - halfWidth, right: shape.labelX + halfWidth, top: shape.labelY - NATION_NAME_ROOM.halfHeight, bottom: shape.labelY + NATION_NAME_ROOM.halfHeight };
-  });
 
   // The widest spacing that gives enough, or the most there are. Too small a
-  // province gives up its distance from the border, then the nation's name.
-  // Trial: options a and b leave no name for a picture to keep off.
-  const rooms = TITLE_OPTION === "a" || TITLE_OPTION === "b" ? [capitalRoom] : [capitalRoom, ...nameRooms];
-  const tries = [...EDGE_MARGINS.map((margin) => ({ rooms, margin })), ...EDGE_MARGINS.map((margin) => ({ rooms: [capitalRoom], margin }))];
+  // province gives up its distance from the border.
+  const rooms = [capitalRoom];
   let plots: Point[] = [];
-  for (const attempt of tries) {
+  for (const margin of EDGE_MARGINS) {
     for (const spacing of SPACINGS) {
-      const found = candidates(polygon, spacing, attempt.rooms, attempt.margin);
+      const found = candidates(polygon, spacing, rooms, margin);
       if (found.length > plots.length) plots = found;
       if (plots.length >= ENOUGH_PLOTS) break;
     }
@@ -115,7 +107,7 @@ export function getProvincePlots(provinceId: string): ProvincePlots | null {
   const distance = ([x, y]: Point) => Math.hypot(x - place.labelX, y - place.labelY);
   plots.sort((a, b) => distance(a) - distance(b));
 
-  // Clear of the names first; anywhere in the province after those.
+  // Clear of the star first; anywhere in the province after those.
   const nearestFirst = (points: Point[]) => points.sort((a, b) => distance(a) - distance(b));
   const open = [...nearestFirst(candidates(polygon, CROWD_GRID, rooms.map(widenedForCrowd), CROWD_EDGE_MARGIN, 0)), ...nearestFirst(candidates(polygon, CROWD_GRID, [], 0, 0))];
 

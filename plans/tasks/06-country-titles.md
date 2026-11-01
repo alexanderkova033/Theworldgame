@@ -28,57 +28,94 @@ All checks in `CLAUDE.md` pass, and Results include final screenshots at a norma
 
 ## Results
 
-Stage 1 only: the three options are built, and the owner picks. Stage 2 has not started.
+Done. Stage 1 showed three options, and the owner chose B on 2026-11-01: names at sea along each coast. Stage 2 makes it the only behaviour.
 
-### Switching between them
+### What changed
 
-Add to the address: `?titles=a`, `?titles=b` or `?titles=c`. Without it the names stay as they are today, so nothing changes for anyone until a choice is made. The switch is `src/presentation/titleOption.ts`. Stage 2 removes it and the options not chosen. No other option was added: none was clearly better.
+- **Names at sea:** `src/presentation/nationSeaNames.ts` picks each name's line, and `NationName` in `MapDecor.tsx` draws it. The names are no longer on the land.
+- **Removed:** options A and C, the `?titles=` switch, the name placement on land in `nationFrontiers.ts`, and `inkier`, which nothing else used.
+- **Freed room:** `mapSlots.ts` keeps no room for a name, so buildings and crowds can use the middle of the land.
+- **Docs:** one line each in `TECHNICAL_DESIGN.md` and `TODO.md`, which described the old names.
 
-### Screenshots
+### The faults from stage 1
 
-Not committed. All in `C:\Users\lorta\AppData\Local\Temp\claude\c--Users-lorta-Documents-repos-Theworldgame\e368a804-c798-48e1-adaa-e1b647feed00\scratchpad\titles\`. Normal window is 1440x900, narrow is 1000x760. Every shot is one save, loaded unchanged: Astravia in July, 31 buildings on the land, with a camp, a strike and a riot (edited in, as they would not all arrive this early in play).
+- **Caldenreich's "C" at the top edge:** fixed. Measured at 0px out of the map when playing Astravia, at both sizes, where it was 2px. The margin is thin: about 2 map units by calculation.
+- **Caldenreich's tilt:** now 24 degrees, against about 30 by eye in stage 1. Astravia's is 10 and Veldoria's 16. No better stretch exists. The flat north shore has about 47 map units of sea above it in the opening view, and the name and party need more than that, so a name there falls off the top (about 20 units in stage 1). Its north-east shore is the flattest that fits.
+- **Pale party lines:** every party's line is now darkened in its own hue until its contrast on the water is at least 5, and a test holds it to at least 4.5 on the sea in all four seasons. Reform Circle goes from `#7ec8e3` to `rgb(38, 60, 68)`. The cost is that party colours read as dark tints, less bright than the swatches elsewhere.
+- **No em dashes** in any new player text. The only new player text is the names themselves.
 
-- Today, to compare: `now-1440-paused.png`, `now-1000-paused.png`
-- A: `a-1440-paused.png`, `a-1000-paused.png`
-- B: `b-1440-paused.png`, `b-1000-paused.png`
-- B, its risks: `b-1440-as-caldenreich.png`, `b-1440-as-veldoria.png` and `b-1440-lost-provinces.png` (each from its own save, made the same way)
-- C, clock stopped: `c-1440-paused.png`, `c-1000-paused.png`
-- C, clock running: `c-1440-running.png`, `c-1000-running.png`
-- C, clock running, pointer resting on Veldoria: `c-1440-running-rest.png`, `c-1000-running-rest.png`
+### A nation with no shore left
 
-### How each shows what is happening in the provinces
+This can happen: Astravia's Redgate provinces and Caldenreich's West province 6 touch no shore. Veldoria has no inland province. The name then takes the nearest open water to the land still held, keeping off other names and islands. A test tries every inland province kept alone. Islands do not count as shore. See `astravia-no-shore-1440.png`: the name is at sea on the north-west shore, steeper than usual (about 50 degrees by eye).
 
-- **Today:** the name is drawn over the crowds. In the save, the riot and the camp sit under "Astravia", and the name and the riot are hard to read apart.
-- **A:** nothing in a province is hidden, since every picture is on top. The cost is the name: pictures now stand on it, so Astravia's reads as "A...ravia", and the party line is hard to read, worst at 1000px. Faint letters also run under the buildings as a little noise.
-- **B:** the clearest land of the three. Nothing but the map's own pictures is on it, and the names stay easy to read. The costs: a name is only seen if that stretch of sea is in view, and the names tilt with the coast. Details below.
-- **C:** while the clock runs, about the same as B on the land, with a faint ghost of each name (10% strength). With the clock stopped it is exactly today's map, with the riot under the name. The game opens paused, and pausing is when a player reads the map and plans, so the fault stays at the moment it matters most. Resting on your own land brings the name back over your provinces at the same moment as the province card. Names coming and going with the clock may also be distracting, which a still screenshot cannot show.
+A nation with no land left at all gets no name. Only the player's provinces can be lost (`TODO.md`). I did not check what the game shows at that point.
 
-**Recommendation: B.** It is the only one that takes the name off the land in every state. Its faults are about the names, not the provinces, which is the better way round.
+### How far a name is out of view at the opening position
 
-### What differs besides the names
+Measured in the browser, in screen pixels, against the map panel. Each row is the nation being played.
 
-Today and C keep the buildings out of the room kept for the name, because C's name comes back there. A and B give that room up (`mapSlots.ts`), so in those two the buildings and crowds stand in different places: the same 31 buildings, spread more evenly, with the riot moved to the south coast. C's empty patch stays while the name is faded.
+| Playing | Window | Astravia | Caldenreich | Veldoria |
+| --- | --- | --- | --- | --- |
+| Astravia | 1440x900 | 0 | 0 | 0 |
+| Astravia | 1000x760 | 0 | 0 | 0 |
+| Caldenreich | 1440x900 | name 29, party 41 | 0 | 0 |
+| Caldenreich | 1000x760 | name 23, party 32 | 0 | 0 |
+| Veldoria | 1440x900 | 0 | 0 | 0 |
+| Veldoria | 1000x760 | 0 | 0 | 0 |
 
-### B's faults, for stage 2 if it is chosen
+**One fault remains.** Playing Caldenreich, Astravia's name falls off the bottom until you pan or zoom out, down from 48px in stage 1, and the top of a letter or two shows at the edge. Astravia's flat south shore is the only good stretch it has, and the opening view stops above it. Fixing that means moving Caldenreich's opening view, which I left alone as outside this task. Its land stays visible, and pointing at it names it.
 
-- **Off the frame:** the map opens on your own land. Playing Caldenreich, Astravia's name falls 48px off the bottom until you pan. Playing Astravia at both sizes, the top of Caldenreich's "C" reaches the top edge of the map (the name's box measures 2px over it). Its north shore has no room, so its name takes the north-east shore, at a steeper tilt than the other two.
-- **Party lines on water:** Caldenreich's blue "Reform Circle" is pale against the sea. That colour was chosen for land.
-- **After losses:** with two Astravian provinces gone the name follows the shore still held, at a tilt of about 40 degrees. A nation holding no shore at all gets no name as the code stands: not tried. Island holdings are not counted as shore.
+No name sat under the map's buttons in any of these measurements. In the browser, every name and party line fitted its line, so no letters were dropped.
+
+### Other checks in the browser
+
+- **A nation that has lost provinces:** Astravia without two provinces. The name follows the shore still held, 0px out.
+- **Setup screen:** names at sea at both sizes, 0px out of the chart. It shows no party lines, as before. At 1000px wide the chart is small and the names are small with it, though readable.
+- **Winter:** names and party lines read clearly on the darker sea.
+- **Zoom and pan:** zoomed right out, and zoomed in then dragged. The names scale and move with the map.
+- **Build window:** your own name now stays on show, since it no longer covers the slots. The window hides what lies behind it, as it does anything else.
+- No browser console errors in any of the shots above, across all three nations.
+
+### Tests
+
+- New `tests/nationSeaNames.test.ts` (8 tests): each nation has a name, on the water, clear of the shore and islands, reading left to right and apart from the others; a whole country's name stays within 35 degrees and below the top of the opening view; it runs along its own shore; it moves with a loss and comes back; a nation with no shore still gets one; a nation with nothing gets none; party lines are dark enough in every season.
+- New test in `tests/mapSlots.test.ts` for the freed room. Putting the old room back temporarily made it fail, so it does catch the change.
 
 ### Checks
 
-- `npx tsc -b`: exit 0, no output.
-- `npm run lint`: the five known warnings and no others.
-- `npm run build`: built in 647ms.
-- `npm test`: Test Files 33 passed (33), Tests 483 passed (483), one full run. No test was changed or added, as this is a trial. The tests run with today's names, so they do not cover options A, B or C, including `tests/mapSlots.test.ts` on A's and B's freed room.
-- The browser console showed no errors in any shot, and no page scrolled sideways.
+`npx tsc -b`: exit 0, no output.
+
+`npm run lint`: the five known warnings and no others (`Gauge.tsx:125`, `ResourceIcon.tsx:5`, `BuildingIcon.tsx:8`, `useGameClock.ts:53`, `App.tsx:333`).
+
+`npm run build`: built in 565ms.
+
+`npm test`, one full run, on the same code apart from this file:
+
+```
+ Test Files  34 passed (34)
+      Tests  492 passed (492)
+```
+
+### Screenshots
+
+Not committed. All in `C:\Users\lorta\AppData\Local\Temp\claude\c--Users-lorta-Documents-repos-Theworldgame\e368a804-c798-48e1-adaa-e1b647feed00\scratchpad\titles-final\`. Normal is 1440x900, narrow is 1000x760. The saves are edited to have buildings and trouble on the land.
+
+- `astravia-1440.png`, `astravia-1000.png`, `caldenreich-1440.png`, `caldenreich-1000.png`, `veldoria-1440.png`, `veldoria-1000.png`
+- `astravia-lost-two-1440.png`, `astravia-no-shore-1440.png`, `caldenreich-no-shore-1440.png`
+- `setup-1440.png`, `setup-1000.png`, `setup-second-nation-1440.png`, `setup-second-nation-1000.png`
+- `astravia-winter-1440.png`
+- `zoomed-out-1440.png` (a province card happened to open over part of Astravia's name, as the pointer was resting), `zoomed-in-1440.png`, `zoomed-in-panned-1440.png`
+- `build-window-1440.png`, `build-window-1000.png`
 
 ### Could not verify, and left open
 
-- **Not looked at:** the setup screen, all three nations under A and C, and the Build window under each option (B keeps your name on show there, A and C hide it as today). Winter was also left out, since another task is changing it. Zooming and panning with the names at sea were not tried. Stage 2 covers the nations and the setup screen.
-- **C's resting** was seen on a neighbour at 1x. Fading during a long game at 5x was not watched.
-- **A's size and paleness, and C's 10%,** are first attempts, not tuned values.
+- **Real play:** every shot is an edited save, paused. I did not play through a real loss of provinces, or watch the names through a game at speed.
+- **Armies:** regiments near the coast or on the way to islands were not on screen in these saves, so a name passing under one was not seen. Armies are drawn on top of names.
+- **Other seasons:** spring and autumn were checked only by the contrast test, not by eye. Summer and winter were seen.
+- **Very narrow windows:** nothing below 1000px wide was tried.
+- **Setup screen, no-shore and Build window** were seen at the sizes listed, not at every size for every nation.
+- **Buildings moved:** with the name's room gone, buildings now stand in new places in existing saves, since plots are worked out rather than saved. Nothing in a save is lost.
 
 ### Noticed, left alone
 
-- The strike crowd in the save stands partly off the coast, under every option and today (see North Thornwick). The riot in A and B sits on the shoreline too.
+- Strike and riot crowds can stand partly over the shoreline (North Thornwick's strike, and the riot on Astravia's south coast). Now that the middle of the land is free this may be worth a look, in `placeCrowds`.
