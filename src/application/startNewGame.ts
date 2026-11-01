@@ -35,7 +35,7 @@ const STARTING_FACTORIES = 2;
 // One-time starting-stat nudges that back up each nation's Nation.startingBonus
 // blurb (nationData.ts) — keep the two in sync when tuning. Veldoria's bonus
 // is an ongoing multiplier instead; see nationEffects.ts.
-const STARTING_STABILITY_BONUS: Record<string, number> = { caldenreich: 10 }; // "steady administration"
+const STARTING_STABILITY_BONUS: Record<string, number> = { caldenreich: 5 }; // "steady administration"
 
 // Lean, but not starved: the farms (Nation.startingFarms) keep food production
 // close to what the population actually eats, and with two factories they employ

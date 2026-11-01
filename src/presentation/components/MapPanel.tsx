@@ -178,7 +178,7 @@ export const MapPanel = memo(function MapPanel({
   const svgRef = useRef<SVGSVGElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   // Opens on your own land (see homeView); Reset comes back here.
-  const home = useMemo(() => homeView(nation.provinceIds), [nation.provinceIds]);
+  const home = useMemo(() => homeView(nation), [nation]);
   const [view, setView] = useState<ViewBox>(home);
   const zoomRatio = BASE_VIEW.width / view.width;
   // dragOrigin is the original pointerdown position, used only to decide

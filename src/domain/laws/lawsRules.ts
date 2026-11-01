@@ -1,11 +1,13 @@
 import {
   LAW_DAYS_BY_TIER,
+  LAW_QUOTA_BASE_POPULATION,
   OWN_PARTY_BACKING_BONUS,
   OWN_PARTY_REBEL_PENALTY,
   RIVAL_OPPOSE_PASS_CHANCE_PENALTY,
   RIVAL_SUPPORT_PASS_CHANCE_BONUS,
 } from "../constants";
 import type { GameState } from "../country/types";
+import { getNation } from "../nations/nationRules";
 import { getParty, getRivalParty } from "../parties/partyRules";
 import { getPartyStance, type PartyStance } from "../parties/rivalRules";
 import { chosenIds, hasParentDone, isClosedOff, isOpenToParty } from "../policy/treeRules";
@@ -37,7 +39,7 @@ export function getLawNodeStatus(state: GameState, node: LawNode): LawNodeStatus
 
   if (node.crossRequirement && !state.enactedResearchIds.includes(node.crossRequirement.nodeId)) return "locked-cross";
 
-  if (state.stats[node.quota.stat] < node.quota.threshold) return "locked-quota";
+  if (state.stats[node.quota.stat] < getQuotaThreshold(state, node)) return "locked-quota";
 
   return "available";
 }
@@ -85,8 +87,18 @@ export function getOwnStance(state: GameState, node: LawNode): PartyStance {
   return getPartyStance(getParty(state.partyId).ideology, node.effects);
 }
 
+// What this country must reach before the law can go to a vote. Everything
+// reads this, never `node.quota.threshold`: a population row is listed for a
+// country of LAW_QUOTA_BASE_POPULATION people and scales with the nation's own
+// size at the start, so it asks the same of a small country as of a large one.
+export function getQuotaThreshold(state: GameState, node: LawNode): number {
+  const { stat, threshold } = node.quota;
+  if (stat !== "population") return threshold;
+  return (threshold * getNation(state.nationId).startingPopulation) / LAW_QUOTA_BASE_POPULATION;
+}
+
 export function getQuotaProgress(state: GameState, node: LawNode): { current: number; threshold: number; ratio: number } {
   const current = state.stats[node.quota.stat];
-  const threshold = node.quota.threshold;
+  const threshold = getQuotaThreshold(state, node);
   return { current, threshold, ratio: Math.min(1, Math.max(0, current / threshold)) };
 }

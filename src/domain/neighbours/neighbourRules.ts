@@ -62,7 +62,7 @@ export function createNeighbour(nationId: string): Neighbour {
     treasury: 0,
     population,
     food: population * STARTING_FOOD_PER_PERSON,
-    stability: nationId === "caldenreich" ? 70 : 60,
+    stability: nationId === "caldenreich" ? 65 : 60, // the same 5 as STARTING_STABILITY_BONUS for the player
     farms: nation.startingFarms,
     factories: 2,
     homes: Math.ceil((population * 1.05) / PEOPLE_PER_HOME),

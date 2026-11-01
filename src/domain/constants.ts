@@ -270,6 +270,9 @@ export const LAW_DAYS_BY_TIER: Record<1 | 2 | 3 | 4 | 5 | 6 | 7, number> = { 1: 
 // power, and money paid only if it passes (see LawEnactCost).
 export const LAW_POLITICAL_POWER_BY_TIER: Record<1 | 2 | 3 | 4 | 5 | 6 | 7, number> = { 1: 20, 2: 30, 3: 50, 4: 70, 5: 90, 6: 110, 7: 130 };
 export const LAW_PRICE_BY_TIER: Record<1 | 2 | 3 | 4 | 5 | 6 | 7, number> = { 1: 250, 2: 350, 3: 900, 4: 2000, 5: 2800, 6: 3400, 7: 4000 };
+// The size of country the population rows of a law's quota are listed for
+// (QUOTAS in laws/lawData.ts). Each nation's scale with its starting population.
+export const LAW_QUOTA_BASE_POPULATION = 10000;
 
 // --- Rival party stances (see domain/parties/rivalRules.ts) ---
 export const RIVAL_OPPOSE_PASS_CHANCE_PENALTY = 0.08; // a law/research vote the rival opposes is harder to pass

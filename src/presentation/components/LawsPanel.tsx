@@ -15,6 +15,7 @@ import {
   getOwnStance,
   getRivalStance,
   getQuotaProgress,
+  getQuotaThreshold,
 } from "../../domain/laws/lawsRules";
 import type { LawCategory, LawNode, QuotaStat } from "../../domain/laws/types";
 import { getParty, getRivalParty } from "../../domain/parties/partyRules";
@@ -97,10 +98,10 @@ function factoriesShort(state: GameState, threshold: number): number {
 }
 
 // What to do about a quota that isn't met yet, in one plain sentence.
-function quotaHint(state: GameState, quota: LawNode["quota"]): string {
-  switch (quota.stat) {
+function quotaHint(state: GameState, node: LawNode): string {
+  switch (node.quota.stat) {
     case "industry": {
-      const n = factoriesShort(state, quota.threshold);
+      const n = factoriesShort(state, getQuotaThreshold(state, node));
       return `Build ${n} more ${n === 1 ? "factory" : "factories"}, and staff ${n === 1 ? "it" : "them"}.`;
     }
     case "population":
@@ -133,12 +134,14 @@ function lawStatusLabel(state: GameState, node: LawNode, status: TreeNodeStatus)
       return "Another party's";
     case "locked-cross":
       return "Needs research";
-    case "locked-quota":
+    case "locked-quota": {
+      const threshold = getQuotaThreshold(state, node);
       if (node.quota.stat === "industry") {
-        const n = factoriesShort(state, node.quota.threshold);
+        const n = factoriesShort(state, threshold);
         return `Needs ${n} more ${n === 1 ? "factory" : "factories"}`;
       }
-      return `Needs ${QUOTA_LABELS[node.quota.stat].toLowerCase()} ${node.quota.stat === "stability" || node.quota.stat === "popularity" ? Math.round(node.quota.threshold) : formatAmount(node.quota.threshold)}`;
+      return `Needs ${QUOTA_LABELS[node.quota.stat].toLowerCase()} ${node.quota.stat === "stability" || node.quota.stat === "popularity" ? Math.round(threshold) : formatAmount(threshold)}`;
+    }
   }
 }
 
@@ -257,16 +260,16 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
       {status === "locked-quota" && (
         <div className="law-inspector__quota">
           <StatusLine status="locked">
-            Unlocks when {QUOTA_LABELS[node.quota.stat].toLowerCase()} reaches {formatQuotaValue(node.quota.stat, node.quota.threshold)}.
+            Unlocks when {QUOTA_LABELS[node.quota.stat].toLowerCase()} reaches {formatQuotaValue(node.quota.stat, quota.threshold)}.
           </StatusLine>
           <span className="law-inspector__quota-label">
             <StatIcon type={QUOTA_ICONS[node.quota.stat]} size={15} />
-            {QUOTA_LABELS[node.quota.stat]} {formatQuotaValue(node.quota.stat, quota.current)} / {formatQuotaValue(node.quota.stat, node.quota.threshold)}
+            {QUOTA_LABELS[node.quota.stat]} {formatQuotaValue(node.quota.stat, quota.current)} / {formatQuotaValue(node.quota.stat, quota.threshold)}
           </span>
           <div className="progress-bar">
             <div className="progress-bar__fill" style={{ width: `${Math.round(quota.ratio * 100)}%` }} />
           </div>
-          <p className="law-inspector__quota-hint">{quotaHint(state, node.quota)}</p>
+          <p className="law-inspector__quota-hint">{quotaHint(state, node)}</p>
         </div>
       )}
 
