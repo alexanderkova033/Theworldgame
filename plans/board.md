@@ -21,7 +21,7 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 09b | [Veldoria's extra coal](tasks/09b-veldoria-coal.md) | merged | `task/09b-veldoria-coal` | starting state, balance | alone |
 | 08b | [Scouting opens when workers run short](tasks/08b-worker-ceiling.md) | merged | `task/08b-worker-ceiling` | chapters, balance | alone |
 | 10 | [Trading orders](tasks/10-trading-orders.md) | merged | `task/10-trading-orders` | market, a day step | alone |
-| 11 | [Trained workers](tasks/11-trained-workers.md) | running: design agreed, being built | `task/11-trained-workers` | labour, balance, People | alone |
+| 11 | [Trained workers](tasks/11-trained-workers.md) | in review: built at `1d4fd81`, checks pass, waiting on the owner before merging | `task/11-trained-workers` | labour, balance, People | alone |
 
 Work branch: `setup-screen-flags`, which holds the latest game (`main` is two commits behind it). Task branches start from it and merge back into it, with 04 last. After each merge, the manager reruns all the checks. The owner plays the result before anything is pushed, and decides when it goes to `main`.
 
