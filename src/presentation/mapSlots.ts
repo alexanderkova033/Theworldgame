@@ -6,6 +6,7 @@
 import { MAP_GEOMETRY } from "../domain/provinces/provinceData";
 import type { ProjectType } from "../domain/construction/types";
 import { distanceToSegment, edges, nationShapes, parsePolygon, type Point } from "./nationFrontiers";
+import { TITLE_OPTION } from "./titleOption";
 
 export interface ProvincePlots {
   plots: Point[]; // building plots, nearest the province's middle first
@@ -99,7 +100,8 @@ export function getProvincePlots(provinceId: string): ProvincePlots | null {
 
   // The widest spacing that gives enough, or the most there are. Too small a
   // province gives up its distance from the border, then the nation's name.
-  const rooms = [capitalRoom, ...nameRooms];
+  // Trial: options a and b leave no name for a picture to keep off.
+  const rooms = TITLE_OPTION === "a" || TITLE_OPTION === "b" ? [capitalRoom] : [capitalRoom, ...nameRooms];
   const tries = [...EDGE_MARGINS.map((margin) => ({ rooms, margin })), ...EDGE_MARGINS.map((margin) => ({ rooms: [capitalRoom], margin }))];
   let plots: Point[] = [];
   for (const attempt of tries) {

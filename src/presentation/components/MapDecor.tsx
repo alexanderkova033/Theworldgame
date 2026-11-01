@@ -2,6 +2,7 @@
 // rose, the nations' names, the capital's star and the province flags.
 import { useLayoutEffect, useRef, useState } from "react";
 import { starPoints } from "./iconShapes";
+import { SEA_NAME_SIZE } from "../nationSeaNames";
 
 // Water-lining, as engravers drew it: rings of fine lines following the
 // coast outward, closer together near the shore. Each ring is a wide ink
@@ -70,19 +71,39 @@ const NATION_NAME_FILL = 0.86; // share of the land's width the name may take
 // with the ruling party underneath; the pair is centred on (x, y). Letter
 // spacing adds a gap after the last letter too, so the name is nudged
 // right by half a gap to sit truly in the middle.
-export function NationName({ x, y, width, name, isYou, party }: { x: number; y: number; width: number; name: string; isYou: boolean; party: { name: string; fill: string } | null }) {
+export function NationName({
+  x,
+  y,
+  width,
+  name,
+  isYou,
+  party,
+  largest = NATION_NAME_SIZE,
+  smallest = NATION_NAME_MIN_SIZE,
+  look = "",
+}: {
+  x: number;
+  y: number;
+  width: number;
+  name: string;
+  isYou: boolean;
+  party: { name: string; fill: string } | null;
+  largest?: number;
+  smallest?: number;
+  look?: string;
+}) {
   const ref = useRef<SVGTextElement>(null);
-  const [size, setSize] = useState(NATION_NAME_SIZE);
+  const [size, setSize] = useState(largest);
   useLayoutEffect(() => {
     const fit = () => {
       const text = ref.current;
       if (!text) return;
       const shown = text.style.fontSize;
-      text.style.fontSize = `${NATION_NAME_SIZE}px`;
+      text.style.fontSize = `${largest}px`;
       const natural = text.getComputedTextLength();
       text.style.fontSize = shown;
       const room = width * NATION_NAME_FILL;
-      setSize(natural > room ? Math.max(NATION_NAME_MIN_SIZE, (NATION_NAME_SIZE * room) / natural) : NATION_NAME_SIZE);
+      setSize(natural > room ? Math.max(smallest, (largest * room) / natural) : largest);
     };
     fit();
     // The display face may still be loading; measure again once it has.
@@ -91,10 +112,10 @@ export function NationName({ x, y, width, name, isYou, party }: { x: number; y: 
     return () => {
       live = false;
     };
-  }, [name, width]);
+  }, [name, width, largest, smallest]);
   const nameY = party ? y - 9 : y;
   return (
-    <g>
+    <g className={`map-panel__nation-title ${look}`}>
       <text
         ref={ref}
         x={x}
@@ -109,6 +130,28 @@ export function NationName({ x, y, width, name, isYou, party }: { x: number; y: 
       {party && (
         <text x={x} y={nameY + size * 0.5 + 10} dominantBaseline="central" className="map-panel__nation-party" style={{ fill: party.fill }}>
           {party.name}
+        </text>
+      )}
+    </g>
+  );
+}
+
+// Trial, option b: the name out at sea, along a line following the coast, with
+// the ruling party under it.
+export function SeaNationName({ id, path, name, isYou, party }: { id: string; path: string; name: string; isYou: boolean; party: { name: string; fill: string } | null }) {
+  return (
+    <g className="map-panel__nation-title is-at-sea">
+      <path id={id} d={path} fill="none" />
+      <text className={`map-panel__nation-name ${isYou ? "is-you" : ""}`} style={{ fontSize: SEA_NAME_SIZE }}>
+        <textPath href={`#${id}`} startOffset="50%">
+          {name}
+        </textPath>
+      </text>
+      {party && (
+        <text className="map-panel__nation-party" dy={17} style={{ fill: party.fill }}>
+          <textPath href={`#${id}`} startOffset="50%">
+            {party.name}
+          </textPath>
         </text>
       )}
     </g>

@@ -282,6 +282,44 @@
   fill: #561414;
 }
 
+/* Trial, option a: smaller and paler, lying on the land under its pictures. */
+.map-panel__nation-title.is-pale .map-panel__nation-name {
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  fill: rgba(43, 29, 18, 0.4);
+  stroke: none;
+}
+
+.map-panel__nation-title.is-pale .map-panel__nation-name.is-you {
+  fill: rgba(86, 20, 20, 0.5);
+}
+
+.map-panel__nation-title.is-pale .map-panel__nation-party {
+  font-size: 11px;
+  opacity: 0.6;
+  stroke: none;
+}
+
+/* Trial, option b: lettered on the water. */
+.map-panel__nation-title.is-at-sea .map-panel__nation-name {
+  stroke: rgba(188, 206, 206, 0.55);
+  stroke-width: 2.5px;
+}
+
+.map-panel__nation-title.is-at-sea .map-panel__nation-party {
+  font-size: 13px;
+  stroke: rgba(188, 206, 206, 0.55);
+}
+
+/* Trial, option c: faded while the clock runs. */
+.map-panel__nation-title.is-fading {
+  transition: opacity 0.35s ease;
+}
+
+.map-panel__nation-title.is-faded {
+  opacity: 0.1;
+}
+
 .map-panel__nation-party {
   font-family: var(--font-display);
   font-size: 15px;

@@ -12,6 +12,8 @@ import type { ProjectType } from "../../domain/construction/types";
 import { MapBuildSlots } from "./MapBuildSlots";
 import { MapSettlements, type UnderwayBuilding } from "./MapSettlements";
 import { nationShapes } from "../nationFrontiers";
+import { seaNames } from "../nationSeaNames";
+import { TITLE_OPTION } from "../titleOption";
 import type { ProvinceStatus } from "../../application/getProvinceOverview";
 import { UnrestStageIcon } from "./CauseIcon";
 import { ResourceIcon } from "./ResourceIcon";
@@ -20,7 +22,7 @@ import { CrisisIcon } from "./CrisisIcon";
 import { SeasonLand, SeasonSea } from "./MapSeasons";
 
 import { TERRAIN_PATTERN, TERRAIN_TINT, inkier, washColor, roadLineWidth, OCEAN_RECT, type MapMode, MODE_COLORS, getModeLevel } from "./mapCommon";
-import { Waterlines, CompassRose, NationName, CapitalBadge, StatusFlag } from "./MapDecor";
+import { Waterlines, CompassRose, NationName, SeaNationName, CapitalBadge, StatusFlag } from "./MapDecor";
 
 interface MapLayersProps {
   nation: Nation;
@@ -46,7 +48,13 @@ interface MapLayersProps {
   lostProvinceIds: string[];
   settledIslandIds: string[];
   foreignIslands: Record<string, string>;
+  clockRunning?: boolean; // trial, option c: the names fade while it does
+  restingNationId?: string | null; // trial, option c: the country the pointer rests on keeps its name
 }
+
+// Trial, option a: smaller than today's 34 and 20.
+const PALE_NAME_SIZE = 22;
+const PALE_NAME_MIN_SIZE = 14;
 
 // Everything drawn on the map, as its own memoized component: panning and
 // zooming only change the <svg>'s viewBox in MapPanel, so none of these
@@ -76,6 +84,8 @@ export const MapLayers = memo(function MapLayers({
   lostProvinceIds,
   settledIslandIds,
   foreignIslands,
+  clockRunning = false,
+  restingNationId = null,
 }: MapLayersProps) {
   const { coastPath, provinces, islands } = MAP_GEOMETRY;
   // Yours: your nation's provinces and the islands you settled, unless
@@ -91,6 +101,11 @@ export const MapLayers = memo(function MapLayers({
   );
   // Frontiers and nation names follow the land each nation holds today.
   const shapes = nationShapes(lostProvinceIds);
+  const partyLine = (nationId: string) => {
+    const rulerId = foreignRulers[nationId];
+    const ruler = rulerId ? getParty(rulerId) : null;
+    return ruler ? { name: ruler.name, fill: inkier(ruler.color, 0.3) } : null;
+  };
 
   return (
     <>
@@ -313,6 +328,7 @@ export const MapLayers = memo(function MapLayers({
             onMouseEnter={isOwned ? () => onHoverProvince(province.id) : undefined}
             onMouseLeave={isOwned ? () => onHoverProvince((prev) => (prev === province.id ? null : prev)) : undefined}
             // Yours has the fuller card on hover (MapPanel), so no tip as well.
+            data-nation={owner?.id}
             data-tip={isOwned ? undefined : `${province.name}${isFree ? " (broke away: free. March regiments here to take it back)" : owner ? ` (${owner.name})` : " (unclaimed)"}`}
           />
         );
@@ -395,6 +411,45 @@ export const MapLayers = memo(function MapLayers({
       ))}
     </g>
 
+    {/* Trial, option a: the names on the bare land, under everything that
+        stands on it. */}
+    {TITLE_OPTION === "a" && (
+      <g pointerEvents="none">
+        {shapes.map((shape) =>
+          shape.nationId === nation.id && buildKinds ? null : (
+            <NationName
+              key={`${shape.nationId}-name`}
+              x={shape.labelX}
+              y={shape.labelY}
+              width={shape.labelWidth}
+              name={shape.name}
+              isYou={shape.nationId === nation.id}
+              party={partyLine(shape.nationId)}
+              largest={PALE_NAME_SIZE}
+              smallest={PALE_NAME_MIN_SIZE}
+              look="is-pale"
+            />
+          ),
+        )}
+      </g>
+    )}
+
+    {/* Trial, option b: the names at sea, so nothing lies on the land. */}
+    {TITLE_OPTION === "b" && (
+      <g pointerEvents="none">
+        {seaNames(lostProvinceIds).map((sea) => (
+          <SeaNationName
+            key={`${sea.nationId}-name`}
+            id={`sea-name-${sea.nationId}`}
+            path={sea.path}
+            name={shapes.find((shape) => shape.nationId === sea.nationId)?.name ?? ""}
+            isYou={sea.nationId === nation.id}
+            party={partyLine(sea.nationId)}
+          />
+        ))}
+      </g>
+    )}
+
     {/* Road network: every road built in the capital grows its hub;
         every road built elsewhere thickens the single line connecting
         that province to the capital, with a "×N" badge carrying the
@@ -463,14 +518,12 @@ export const MapLayers = memo(function MapLayers({
 
     {/* Big, spaced-out nation names across each country (EU4-style),
         with the party currently ruling each neighbor underneath. */}
-    {(
+    {(TITLE_OPTION === "now" || TITLE_OPTION === "c") && (
       <g pointerEvents="none">
         {shapes.map((shape) => {
           const isYou = shape.nationId === nation.id;
           // With the Build window open your own land shows its slots instead.
           if (isYou && buildKinds) return null;
-          const rulerId = foreignRulers[shape.nationId];
-          const ruler = rulerId ? getParty(rulerId) : null;
           return (
             <NationName
               key={`${shape.nationId}-name`}
@@ -479,7 +532,8 @@ export const MapLayers = memo(function MapLayers({
               width={shape.labelWidth}
               name={shape.name}
               isYou={isYou}
-              party={ruler ? { name: ruler.name, fill: inkier(ruler.color, 0.3) } : null}
+              party={partyLine(shape.nationId)}
+              look={TITLE_OPTION === "c" ? `is-fading ${clockRunning && restingNationId !== shape.nationId ? "is-faded" : ""}` : ""}
             />
           );
         })}

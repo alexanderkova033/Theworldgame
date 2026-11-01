@@ -499,6 +499,7 @@ function App() {
       <main className="game-layout__main">
         <div className="game-layout__map-stage">
           <MapPanel
+            isPaused={state.isPaused}
             nation={nation}
             lostProvinceIds={state.lostProvinceIds}
             settledIslandIds={state.settledIslandIds}

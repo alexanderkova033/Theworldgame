@@ -1,6 +1,7 @@
 import "./MapPanel.css";
 import { washColor, type ViewBox, BASE_VIEW, DRAG_CLICK_THRESHOLD, WHEEL_SETTLE_MS, LABEL_ZOOM_THRESHOLD, clampViewBox, homeView, type MapMode, type ModeLevel, MODE_COLORS, MAP_MODES } from "./mapCommon";
 import { MapLayers } from "./MapLayers";
+import { TITLE_OPTION } from "../titleOption";
 import { flushSync } from "react-dom";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { ProjectType } from "../../domain/construction/types";
@@ -59,6 +60,7 @@ const BUILDING_LABELS: Record<ProjectType, string> = {
 };
 
 interface MapPanelProps {
+  isPaused: boolean; // trial, option c: the names fade while the clock runs
   nation: Nation;
   placedBuildings: PlacedBuilding[];
   underway: UnderwayBuilding[]; // what's going up, stable from day to day so the map isn't redrawn for it
@@ -172,6 +174,7 @@ export const MapPanel = memo(function MapPanel({
   freeProvinces,
   sieges,
   season,
+  isPaused,
 }: MapPanelProps) {
   const { provinces } = MAP_GEOMETRY;
 
@@ -225,7 +228,24 @@ export const MapPanel = memo(function MapPanel({
   // Which map mode is showing — a view choice, not simulation truth.
   const [mapMode, setMapMode] = useState<MapMode>("political");
 
+  // Trial, option c: the country the pointer has come to rest on shows its name.
+  const [restingNationId, setRestingNationId] = useState<string | null>(null);
+  const nationRest = useRef<{ x: number; y: number; id: string | null; timer: ReturnType<typeof setTimeout> | null }>({ x: 0, y: 0, id: null, timer: null });
+  function watchNationRest(e: React.MouseEvent<HTMLDivElement>) {
+    const rest = nationRest.current;
+    const id = (e.target as Element).closest?.("[data-nation]")?.getAttribute("data-nation") ?? null;
+    if (id === restingNationId && id !== null) return;
+    if (restingNationId !== null) setRestingNationId(null);
+    if (id === rest.id && Math.hypot(e.clientX - rest.x, e.clientY - rest.y) <= TIP_REST_SLOP) return;
+    if (rest.timer) clearTimeout(rest.timer);
+    rest.x = e.clientX;
+    rest.y = e.clientY;
+    rest.id = id;
+    rest.timer = id ? setTimeout(() => setRestingNationId(id), TIP_REST_MS) : null;
+  }
+
   function handleStageMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    if (TITLE_OPTION === "c") watchNationRest(e);
     const rect = stageRef.current?.getBoundingClientRect();
     if (!rect) return;
     tooltipPos.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -586,6 +606,8 @@ export const MapPanel = memo(function MapPanel({
             lostProvinceIds={lostProvinceIds}
             settledIslandIds={settledIslandIds}
             foreignIslands={foreignIslands}
+            clockRunning={!isPaused}
+            restingNationId={restingNationId}
           />
           {regiments && <ArmyLayer regiments={regiments} playerNationId={nation.id} marchFrom={marchFrom} onPick={handlePickArmy} preview={preview} freeProvinces={freeProvinces} sieges={sieges} />}
         </svg>
