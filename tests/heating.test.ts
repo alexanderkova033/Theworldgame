@@ -32,11 +32,12 @@ function withHomes(types: ProjectType[], coal: number, wood: number): GameState 
   };
 }
 
-describe("Astravia's extra coal", () => {
-  it("goes to Astravia alone", () => {
-    expect(startNewGame("astravia", "astravia-harvest-union").resources.coal).toBe(STARTING_COAL + 120);
-    expect(startNewGame("caldenreich", "caldenreich-crown-loyalists").resources.coal).toBe(STARTING_COAL);
-    expect(startNewGame("veldoria", "veldoria-ironworkers-guild").resources.coal).toBe(STARTING_COAL);
+describe("starting coal", () => {
+  it("is 200 in Astravia, 80 in Caldenreich and 140 in Veldoria", () => {
+    expect(STARTING_COAL).toBe(80);
+    expect(startNewGame("astravia", "astravia-harvest-union").resources.coal).toBe(200);
+    expect(startNewGame("caldenreich", "caldenreich-crown-loyalists").resources.coal).toBe(80);
+    expect(startNewGame("veldoria", "veldoria-ironworkers-guild").resources.coal).toBe(140);
   });
 });
 

@@ -3,7 +3,7 @@
 // start screen in plain words (`changes`). The levels are measured by the
 // scripted players in tests/balance.test.ts, so each means something. Out
 // of 27 five-year games, a sloppy player (late, never ahead of trouble) and
-// a careful one win: Easy 14 and 27, Normal 0 and 17, Hard 0 and 7,
+// a careful one win: Easy 14 and 27, Normal 0 and 20, Hard 0 and 7,
 // Ruthless 0 and 2 (measured 2026-11-01). The scripted players build none of
 // the larger buildings, mines or sawmills, service nothing and pass no laws, so
 // a good human player should do better. Not every country can be saved on

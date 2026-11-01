@@ -27,8 +27,9 @@ export const STARTING_RESOURCE_STOCK = 15; // a little in the stores, for the fi
 // this carries the first winter with room for a few new homes, and the next
 // winter is the player's to prepare for.
 export const STARTING_COAL = 80;
-// Astravia has no hills, and wood is a poor fuel: this carries its next winter too.
-export const STARTING_EXTRA_COAL: Record<string, number> = { astravia: 120 };
+// Astravia and Veldoria have no hills, and wood is a poor fuel: this carries their
+// next winter too (Veldoria's is smaller, with fewer homes to heat).
+export const STARTING_EXTRA_COAL: Record<string, number> = { astravia: 120, veldoria: 60 };
 // ...and wood where the land grows none (no forest province): a farm (15) and
 // one set of homes (12), before the market opens. The works broken at the start
 // are factories, mended with ore.
