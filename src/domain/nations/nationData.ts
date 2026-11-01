@@ -1,5 +1,9 @@
 // The continent is divided among three playable nations. The two the player
-// doesn't pick are run by the computer (see domain/neighbours).
+// doesn't pick are run by the computer (see domain/neighbours). A nation's
+// people and farms are the same whichever way it is played: 1,900 food a farm,
+// so five farms for each 10,000 people, about what they eat outside winter.
+// Astravia's extra farm comes on top. The land sets the numbers: Veldoria
+// has four provinces and the others six.
 import type { Nation } from "./types";
 
 export const NATIONS: Nation[] = [
@@ -15,6 +19,8 @@ export const NATIONS: Nation[] = [
     ],
     blurb: "A young republic in the continent's heartland, balancing farmland and ambition.",
     startingBonus: "Starts with an extra farm.",
+    startingPopulation: 12000,
+    startingFarms: 7,
   },
   {
     id: "caldenreich",
@@ -28,6 +34,8 @@ export const NATIONS: Nation[] = [
     ],
     blurb: "A disciplined northern kingdom, proud of its schools and its steady administration.",
     startingBonus: "Starts with higher stability.",
+    startingPopulation: 10000,
+    startingFarms: 5,
   },
   {
     id: "veldoria",
@@ -40,5 +48,7 @@ export const NATIONS: Nation[] = [
     ],
     blurb: "A compact eastern power built on early industry. Smaller, but sharp-edged.",
     startingBonus: "+15% industry output.",
+    startingPopulation: 8000,
+    startingFarms: 4,
   },
 ];

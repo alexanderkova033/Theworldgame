@@ -101,7 +101,7 @@ export function getColdStabilityPenalty(unheatedShare: number): number {
 // plus a little slack, spread round-robin over its provinces.
 export function buildStartingHomes(nationId: string, population: number): PlacedBuilding[] {
   const nation = getNation(nationId);
-  const count = Math.ceil((population * 1.05) / PEOPLE_PER_HOME);
+  const count = Math.round((population * 1.05) / PEOPLE_PER_HOME);
   return Array.from({ length: count }, (_, i) => ({
     id: `starting-home-${i + 1}`,
     provinceId: nation.provinceIds[i % nation.provinceIds.length],
