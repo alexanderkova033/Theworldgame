@@ -21,7 +21,7 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 09b | [Veldoria's extra coal](tasks/09b-veldoria-coal.md) | merged | `task/09b-veldoria-coal` | starting state, balance | alone |
 | 08b | [Scouting opens when workers run short](tasks/08b-worker-ceiling.md) | merged | `task/08b-worker-ceiling` | chapters, balance | alone |
 | 10 | [Trading orders](tasks/10-trading-orders.md) | merged | `task/10-trading-orders` | market, a day step | alone |
-| 11 | [Trained workers](tasks/11-trained-workers.md) | design note on its branch, waiting on the owner to agree it | `task/11-trained-workers` | labour, balance, People | alone |
+| 11 | [Trained workers](tasks/11-trained-workers.md) | running: design agreed, being built | `task/11-trained-workers` | labour, balance, People | alone |
 
 Work branch: `setup-screen-flags`, which holds the latest game (`main` is two commits behind it). Task branches start from it and merge back into it, with 04 last. After each merge, the manager reruns all the checks. The owner plays the result before anything is pushed, and decides when it goes to `main`.
 
@@ -48,6 +48,8 @@ Owner's decisions on this list, 2026-10-31:
 - A service costs 30% of the build price. It also needs a couple of workers, slower and dearer when untrained: built in task 11, since training doesn't exist until then.
 - The first payment stays at 60%, shown on each building's row.
 - The Build window is one size for both sections, between today's two.
+
+Owner's decisions on the worker design, 2026-11-01: everyone working on day one is trained; using the choice well may win more games; building ahead of your people is not softened, and Build gets a tip saying where the workers come from; an untrained crew means fewer than 90% of that trade trained. The note's smaller choices are accepted as proposed.
 
 Planned order: the look (1, 2, 3, 5, 10), then the numbers one at a time (4, 6, 9), then trading (8), then workers (7) alone and last. Item 3 gets real screenshots of options for the owner to pick from.
 
