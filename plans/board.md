@@ -18,6 +18,7 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 07b | [Law requirements and Caldenreich's lead](tasks/07b-nation-balance.md) | merged | `task/07b-nation-balance` | laws, starting state, balance | alone |
 | 08 | [Earlier scouting](tasks/08-earlier-scouting.md) | merged | `task/08-earlier-scouting` | chapters, balance | alone |
 | 09 | [Heating](tasks/09-heating.md) | merged, with 120 extra coal for Astravia and an earlier warning | `task/09-heating` | housing rules, balance | alone |
+| 09b | [Veldoria's extra coal](tasks/09b-veldoria-coal.md) | waiting on 08b | `task/09b-veldoria-coal` | starting state, balance | alone |
 | 08b | [Scouting opens when workers run short](tasks/08b-worker-ceiling.md) | running | `task/08b-worker-ceiling` | chapters, balance | alone |
 | 10 | [Trading orders](tasks/10-trading-orders.md) | running | `task/10-trading-orders` | market, a day step | alone |
 | 11 | [Trained workers](tasks/11-trained-workers.md) | waiting on 10, stops for the owner to agree a design | `task/11-trained-workers` | labour, balance, People | alone |
@@ -61,7 +62,7 @@ Planned order: the look (1, 2, 3, 5, 10), then the numbers one at a time (4, 6, 
 
 ## Small follow-ups from task 09
 
-- Veldoria digs no coal either and got none extra. Careful on Normal it goes cold in 8 of 16 second winters and 7 of 9 third winters, and its wins over 18 seeds fell from 4 to 2. The autumn warning shows every year there. Waiting on the owner.
+- Veldoria digs no coal either and got none extra. Careful on Normal it goes cold in 8 of 16 second winters and 7 of 9 third winters, and its wins over 18 seeds fell from 4 to 2. The autumn warning shows every year there. The owner chose 60 extra coal: task 09b.
 - Heat shares 0.8 and 0.65 have unit tests only, as no scripted game builds tenements or apartment blocks.
 - Nobody has checked that a person acts on the warning in time.
 
