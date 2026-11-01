@@ -11,7 +11,7 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 01 | [Precise warnings](tasks/01-precise-warnings.md) | merged | `task/01-precise-warnings` | day messages, advisor alerts, one chapter line, comment encoding | 02, 03 |
 | 02 | [The first minute](tasks/02-first-minute.md) | merged | `task/02-first-minute` | Objectives panel | 01, 03 |
 | 03 | [Fewer interruptions](tasks/03-fewer-interruptions.md) | merged | `task/03-fewer-interruptions` | `App.tsx`, how briefings and letters follow each other | 01, 02 |
-| 04 | [Warning before a breakdown](tasks/04-worn-buildings.md) | merged, service price waiting on owner | `task/04-worn-buildings` | maintenance rules, Repairs, map, balance | alone |
+| 04 | [Warning before a breakdown](tasks/04-worn-buildings.md) | merged | `task/04-worn-buildings` | maintenance rules, Repairs, map, balance | alone |
 | 05 | [Winter, the Build window, top bar lines](tasks/05-look.md) | waiting on 04 | `task/05-look` | map season CSS, Build rows and window size, top bar CSS | 06 |
 | 06 | [Country titles](tasks/06-country-titles.md) | waiting on 04, stops for the owner to pick | `task/06-country-titles` | map names | 05 |
 | 07 | [Starting populations and wood](tasks/07-starting-countries.md) | waiting on 05 and 06 | `task/07-starting-countries` | starting state, balance | alone |
@@ -42,6 +42,7 @@ Owner's decisions on this list, 2026-10-31:
 - Untrained workers improve with time in the job (about a year to reach full efficiency).
 - Workers are assigned across the whole country, not per province. People moved keep working in their previous job until the month ends.
 - Caldenreich and Veldoria get some starting wood.
+- A service costs 30% of the build price. It also needs a couple of workers, slower and dearer when untrained: built in task 11, since training doesn't exist until then.
 - The first payment stays at 60%, shown on each building's row.
 - The Build window is one size for both sections, between today's two.
 
@@ -50,7 +51,6 @@ Planned order: the look (1, 2, 3, 5, 10), then the numbers one at a time (4, 6, 
 ## Watch
 
 - One test failed once in `npm test` after task 02 merged, and was not identified. Task 04 then saw `tests/interruptions.test.ts` time out at 5 seconds and an unexplained failure in `tests/balance.test.ts`. The limit is now 30 seconds. If a failure recurs, save the name and the error.
-- `SERVICE_COST_SHARE` is 0.1 for now, which moves Hard +7 of 27 for a careful player who services. Tasks 07 to 09 measure balance, so this must be settled before they start. Then update the recorded ladder in `difficultyData.ts` and TODO.md.
 
 ## Small follow-ups from task 03
 
