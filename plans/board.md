@@ -15,8 +15,8 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 05 | [Winter, the Build window, top bar lines](tasks/05-look.md) | merged | `task/05-look` | map season CSS, Build rows and window size, top bar CSS | 06 |
 | 06 | [Country titles](tasks/06-country-titles.md) | merged (names at sea) | `task/06-country-titles` | map names | 05 |
 | 07 | [Starting populations and wood](tasks/07-starting-countries.md) | merged | `task/07-starting-countries` | starting state, balance | alone |
-| 07b | [Law requirements and Caldenreich's lead](tasks/07b-nation-balance.md) | running | `task/07b-nation-balance` | laws, starting state, balance | alone |
-| 08 | [Earlier scouting](tasks/08-earlier-scouting.md) | waiting on 07 | `task/08-earlier-scouting` | chapters, balance | alone |
+| 07b | [Law requirements and Caldenreich's lead](tasks/07b-nation-balance.md) | merged | `task/07b-nation-balance` | laws, starting state, balance | alone |
+| 08 | [Earlier scouting](tasks/08-earlier-scouting.md) | running | `task/08-earlier-scouting` | chapters, balance | alone |
 | 09 | [Heating](tasks/09-heating.md) | waiting on 08 | `task/09-heating` | housing rules, balance | alone |
 | 10 | [Trading orders](tasks/10-trading-orders.md) | waiting on 09 | `task/10-trading-orders` | market, a day step | alone |
 | 11 | [Trained workers](tasks/11-trained-workers.md) | waiting on 10, stops for the owner to agree a design | `task/11-trained-workers` | labour, balance, People | alone |
@@ -51,7 +51,10 @@ Planned order: the look (1, 2, 3, 5, 10), then the numbers one at a time (4, 6, 
 
 ## Watch
 
-- Task 07 moved the ladder to Easy 10 and 27, Normal 0 and 18, Hard 0 and 7, Ruthless 0 and 3. Task 07b records the final figures. Careful wins over 18 seeds, as Astravia, Caldenreich, Veldoria: Normal 10, 18, 5; Hard 5, 11, 0; Ruthless 5, 2, 0. Task 08 waits for 07b, as it measures from that baseline.
+- Task 07 moved the ladder to Easy 10 and 27, Normal 0 and 18, Hard 0 and 7, Ruthless 0 and 3. Task 07b then moved it to Easy 12 and 27, Normal 0 and 17, Hard 0 and 5, Ruthless 0 and 3 (recorded in `difficultyData.ts`). Hard's 5 is exactly the lowest `balance.test.ts` allows. Careful wins over 18 seeds, as Astravia, Caldenreich, Veldoria: Normal 10, 16, 5; Hard 5, 8, 0; Ruthless 5, 4, 0. The ladder games pass no laws, so they can't judge the scaled requirements.
+- Veldoria now passes about three times as many Labour laws, but wins no more. It wins nothing on Hard or Ruthless. Why is not traced.
+- "Population 12k / 12k" can show while a law is still locked (at 11,960, say), because of the number format.
+- Hard's test title in `balance.test.ts` says "about a third", which no longer fits.
 
 - One test failed once in `npm test` after task 02 merged, and was not identified. Task 04 then saw `tests/interruptions.test.ts` time out at 5 seconds and an unexplained failure in `tests/balance.test.ts`. The limit is now 30 seconds. If a failure recurs, save the name and the error.
 
