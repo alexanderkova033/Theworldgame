@@ -26,8 +26,7 @@ import { getDecision } from "../domain/decisions/decisionRules";
 import { resolveDecision } from "./actions/resolveDecision";
 import type { GameState } from "../domain/country/types";
 import { getElectionThreshold } from "../domain/parties/electionRules";
-import { CAPTAIN_FROM_MONTH, RELATIONS_HOSTILE } from "../domain/constants";
-import { isAtJobCeiling } from "./getJobCeiling";
+import { CAPTAIN_FROM_MONTH, CAPTAIN_SHORTAGE_DAYS, RELATIONS_HOSTILE } from "../domain/constants";
 
 export { monthNumber };
 
@@ -56,7 +55,7 @@ const TRIGGERS: Record<SystemChapterId, Trigger> = {
   streets: (s) => s.unrestStage !== "calm" || Object.values(s.provinces).some((p) => p.unrestStage !== "calm"),
   voters: (s, month) => month >= 10 && s.stats.popularity < getElectionThreshold(s) + 5,
   envoys: (s, month) => month >= 6 && s.lastDayLedger.support.foreign !== undefined,
-  captain: (s, month) => month >= CAPTAIN_FROM_MONTH && isAtJobCeiling(s),
+  captain: (s, month) => month >= CAPTAIN_FROM_MONTH && s.daysShortOfWorkers >= CAPTAIN_SHORTAGE_DAYS,
   // Trouble the army would answer: a province risen, a neighbour's
   // settlers at sea, or a neighbour turned hostile.
   army: (s, month) =>

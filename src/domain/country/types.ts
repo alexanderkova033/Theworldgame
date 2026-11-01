@@ -187,6 +187,7 @@ export interface GameState {
   factionApproval: Record<Ideology, number>; // per-ideology approval (0-100); stats.popularity is their electorate-weighted average — see domain/parties/factionRules.ts
   expeditions: Expedition[]; // in-progress scouting trips to unclaimed islands
   scoutedIslandIds: string[]; // islands a completed expedition has already visited
+  daysShortOfWorkers: number; // days in a row the country has been short of workers (see isShortOfWorkers); brings the captain's offer
   events: GameEvent[];
   monthlyReports: MonthlyReport[];
   history: DailyDelta[]; // daily deltas since the last monthly report

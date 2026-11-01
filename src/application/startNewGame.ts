@@ -152,6 +152,7 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     orderTally: null,
     expeditions: [],
     scoutedIslandIds: [],
+    daysShortOfWorkers: 0,
     events: [
       {
         id: "event-start",
