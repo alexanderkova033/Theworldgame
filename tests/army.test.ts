@@ -267,9 +267,11 @@ describe("taking back a province that broke away", () => {
 
   // Played, not set up: a sloppy player who leaves uprisings alone loses a
   // province, and its regiments win it back. (Seed 33 stopped telling it once
-  // letters grew rarer, 2026-10-29: that country fell 20 days after its loss.)
+  // letters grew rarer, 2026-10-29: that country fell 20 days after its loss.
+  // Seed 35 stopped once buildings wore before breaking, 2026-10-31: 16 seeds in
+  // the first 60 tell it now.)
   it("happens in a played game, lost to neglect and won back by the army", () => {
-    seedRandom(35);
+    seedRandom(8);
     let lostOn = -1;
     let backOn = -1;
     let day = 0;

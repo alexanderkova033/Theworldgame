@@ -1,8 +1,9 @@
 // Step 1 of the day: everything being built or worked on moves forward,
 // and buildings wear out.
 import { advanceProject, isProjectComplete } from "../../domain/construction/constructionRules";
-import { CURRENCY_SYMBOL } from "../../domain/constants";
+import { CURRENCY_SYMBOL, WORN_WARNING_DAYS } from "../../domain/constants";
 import type { Project, ProjectType } from "../../domain/construction/types";
+import { dayNumber } from "../../domain/country/calendar";
 import type { GameState } from "../../domain/country/types";
 import { getDifficulty } from "../../domain/difficulty/difficultyData";
 import { getIslandExpeditionData } from "../../domain/expeditions/expeditionData";
@@ -146,7 +147,7 @@ export function advanceBuildings(day: Day): GameState {
   working = syncProvinces(working);
 
   // 1d. Repairs in progress tick down; then any working building might
-  // break (police deter some of it). Broken buildings stop producing until
+  // turn worn (police deter some of it), and one worn too long breaks. Broken buildings stop producing until
   // repaired — everything after this reads getWorkingCounts, not the raw counts.
   const repairs = advanceRepairs(working.placedBuildings);
   for (const building of repairs.repaired) {
@@ -157,13 +158,21 @@ export function advanceBuildings(day: Day): GameState {
       topic: "repaired",
     });
   }
-  const breakdowns = rollBreakdowns(repairs.placedBuildings, getPoliceBreakdownReduction(working.workforce.police), day.mods.breakdownMultiplier * getDifficulty(state.difficulty).breakdownMultiplier);
+  const breakdowns = rollBreakdowns(repairs.placedBuildings, dayNumber(state.date), getPoliceBreakdownReduction(working.workforce.police), day.mods.breakdownMultiplier * getDifficulty(state.difficulty).breakdownMultiplier);
   for (const building of breakdowns.broken) {
     log(day, {
       date: state.date,
       message: `${BUILDING_NAMES[building.type]} in ${getProvinceName(building.provinceId)} has broken down.`,
       severity: "warning",
       topic: "breakdown",
+    });
+  }
+  for (const building of breakdowns.worn) {
+    log(day, {
+      date: state.date,
+      message: `Wear on ${BUILDING_NAMES[building.type]} in ${getProvinceName(building.provinceId)}. Service within ${WORN_WARNING_DAYS} days to avoid a breakdown.`,
+      severity: "warning",
+      topic: "worn",
     });
   }
   working = { ...working, placedBuildings: breakdowns.placedBuildings };

@@ -1,7 +1,8 @@
 // Buildings wear out. Every working building has a small daily chance to
-// break down (police deter some of it — see domain/workforce); a broken one
-// produces nothing until the player pays for a repair, which then takes
-// REPAIR_DAYS to finish. The aggregate counts on GameState (farmCount,
+// turn worn (police deter some of it — see domain/workforce). A worn one keeps
+// working for WORN_WARNING_DAYS, and the player may pay to service it. If they
+// don't, it breaks down, and produces nothing until they pay for a repair,
+// which then takes REPAIR_DAYS to finish. The aggregate counts on GameState (farmCount,
 // factoryCount, ...) stay "how many exist"; getWorkingCounts below is "how
 // many are actually running today", and that's what the simulation uses.
 import {
@@ -20,6 +21,8 @@ import {
   HOUSING_WOOD_COST,
   REPAIR_COST_SHARE,
   REPAIR_DAYS,
+  SERVICE_COST_SHARE,
+  WORN_WARNING_DAYS,
   ROAD_COST,
   ROAD_ORE_COST,
   HARBOUR_COST,
@@ -44,7 +47,8 @@ import {
   TOWER_ORE_COST,
 } from "../constants";
 import type { ProjectType } from "../construction/types";
-import type { GameState } from "../country/types";
+import { dayNumber } from "../country/calendar";
+import type { GameDate, GameState } from "../country/types";
 import type { PlacedBuilding } from "../provinces/types";
 import type { ResourceType } from "../resources/types";
 
@@ -73,14 +77,23 @@ export interface RepairCost {
   resourceAmount: number;
 }
 
-// costMultiplier: cheaper with research (ResearchEffects.repairCostMultiplier).
-export function getRepairCost(type: ProjectType, costMultiplier = 1): RepairCost {
+function shareOfPrice(type: ProjectType, share: number): RepairCost {
   const price = BUILD_PRICES[type];
   return {
-    treasury: Math.round(price.treasury * REPAIR_COST_SHARE * costMultiplier),
+    treasury: Math.round(price.treasury * share),
     resourceType: price.resourceType,
-    resourceAmount: Math.ceil(price.resourceAmount * REPAIR_COST_SHARE * costMultiplier),
+    resourceAmount: Math.ceil(price.resourceAmount * share),
   };
+}
+
+// costMultiplier: cheaper with research (ResearchEffects.repairCostMultiplier).
+export function getRepairCost(type: ProjectType, costMultiplier = 1): RepairCost {
+  return shareOfPrice(type, REPAIR_COST_SHARE * costMultiplier);
+}
+
+// Paid as a repair is, and made cheaper by the same things.
+export function getServiceCost(type: ProjectType, costMultiplier = 1): RepairCost {
+  return shareOfPrice(type, SERVICE_COST_SHARE * costMultiplier);
 }
 
 // How many ordinary homes a building is worth: what it shelters, and burns.
@@ -90,6 +103,15 @@ export function getHomeWeight(type: ProjectType): number {
 
 export function isWorking(building: PlacedBuilding): boolean {
   return building.condition === undefined;
+}
+
+// Worn is still working: nothing that reads isWorking treats it differently.
+export function isWorn(building: PlacedBuilding): boolean {
+  return building.wornUntilDay !== undefined && isWorking(building);
+}
+
+export function getWornDaysLeft(building: PlacedBuilding, date: GameDate): number {
+  return Math.max(0, (building.wornUntilDay ?? 0) - dayNumber(date));
 }
 
 function countNotWorking(placedBuildings: PlacedBuilding[], type: ProjectType): number {
@@ -121,22 +143,33 @@ export function getWorkingCounts(state: GameState): WorkingCounts {
   };
 }
 
-// Returns the same array when nothing broke, so the (memoized) map doesn't
-// re-render on an ordinary day.
+// A failed roll marks a building worn; a worn one rolls no more, and breaks
+// when its time is up. Returns the same array when nothing changed, so the
+// (memoized) map doesn't re-render on an ordinary day. `today` is the day
+// being played, so a building marked now shows the whole warning tomorrow.
 export function rollBreakdowns(
   placedBuildings: PlacedBuilding[],
+  today: number,
   breakdownReduction: number, // 0..1, from police — see workforceRules.ts
   breakdownMultiplier = 1, // from research (ResearchEffects.breakdownMultiplier)
-): { placedBuildings: PlacedBuilding[]; broken: PlacedBuilding[] } {
+): { placedBuildings: PlacedBuilding[]; broken: PlacedBuilding[]; worn: PlacedBuilding[] } {
   const chance = BREAKDOWN_CHANCE_PER_DAY * (1 - breakdownReduction) * breakdownMultiplier;
   const broken: PlacedBuilding[] = [];
+  const worn: PlacedBuilding[] = [];
   const next = placedBuildings.map((building) => {
-    if (!isWorking(building) || Math.random() >= chance) return building;
-    const failed: PlacedBuilding = { ...building, condition: "broken" };
-    broken.push(failed);
-    return failed;
+    if (!isWorking(building)) return building;
+    if (isWorn(building)) {
+      if (today < building.wornUntilDay!) return building;
+      const failed: PlacedBuilding = { ...building, condition: "broken", wornUntilDay: undefined };
+      broken.push(failed);
+      return failed;
+    }
+    if (Math.random() >= chance) return building;
+    const failing: PlacedBuilding = { ...building, wornUntilDay: today + 1 + WORN_WARNING_DAYS };
+    worn.push(failing);
+    return failing;
   });
-  return broken.length === 0 ? { placedBuildings, broken } : { placedBuildings: next, broken };
+  return broken.length === 0 && worn.length === 0 ? { placedBuildings, broken, worn } : { placedBuildings: next, broken, worn };
 }
 
 // One day of work on every repair in progress. Same identity guarantee as

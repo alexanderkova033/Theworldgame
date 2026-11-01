@@ -51,6 +51,25 @@
   display: block;
 }
 
+.repairs-panel__item.is-worn {
+  border-color: rgba(201, 138, 30, 0.75);
+}
+
+.is-worn .repairs-panel__badge {
+  background: #c98a1e;
+  color: #2b1d12;
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.repairs-panel__days {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--warning);
+  font-weight: 700;
+}
+
 .is-broken .repairs-panel__icon > svg {
   filter: grayscale(0.7) brightness(0.75);
 }

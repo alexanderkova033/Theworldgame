@@ -14,6 +14,7 @@ export { canEnactLaw, enactLaw } from "./enactLaw";
 export { canFocusResearch, clearResearchFocus, focusResearch } from "./researchActions";
 export { canHirePolice, canHireScientist, dismissPolice, dismissScientist, hirePolice, hireScientist } from "./workforceActions";
 export { canRepairBuilding, repairBuilding } from "./repairBuilding";
+export { canServiceBuilding, serviceBuilding } from "./serviceBuilding";
 export { canPressureGovernment, pressureGovernment } from "./pressureGovernment";
 export { resolveDecision, dismissDecision } from "./resolveDecision";
 export { setTaxRate } from "./setTaxRate";

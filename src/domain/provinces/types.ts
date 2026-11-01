@@ -69,4 +69,5 @@ export interface PlacedBuilding {
   type: ProjectType;
   condition?: "broken" | "repairing" | "seized" | "ruined"; // seized: held by a province that has risen (see domain/uprising); ruined: by a crisis, until it is put right (domain/crises)
   repairDaysRemaining?: number;
+  wornUntilDay?: number; // worn, and still working: the dayNumber it breaks on unless serviced. A date, not a countdown, so the map is not redrawn every day (see domain/maintenance)
 }
