@@ -2,7 +2,7 @@
 // GameState, with starting infrastructure placed within that nation's own
 // provinces (so different nations feel at least slightly different from day
 // one, even though the underlying economy math is the same for everyone).
-import { STARTING_COAL, STARTING_RESOURCE_STOCK } from "../domain/constants";
+import { STARTING_COAL, STARTING_FOOD_PER_PERSON, STARTING_RESOURCE_STOCK, STARTING_WOOD_NO_FOREST } from "../domain/constants";
 import { getSeason } from "../domain/country/calendar";
 import { getDifficulty, type Difficulty } from "../domain/difficulty/difficultyData";
 import { createForeignPolitics } from "../domain/diplomacy/diplomacyRules";
@@ -19,32 +19,26 @@ import { emptyLedger } from "../domain/ledger/ledgerRules";
 import { emptyWorkforce } from "../domain/workforce/workforceRules";
 import { newChapterProgress } from "../domain/chapters/chapterData";
 import type { GameMode } from "../domain/reign/reignData";
-import { createNeighbours } from "../domain/neighbours/neighbourRules";
+import { createNeighbours, landYield } from "../domain/neighbours/neighbourRules";
 
 // The reign opens on New Year's Day, in the dead of winter (see getSeason):
 // farms barely yield, so the very first thing the player sees is food
 // falling and why. Last autumn's harvest is in the granaries
-// (STARTING_FOOD) to carry the country through to spring.
+// (STARTING_FOOD_PER_PERSON) to carry the country through to spring.
 export const STARTING_DATE = { year: 1, month: 1, day: 1 };
-
-// Enough for a 2-farm nation to reach spring without building anything —
-// just. A 2-farm nation eats ~5,000 more than it grows per winter day.
-const STARTING_FOOD = 400000;
 
 // Everything else starts at zero: no money, no stockpiles, no political
 // capital, no research. Surviving the first winter — keeping people fed,
 // housed and warm with nothing in hand — is the opening challenge.
-const STARTING_POPULATION = 10000;
 const STARTING_FACTORIES = 2;
 
 // One-time starting-stat nudges that back up each nation's Nation.startingBonus
 // blurb (nationData.ts) — keep the two in sync when tuning. Veldoria's bonus
 // is an ongoing multiplier instead; see nationEffects.ts.
-const EXTRA_STARTING_FARM_NATIONS = ["astravia"]; // "balancing farmland and ambition"
 const STARTING_STABILITY_BONUS: Record<string, number> = { caldenreich: 10 }; // "steady administration"
 
-// Lean, but not starved: the farms keep food production close to what a
-// 10,000-strong population actually eats, and with two factories they employ
+// Lean, but not starved: the farms (Nation.startingFarms) keep food production
+// close to what the population actually eats, and with two factories they employ
 // about the people there are — cutting further looked like "less free stuff" but was actually a
 // guaranteed early famine, which isn't the same thing as "costs more to
 // build." No free road, though — that bonus is easy to live without.
@@ -78,7 +72,8 @@ export function startNewGame(nationId: string, partyId: string, difficulty: Diff
 function createInitialState(nationId: string, partyId: string, difficulty: Difficulty): GameState {
   const nation = getNation(nationId);
   const level = getDifficulty(difficulty);
-  const farmCount = EXTRA_STARTING_FARM_NATIONS.includes(nationId) ? 6 : 5;
+  const population = nation.startingPopulation;
+  const farmCount = nation.startingFarms;
   const factoryCount = STARTING_FACTORIES;
   const roadCount = 0;
   const stability = level.startingStability + (STARTING_STABILITY_BONUS[nationId] ?? 0);
@@ -106,8 +101,8 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
 
     stats: {
       treasury: level.startingTreasury,
-      population: STARTING_POPULATION,
-      food: STARTING_FOOD * level.startingFoodShare,
+      population,
+      food: population * STARTING_FOOD_PER_PERSON * level.startingFoodShare,
       industry: calculateIndustryOutput(factoryCount),
       stability,
       politicalPower: 0,
@@ -115,7 +110,7 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     },
     unrestStage: "calm",
     resources: {
-      wood: STARTING_RESOURCE_STOCK,
+      wood: landYield(nationId).wood > 0 ? STARTING_RESOURCE_STOCK : STARTING_WOOD_NO_FOREST,
       ore: STARTING_RESOURCE_STOCK,
       coal: STARTING_COAL,
       grain: STARTING_RESOURCE_STOCK,
@@ -124,7 +119,7 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     factionApproval: Object.fromEntries(FACTIONS.map((f) => [f, level.startingSupport])) as Record<Ideology, number>,
 
     projects: [],
-    placedBuildings: [...buildStartingBuildings(nationId, farmCount, level.startingBroken), ...buildStartingHomes(nationId, STARTING_POPULATION * level.startingHomesShare)],
+    placedBuildings: [...buildStartingBuildings(nationId, farmCount, level.startingBroken), ...buildStartingHomes(nationId, population * level.startingHomesShare)],
     provinces: {},
     enactedLawIds: [],
     enactedResearchIds: [],

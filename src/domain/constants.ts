@@ -27,6 +27,11 @@ export const STARTING_RESOURCE_STOCK = 15; // a little in the stores, for the fi
 // carries the first winter with room for a few new homes, and the next
 // winter is the player's to prepare for.
 export const STARTING_COAL = 80;
+// ...and wood where the land grows none (no forest province): a farm (15) and
+// one set of homes (12), before the market opens. The works broken at the start
+// are factories, mended with ore.
+export const STARTING_WOOD_NO_FOREST = 27;
+export const STARTING_FOOD_PER_PERSON = 40; // last autumn's harvest in the granaries, before the level's share
 export const FARM_WOOD_COST = 15; // lumber for the barn
 export const FACTORY_ORE_COST = 22; // metal for machinery
 export const ROAD_ORE_COST = 10; // gravel for the roadbed

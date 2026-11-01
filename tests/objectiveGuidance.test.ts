@@ -91,8 +91,9 @@ describe("guidance on the later steps", () => {
   });
 
   it("names the goods when money isn't what's missing", () => {
-    // Caldenreich grows no wood: a farm's barn leaves too little for homes, and the market is shut.
-    const state = running(buildFarm(open(nation, party, "easy"), province));
+    // Caldenreich grows no wood: with its stock spent on other works, 6 is one short of homes, and the market is shut.
+    const farmed = running(buildFarm(open(nation, party, "easy"), province));
+    const state = { ...farmed, resources: { ...farmed.resources, wood: 6 } };
     expect(getObjectiveGuidance(state, "first-winter", HOMES)).toEqual({ kind: "goods", good: "wood", short: 1 });
     const mended = { ...state, placedBuildings: state.placedBuildings.map((b) => ({ ...b, condition: undefined })) };
     expect(words(mended)).toContain("Needs 1 more wood to start.");

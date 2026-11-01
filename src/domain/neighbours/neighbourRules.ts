@@ -1,5 +1,5 @@
 // The neighbours run their own countries, a month at a time. Each starts
-// where the player's does (10,000 people, its farms and a factory, homes for
+// where the player's does (its own people and farms, two factories, homes for
 // all) and lives by the same numbers: farms feed people by the season, taxes
 // and factories bring in money, homes cap how far people can grow. Then the
 // computer chooses, by the nation's temper (neighbourData.ts): food first,
@@ -34,6 +34,7 @@ import {
   RACE_FROM_MONTH,
   RELATIONS_HOSTILE_APPETITE,
   SETTLE_COST,
+  STARTING_FOOD_PER_PERSON,
   PEOPLE_PER_HOME,
 } from "../constants";
 import { getSeason } from "../country/calendar";
@@ -55,13 +56,14 @@ export function neighbourDice(nationId: string, month: number, purpose: string):
 
 // As the player's country starts (see application/startNewGame.ts).
 export function createNeighbour(nationId: string): Neighbour {
-  const population = 10000;
+  const nation = NATIONS.find((n) => n.id === nationId)!;
+  const population = nation.startingPopulation;
   return {
     treasury: 0,
     population,
-    food: 400000,
+    food: population * STARTING_FOOD_PER_PERSON,
     stability: nationId === "caldenreich" ? 70 : 60,
-    farms: nationId === "astravia" ? 6 : 5,
+    farms: nation.startingFarms,
     factories: 2,
     homes: Math.ceil((population * 1.05) / PEOPLE_PER_HOME),
     stores: { wood: 0, ore: 0, coal: 0 },
