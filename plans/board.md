@@ -18,8 +18,8 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 07b | [Law requirements and Caldenreich's lead](tasks/07b-nation-balance.md) | merged | `task/07b-nation-balance` | laws, starting state, balance | alone |
 | 08 | [Earlier scouting](tasks/08-earlier-scouting.md) | merged | `task/08-earlier-scouting` | chapters, balance | alone |
 | 09 | [Heating](tasks/09-heating.md) | merged, with 120 extra coal for Astravia and an earlier warning | `task/09-heating` | housing rules, balance | alone |
-| 09b | [Veldoria's extra coal](tasks/09b-veldoria-coal.md) | waiting on 08b | `task/09b-veldoria-coal` | starting state, balance | alone |
-| 08b | [Scouting opens when workers run short](tasks/08b-worker-ceiling.md) | running | `task/08b-worker-ceiling` | chapters, balance | alone |
+| 09b | [Veldoria's extra coal](tasks/09b-veldoria-coal.md) | running | `task/09b-veldoria-coal` | starting state, balance | alone |
+| 08b | [Scouting opens when workers run short](tasks/08b-worker-ceiling.md) | merged | `task/08b-worker-ceiling` | chapters, balance | alone |
 | 10 | [Trading orders](tasks/10-trading-orders.md) | merged | `task/10-trading-orders` | market, a day step | alone |
 | 11 | [Trained workers](tasks/11-trained-workers.md) | waiting on 10, stops for the owner to agree a design | `task/11-trained-workers` | labour, balance, People | alone |
 
@@ -59,6 +59,12 @@ Planned order: the look (1, 2, 3, 5, 10), then the numbers one at a time (4, 6, 
 - Hard's test title in `balance.test.ts` says "about a third", which no longer fits.
 
 - One test failed once in `npm test` after task 02 merged, and was not identified. Task 04 then saw `tests/interruptions.test.ts` time out at 5 seconds and an unexplained failure in `tests/balance.test.ts`. The limit is now 30 seconds. If a failure recurs, save the name and the error.
+
+## Small follow-ups from task 08b
+
+- Countries are short of workers from month 1 in nearly every careful game, which is why the line is as high as 45% of workers. Whether a player reads this as "not enough workers" depends on how it's shown.
+- A crude script that builds ahead of its people loses games (careful Normal 1, 2, 0 against 7, 8, 2). Watch this with task 11, since it is the behaviour the chapter answers.
+- No game has tested whether islands relieve the shortage.
 
 ## Small follow-ups from task 10
 
