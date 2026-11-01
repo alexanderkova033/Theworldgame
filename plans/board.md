@@ -18,10 +18,10 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 07b | [Law requirements and Caldenreich's lead](tasks/07b-nation-balance.md) | merged | `task/07b-nation-balance` | laws, starting state, balance | alone |
 | 08 | [Earlier scouting](tasks/08-earlier-scouting.md) | merged | `task/08-earlier-scouting` | chapters, balance | alone |
 | 09 | [Heating](tasks/09-heating.md) | merged, with 120 extra coal for Astravia and an earlier warning | `task/09-heating` | housing rules, balance | alone |
-| 09b | [Veldoria's extra coal](tasks/09b-veldoria-coal.md) | running | `task/09b-veldoria-coal` | starting state, balance | alone |
+| 09b | [Veldoria's extra coal](tasks/09b-veldoria-coal.md) | merged | `task/09b-veldoria-coal` | starting state, balance | alone |
 | 08b | [Scouting opens when workers run short](tasks/08b-worker-ceiling.md) | merged | `task/08b-worker-ceiling` | chapters, balance | alone |
 | 10 | [Trading orders](tasks/10-trading-orders.md) | merged | `task/10-trading-orders` | market, a day step | alone |
-| 11 | [Trained workers](tasks/11-trained-workers.md) | waiting on 10, stops for the owner to agree a design | `task/11-trained-workers` | labour, balance, People | alone |
+| 11 | [Trained workers](tasks/11-trained-workers.md) | design note running, stops for the owner to agree it | `task/11-trained-workers` | labour, balance, People | alone |
 
 Work branch: `setup-screen-flags`, which holds the latest game (`main` is two commits behind it). Task branches start from it and merge back into it, with 04 last. After each merge, the manager reruns all the checks. The owner plays the result before anything is pushed, and decides when it goes to `main`.
 
@@ -59,6 +59,12 @@ Planned order: the look (1, 2, 3, 5, 10), then the numbers one at a time (4, 6, 
 - Hard's test title in `balance.test.ts` says "about a third", which no longer fits.
 
 - One test failed once in `npm test` after task 02 merged, and was not identified. Task 04 then saw `tests/interruptions.test.ts` time out at 5 seconds and an unexplained failure in `tests/balance.test.ts`. The limit is now 30 seconds. If a failure recurs, save the name and the error.
+
+## Small follow-ups from task 09b
+
+- Ladder now Easy 14 and 27, Normal 0 and 20, Hard 0 and 7, Ruthless 0 and 2. Normal's "about half" is generous at 35 of 54 (10, 17, 8 by nation) and 20 sits under the test's ceiling of 22. Waiting on the owner's wording.
+- A coal order with a high enough limit keeps a country warm, but at 1.5 of base it costs 2,200 to 4,200 Cr a year, and careful Veldoria's wins fell at most limits (8 with no order; 5, 7, 4, 4). Nothing tells the player an order's yearly cost.
+- Veldoria still wins nothing on Hard or Ruthless, with or without orders.
 
 ## Small follow-ups from task 08b
 
