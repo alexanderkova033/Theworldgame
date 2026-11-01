@@ -32,22 +32,23 @@ interface GoodSpec {
   basePrice: number; // mid price per unit when the market holds exactly its normal stock
   equilibrium: number; // the market's normal stock
   batch: number; // units per trade at ×1
+  orderStep: number; // how far a standing order's price moves per click
   priceFloor?: number; // lowest price as a share of base (default MARKET_PRICE_FLOOR)
   recovery?: number; // share of the gap to normal closed per day (default MARKET_RECOVERY_PER_DAY)
 }
 
 export const GOOD_SPECS: Record<MarketGood, GoodSpec> = {
-  wood: { basePrice: 25, equilibrium: 120, batch: 5 },
-  ore: { basePrice: 28, equilibrium: 120, batch: 5 },
-  coal: { basePrice: 22, equilibrium: 120, batch: 5 },
+  wood: { orderStep: 1, basePrice: 25, equilibrium: 120, batch: 5 },
+  ore: { orderStep: 1, basePrice: 28, equilibrium: 120, batch: 5 },
+  coal: { orderStep: 1, basePrice: 22, equilibrium: 120, batch: 5 },
   // Raw grain and fish fetch little: their worth is in the food they make.
-  grain: { basePrice: 8, equilibrium: 120, batch: 5 },
-  fish: { basePrice: 8, equilibrium: 120, batch: 5 },
+  grain: { orderStep: 0.5, basePrice: 8, equilibrium: 120, batch: 5 },
+  fish: { orderStep: 0.5, basePrice: 8, equilibrium: 120, batch: 5 },
   // Food moves in cartloads and is cheap per unit — but the market only
   // absorbs so much before the price collapses.
   // A food glut can drive the price almost to nothing, and the market only
   // works through it slowly — dumping a surplus every day stops paying.
-  food: { basePrice: 0.01, equilibrium: 50000, batch: 2000, priceFloor: 0.05, recovery: 0.015 },
+  food: { orderStep: 0.0005, basePrice: 0.01, equilibrium: 50000, batch: 2000, priceFloor: 0.05, recovery: 0.015 },
 };
 
 // How the season shifts each good's normal stock (1 = unchanged).

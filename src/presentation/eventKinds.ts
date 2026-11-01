@@ -51,6 +51,7 @@ const KINDS: Record<Exclude<EventTopic, "paused">, Omit<EventKind, "kind">> = {
   chapter: { plural: "chapters", foldable: false, toast: "never" },
   crisis: { plural: "crises", foldable: false, toast: "always", action: SEE_PEOPLE },
   trade: { plural: "trade offers", foldable: false, toast: "always", action: { label: "Market", ...MARKET } },
+  orders: { plural: "months of standing orders", foldable: false, toast: "never", action: { label: "Market", ...MARKET } },
 };
 
 const OTHER: EventKind = { kind: "other", plural: "events", foldable: false, toast: "always" };

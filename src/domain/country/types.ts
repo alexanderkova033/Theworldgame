@@ -3,7 +3,7 @@
 import type { Project } from "../construction/types";
 import type { DecisionHistoryEntry } from "../decisions/types";
 import type { ForeignGovernment } from "../diplomacy/types";
-import type { MarketState } from "../market/types";
+import type { MarketOrders, MarketState, OrderTally } from "../market/types";
 import type { Expedition } from "../expeditions/types";
 import type { Difficulty } from "../difficulty/difficultyData";
 import type { Ledger } from "../ledger/types";
@@ -85,6 +85,7 @@ export type EventTopic =
   | "army" // regiments fighting, a province taken back, a regiment lost (see domain/military)
   | "season" // the turn of a season: no longer logged, kept for older saves
   | "trade" // a neighbour's trade offer, standing in the Market
+  | "orders" // what the standing orders did this month, one line a month
   | "world"
   | "chapter" // a chapter opening or completed (see domain/chapters)
   | "crisis"; // a flood, a worked-out seam... striking a province, or ending (see domain/crises)
@@ -181,6 +182,8 @@ export interface GameState {
   workforce: Workforce; // salaried scientists and police — see domain/workforce
   foreignPolitics: Record<string, ForeignGovernment>; // every nation but the player's — see domain/diplomacy
   market: MarketState; // the continental market's stock of every good — see domain/market
+  marketOrders: MarketOrders; // the player's standing orders, good by good
+  orderTally: OrderTally | null; // what they have done this month
   factionApproval: Record<Ideology, number>; // per-ideology approval (0-100); stats.popularity is their electorate-weighted average — see domain/parties/factionRules.ts
   expeditions: Expedition[]; // in-progress scouting trips to unclaimed islands
   scoutedIslandIds: string[]; // islands a completed expedition has already visited

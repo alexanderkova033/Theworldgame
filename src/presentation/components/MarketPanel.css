@@ -56,8 +56,114 @@
 }
 
 .market-row {
-  padding: 0.55rem 0.5rem;
+  padding: 0.55rem 0.5rem 0.3rem;
+}
+
+.market-good {
   border-bottom: 1px solid rgba(122, 83, 31, 0.35);
+}
+
+/* Standing orders: a strip under each good. An order that is on is solid, so
+   the running ones can be picked out down the board. */
+.market__orders-line {
+  margin: 0.5rem 0 0;
+  padding: 0.3rem 0.5rem;
+  border-left: 3px solid var(--ink-build);
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+
+.market-orders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0 0.5rem 0.5rem;
+}
+
+.market-order-chip {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--rule);
+  font-size: 0.8125rem;
+}
+
+.market-order-chip button {
+  min-height: 0;
+  padding: 0.1rem 0.45rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink-muted);
+  font-size: inherit;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.market-order-chip__switch {
+  min-width: 2.2rem;
+  border-right: 1px solid var(--rule) !important;
+  font-weight: 700 !important;
+}
+
+.market-order-chip.is-on {
+  border-color: var(--ink-build);
+}
+
+.market-order-chip.is-on .market-order-chip__switch {
+  background: var(--ink-build);
+  border-right-color: var(--ink-build) !important;
+  color: var(--paper-raised);
+}
+
+.market-order-chip.is-on .market-order-chip__terms {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.market-order-chip.is-unset .market-order-chip__switch {
+  display: none;
+}
+
+.market-order-edit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.9rem;
+  padding: 0.4rem 0.5rem 0.55rem;
+  background: var(--paper-deep);
+  font-size: 0.875rem;
+}
+
+.market-order-edit label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.market-order-edit button {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.market-order-number {
+  display: inline-flex;
+}
+
+.market-order-number button {
+  padding: 0.1rem 0.45rem;
+}
+
+.market-order-number input {
+  width: 4.2rem;
+  padding: 0.1rem 0.25rem;
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  background: var(--paper-raised);
+  color: var(--ink);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .market-row__good {

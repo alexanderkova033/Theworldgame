@@ -128,6 +128,7 @@ export interface PlayOptions {
   war?: boolean; // also goes to war for the islands the neighbours hold, once it has three regiments, keeping a garrison on its own islands
   service?: boolean; // also services every worn building whenever it can pay, buying the good if it must
   neglect?: boolean; // leaves uprisings alone: sends no militia and refuses the rebels' terms, so a province can break away
+  orders?: (start: GameState) => GameState; // sets standing orders before the first day; the balance games set none
 }
 
 // The burdens of office, least harmful first for a country that lives on
@@ -155,9 +156,10 @@ function chooseBurden(offer: string[], sloppy: boolean): string {
   return [...offer].sort((a, b) => rank(a) - rank(b))[0];
 }
 
-export function playCarefully(nation: string, party: string, { days, onStop, follow, onDay, difficulty = "easy", skill = "careful", mode, settle = false, trade = false, treaties = false, army = false, war = false, neglect = false, service = false }: PlayOptions): GameState {
+export function playCarefully(nation: string, party: string, { days, onStop, follow, onDay, difficulty = "easy", skill = "careful", mode, settle = false, trade = false, treaties = false, army = false, war = false, neglect = false, service = false, orders }: PlayOptions): GameState {
   const sloppy = skill === "sloppy";
   let s = takeLoan(startNewGame(nation, party, difficulty, mode));
+  if (orders) s = orders(s);
   if (!sloppy) s = setTaxRate(s, 0.12);
   const route = follow ? pathRoute(follow.tree, follow.pathKey) : [];
   const area = follow?.tree === "research" ? (RESEARCH_NODES.find((n) => n.id === route[1])!.category as ResearchCategory) : null;
