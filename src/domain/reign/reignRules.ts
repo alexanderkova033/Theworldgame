@@ -4,6 +4,7 @@ import type { GameDate } from "../country/types";
 import { getDifficulty, type Difficulty } from "../difficulty/difficultyData";
 import { combineEffects, describeEffects, type ModifierEffects } from "../policy/modifiers";
 import { BURDENS, type Burden, type BurdenId, type GameMode } from "./reignData";
+import { counted } from "../plural";
 
 
 export function isLongReign(state: { mode?: GameMode }): boolean {
@@ -56,7 +57,7 @@ export function getBurdenRivalSwing(burdens: BurdenId[] | undefined): number {
 // What a burden does, in the same plain lines as a law's costs.
 export function describeBurden(burden: Burden): string[] {
   const lines = describeEffects(burden.effects).costs.map((line) => line.text);
-  if (burden.expectations) lines.push(`Support drifts ${Math.abs(burden.expectations)} points lower`);
+  if (burden.expectations) lines.push(`Support drifts ${counted(Math.abs(burden.expectations), "point")} lower`);
   if (burden.rivalSwing) lines.push(`The rival's campaigns hit ${Math.round((burden.rivalSwing - 1) * 100)}% harder`);
   if (burden.rallies) lines.push(`Rallies and courting lift support ${Math.round((1 - burden.rallies) * 100)}% less`);
   return lines;

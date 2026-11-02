@@ -1,5 +1,6 @@
 // Step 1 of the day: everything being built or worked on moves forward,
 // and buildings wear out.
+import { isFeatureOpen } from "../../domain/chapters/chapterData";
 import { advanceProject, isProjectComplete } from "../../domain/construction/constructionRules";
 import { CURRENCY_SYMBOL, WORN_WARNING_DAYS } from "../../domain/constants";
 import type { Project, ProjectType } from "../../domain/construction/types";
@@ -77,7 +78,9 @@ export function advanceBuildings(day: Day): GameState {
 
     const advanced = advanceProject(project, day.efficiency, canAffordToday);
     if (advanced.isStalled && !project.isStalled) {
-      log(day, { date: state.date, message: `${project.label} construction has stalled: ${describeStall(project, canAffordTreasury, canAffordResource)}`, severity: "warning", topic: "stall" });
+      // Money first, as it would pay for the goods too. A good only counts while there is a market to buy it on.
+      const stalledFor = !canAffordTreasury ? "money" : project.resourceType && isFeatureOpen(state, "market") ? project.resourceType : undefined;
+      log(day, { date: state.date, message: `${project.label} construction has stalled: ${describeStall(project, canAffordTreasury, canAffordResource)}`, severity: "warning", topic: "stall", stalledFor });
     } else if (!advanced.isStalled && project.isStalled) {
       log(day, { date: state.date, message: `${project.label} construction resumes.`, severity: "info", topic: "stall" });
     }

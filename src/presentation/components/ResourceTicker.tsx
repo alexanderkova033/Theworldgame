@@ -28,6 +28,7 @@ import { FlameIcon, HourglassIcon, LoanIcon, UnrestStageIcon } from "./CauseIcon
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 import { useLetterPreview, type PreviewMetric } from "../letterPreview";
+import { counted } from "../../domain/plural";
 
 interface ResourceTickerProps {
   stats: CountryStats;
@@ -144,7 +145,7 @@ function WhyChip({
         className={`resource-ticker__chip resource-ticker__why-button ${danger ? "is-danger" : warn ? "is-warn" : ""} ${open ? "is-open" : ""} ${previewed !== undefined ? "is-previewed" : ""}`}
         aria-expanded={open}
         aria-haspopup="true"
-        aria-label={`${label}${gone ? ". None left" : runOut ? `. Runs out in ${runOut.days} days if nothing changes` : ""}. Show why it changed.`}
+        aria-label={`${label}${gone ? ". None left" : runOut ? `. Runs out in ${counted(runOut.days, "day")} if nothing changes` : ""}. Show why it changed.`}
         title={`${label}${gone ? ". None left" : runOut ? `. Runs out around ${formatDate(runOut.date)} if nothing changes` : ""}. Click to see why it's moving.`}
         onClick={() => setOpen((v) => !v)}
       >
@@ -170,7 +171,7 @@ function WhyChip({
                 "None left, and less comes in each day than goes out."
               ) : (
                 <>
-                  Runs out around <strong>{formatDate(runOut.date)}</strong> ({runOut.days} days) if nothing changes, counting the lean winter harvests.
+                  Runs out around <strong>{formatDate(runOut.date)}</strong> ({counted(runOut.days, "day")}) if nothing changes, counting the lean winter harvests.
                 </>
               )}
             </p>
@@ -281,8 +282,8 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, producti
         <Chip
           label={
             heating.isWinter
-              ? `Heating: homes burn ${heating.fuelPerDay.toFixed(1)} coal a day, or ${WOOD_PER_COAL_HEAT} times that in wood. Your coal and wood last ${Math.floor(heating.daysOfFuel)} days`
-              : `Winter in ${heating.daysUntilWinter} days: your coal and wood last ${Math.floor(heating.daysOfFuel)} of its ${heating.winterDaysLeft} days`
+              ? `Heating: homes burn ${heating.fuelPerDay.toFixed(1)} coal a day, or ${WOOD_PER_COAL_HEAT} times that in wood. Your coal and wood last ${counted(Math.floor(heating.daysOfFuel), "day")}`
+              : `Winter in ${counted(heating.daysUntilWinter, "day")}: your coal and wood last ${Math.floor(heating.daysOfFuel)} of its ${counted(heating.winterDaysLeft, "day")}`
           }
           danger={heatingDanger}
           warn={!heatingDanger}
@@ -298,7 +299,7 @@ export function ResourceTicker({ stats, electionThreshold, unrestStage, producti
       {shortages.map((short) => (
         <Chip
           key={short.type}
-          label={`${RESOURCE_LABELS[short.type]}: ${formatExact(short.stock)} left. Building draws ${short.perDay.toFixed(1)} a day, about ${Math.floor(short.daysLeft)} days.`}
+          label={`${RESOURCE_LABELS[short.type]}: ${formatExact(short.stock)} left. Building draws ${short.perDay.toFixed(1)} a day, about ${counted(Math.floor(short.daysLeft), "day")}.`}
           danger
         >
           <ResourceGlyph type={short.type} />

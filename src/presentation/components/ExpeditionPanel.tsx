@@ -27,6 +27,7 @@ import { MAP_GEOMETRY } from "../../domain/provinces/provinceData";
 import { playShipBell } from "../audio/sound";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
+import { counted } from "../../domain/plural";
 
 interface ExpeditionPanelProps {
   state: GameState;
@@ -74,7 +75,7 @@ function RaceNote({ state, islandId }: { state: GameState; islandId: string }) {
   if (!voyage) return null;
   return (
     <p className="note is-warning ventures-race">
-      {getNation(voyage.nationId).name}'s settlers land here in {Math.ceil(voyage.daysRemaining)} days, and it will be theirs. Settle it first to keep it.
+      {getNation(voyage.nationId).name}'s settlers land here in {counted(Math.ceil(voyage.daysRemaining), "day")}, and it will be theirs. Settle it first to keep it.
     </p>
   );
 }

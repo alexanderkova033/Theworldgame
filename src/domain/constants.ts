@@ -53,7 +53,9 @@ export const MARKET_OUTLOOK_MIN = 0.7;
 export const MARKET_OUTLOOK_MAX = 1.3;
 // Standing orders (see application/day/marketOrders.ts).
 export const MARKET_ORDER_BATCHES = 1; // each order trades this many of the good's batches a day (5 of a good, 2,000 food)
-export const MARKET_ORDER_RESERVE = 500; // an order never takes the treasury below this
+export const MARKET_ORDER_RESERVE = 500; // what orders leave in the treasury, until the player sets another figure (GameState.marketOrderReserve)
+export const MARKET_ORDER_RESERVE_STEP = 100; // how far that figure moves per click
+export const COAL_ORDER_FORECAST_DAYS = 360; // how far ahead a coal order's cost and winter are worked out (see application/getCoalOrderOutlook.ts)
 
 // --- The larger buildings. Each does the work of several of the plain kind
 // for fewer hands and far less room, at a higher price per unit of output: worth

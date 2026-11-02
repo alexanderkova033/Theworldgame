@@ -16,6 +16,7 @@ import {
 import { getAnswerCost } from "../domain/crises/crisisRules";
 import type { CrisisAnswer, CrisisKind } from "../domain/crises/types";
 import { formatAmount } from "./formatNumber";
+import { counted } from "../domain/plural";
 
 export const CRISIS_NAMES: Record<CrisisKind, string> = {
   flood: "Flood",
@@ -57,7 +58,7 @@ export function crisisPrompt(kind: CrisisKind, name: string, detail: { homesLost
   }
 }
 
-const days = (n: number) => (n >= 360 ? `${Math.round(n / 360)} ${n >= 720 ? "years" : "year"}` : `${n} days`);
+const days = (n: number) => (n >= 360 ? `${Math.round(n / 360)} ${n >= 720 ? "years" : "year"}` : counted(n, "day"));
 
 function price(answer: CrisisAnswer): string {
   const cost = getAnswerCost(answer);

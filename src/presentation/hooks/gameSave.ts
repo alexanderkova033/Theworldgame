@@ -5,6 +5,7 @@
 // still a straight stringify/parse round trip, plus hydrateGameState below
 // filling in any fields an older save predates.
 import type { CountryStats, GameDate, GameState } from "../../domain/country/types";
+import { MARKET_ORDER_RESERVE } from "../../domain/constants";
 import { FACTIONS } from "../../domain/parties/factionData";
 import type { Ideology } from "../../domain/parties/types";
 import { getSeason } from "../../domain/country/calendar";
@@ -110,6 +111,7 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     foreignPolitics: raw.foreignPolitics ?? createForeignPolitics(raw.nationId!),
     market: hydrateMarket(raw),
     marketOrders: raw.marketOrders ?? {},
+    marketOrderReserve: raw.marketOrderReserve ?? MARKET_ORDER_RESERVE,
     orderTally: raw.orderTally ?? null,
     // Pre-coalition saves have no per-faction breakdown — start every faction
     // exactly where the old flat popularity number already was, so resuming

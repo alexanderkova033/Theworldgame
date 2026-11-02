@@ -16,6 +16,7 @@ import { FEEDBACK_URL } from "../feedback";
 import { NavIcon } from "./NavIcon";
 import { StatIcon } from "./StatIcon";
 import { ResourceTicker } from "./ResourceTicker";
+import { counted } from "../../domain/plural";
 
 const SPEEDS: GameSpeed[] = [1, 2, 3, 5];
 
@@ -241,7 +242,7 @@ export function TopBar({
           style={{ "--party-color": partyColor } as CSSProperties}
           onClick={() => onOpenPanel("politics")}
           aria-current={activePanel === "politics" ? "true" : undefined}
-          aria-label={`Politics: ${nationName}, ${partyName}: support ${supportPercent}%, ${electionThreshold}% needed, election in ${electionMonths} months`}
+          aria-label={`Politics: ${nationName}, ${partyName}: support ${supportPercent}%, ${electionThreshold}% needed, election in ${counted(electionMonths, "month")}`}
           title="Politics: the election, support, unrest and the neighbours"
         >
           <span className="top-bar__nation-name">{nationName}</span>

@@ -11,6 +11,7 @@ import type { Ideology } from "../domain/parties/types";
 import { getProvinceName } from "../domain/provinces/provinceRules";
 import { formatAmount, formatSigned } from "./formatNumber";
 import { BUILDING_NAMES, GROUP_NAMES } from "./names";
+import { counted } from "../domain/plural";
 
 const CRISIS_WORDS: Record<CrisisKind, string> = {
   flood: "a flood",
@@ -23,7 +24,7 @@ const CRISIS_WORDS: Record<CrisisKind, string> = {
 function span(days: number): string {
   if (days % 360 === 0) return days === 360 ? "a year" : `${days / 360} years`;
   if (days % 30 === 0) return days === 30 ? "a month" : `${days / 30} months`;
-  return `${days} days`;
+  return counted(days, "day");
 }
 
 const count = (n: number, type: keyof typeof BUILDING_NAMES) => (n === 1 ? `a ${BUILDING_NAMES[type][0].toLowerCase()}` : `${n} ${BUILDING_NAMES[type][1].toLowerCase()}`);

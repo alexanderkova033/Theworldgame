@@ -6,7 +6,12 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { buildFarm } from "../src/application/actions/buildFarm";
 import { canRepairBuilding, repairBuilding } from "../src/application/actions/repairBuilding";
 import { getDaysToSave } from "../src/application/getDaysToSave";
-import { getObjectiveGuidance } from "../src/application/getObjectiveGuidance";
+import { STORY_RULES } from "../src/application/chapters";
+import { getCurrentObjective, getObjectiveGuidance, getObjectiveUnderway, MARROW_PROVINCES, THORNWICK_PROVINCES } from "../src/application/getObjectiveGuidance";
+import { getDailyProductionSummary } from "../src/application/getDailyProductionSummary";
+import { upfrontCost } from "../src/application/actions/createBuildAction";
+import { allChaptersOpen, type ChapterId } from "../src/domain/chapters/chapterData";
+import { EDUCATION_COST, FARM_COST, HARBOUR_COST, REPAIR_DAYS } from "../src/domain/constants";
 import { simulateDay } from "../src/application/simulateDay";
 import { startNewGame } from "../src/application/startNewGame";
 import type { Difficulty } from "../src/domain/difficulty/difficultyData";
@@ -133,5 +138,133 @@ describe("guidance on the later steps", () => {
     expect(getObjectiveGuidance(inHand, "first-winter", REPAIR)).toBeNull();
     expect(getObjectiveGuidance(noMoney(rich), "first-winter", 3)).toBeNull();
     expect(getObjectiveGuidance(noMoney(rich), "exchange", 0)).toBeNull();
+  });
+});
+
+describe("repairs under way", () => {
+  const [nation, party] = NATIONS[1];
+  const province = getNation(nation).capitalProvinceId;
+  const paid = (state: GameState) => {
+    const rich = { ...state, stats: { ...state.stats, treasury: 5000 } };
+    return repairAll(rich);
+  };
+
+  it("are paid for: the step says so, and the farm step takes over the Go", () => {
+    const state = paid(open(nation, party, "normal"));
+    expect(getObjectiveUnderway(state, "first-winter", REPAIR)).toBe(REPAIR_DAYS);
+    expect(getCurrentObjective(state, "first-winter", [false, false, false, false])).toBe(FARM);
+    const html = words(state);
+    expect(html).toContain(`Under way. Back in service in ${REPAIR_DAYS} days.`);
+    expect(html.indexOf("Go ›")).toBeGreaterThan(html.indexOf("Build a farm"));
+    expect(html.match(/is-current/g)).toHaveLength(1);
+  });
+
+  it("let the farm step's guidance show when there is no money for it", () => {
+    const state = { ...paid(open(nation, party, "normal")), date: { year: 1, month: 1, day: 5 }, isPaused: false };
+    const broke = { ...state, stats: { ...state.stats, treasury: 10 } };
+    expect(words(broke)).toContain("Under way.");
+    expect(words(broke)).toMatch(/390 Cr to start\. Enough in \d+ days\./);
+  });
+
+  it("count down, singular at the last", () => {
+    const state = paid(open(nation, party, "normal"));
+    const nearly = { ...state, placedBuildings: state.placedBuildings.map((b) => (b.condition === "repairing" ? { ...b, repairDaysRemaining: 1 } : b)) };
+    expect(words(nearly)).toContain("Back in service in 1 day.");
+  });
+
+  it("don't count until all of them are paid", () => {
+    const state = { ...open(nation, party, "normal"), stats: { ...open(nation, party, "normal").stats, treasury: 5000 } };
+    const [first] = state.placedBuildings.filter((b) => b.condition === "broken");
+    const one = repairBuilding(state, first.id);
+    expect(getObjectiveUnderway(one, "first-winter", REPAIR)).toBeNull();
+    expect(getCurrentObjective(one, "first-winter", [false, false, false, false])).toBe(REPAIR);
+    expect(words(one)).not.toContain("Under way.");
+  });
+
+  it("are done once they are done: the step is ticked and says no more", () => {
+    let state = { ...paid(open(nation, party, "normal")), isPaused: false };
+    for (let i = 0; i < REPAIR_DAYS + 1; i++) state = day(state);
+    expect(state.placedBuildings.some((b) => b.condition === "repairing")).toBe(false);
+    expect(words(state)).not.toContain("Under way.");
+    expect(province).toBeTruthy();
+  });
+});
+
+describe("the first day's wait", () => {
+  it.each(NATIONS)("in %s counts down from the first day, and matches the day it is reached", (nation, party) => {
+    let state = open(nation, party, "normal");
+    const cost = 325;
+    const first = getDaysToSave(state, cost - state.stats.treasury)!;
+    state = { ...state, isPaused: false };
+    let days = 0;
+    while (state.stats.treasury < cost) {
+      const said = getDaysToSave(state, cost - state.stats.treasury);
+      expect(said, `on day ${days}`).toBe(first - days);
+      state = day(state);
+      days++;
+    }
+    expect(days).toBe(first);
+  });
+
+  it("does not change what the first day pays", () => {
+    const state = open(...NATIONS[1], "normal");
+    const before = state.stats.treasury;
+    const income = getDailyProductionSummary(state);
+    const after = day(state);
+    expect(after.stats.treasury - before).toBeCloseTo(income.netTreasury, 6);
+    expect(income.netTreasuryFromTomorrow).toBeCloseTo(getDailyProductionSummary(after).netTreasury, 1);
+  });
+});
+
+describe("guidance on the school, Thornwick and harbour steps", () => {
+  const [nation, party] = NATIONS.find(([id]) => id === "astravia")!;
+  const SCHOOL = 1;
+  const running = (state: GameState, treasury: number): GameState => ({ ...state, date: { year: 2, month: 6, day: 5 }, isPaused: false, chapters: allChaptersOpen(), stats: { ...state.stats, treasury } });
+  const base = open(nation, party, "normal");
+  const opened = (id: ChapterId, state: GameState): GameState => ({ ...state, chapters: { ...state.chapters, opened: [id], done: [], deeds: [...state.chapters.deeds, "astravia-petition:grant", "astravia-charter:grant"] } });
+
+  it("prices a school at what it takes to start, in the style of the others", () => {
+    const state = running(base, 10);
+    expect(getObjectiveGuidance(state, "society", SCHOOL)).toMatchObject({ kind: "saving", cost: upfrontCost(EDUCATION_COST) });
+    expect(words(opened("society", { ...state, researchFocus: { ...state.researchFocus, industry: "chosen" } }))).toMatch(/\d+ Cr to start\. Enough in \d+ days\./);
+  });
+
+  it("has nothing to say about a school once it can be paid for, or for the research step", () => {
+    expect(getObjectiveGuidance(running(base, 5000), "society", SCHOOL)).toBeNull();
+    expect(getObjectiveGuidance(running(base, 10), "society", 0)).toBeNull();
+  });
+
+  it("prices the farm in Thornwick, and only looks there", () => {
+    const state = running(base, 10);
+    expect(getObjectiveGuidance(state, "astravia:promise", 1)).toMatchObject({ kind: "saving", cost: upfrontCost(FARM_COST) });
+    expect(getObjectiveGuidance(running(base, 5000), "astravia:promise", 1)).toBeNull();
+    const lost = { ...state, provinces: Object.fromEntries(Object.entries(state.provinces).filter(([id]) => !id.startsWith("province-8"))) };
+    expect(getObjectiveGuidance(lost, "astravia:promise", 1)).toBeNull();
+  });
+
+  it("names the goods when the money is there but Thornwick's farm wants wood", () => {
+    const rich = running(base, 5000);
+    const noWood = { ...rich, resources: { ...rich.resources, wood: 0 }, market: { ...rich.market, supply: { ...rich.market.supply, wood: 0 } } };
+    expect(getObjectiveGuidance(noWood, "astravia:promise", 1)).toMatchObject({ kind: "goods", good: "wood" });
+  });
+
+  it.each([
+    ["astravia:promise", "farm", THORNWICK_PROVINCES],
+    ["astravia:coast", "harbour", MARROW_PROVINCES],
+  ] as const)("looks in the same provinces as the story's own check on %s", (chapter, type, provinces) => {
+    const check = STORY_RULES[chapter].checks[1];
+    const withProject = (provinceId: string): GameState => ({ ...base, projects: [{ id: "p", type, label: type, totalDays: 1, daysRemaining: 1, provinceId, treasuryCostPerDay: 0, resourceType: "wood", resourceCostPerDay: 0, isStalled: false }] });
+    for (const id of Object.keys(base.provinces)) expect(check(withProject(id)), id).toBe(provinces.includes(id));
+  });
+
+  it("prices the harbour on the Marrow Coast", () => {
+    const state = running(base, 10);
+    expect(getObjectiveGuidance(state, "astravia:coast", 1)).toMatchObject({ kind: "saving", cost: upfrontCost(HARBOUR_COST) });
+    expect(getObjectiveGuidance(running(base, 50000), "astravia:coast", 1)).toBeNull();
+  });
+
+  it("stays quiet about a harbour while ventures are shut", () => {
+    const shut = { ...running(base, 10), chapters: base.chapters };
+    expect(getObjectiveGuidance(shut, "astravia:coast", 1)).toBeNull();
   });
 });

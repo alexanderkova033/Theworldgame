@@ -4,6 +4,8 @@
 // this is a read-only projection of "if a day happened right now," not a
 // second copy of the simulation rules.
 import { BASE_TAX_INCOME_PER_POP, INCOME_PER_INDUSTRY } from "../domain/constants";
+import { calculateIndustryOutput } from "../domain/industry/industryRules";
+import { getUnrestIndustryMultiplier } from "../domain/unrest/unrestRules";
 import { getCollectedTaxRate } from "../domain/economy/economyRules";
 import { getTaxedPopulation } from "../domain/uprising/uprisingRules";
 import { getPayRiseBill } from "../domain/uprising/demandRules";
@@ -33,7 +35,8 @@ export interface DailyProductionSummary {
   armyPay: number; // your regiments' pay (see domain/military)
   totalIncome: number; // net of salaries
   buildingInstalments: number; // the daily share of every project still being paid off (see createBuildAction)
-  netTreasury: number; // what the treasury actually moves by in a day: income, less wages, less instalments
+  netTreasury: number; // what the treasury actually moves by today: income, less wages, less instalments
+  netTreasuryFromTomorrow: number; // the same from tomorrow on: a day pays on yesterday's industry, and today's staffed factories set tomorrow's
   season: Season;
   farmFood: number;
   processedFood: number;
@@ -62,6 +65,7 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const taxBase = getTaxedPopulation(state.provinces, state.stats.population, state.date) * BASE_TAX_INCOME_PER_POP * incomeMultiplier;
   const taxIncome = taxBase * getCollectedTaxRate(state.taxRate);
   const industryIncome = state.stats.industry * INCOME_PER_INDUSTRY * incomeMultiplier;
+  const industryTomorrow = calculateIndustryOutput(staffed.factories) * mods.industryMultiplier * getUnrestIndustryMultiplier(state.unrestStage, state.workforce.police);
   const salaries = getDailySalaries(state.workforce, mods.wageMultiplier) + getPayRiseBill(state.provinces, state.date);
   const buildingInstalments = state.projects.reduce((sum, project) => sum + project.treasuryCostPerDay, 0);
 
@@ -94,6 +98,7 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
     totalIncome: taxIncome + industryIncome + colonyIncome - salaries - armyPay,
     buildingInstalments,
     netTreasury: taxIncome + industryIncome + colonyIncome - salaries - armyPay - buildingInstalments,
+    netTreasuryFromTomorrow: taxIncome + industryTomorrow * INCOME_PER_INDUSTRY * incomeMultiplier + colonyIncome - salaries - armyPay - buildingInstalments,
     season,
     farmFood,
     processedFood,

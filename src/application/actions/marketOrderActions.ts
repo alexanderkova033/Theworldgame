@@ -2,7 +2,7 @@
 // today. The day's step (day/marketOrders.ts) and the Market ask the same
 // questions here, so the screen says what the simulation will do.
 import { isFeatureOpen } from "../../domain/chapters/chapterData";
-import { CURRENCY_SYMBOL, MARKET_ORDER_BATCHES, MARKET_ORDER_RESERVE } from "../../domain/constants";
+import { CURRENCY_SYMBOL, MARKET_ORDER_BATCHES } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { GOOD_SPECS, MARKET_GOODS, getBatchSize, getMidPrice, marketHasStock } from "../../domain/market/marketRules";
 import type { BuyOrder, GoodOrders, MarketGood, OrderTally, SellOrder } from "../../domain/market/types";
@@ -69,6 +69,10 @@ export function setSellOrderToToday(state: GameState, good: MarketGood): GameSta
   return changeSellOrder(state, good, { above: toStep(good, todaysPrice(state, good), Math.floor) });
 }
 
+export function setOrderReserve(state: GameState, reserve: number): GameState {
+  return { ...state, marketOrderReserve: Math.max(0, reserve) };
+}
+
 export function countOrdersOn(state: GameState): number {
   return MARKET_GOODS.reduce((sum, good) => {
     const orders = state.marketOrders[good];
@@ -78,7 +82,7 @@ export function countOrdersOn(state: GameState): number {
 
 // A buy limit at or over the sell limit would pay the spread day after day,
 // buying and selling the same goods. Neither trades until they are apart.
-function ordersCross(state: GameState, good: MarketGood): boolean {
+export function ordersCross(state: GameState, good: MarketGood): boolean {
   const { buy, sell } = state.marketOrders[good] ?? {};
   return !!buy?.on && !!sell?.on && buy.below >= sell.above;
 }
@@ -94,8 +98,8 @@ export function whyBuyOrderWaits(state: GameState, good: MarketGood): string | n
   if (todaysPrice(state, good) >= order.below) return "Waiting for the price to fall.";
   if (order.stockUnder !== null && goodHolding(state, good) >= order.stockUnder) return "Waiting: you hold enough.";
   if (!marketHasStock(state.market, good, getBatchSize(good, MARKET_ORDER_BATCHES))) return "Waiting: the market has too little.";
-  if (!canBuyGood(state, good, MARKET_ORDER_BATCHES) || state.stats.treasury - getMarketBuyCost(state, good, MARKET_ORDER_BATCHES) < MARKET_ORDER_RESERVE) {
-    return `Waiting: orders leave ${MARKET_ORDER_RESERVE} ${CURRENCY_SYMBOL} in the treasury.`;
+  if (!canBuyGood(state, good, MARKET_ORDER_BATCHES) || state.stats.treasury - getMarketBuyCost(state, good, MARKET_ORDER_BATCHES) < state.marketOrderReserve) {
+    return `Waiting: orders leave ${state.marketOrderReserve} ${CURRENCY_SYMBOL} in the treasury.`;
   }
   return null;
 }

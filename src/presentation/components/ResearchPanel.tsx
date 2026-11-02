@@ -43,6 +43,7 @@ import { InspectorHeader, Lockouts, PathInspector, StatusLine, SynergyLine, Tree
 import { AREA_LABELS } from "../researchAreas";
 import { ScientistStepper } from "./WorkforcePanel";
 import { formatAmount, formatRate, formatSigned } from "../formatNumber";
+import { counted } from "../../domain/plural";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
 
@@ -64,7 +65,7 @@ function PathCost({ state, nodes }: { state: GameState; nodes: ResearchNode[] })
       <CostChips>
         <StatChip type="research" amount={Math.round(work)} />
       </CostChips>
-      <span className="note">{rate > 0 ? `about ${formatAmount(Math.ceil(work / rate))} days at today's rate` : "no progress at today's rate"}</span>
+      <span className="note">{rate > 0 ? `about ${counted(Math.ceil(work / rate), "day", "days", formatAmount(Math.ceil(work / rate)))} at today's rate` : "no progress at today's rate"}</span>
     </div>
   );
 }
@@ -209,7 +210,7 @@ function ResearchInspector({ node, state, status, onFocus, onStop }: ResearchIns
           <CostChips>
             <StatChip type="research" amount={getResearchCost(node)} />
           </CostChips>
-          {daysLeft !== null && <span className="research-inspector__eta">about {daysLeft} days at today's rate</span>}
+          {daysLeft !== null && <span className="research-inspector__eta">about {counted(daysLeft, "day")} at today's rate</span>}
         </div>
       )}
 

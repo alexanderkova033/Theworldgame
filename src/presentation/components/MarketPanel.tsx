@@ -5,6 +5,7 @@
 // over the following weeks.
 import "./MarketPanel.css";
 import { useState } from "react";
+import { getCoalOrderOutlook } from "../../application/getCoalOrderOutlook";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import {
   acceptOffer,
@@ -21,16 +22,17 @@ import {
   getMarketSellRevenue,
   sellGood,
   setBuyOrderToToday,
+  setOrderReserve,
   setSellOrderToToday,
   toggleBuyOrder,
   toggleSellOrder,
   whyBuyOrderWaits,
   whySellOrderWaits,
 } from "../../application/actions";
-import { dayNumber } from "../../domain/country/calendar";
+import { dayNumber, getSeason } from "../../domain/country/calendar";
 import { getNation } from "../../domain/nations/nationRules";
 import { relationsWord } from "../../domain/neighbours/relationsRules";
-import { CURRENCY_SYMBOL, MARKET_ORDER_BATCHES, MARKET_ORDER_RESERVE } from "../../domain/constants";
+import { CURRENCY_SYMBOL, MARKET_ORDER_BATCHES, MARKET_ORDER_RESERVE_STEP } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
 import { GOOD_SPECS, MARKET_GOODS, getBatchSize, getBuyCost, getMidPrice, getPriceRatio, getSellRevenue, holdsPort } from "../../domain/market/marketRules";
 import type { MarketGood } from "../../domain/market/types";
@@ -38,6 +40,7 @@ import { formatAmount } from "../formatNumber";
 import { playCoins, playSeal } from "../audio/sound";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
+import { counted } from "../../domain/plural";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
 
@@ -132,7 +135,28 @@ function orderWords(state: GameState, good: MarketGood, side: OrderSide): string
 function orderTip(state: GameState, good: MarketGood, side: OrderSide): string {
   const set = state.marketOrders[good]?.[side];
   if (!set) return side === "buy" ? "Buy a little each day while the price is low. Starts at today's price." : "Sell a little each day while the price is high. Starts at today's price, keeping what you hold now.";
-  return (side === "buy" ? whyBuyOrderWaits(state, good) : whySellOrderWaits(state, good)) ?? "Trades today.";
+  const now = (side === "buy" ? whyBuyOrderWaits(state, good) : whySellOrderWaits(state, good)) ?? "Trades today.";
+  const outlook = side === "buy" && good === "coal" ? getCoalOrderOutlook(state) : null;
+  if (!outlook) return now;
+  const cost = Math.round(outlook.yearlyCost / 10) * 10;
+  return `${now} ${cost > 0 ? `Over the next year it should cost about ${formatAmount(cost)} ${CURRENCY_SYMBOL}` : "Over the next year it should buy nothing"}, at today's prices and with today's homes.`;
+}
+
+const LIMIT_ADVICE = { price: "Raise the price limit.", stock: "Raise the stock limit.", money: "The treasury can't pay for it." };
+
+// A coal order that won't see the winter through, in words on the order.
+function CoalOrderWarning({ state }: { state: GameState }) {
+  const outlook = getCoalOrderOutlook(state);
+  if (!outlook || outlook.shortDays === 0) return null;
+  const held = formatAmount(Math.floor(outlook.coalAtWinter));
+  const burn = formatAmount(Math.ceil(outlook.winterBurn));
+  const when = getSeason(state.date) === "winter" ? `You hold about ${held} coal, and the rest of winter burns ${burn}.` : `This order reaches about ${held} coal by winter, which burns ${burn}.`;
+  const after = outlook.coldDays > 0 ? `Homes would go cold for about ${counted(outlook.coldDays, "day")} of it.` : "The rest would burn wood.";
+  return (
+    <p className="market-order-warning" data-tip={`${after} Worked out from today's prices and homes.`}>
+      {when} {LIMIT_ADVICE[outlook.heldBackBy]}
+    </p>
+  );
 }
 
 // One order: its switch, and its terms, which open for changing.
@@ -212,14 +236,15 @@ function OrderEditor({ state, good, side, onClose, dispatch }: { state: GameStat
 }
 
 // What the orders are up to, in one line over the board.
-function OrdersLine({ state }: { state: GameState }) {
+function OrdersLine({ state, dispatch }: { state: GameState; dispatch: Dispatch }) {
   if (Object.keys(state.marketOrders).length === 0) return null;
   const on = countOrdersOn(state);
   const tally = state.orderTally;
   const thisMonth = tally && tally.year === state.date.year && tally.month === state.date.month ? tally : null;
   return (
     <p className="market__orders-line" data-tip={`Each order trades once a day: ${formatAmount(getBatchSize("coal", MARKET_ORDER_BATCHES))} of a good, or ${formatAmount(getBatchSize("food", MARKET_ORDER_BATCHES))} food. Prices move as they do for any trade.`}>
-      <strong>{on === 1 ? "1 standing order on." : `${on} standing orders on.`}</strong> They leave {formatAmount(MARKET_ORDER_RESERVE)} {CURRENCY_SYMBOL} in the treasury. {thisMonth ? describeOrderTally(thisMonth, formatAmount) : "No trades by them yet this month."}
+      <strong>{on === 1 ? "1 standing order on." : `${on} standing orders on.`}</strong> They leave{" "}
+      <OrderNumber label="What orders leave in the treasury" value={state.marketOrderReserve} step={MARKET_ORDER_RESERVE_STEP} decimals={0} onChange={(v) => dispatch((s) => setOrderReserve(s, v ?? 0))} /> {CURRENCY_SYMBOL} in the treasury. {thisMonth ? describeOrderTally(thisMonth, formatAmount) : "No trades by them yet this month."}
     </p>
   );
 }
@@ -298,6 +323,7 @@ function MarketRow({ state, good, perDay, quantity, openOrder, onOpenOrder, disp
       <OrderChip state={state} good={good} side="buy" isOpen={openOrder === "buy"} onOpen={(open) => onOpenOrder(open ? "buy" : null)} dispatch={dispatch} />
       <OrderChip state={state} good={good} side="sell" isOpen={openOrder === "sell"} onOpen={(open) => onOpenOrder(open ? "sell" : null)} dispatch={dispatch} />
     </div>
+    {good === "coal" && <CoalOrderWarning state={state} />}
     {openOrder && <OrderEditor state={state} good={good} side={openOrder} onClose={() => onOpenOrder(null)} dispatch={dispatch} />}
     </div>
   );
@@ -329,7 +355,7 @@ function OfferCard({ state, dispatch }: { state: GameState; dispatch: MarketPane
       <div className="market-offer__body">
         <h3 className="market-offer__title">
           {nation.name} {selling ? "offers" : "would buy"} {formatAmount(offer.amount)} {offer.good}
-          {daysLeft !== null && <span className="market-offer__days">{daysLeft > 0 ? `${daysLeft} days left` : "Last day"}</span>}
+          {daysLeft !== null && <span className="market-offer__days">{daysLeft > 0 ? `${counted(daysLeft, "day")} left` : "Last day"}</span>}
         </h3>
         <p className="market-offer__terms" title={`They are ${feeling} towards you; a deal would warm them.`}>
           For {formatAmount(offer.price)} {CURRENCY_SYMBOL}. The market would {selling ? "ask" : "pay"} {formatAmount(market)} {CURRENCY_SYMBOL}.
@@ -381,7 +407,7 @@ export function MarketPanel({ state, production, dispatch }: MarketPanelProps) {
           </span>
         )}
 
-        <OrdersLine state={state} />
+        <OrdersLine state={state} dispatch={dispatch} />
 
         <div className="market__columns" aria-hidden="true">
           <span>Good</span>

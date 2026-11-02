@@ -32,7 +32,9 @@ import { RESEARCH_CATEGORIES } from "../domain/workforce/workforceRules";
 import { formatDate } from "../domain/country/calendar";
 import type { DailyProductionSummary } from "./getDailyProductionSummary";
 import type { Forecasts } from "./getForecasts";
+import { getProjectShortages, type StallCause } from "./getProjectAffordability";
 import { isWinterFuelShort, type HeatingOutlook } from "./getHeatingOutlook";
+import { counted } from "../domain/plural";
 
 export type AdvisorAlertKind =
   | "uprising"
@@ -57,6 +59,7 @@ export interface AdvisorAlert {
   detail: string; // tooltip: what's wrong and what to do
   critical: boolean;
   stage?: GameState["unrestStage"]; // for the unrest alert
+  stalledFor?: StallCause; // for the stalled alert: what the first of them is short of
 }
 
 export interface AdvisorOutlook {
@@ -69,9 +72,7 @@ const ALERT_ORDER: AdvisorAlertKind[] = ["uprising", "unrest", "provinceUnrest",
 
 const UNREST_NAMES: Record<GameState["unrestStage"], string> = { calm: "Calm", discontent: "Discontent", strikes: "Strikes", riots: "Riots" };
 
-function dayCount(days: number): string {
-  return `${days} day${days === 1 ? "" : "s"}`;
-}
+const dayCount = (days: number): string => counted(days, "day");
 
 function percent(share: number): string {
   return `${Math.round(share * 100)}%`;
@@ -98,7 +99,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     alerts.push({
       kind: "uprising",
       text: `Risen: ${getProvinceName(id)}${others}`,
-      detail: `${getProvinceName(id)} has risen against the government (rebel strength ${Math.round(strongest.uprising!.strength)}): rebels hold its farms and works, and it pays no taxes.${breaking !== null ? ` At full strength, it breaks away for good in ${breaking} days.` : ""} ${streets ? "Send in the militia, or calm the country and it burns out." : "Calm the country and it burns out."}`,
+      detail: `${getProvinceName(id)} has risen against the government (rebel strength ${Math.round(strongest.uprising!.strength)}): rebels hold its farms and works, and it pays no taxes.${breaking !== null ? ` At full strength, it breaks away for good in ${dayCount(breaking)}.` : ""} ${streets ? "Send in the militia, or calm the country and it burns out." : "Calm the country and it burns out."}`,
       critical: true,
     });
   }
@@ -140,7 +141,7 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     alerts.push({
       kind: "race",
       text: `${getNation(voyage.nationId).name} → ${getProvinceName(voyage.islandId)}: ${days}d`,
-      detail: `${getNation(voyage.nationId).name}'s settlers land on ${getProvinceName(voyage.islandId)} in ${days} days, and it will be theirs. Settle it first to keep it.`,
+      detail: `${getNation(voyage.nationId).name}'s settlers land on ${getProvinceName(voyage.islandId)} in ${dayCount(days)}, and it will be theirs. Settle it first to keep it.`,
       critical: false,
     });
   }
@@ -151,14 +152,14 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     alerts.push({
       kind: "coal",
       text: `Coal: ${dayCount(days)}`,
-      detail: `Coal and firewood last ${days} more days, with ${heating.winterDaysLeft} days of winter left. ${market ? "Buy coal." : "Keep the wood for burning, not building."}`,
+      detail: `Coal and firewood last ${counted(days, "more day", "more days")}, with ${dayCount(heating.winterDaysLeft)} of winter left. ${market ? "Buy coal." : "Keep the wood for burning, not building."}`,
       critical: days < ADVISOR_COAL_CRITICAL_DAYS,
     });
   } else if (isWinterFuelShort(heating, production.resourceProduction.coal)) {
     alerts.push({
       kind: "coal",
       text: `Winter coal: ${percent(heating.fuelNeeded > 0 ? heating.fuel / heating.fuelNeeded : 1)}`,
-      detail: `Winter starts in ${heating.daysUntilWinter} days. Your coal and wood last ${Math.floor(heating.daysOfFuel)} of its ${heating.winterDaysLeft} days.${market ? " Coal costs more once it starts." : ""}`,
+      detail: `Winter starts in ${dayCount(heating.daysUntilWinter)}. Your coal and wood last ${Math.floor(heating.daysOfFuel)} of its ${dayCount(heating.winterDaysLeft)}.${market ? " Coal costs more once it starts." : ""}`,
       critical: heating.daysUntilWinter <= ADVISOR_WINTER_PREP_CRITICAL_DAYS,
     });
   }
@@ -247,13 +248,18 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
     });
   }
 
-  const stalled = state.projects.filter((p) => p.isStalled).length;
+  const stalledProjects = state.projects.filter((p) => p.isStalled);
+  const stalled = stalledProjects.length;
   if (stalled > 0) {
+    const shortages = getProjectShortages(state);
+    const short = stalledProjects.map((p) => shortages.get(p.id)).filter((s) => s !== undefined);
+    const wants = [...new Set(short.flatMap((s) => [s.money ? "money" : null, s.good]).filter((word) => word !== null))].join(" and ");
     alerts.push({
       kind: "stalled",
       text: `Stalled: ${stalled}`,
-      detail: `${stalled} building project${stalled === 1 ? " is" : "s are"} stalled for lack of money or materials, and slipping backward.`,
+      detail: `${stalled} building project${stalled === 1 ? " is" : "s are"} stalled for lack of ${wants || "money or materials"}, and slipping backward.`,
       critical: false,
+      stalledFor: short.some((s) => s.money) ? "money" : short[0] && isFeatureOpen(state, "market") ? (short[0].good ?? undefined) : undefined,
     });
   }
 

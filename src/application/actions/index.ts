@@ -8,7 +8,7 @@ export { buildHousing } from "./buildHousing";
 export { countBuildingsInProvince } from "./createBuildAction";
 export { buyAndBuild, planBuyAndBuild, type BuyAndBuildPlan } from "./buyAndBuild";
 export { buyGood, canBuyGood, canSellGood, getMarketBuyCost, getMarketSellRevenue, sellGood } from "./marketActions";
-export { changeBuyOrder, changeSellOrder, countOrdersOn, describeOrderTally, setBuyOrderToToday, setSellOrderToToday, toggleBuyOrder, toggleSellOrder, whyBuyOrderWaits, whySellOrderWaits } from "./marketOrderActions";
+export { changeBuyOrder, changeSellOrder, countOrdersOn, describeOrderTally, setBuyOrderToToday, setOrderReserve, setSellOrderToToday, toggleBuyOrder, toggleSellOrder, whyBuyOrderWaits, whySellOrderWaits } from "./marketOrderActions";
 export { canTakeLoan, canRepayLoan, getRepayAmount, repayLoan, takeLoan } from "./loanActions";
 export { canSendExpedition, sendExpedition } from "./sendExpedition";
 export { canEnactLaw, enactLaw } from "./enactLaw";

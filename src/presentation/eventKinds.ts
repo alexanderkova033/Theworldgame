@@ -57,8 +57,16 @@ const KINDS: Record<Exclude<EventTopic, "paused">, Omit<EventKind, "kind">> = {
 
 const OTHER: EventKind = { kind: "other", plural: "events", foldable: false, toast: "always" };
 
+// A stall's button goes to where its cause is mended; resuming needs nothing mended.
+function stallAction(event: GameEvent): EventAction {
+  if (event.stalledFor === "money") return SEE_BUDGET;
+  if (event.stalledFor) return { label: `Buy ${event.stalledFor}`, ...MARKET };
+  return BUILD;
+}
+
 export function getEventKind(event: GameEvent): EventKind {
   if (!event.topic) return OTHER;
+  if (event.topic === "stall") return { kind: "stall", ...KINDS.stall, action: stallAction(event) };
   // A pause is never folded away, and its button goes to whatever stopped the game.
   if (event.topic === "paused") return { kind: "paused", plural: "pauses", foldable: false, toast: "always", action: event.about && event.about !== "paused" ? KINDS[event.about].action : undefined };
   return { kind: event.topic, ...KINDS[event.topic] };
