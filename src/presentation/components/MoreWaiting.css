@@ -1,0 +1,10 @@
+/* How many more stops wait behind this one. */
+.more-waiting {
+  align-self: flex-end;
+  margin: 0;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--gilt);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--window-ink);
+}

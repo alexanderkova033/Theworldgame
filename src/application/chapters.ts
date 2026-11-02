@@ -182,8 +182,18 @@ export function stopsBehind(state: GameState, id: ChapterId): number {
     if (!joins) lettersToCome += 1;
     letterOpen = true;
   });
-  const others = [state.pendingDecisionId, state.burdenOffer, state.pendingDemand, state.pendingCrisis, state.ultimatum && !state.ultimatum.answered].filter(Boolean).length;
-  return unread.filter((c) => c !== id).length + lettersToCome + letters.length + others;
+  return unread.filter((c) => c !== id).length + lettersToCome + letters.length + openLetters(state);
+}
+
+function openLetters(state: GameState): number {
+  return [state.pendingDecisionId, state.burdenOffer, state.pendingDemand, state.pendingCrisis, state.ultimatum && !state.ultimatum.answered].filter(Boolean).length;
+}
+
+// How many more stops wait behind a letter on screen (a burden, a decision, an
+// ultimatum, a demand or a crisis): the other open letters, and the story
+// letters queued to follow. Any briefing comes before all of them.
+export function lettersBehind(state: GameState): number {
+  return Math.max(0, openLetters(state) - 1) + state.chapters.letters.length;
 }
 
 // The next story letter waiting, sent once no other letter is open.

@@ -1,5 +1,6 @@
 import "./DecisionModal.css";
 import { useEffect } from "react";
+import { lettersBehind } from "../../application/chapters";
 import { previewOf, setLetterPreview } from "../letterPreview";
 import type { GameState } from "../../domain/country/types";
 import { getDecision } from "../../domain/decisions/decisionRules";
@@ -7,6 +8,7 @@ import type { DecisionDefinition, DecisionEffects } from "../../domain/decisions
 import { playSeal } from "../audio/sound";
 import { BuildingGlyph } from "./CauseIcon";
 import { Modal } from "./Modal";
+import { MoreWaiting } from "./MoreWaiting";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import { describeEffects, describeOutcomeParts, type OutcomePart } from "../storyText";
@@ -105,6 +107,7 @@ export function DecisionModal({ state, onResolve, onDismiss }: DecisionModalProp
     // A story letter must be answered: its choice is the story (domain/chapters).
     <Modal title={decision.title} onClose={decision.story ? undefined : onDismiss}>
       <div className="decision-modal">
+        <MoreWaiting count={lettersBehind(state)} />
         {chapter ? (
           <StoryPlate chapterId={chapter.id} />
         ) : (

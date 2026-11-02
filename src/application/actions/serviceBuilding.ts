@@ -42,7 +42,7 @@ export function serviceBuilding(state: GameState, buildingId: string): GameState
     ...state,
     stats: { ...state.stats, treasury: state.stats.treasury - cost.treasury },
     resources: deductResource(state.resources, cost.resourceType, cost.resourceAmount),
-    placedBuildings: state.placedBuildings.map((b) => (b.id === buildingId ? { ...b, serviceUntilDay: dayNumber(state.date) + days } : b)),
+    placedBuildings: state.placedBuildings.map((b) => (b.id === buildingId ? { ...b, serviceUntilDay: dayNumber(state.date) + days, serviceDays: days } : b)),
   };
   return recordAction(state, next, { treasury: "construction" });
 }

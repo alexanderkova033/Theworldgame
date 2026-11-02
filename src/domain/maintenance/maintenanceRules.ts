@@ -21,6 +21,8 @@ import {
   HOUSING_WOOD_COST,
   REPAIR_COST_SHARE,
   REPAIR_DAYS,
+  SERVICE_DAYS_TRAINED,
+  SERVICE_DAYS_UNTRAINED,
   SERVICE_COST_SHARE,
   SERVICE_UNTRAINED_COST,
   WORN_WARNING_DAYS,
@@ -126,6 +128,15 @@ export function getServiceDaysLeft(building: PlacedBuilding, date: GameDate): nu
   return Math.max(0, (building.serviceUntilDay ?? 0) - dayNumber(date));
 }
 
+// How far along a service is, 0..1. A save made during a service, from before
+// its length was kept, has only the days left: more than a trained crew takes
+// means an untrained one, and otherwise a trained crew is the likelier.
+export function getServiceProgress(building: PlacedBuilding, date: GameDate): number {
+  const left = getServiceDaysLeft(building, date);
+  const total = building.serviceDays ?? (left > SERVICE_DAYS_TRAINED ? SERVICE_DAYS_UNTRAINED : SERVICE_DAYS_TRAINED);
+  return Math.min(1, Math.max(0, 1 - left / total));
+}
+
 export function getWornDaysLeft(building: PlacedBuilding, date: GameDate): number {
   return Math.max(0, (building.wornUntilDay ?? 0) - dayNumber(date));
 }
@@ -178,7 +189,7 @@ export function rollBreakdowns(
     if (!isWorking(building)) return building;
     if (isBeingServiced(building)) {
       if (today + 1 < building.serviceUntilDay!) return building;
-      const done: PlacedBuilding = { ...building, wornUntilDay: undefined, serviceUntilDay: undefined };
+      const done: PlacedBuilding = { ...building, wornUntilDay: undefined, serviceUntilDay: undefined, serviceDays: undefined };
       serviced.push(done);
       return done;
     }

@@ -4,6 +4,7 @@
 // aside would be a refusal nobody chose.
 import "./DecisionModal.css";
 import { canAnswerDemand, getDemandAnswers } from "../../application/actions";
+import { lettersBehind } from "../../application/chapters";
 import {
   AMNESTY_POLITICAL_POWER,
   AMNESTY_SUPPORT,
@@ -16,6 +17,7 @@ import type { DemandAnswer } from "../../domain/uprising/types";
 import { playSeal } from "../audio/sound";
 import { formatSigned } from "../formatNumber";
 import { Modal } from "./Modal";
+import { MoreWaiting } from "./MoreWaiting";
 import { StatIcon, type StatIconType } from "./StatIcon";
 
 interface Plate {
@@ -55,6 +57,7 @@ export function DemandLetter({ state, onAnswer }: { state: GameState; onAnswer: 
   return (
     <Modal title={isPay ? "A Pay Rise" : "The Rebels' Terms"}>
       <div className="decision-modal">
+        <MoreWaiting count={lettersBehind(state)} />
         <div className="decision-modal__icon">
           <StatIcon type={isPay ? "treasury" : "uprising"} size={36} />
         </div>

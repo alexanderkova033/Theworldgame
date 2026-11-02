@@ -1,6 +1,7 @@
 // Winter heating: need is reckoned in coal, coal burns first, and wood meets
 // the rest at WOOD_PER_COAL_HEAT to one. Larger buildings hold their heat.
 import { describe, expect, it } from "vitest";
+import { buildTenement, buildTower } from "../src/application/actions/buildLarger";
 import { getAdvisorOutlook } from "../src/application/getAdvisorOutlook";
 import { getDailyProductionSummary } from "../src/application/getDailyProductionSummary";
 import { getForecasts } from "../src/application/getForecasts";
@@ -16,7 +17,12 @@ import type { GameState } from "../src/domain/country/types";
 import { getDecision } from "../src/domain/decisions/decisionRules";
 import { burnHeatingFuel, getBuildingHeatDemand, getHeatingDemand, getHeatInStock, getHeatShare } from "../src/domain/housing/housingRules";
 import { emptyResourceBundle } from "../src/domain/resources/resourceRules";
+import { getSeason } from "../src/domain/country/calendar";
+import { getNation } from "../src/domain/nations/nationRules";
+import { getModifiers } from "../src/domain/policy/policyRules";
 import { calmStart } from "./support/calmStart";
+import { playCarefully } from "./support/carefulPlayer";
+import { seedRandom } from "./support/seededRandom";
 
 const stock = (coal: number, wood: number) => ({ ...emptyResourceBundle(), coal, wood });
 
@@ -114,6 +120,73 @@ describe("each kind of home", () => {
     const broken: GameState = { ...state, placedBuildings: [state.placedBuildings[0], { ...state.placedBuildings[1], condition: "broken" }] };
     expect(getHeatingDemand(broken, "winter")).toBeCloseTo(getBuildingHeatDemand("tenement"));
   });
+});
+
+describe("a game with tenements and apartment blocks", () => {
+  const LAND = getNation("astravia").provinceIds;
+  const ordinaryHomes = (s: GameState): GameState => ({
+    ...s,
+    placedBuildings: s.placedBuildings.flatMap((b) =>
+      b.type === "tenement" || b.type === "tower"
+        ? Array.from({ length: b.type === "tenement" ? HOMES_PER_TENEMENT : HOMES_PER_TOWER }, (_, i) => ({ ...b, id: `${b.id}-home-${i}`, type: "housing" as const }))
+        : [b],
+    ),
+  });
+  const heatIn = (s: GameState) => getHeatInStock(s.resources);
+
+  it("burns less for the same homes, in the stock itself, winter after winter", () => {
+    seedRandom(20261015);
+    const winters: GameState[] = [];
+    let unlocked = false;
+    const end = playCarefully("astravia", "astravia-harvest-union", {
+      days: 3 * 365,
+      onDay: (s) => {
+        if (getSeason(s.date) === "winter") winters.push(s);
+      },
+      habit: (state) => {
+        // The research that opens apartment blocks, and the goods they take: this is about their fuel.
+        let s: GameState = { ...state, resources: { ...state.resources, wood: Math.max(state.resources.wood, 200), ore: Math.max(state.resources.ore, 200), coal: Math.max(state.resources.coal, 100) } };
+        if (!unlocked) {
+          unlocked = true;
+          s = { ...s, enactedResearchIds: [...s.enactedResearchIds, "housing-back-to-backs"] };
+        }
+        if (s.stats.treasury < 5000 || s.projects.some((p) => p.type === "tenement" || p.type === "tower")) return s;
+        const fewest = (type: ProjectType) => s.placedBuildings.filter((b) => b.type === type).length;
+        const action = fewest("tower") < fewest("tenement") ? buildTower : buildTenement;
+        for (const id of LAND) if (action.canBuild(s, id)) return action(s, id);
+        return s;
+      },
+    });
+    expect(end.isGameOver && end.outcome !== "victory").toBe(false);
+    const count = (s: GameState, type: ProjectType) => s.placedBuildings.filter((b) => b.type === type && b.condition === undefined).length;
+    const last = winters[winters.length - 1];
+    expect(count(last, "tenement")).toBeGreaterThan(0);
+    expect(count(last, "tower")).toBeGreaterThan(0);
+
+    // Every winter day with them standing: what the country was asked to burn.
+    const report: string[] = [];
+    for (const year of new Set(winters.map((s) => s.date.year))) {
+      const days = winters.filter((s) => s.date.year === year && (count(s, "tenement") > 0 || count(s, "tower") > 0));
+      if (days.length === 0) continue;
+      const burned = days.reduce((sum, s) => sum + getHeatingDemand(s, "winter"), 0);
+      const asHomes = days.reduce((sum, s) => sum + getHeatingDemand(ordinaryHomes(s), "winter"), 0);
+      expect(burned, `year ${year}`).toBeLessThan(asHomes);
+      report.push(`year ${year}: ${Math.round(burned)} coal, against ${Math.round(asHomes)} in ordinary homes (${count(days[days.length - 1], "tenement")} tenements, ${count(days[days.length - 1], "tower")} blocks)`);
+    }
+    console.log(`Winter fuel in a game of tenements and blocks:\n${report.join("\n")}`);
+
+    // And that is what leaves the stock: one more day from the same morning, each way.
+    const morning: GameState = { ...last, resources: { ...last.resources, coal: 500, wood: 0 }, isPaused: false };
+    const tenements = count(morning, "tenement");
+    const towers = count(morning, "tower");
+    const saved = tenements * HOMES_PER_TENEMENT * (1 - HEAT_SHARE_TENEMENT) + towers * HOMES_PER_TOWER * (1 - HEAT_SHARE_TOWER);
+    seedRandom(5);
+    const real = simulateDay(morning);
+    seedRandom(5);
+    const homes = simulateDay(ordinaryHomes(morning));
+    const multiplier = getModifiers(morning).heatingMultiplier;
+    expect(heatIn(real) - heatIn(homes)).toBeCloseTo(saved * HEATING_FUEL_PER_HOME * multiplier, 3);
+  }, 60000);
 });
 
 describe("everything that reads fuel", () => {

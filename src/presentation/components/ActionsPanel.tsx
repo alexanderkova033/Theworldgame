@@ -595,7 +595,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, i
                             while it's pointed at (Tooltips.tsx). */}
                         <span
                           className={`build-row__cost ${treasuryShort ? "is-short" : treasuryPartial ? "is-partial" : ""}`}
-                          title={`You have ${formatAmount(treasury)} ${CURRENCY_SYMBOL}. It costs ${formatAmount(cost)} in all: ${formatAmount(upfrontCost(cost))} when ordered, the rest during the build.`}
+                          data-tip={`You have ${formatAmount(treasury)} ${CURRENCY_SYMBOL}. It costs ${formatAmount(cost)} in all: ${formatAmount(upfrontCost(cost))} when ordered, the rest during the build.`}
                         >
                           <StatIcon type="treasury" size={14} />
                           {formatAmount(cost)}
@@ -603,7 +603,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, i
                         </span>
                         <span
                           className={`build-row__cost ${resourceShort ? "is-short" : resourcePartial ? "is-partial" : ""}`}
-                          title={`You have ${formatAmount(stock)} ${item.resourceType}. It takes ${item.resourceCost} in all: ${upfrontCost(item.resourceCost)} when ordered, the rest during the build.`}
+                          data-tip={`You have ${formatAmount(stock)} ${item.resourceType}. It takes ${item.resourceCost} in all: ${upfrontCost(item.resourceCost)} when ordered, the rest during the build.`}
                         >
                           <ResourceGlyph type={item.resourceType} />
                           {item.resourceCost}

@@ -13,10 +13,10 @@
 // only way to ask when the player has turned resting tips off.
 //
 // Drawn things (the map, the chamber's seats) carry `data-tip` instead: an SVG
-// title element would bring the browser's own tooltip back beside this one. A title
-// that changes while it's pointed at (a figure ticking over) is set aside
-// again as it arrives, and a click only hides the box: the title stays aside
-// until the pointer leaves.
+// title element would bring the browser's own tooltip back beside this one. A tip
+// that changes while it's pointed at (a figure ticking over) is followed, a
+// title being set aside again as it arrives, and a click only hides the box:
+// the title stays aside until the pointer leaves.
 //
 // A finger has no hover, so on a touch screen a tip comes from pressing and
 // holding instead: it shows once the finger has rested a moment, stays
@@ -107,14 +107,14 @@ export function Tooltips() {
       // The page may set a new title while this one is aside (a daily figure
       // in its text): take that too, and show it if the tip is up.
       const watcher = new MutationObserver(() => {
-        const fresh = el.getAttribute("title");
+        const fresh = el.getAttribute("title") ?? el.getAttribute("data-tip");
         const h = held.current;
         if (fresh === null || !h || h.el !== el) return;
         el.removeAttribute("title");
         h.title = fresh;
         if (shown.current) setTip((tip) => (tip ? { ...tip, text: fresh } : tip));
       });
-      watcher.observe(el, { attributes: true, attributeFilter: ["title"] });
+      watcher.observe(el, { attributes: true, attributeFilter: ["title", "data-tip"] });
       held.current = { el, title, fromTitle: ownTitle !== null, describedBy: el.getAttribute("aria-describedby"), watcher };
       el.removeAttribute("title");
       el.setAttribute("data-tip-held", "");

@@ -5,13 +5,19 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it } from "vitest";
 import { resolveDecision } from "../src/application/actions/resolveDecision";
-import { advanceChapters, joinedLetter, readAndAnswer, readBriefing, sendStoryLetter, stopsBehind } from "../src/application/chapters";
+import { advanceChapters, joinedLetter, lettersBehind, readAndAnswer, readBriefing, sendStoryLetter, stopsBehind } from "../src/application/chapters";
 import { startNewGame } from "../src/application/startNewGame";
 import { STORY_CHAPTERS, type ChapterId } from "../src/domain/chapters/chapterData";
 import type { GameState } from "../src/domain/country/types";
 import { getDecision } from "../src/domain/decisions/decisionRules";
+import { BurdenLetter } from "../src/presentation/components/BurdenLetter";
 import { ChapterBriefing } from "../src/presentation/components/ChapterBriefing";
+import { CrisisLetter } from "../src/presentation/components/CrisisLetter";
+import { DecisionModal } from "../src/presentation/components/DecisionModal";
+import { DemandLetter } from "../src/presentation/components/DemandLetter";
+import { UltimatumLetter } from "../src/presentation/components/UltimatumLetter";
 import { hydrateGameState } from "../src/presentation/hooks/gameSave";
+import { isLetterWaiting } from "../src/presentation/hooks/useGameClock";
 import { chooseWindow, giveWindowBack, holdWindowBack, NO_WINDOW } from "../src/presentation/windowHold";
 import { NATIONS, playCarefully, type ScriptedStop } from "./support/carefulPlayer";
 import { seedRandom } from "./support/seededRandom";
@@ -73,6 +79,16 @@ describe("the window a letter displaces", () => {
   it("is nothing when no window was open, as on loading a save with briefings waiting", () => {
     expect(giveWindowBack(holdWindowBack(NO_WINDOW))).toEqual(NO_WINDOW);
     expect(holdWindowBack(NO_WINDOW)).toBe(NO_WINDOW);
+  });
+});
+
+describe("a story letter queued for tomorrow", () => {
+  it("doesn't count as a letter waiting, so the held window comes back as the last one closes", () => {
+    const s = waiting(PROMISE, {}, []);
+    const queued = { ...s, chapters: { ...s.chapters, letters: [LETTER] } };
+    expect(isLetterWaiting(queued)).toBe(false);
+    expect(isLetterWaiting({ ...queued, pendingDecisionId: "press-interview" })).toBe(true);
+    expect(isLetterWaiting({ ...s, burdenOffer: ["dear-markets"] })).toBe(true);
   });
 });
 
@@ -168,6 +184,48 @@ describe("several chapters at once", () => {
     const two = waiting(PROMISE, {}, ["exchange", PROMISE]);
     const read = readBriefing(two, "exchange");
     expect(joinedLetter(read, PROMISE)).toBe(LETTER);
+  });
+});
+
+describe("the sign on a letter", () => {
+  const sign = (element: Parameters<typeof renderToStaticMarkup>[0]) => /(\d+) more waiting/.exec(renderToStaticMarkup(element))?.[1] ?? null;
+  const start = () => waiting(PROMISE, {}, []);
+  const decision = (state: GameState) => createElement(DecisionModal, { state, onResolve: () => {}, onDismiss: () => {} });
+  const burden = (state: GameState) => createElement(BurdenLetter, { state, onTake: () => {} });
+  const ultimatum = (state: GameState) => createElement(UltimatumLetter, { state, onPay: () => {}, onStandFirm: () => {} });
+  const demand = (state: GameState) => createElement(DemandLetter, { state, onAnswer: () => {} });
+  const crisis = (state: GameState) => createElement(CrisisLetter, { state, onAnswer: () => {} });
+
+  it("isn't shown when nothing is behind the letter on screen", () => {
+    const s = start();
+    expect(lettersBehind({ ...s, pendingDecisionId: "press-interview" })).toBe(0);
+    expect(sign(decision({ ...s, pendingDecisionId: "press-interview" }))).toBeNull();
+    expect(sign(burden({ ...s, burdenOffer: ["dear-markets"] }))).toBeNull();
+  });
+
+  it("counts the story letters queued behind a decision", () => {
+    const s = start();
+    const queued = { ...s, pendingDecisionId: "press-interview", chapters: { ...s.chapters, letters: [LETTER] } };
+    expect(lettersBehind(queued)).toBe(1);
+    expect(sign(decision(queued))).toBe("1");
+  });
+
+  it("shows on a burden with a decision behind it", () => {
+    const s = start();
+    expect(sign(burden({ ...s, burdenOffer: ["dear-markets"], pendingDecisionId: "press-interview" }))).toBe("1");
+  });
+
+  it("shows on an ultimatum, a demand and a crisis", () => {
+    const s = start();
+    const id = Object.keys(s.provinces)[0];
+    const threat = { nationId: "veldoria", islandId: "island-2", warOn: { year: 2, month: 1, day: 1 }, answered: false };
+    const asks = { kind: "payRise" as const, provinceId: id };
+    const flooded = { ...s.provinces, [id]: { ...s.provinces[id], crisis: { kind: "flood" as const, since: s.date, until: s.date, homesLost: 0 } } };
+    const queue = { ...s.chapters, letters: [LETTER] };
+    expect(sign(ultimatum({ ...s, ultimatum: threat, chapters: queue }))).toBe("1");
+    expect(sign(demand({ ...s, pendingDemand: asks, chapters: queue }))).toBe("1");
+    expect(sign(crisis({ ...s, provinces: flooded, pendingCrisis: id, chapters: queue } as GameState))).toBe("1");
+    expect(sign(demand({ ...s, pendingDemand: asks, ultimatum: threat }))).toBe("1");
   });
 });
 

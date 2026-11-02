@@ -5,12 +5,13 @@ import "./RepairsPanel.css";
 import { canRepairBuilding, canServiceBuilding, getServiceOrder, repairBuilding, serviceBuilding } from "../../application/actions";
 import { REPAIR_DAYS, SERVICE_CREW, SERVICE_DAYS_TRAINED } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
-import { getRepairCost, getServiceDaysLeft, getWornDaysLeft, isBeingServiced, isWorn, needsService } from "../../domain/maintenance/maintenanceRules";
+import { getRepairCost, getServiceDaysLeft, getServiceProgress, getWornDaysLeft, isBeingServiced, isWorn, needsService } from "../../domain/maintenance/maintenanceRules";
 import { getModifiers } from "../../domain/policy/policyRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { playRepair } from "../audio/sound";
 import { BuildingIcon } from "./BuildingIcon";
 import { CostChips, ResourceChip, TreasuryChip } from "./CostChips";
+import { Gauge } from "./Gauge";
 
 export function WrenchIcon({ size = 14 }: { size?: number }) {
   return (
@@ -56,12 +57,10 @@ export function RepairsPanel({ state, dispatch }: { state: GameState; dispatch: 
               </span>
               <span className="repairs-panel__where">{getProvinceName(building.provinceId)}</span>
               {isRepairing ? (
-                <span className="repairs-panel__progress" title={`${daysLeft} days until it's back in service`}>
-                  <span className="progress-bar">
-                    <span className="progress-bar__fill" style={{ width: `${Math.round((1 - daysLeft / REPAIR_DAYS) * 100)}%` }} />
-                  </span>
+                <div className="repairs-panel__progress" title={`${daysLeft} days until it's back in service`}>
+                  <Gauge max={1} size="sm" segments={[{ value: 1 - daysLeft / REPAIR_DAYS, tone: "good" }]} label={`Repair: ${daysLeft} days left`} />
                   {daysLeft}d
-                </span>
+                </div>
               ) : (
                 <button
                   type="button"
@@ -93,9 +92,11 @@ export function RepairsPanel({ state, dispatch }: { state: GameState; dispatch: 
                 </svg>
               </span>
               <span className="repairs-panel__where">{getProvinceName(building.provinceId)}</span>
-              <span className="repairs-panel__crew" data-tip={`${SERVICE_CREW} people are servicing it. It keeps working, and the wear is gone in ${daysLeft} days.`}>
-                Crew at work, {daysLeft}d
-              </span>
+              <span className="repairs-panel__crew">Crew at work</span>
+              <div className="repairs-panel__progress" data-tip={`${SERVICE_CREW} people are servicing it. It keeps working, and the wear is gone in ${daysLeft} days.`}>
+                <Gauge max={1} size="sm" segments={[{ value: getServiceProgress(building, state.date), tone: "good" }]} label={`Service: ${daysLeft} days left`} />
+                {daysLeft}d
+              </div>
             </li>
           );
         })}

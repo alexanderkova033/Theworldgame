@@ -190,12 +190,19 @@ function getAlerts(state: GameState, production: DailyProductionSummary, heating
 
   // Hands: farms are staffed first, so short farms are the serious case.
   const labour = getLabourSituation(state);
+  // The player's own limit is no shortage: judged by what no limit would give.
+  // (Factories are filled last, and a limit leaves no one jobless, so one can't
+  // hold them back like this.)
+  const unlimited = state.workPlan ? getLabourSituation({ ...state, workPlan: null }).foodStaffing : labour.foodStaffing;
   if (labour.foodStaffing < 1) {
+    const held = percent(labour.foodStaffing) !== percent(unlimited);
     alerts.push({
       kind: "farmWorkers",
-      text: `Farms: ${percent(labour.foodStaffing)} staffed`,
-      detail: "Not enough workers for the farms, granaries and canneries. More homes mean more people; fewer factories free up hands.",
-      critical: labour.foodStaffing < ADVISOR_FARM_STAFF_CRITICAL,
+      text: `Farms: ${percent(labour.foodStaffing)}${held ? ", your limit" : " staffed"}`,
+      detail: held
+        ? `Your limit in People is why the farms stand at ${percent(labour.foodStaffing)}. With no limit they would stand at ${percent(unlimited)}.`
+        : "Not enough workers for the farms, granaries and canneries. More homes mean more people; fewer factories free up hands.",
+      critical: unlimited < ADVISOR_FARM_STAFF_CRITICAL,
     });
   } else if (labour.industryStaffing < 1) {
     alerts.push({
