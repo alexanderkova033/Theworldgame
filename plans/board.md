@@ -22,6 +22,8 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 08b | [Scouting opens when workers run short](tasks/08b-worker-ceiling.md) | merged | `task/08b-worker-ceiling` | chapters, balance | alone |
 | 10 | [Trading orders](tasks/10-trading-orders.md) | merged | `task/10-trading-orders` | market, a day step | alone |
 | 11 | [Trained workers](tasks/11-trained-workers.md) | merged, with limits that aren't exact | `task/11-trained-workers` | labour, balance, People | alone |
+| 12 | [Leftovers: advice and trading](tasks/12-advice-and-trading-leftovers.md) | running | `task/12-advice-trading` | messages, Objectives, forecasts, market orders | 13 |
+| 13 | [Leftovers: windows, map, workers](tasks/13-windows-map-workers-leftovers.md) | running | `task/13-windows-map-workers` | window holds, People, Repairs, map, tests | 12 |
 
 Work branch: `setup-screen-flags`, which holds the latest game (`main` is two commits behind it). Task branches start from it and merge back into it, with 04 last. After each merge, the manager reruns all the checks. The owner plays the result before anything is pushed, and decides when it goes to `main`.
 
