@@ -21,7 +21,7 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 09b | [Veldoria's extra coal](tasks/09b-veldoria-coal.md) | merged | `task/09b-veldoria-coal` | starting state, balance | alone |
 | 08b | [Scouting opens when workers run short](tasks/08b-worker-ceiling.md) | merged | `task/08b-worker-ceiling` | chapters, balance | alone |
 | 10 | [Trading orders](tasks/10-trading-orders.md) | merged | `task/10-trading-orders` | market, a day step | alone |
-| 11 | [Trained workers](tasks/11-trained-workers.md) | in review: built at `1d4fd81`, checks pass, waiting on the owner before merging | `task/11-trained-workers` | labour, balance, People | alone |
+| 11 | [Trained workers](tasks/11-trained-workers.md) | merged, with limits that aren't exact | `task/11-trained-workers` | labour, balance, People | alone |
 
 Work branch: `setup-screen-flags`, which holds the latest game (`main` is two commits behind it). Task branches start from it and merge back into it, with 04 last. After each merge, the manager reruns all the checks. The owner plays the result before anything is pushed, and decides when it goes to `main`.
 
@@ -62,9 +62,18 @@ Planned order: the look (1, 2, 3, 5, 10), then the numbers one at a time (4, 6, 
 
 - One test failed once in `npm test` after task 02 merged, and was not identified. Task 04 then saw `tests/interruptions.test.ts` time out at 5 seconds and an unexplained failure in `tests/balance.test.ts`. The limit is now 30 seconds. If a failure recurs, save the name and the error.
 
+## Small follow-ups from task 11
+
+- Ladder now Easy 14 and 27, Normal 0 and 19, Hard 0 and 8, Ruthless 0 and 1. Ruthless sits on the test's floor of 1, so one more lost game fails `balance.test.ts`. Careful Normal is 33 of 54 (10, 17, 6 by nation); the start screen now says about three games in five (owner, 2026-11-02).
+- A limit isn't exact, because it never leaves anyone jobless: 1,800 on Astravia's farms gives 2,014, and setting almost any limit pays a little. The owner accepted this and will judge it in play.
+- "Farms: 84% staffed" shows in red even when the player's own limit is the cause.
+- A service in progress shows days left and no progress bar.
+- Servicing everything, careful, of 54 against instant servicing: Normal 29 (33), Hard 13 (14), Ruthless 7 (7).
+- Not tested: whether a war broke out in the games under a limit, moving people with the seasons, laws or research that cut jobs under a limit. Schools under a limit have weak evidence. Nobody has played it.
+
 ## Small follow-ups from task 09b
 
-- Ladder now Easy 14 and 27, Normal 0 and 20, Hard 0 and 7, Ruthless 0 and 2. Normal's "about half" is generous at 35 of 54 (10, 17, 8 by nation) and 20 sits under the test's ceiling of 22. Waiting on the owner's wording.
+- Ladder at that point: Easy 14 and 27, Normal 0 and 20, Hard 0 and 7, Ruthless 0 and 2. The test's ceiling on Normal is 22.
 - A coal order with a high enough limit keeps a country warm, but at 1.5 of base it costs 2,200 to 4,200 Cr a year, and careful Veldoria's wins fell at most limits (8 with no order; 5, 7, 4, 4). Nothing tells the player an order's yearly cost.
 - Veldoria still wins nothing on Hard or Ruthless, with or without orders.
 

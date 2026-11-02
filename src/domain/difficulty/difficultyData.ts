@@ -72,7 +72,7 @@ export const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultySettings> = {
   normal: {
     name: "Normal",
     title: "Minister",
-    summary: "The game as designed. A careful player wins about half the time.",
+    summary: "The game as designed. A careful player wins about three games in five.",
     changes: ["You inherit 1,000 Cr of debt, broken works and too few homes", "Trouble in a province about every other month", "Elections need 52%, 56%, 60%", "Voters expect more: support settles 4 points below neutral", "10% less political power", "A tenth less of the usual food in store", "3 retries from a checkpoint"],
     electionThresholds: [52, 56, 60],
     expectations: -4,
