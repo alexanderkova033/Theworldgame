@@ -11,9 +11,8 @@ import { buyGood, canBuyGood, canSellGood, sellGood } from "../../src/applicatio
 import { canCourtGroup, canCrackDown, canHoldRally, courtGroup, crackDown, holdRally } from "../../src/application/actions/politicalActions";
 import { getFactionWeights } from "../../src/domain/parties/factionRules";
 import { repairBuilding } from "../../src/application/actions/repairBuilding";
-import { serviceBuilding } from "../../src/application/actions/serviceBuilding";
-import { getServiceCost, isWorn } from "../../src/domain/maintenance/maintenanceRules";
-import { getModifiers } from "../../src/domain/policy/policyRules";
+import { getServiceOrder, serviceBuilding } from "../../src/application/actions/serviceBuilding";
+import { needsService } from "../../src/domain/maintenance/maintenanceRules";
 import { canRaiseMilitia, canSendMilitia, raiseMilitia, sendMilitia } from "../../src/application/actions/militiaActions";
 import { answerDemand, canAnswerDemand } from "../../src/application/actions/demandActions";
 import { answerCrisis, canAnswerCrisis, getCrisisAnswers } from "../../src/application/actions/crisisActions";
@@ -129,6 +128,7 @@ export interface PlayOptions {
   service?: boolean; // also services every worn building whenever it can pay, buying the good if it must
   neglect?: boolean; // leaves uprisings alone: sends no militia and refuses the rebels' terms, so a province can break away
   orders?: (start: GameState) => GameState; // sets standing orders before the first day; the balance games set none
+  habit?: (state: GameState) => GameState; // something more it does every day, such as setting limits on where people work; the balance games have none
 }
 
 // The burdens of office, least harmful first for a country that lives on
@@ -156,7 +156,7 @@ function chooseBurden(offer: string[], sloppy: boolean): string {
   return [...offer].sort((a, b) => rank(a) - rank(b))[0];
 }
 
-export function playCarefully(nation: string, party: string, { days, onStop, follow, onDay, difficulty = "easy", skill = "careful", mode, settle = false, trade = false, treaties = false, army = false, war = false, neglect = false, service = false, orders }: PlayOptions): GameState {
+export function playCarefully(nation: string, party: string, { days, onStop, follow, onDay, difficulty = "easy", skill = "careful", mode, settle = false, trade = false, treaties = false, army = false, war = false, neglect = false, service = false, orders, habit }: PlayOptions): GameState {
   const sloppy = skill === "sloppy";
   let s = takeLoan(startNewGame(nation, party, difficulty, mode));
   if (orders) s = orders(s);
@@ -186,8 +186,8 @@ export function playCarefully(nation: string, party: string, { days, onStop, fol
       s = repairBuilding(ensure(s, building.type === "factory" || building.type === "road" || building.type === "cannery" ? "ore" : "wood", 6), building.id);
     }
     if (service) {
-      for (const building of s.placedBuildings.filter(isWorn)) {
-        const cost = getServiceCost(building.type, getModifiers(s).repairCostMultiplier);
+      for (const building of s.placedBuildings.filter(needsService)) {
+        const { cost } = getServiceOrder(s, building.type);
         if (s.stats.treasury >= cost.treasury) s = serviceBuilding(ensure(s, cost.resourceType as Good, cost.resourceAmount), building.id);
       }
     }
@@ -271,6 +271,7 @@ export function playCarefully(nation: string, party: string, { days, onStop, fol
     if (treaties) s = signTreaties(s);
     if (army) s = keepGarrisons(s);
     if (war) s = wageWar(s);
+    if (habit) s = habit(s);
     s = simulateDay({ ...s, isPaused: false });
     onDay?.(s);
   }

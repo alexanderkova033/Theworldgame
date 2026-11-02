@@ -153,6 +153,10 @@ export const UNEMPLOYMENT_POPULARITY_PENALTY = 30; // times the share of workers
 // Each province is its own job market; of the people left without work in
 // theirs, this share will travel to fill open jobs in another.
 export const COMMUTE_SHARE = 0.7;
+// Trained workers (see domain/labour/trainingRules.ts).
+export const UNTRAINED_EFFICIENCY = 0.6; // what someone new to a trade gives, against a trained hand
+export const TRAINING_RATE = 0.2; // share of what a trade's learners still lack that they learn each month: 68% after a month, 90% after six, 97% after twelve
+export const WORK_PLAN_STEP = 50; // people moved by one press in Where people work
 
 // --- Migration between provinces (see domain/provinces/provinceMigration.ts) ---
 export const MIGRATION_SHARE_PER_DAY = 0.02; // of a province's homeless (and of its jobless households) who move each day
@@ -268,6 +272,11 @@ export const REPAIR_COST_SHARE = 0.25; // a repair costs this share of the build
 export const REPAIR_DAYS = 10;
 export const WORN_WARNING_DAYS = 30; // a building whose roll fails stays worn, and working, this long before it breaks
 export const SERVICE_COST_SHARE = 0.3; // servicing a worn building costs this share of its original price: more than a repair, but it is out of use for no days
+export const SERVICE_CREW = 20; // people a service takes from the building's province while it lasts
+export const SERVICE_DAYS_TRAINED = 5;
+export const SERVICE_DAYS_UNTRAINED = 10;
+export const SERVICE_UNTRAINED_COST = 1.5; // an untrained crew's price, against a trained one's
+export const SERVICE_CREW_TRAINED_SHARE = 0.9; // a crew is trained when this share of those working in its trade are
 
 // --- Laws & political power (see domain/laws, domain/politics) ---
 // Political power trickles in daily — faster the more popular the government

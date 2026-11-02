@@ -4,11 +4,14 @@
 // are filled, and every province as a row of small bars.
 import "./PeoplePanel.css";
 import type { ReactNode } from "react";
+import { cancelWorkChange, canMoveWorkers, chooseAutomaticWork, chooseWork, getComingWorkPlan, moveWorkers } from "../../application/actions";
 import { getHeatingOutlook } from "../../application/getHeatingOutlook";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import type { GameState } from "../../domain/country/types";
-import { getLabourSituation, type Sector, type SectorJobs } from "../../domain/labour/labourRules";
-import { ADVISOR_FOOD_CRITICAL_DAYS, ADVISOR_FOOD_WARN_DAYS, ADVISOR_WINTER_PREP_DAYS, COMMUTE_SHARE, LABOUR_SHARE, WOOD_PER_COAL_HEAT } from "../../domain/constants";
+import { nextMonthStartName } from "../../domain/country/calendar";
+import { getLabourSituation, type LabourSituation, type Sector } from "../../domain/labour/labourRules";
+import type { Trade } from "../../domain/labour/trainingRules";
+import { ADVISOR_FOOD_CRITICAL_DAYS, ADVISOR_FOOD_WARN_DAYS, ADVISOR_WINTER_PREP_DAYS, COMMUTE_SHARE, LABOUR_SHARE, WOOD_PER_COAL_HEAT, WORK_PLAN_STEP } from "../../domain/constants";
 import { isWorking } from "../../domain/maintenance/maintenanceRules";
 import type { ProjectType } from "../../domain/construction/types";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
@@ -87,15 +90,50 @@ const TYPE_NAMES: Partial<Record<ProjectType, [string, string]>> = {
 
 const staffedTone = (share: number) => (share >= 100 ? "good" : share >= 60 ? "warn" : "bad");
 
-function WorkChain({ state, sectors }: { state: GameState; sectors: Record<Sector, SectorJobs> }) {
+function WorkChain({ state, labour, dispatch }: { state: GameState; labour: LabourSituation; dispatch: (action: (state: GameState) => GameState) => void }) {
   const working = state.placedBuildings.filter(isWorking);
+  const { sectors } = labour;
+  const coming = getComingWorkPlan(state);
+  const when = nextMonthStartName(state.date);
+  const afterChange = state.workPlanNext ? getLabourSituation({ ...state, workPlan: coming, workPlanNext: null }) : null;
   return (
-    <div className="people-work" title={`About ${Math.round(LABOUR_SHARE * 100)}% of your people are of working age. They take food jobs first, then schools, then factories, so when hands run short the factories go quiet before the farms do. Of the people left without work in one province, ${Math.round(COMMUTE_SHARE * 10)} in 10 travel to fill jobs in another.`}>
-      <h3 className="people-section-title">Where people work</h3>
+    <div className="people-work">
+      <div className="people-work__top">
+        <h3
+          className="people-section-title"
+          data-tip={`About ${Math.round(LABOUR_SHARE * 100)}% of your people are of working age. On Automatic they take food jobs first, then schools, then factories, so when hands run short the factories go quiet before the farms do. Of the people left without work in one province, ${Math.round(COMMUTE_SHARE * 10)} in 10 travel to fill jobs in another.`}
+        >
+          Where people work
+        </h3>
+        <span className="people-work__mode" role="group" aria-label="Who decides where people work">
+          <button type="button" className={coming ? "" : "is-on"} aria-pressed={!coming} data-tip="Jobs fill by themselves, food first." onClick={() => dispatch(chooseAutomaticWork)}>
+            Automatic
+          </button>
+          <button type="button" className={coming ? "is-on" : ""} aria-pressed={!!coming} data-tip="You set the most people in each sector, for the whole country. Anyone left over still takes any open job." onClick={() => dispatch(chooseWork)}>
+            Your choice
+          </button>
+        </span>
+        {state.workPlanNext && (
+          <>
+            <span className="people-work__when">{state.workPlanNext === "automatic" ? `Automatic from ${when}` : `Changes on ${when}`}</span>
+            <button type="button" className="people-work__keep" data-tip="Take back this change. Nobody has moved yet." onClick={() => dispatch(cancelWorkChange)}>
+              Keep it as it is
+            </button>
+          </>
+        )}
+      </div>
       <div className="people-work__chain">
         {SECTORS.map((sector, i) => {
           const jobs = sectors[sector.key];
           const share = jobs.jobs > 0 ? Math.round((jobs.hired / jobs.jobs) * 100) : null;
+          const trade = sector.key === "school" ? null : (sector.key as Trade);
+          const skill = trade && jobs.hired >= 1 ? labour.skill[trade] : null;
+          const trained = trade ? state.trained[trade] : 0;
+          // Empty jobs are news under a limit; on Automatic the figures say it.
+          const empty = state.workPlan ? jobs.jobs - jobs.hired : 0;
+          // Who will really work here after the month's end, when that is about to change.
+          const nextHired = afterChange ? Math.round(afterChange.sectors[sector.key].hired) : null;
+          const pending = nextHired !== null && Math.abs(nextHired - jobs.hired) >= 1 ? nextHired : null;
           const buildings = sector.types
             .map((type) => {
               const count = working.filter((b) => b.type === type).length;
@@ -110,15 +148,43 @@ function WorkChain({ state, sectors }: { state: GameState; sectors: Record<Secto
                   ›
                 </span>
               )}
-              <div className={`people-work__tile ${share === null ? "is-empty" : ""}`} title={buildings.length > 0 ? buildings.join(", ") : "None yet"}>
-                <span className="people-work__icon">{sector.icon}</span>
+              <div className={`people-work__tile ${share === null ? "is-empty" : ""}`}>
+                <span className="people-work__icon" data-tip={buildings.length > 0 ? buildings.join(", ") : "None yet"}>{sector.icon}</span>
                 <span className="people-work__body">
                   <span className="people-work__head">
                     <span className="people-work__label">{sector.label}</span>
                     {share !== null && <strong className={`people-work__share is-${staffedTone(share)}`}>{share}%</strong>}
                   </span>
-                  <Gauge max={100} size="sm" segments={share === null ? [] : [{ value: share, tone: staffedTone(share) }]} label={share === null ? `No ${sector.label.toLowerCase()} yet` : `${share}% staffed`} />
+                  <span className="people-work__gauge">
+                    <Gauge max={100} size="sm" segments={share === null ? [] : [{ value: share, tone: staffedTone(share) }]} label={share === null ? `No ${sector.label.toLowerCase()} yet` : `${share}% staffed`} />
+                    {pending !== null && jobs.jobs > 0 && <span className="people-work__mark" style={{ left: `${Math.min(100, (pending / jobs.jobs) * 100)}%` }} aria-hidden="true" />}
+                  </span>
                   <span className="people-work__figures">{share === null ? "None yet" : `${formatAmount(jobs.hired)} of ${formatAmount(jobs.jobs)} jobs`}</span>
+                  {skill !== null && skill < 0.995 && (
+                    <span
+                      className="people-work__skill"
+                      data-tip={`${formatAmount(Math.min(trained, jobs.hired))} of those working here know the work. Someone new gives 60% of a trained hand, 90% after six months and 97% after a year.`}
+                    >
+                      {Math.round(skill * 100)}% skill
+                    </span>
+                  )}
+                  {empty >= 1 && <span className="people-work__empty" data-tip="Your limit holds these jobs back, or there is nobody to fill them.">{formatAmount(empty)} jobs empty</span>}
+                  {pending !== null && (
+                    <span className="people-work__next" data-tip="Who will really work here. It can differ from your limit: people who won't travel take any job open near home rather than stand idle.">
+                      {formatAmount(pending)} from {when}
+                    </span>
+                  )}
+                  {coming && jobs.jobs > 0 && (
+                    <span className="people-work__steps">
+                      <button type="button" aria-label={`${WORK_PLAN_STEP} fewer in ${sector.label.toLowerCase()}`} data-tip={`${WORK_PLAN_STEP} fewer here, from ${when}`} disabled={!canMoveWorkers(state, sector.key, "fewer")} onClick={() => dispatch((s) => moveWorkers(s, sector.key, "fewer"))}>
+                        −
+                      </button>
+                      <span className="people-work__limit" data-tip="The most people here from the month's end">{formatAmount(coming[sector.key])}</span>
+                      <button type="button" aria-label={`${WORK_PLAN_STEP} more in ${sector.label.toLowerCase()}`} data-tip={`${WORK_PLAN_STEP} more here, from ${when}`} disabled={!canMoveWorkers(state, sector.key, "more")} onClick={() => dispatch((s) => moveWorkers(s, sector.key, "more"))}>
+                        +
+                      </button>
+                    </span>
+                  )}
                 </span>
               </div>
             </div>
@@ -208,6 +274,7 @@ function ProvinceRows({
 
 interface PeoplePanelProps {
   state: GameState;
+  dispatch: (action: (state: GameState) => GameState) => void;
   production: DailyProductionSummary;
   provinces: ProvinceOverview[];
   selectedProvinceId: string;
@@ -216,7 +283,7 @@ interface PeoplePanelProps {
   onBuild: () => void; // to the Build section, for the picked province
 }
 
-export function PeoplePanel({ state, production, provinces, selectedProvinceId, onSelectProvince, onOpenPanel, onBuild }: PeoplePanelProps) {
+export function PeoplePanel({ state, dispatch, production, provinces, selectedProvinceId, onSelectProvince, onOpenPanel, onBuild }: PeoplePanelProps) {
   const population = state.stats.population;
   const capacity = production.housingCapacity;
   const homeless = production.homeless; // summed over provinces — a free home elsewhere doesn't help
@@ -382,7 +449,7 @@ export function PeoplePanel({ state, production, provinces, selectedProvinceId, 
       />
       </div>
 
-      <WorkChain state={state} sectors={labour.sectors} />
+      <WorkChain state={state} labour={labour} dispatch={dispatch} />
 
       <ProvinceRows provinces={provinces} selectedProvinceId={selectedProvinceId} onSelectProvince={onSelectProvince} onBuild={onBuild} />
     </section>

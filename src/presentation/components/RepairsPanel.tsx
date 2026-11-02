@@ -2,10 +2,10 @@
 // ones still to be serviced. Only shown when there's something to fix — a quiet
 // economy tab otherwise.
 import "./RepairsPanel.css";
-import { canRepairBuilding, canServiceBuilding, repairBuilding, serviceBuilding } from "../../application/actions";
-import { REPAIR_DAYS } from "../../domain/constants";
+import { canRepairBuilding, canServiceBuilding, getServiceOrder, repairBuilding, serviceBuilding } from "../../application/actions";
+import { REPAIR_DAYS, SERVICE_CREW, SERVICE_DAYS_TRAINED } from "../../domain/constants";
 import type { GameState } from "../../domain/country/types";
-import { getRepairCost, getServiceCost, getWornDaysLeft, isWorn } from "../../domain/maintenance/maintenanceRules";
+import { getRepairCost, getServiceDaysLeft, getWornDaysLeft, isBeingServiced, isWorn, needsService } from "../../domain/maintenance/maintenanceRules";
 import { getModifiers } from "../../domain/policy/policyRules";
 import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { playRepair } from "../audio/sound";
@@ -27,8 +27,9 @@ export function RepairsPanel({ state, dispatch }: { state: GameState; dispatch: 
   // Broken or under repair; not held by rebels or ruined by a crisis, which come back by themselves.
   const damaged = state.placedBuildings.filter((b) => b.condition === "broken" || b.condition === "repairing");
   // Soonest to break first.
-  const worn = state.placedBuildings.filter(isWorn).sort((a, b) => a.wornUntilDay! - b.wornUntilDay!);
-  if (damaged.length === 0 && worn.length === 0) return null;
+  const worn = state.placedBuildings.filter(needsService).sort((a, b) => a.wornUntilDay! - b.wornUntilDay!);
+  const servicing = state.placedBuildings.filter(isBeingServiced);
+  if (damaged.length === 0 && !state.placedBuildings.some(isWorn)) return null;
   const repairCostMultiplier = getModifiers(state).repairCostMultiplier;
 
   return (
@@ -82,8 +83,24 @@ export function RepairsPanel({ state, dispatch }: { state: GameState; dispatch: 
             </li>
           );
         })}
+        {servicing.map((building) => {
+          const daysLeft = getServiceDaysLeft(building, state.date);
+          return (
+            <li key={building.id} className="repairs-panel__item is-worn is-servicing">
+              <span className="repairs-panel__icon" aria-hidden="true">
+                <svg viewBox="-12 -16 24 24">
+                  <BuildingIcon type={building.type} x={0} y={0} size={7} />
+                </svg>
+              </span>
+              <span className="repairs-panel__where">{getProvinceName(building.provinceId)}</span>
+              <span className="repairs-panel__crew" data-tip={`${SERVICE_CREW} people are servicing it. It keeps working, and the wear is gone in ${daysLeft} days.`}>
+                Crew at work, {daysLeft}d
+              </span>
+            </li>
+          );
+        })}
         {worn.map((building) => {
-          const cost = getServiceCost(building.type, repairCostMultiplier);
+          const { cost, days, trainedCrew } = getServiceOrder(state, building.type);
           const daysLeft = getWornDaysLeft(building, state.date);
           return (
             <li key={building.id} className="repairs-panel__item is-worn">
@@ -97,11 +114,12 @@ export function RepairsPanel({ state, dispatch }: { state: GameState; dispatch: 
               <span className="repairs-panel__days" title={`Worn: breaks down in ${daysLeft} days unless serviced`}>
                 {daysLeft}d
               </span>
+              <span className={`repairs-panel__crew ${trainedCrew ? "" : "is-untrained"}`}>{trainedCrew ? "Trained crew" : "Untrained crew"}, {days}d</span>
               <button
                 type="button"
                 className="btn-primary repairs-panel__button"
                 disabled={!canServiceBuilding(state, building.id)}
-                title="Service: the wear is gone at once, and it never stops working"
+                data-tip={`${SERVICE_CREW} people from ${getProvinceName(building.provinceId)} take ${days} days. It keeps working, and its wear stops counting down. ${trainedCrew ? `Trained crews take ${SERVICE_DAYS_TRAINED} days.` : `Fewer than 9 in 10 of those in this trade are trained, so the crew is slower and costs half as much again.`}`}
                 onClick={() => {
                   playRepair();
                   dispatch((s) => serviceBuilding(s, building.id));

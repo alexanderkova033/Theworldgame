@@ -239,6 +239,117 @@
   color: var(--ink-muted);
 }
 
+.people-work__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.people-work__mode {
+  display: inline-flex;
+}
+
+.people-work__mode button {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.8125rem;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.people-work__mode button + button {
+  border-left: none;
+}
+
+.people-work__mode button.is-on {
+  background: var(--bar);
+  border-color: var(--gilt);
+  color: var(--gilt-bright);
+  font-weight: 700;
+}
+
+.people-work__when {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--warning);
+}
+
+.people-work__keep {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.8125rem;
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.people-work__gauge {
+  position: relative;
+  display: block;
+}
+
+.people-work__mark {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 3px;
+  margin-left: -1px;
+  background: var(--ink);
+}
+
+.people-work__skill,
+.people-work__empty,
+.people-work__next {
+  font-size: 0.8125rem;
+}
+
+.people-work__skill {
+  color: var(--warning);
+}
+
+.people-work__empty {
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.people-work__next {
+  font-weight: 700;
+}
+
+.people-work__steps {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.1rem;
+}
+
+.people-work__steps button {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  font-weight: 800;
+  line-height: 1;
+  background: var(--paper);
+  border: 1px solid var(--rule-dark);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.people-work__steps button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.people-work__limit {
+  min-width: 2.6rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 /* --- Provinces: one row each, bars to compare down the column --- */
 .people-provinces {
   display: flex;

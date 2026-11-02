@@ -25,7 +25,7 @@ export function produceGoods(day: Day, working: GameState, labour: LabourSituati
   // 2a. Raw resources: every owned province produces its terrain's
   // resource, less what a crisis there takes (domain/crises), with what its
   // mines and sawmills add, and roads on top.
-  const producedResources = addResources(working.resources, getGoodsProduction(working, day.season, (id) => labour.provinces[id]?.industryStaffing ?? 0));
+  const producedResources = addResources(working.resources, getGoodsProduction(working, day.season, (id) => labour.provinces[id]?.industryOutput ?? 0));
   const market = updateMarket(working.market, day.season, isFirstDayOfMonth(date));
 
   // 2b. Granaries and canneries turn today's grain and fish into food,

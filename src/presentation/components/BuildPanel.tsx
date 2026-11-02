@@ -10,7 +10,7 @@ import "./BuildPanel.css";
 import type { DailyProductionSummary } from "../../application/getDailyProductionSummary";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
 import type { GameState } from "../../domain/country/types";
-import { isWorn } from "../../domain/maintenance/maintenanceRules";
+import { isWorn, needsService } from "../../domain/maintenance/maintenanceRules";
 import type { BuildSection, OpenPanel } from "../navigation";
 import { useEffect, useRef } from "react";
 import { ActionsPanel } from "./ActionsPanel";
@@ -43,7 +43,7 @@ const MATERIAL_NAMES: Partial<Record<ResourceType, string>> = { wood: "Wood", or
 
 function sectionTabs(state: GameState, production: DailyProductionSummary, provinces: ProvinceOverview[]): SubTab[] {
   const broken = state.placedBuildings.filter((b) => b.condition === "broken").length;
-  const worn = state.placedBuildings.filter(isWorn).length;
+  const worn = state.placedBuildings.filter(needsService).length;
   const stalled = state.projects.filter((p) => p.isStalled).length;
   const peopleTrouble = provinces.some((p) => {
     const status = getProvinceStatus(p);
@@ -110,6 +110,7 @@ export function BuildPanel({ state, dispatch, production, provinces, selectedPro
       {section === "people" && (
         <PeoplePanel
           state={state}
+          dispatch={dispatch}
           production={production}
           provinces={provinces}
           selectedProvinceId={selectedProvinceId}

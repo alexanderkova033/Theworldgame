@@ -19,6 +19,7 @@ import { emptyLedger } from "../../domain/ledger/ledgerRules";
 import { emptyResourceBundle } from "../../domain/resources/resourceRules";
 import { getStageForStability } from "../../domain/unrest/unrestRules";
 import { emptyWorkforce } from "../../domain/workforce/workforceRules";
+import { getHiredInTrades, getLabourSituation } from "../../domain/labour/labourRules";
 import { allChaptersOpen } from "../../domain/chapters/chapterData";
 import { getDecision } from "../../domain/decisions/decisionRules";
 import { createNeighbours } from "../../domain/neighbours/neighbourRules";
@@ -116,6 +117,10 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
     factionApproval: raw.factionApproval ?? (Object.fromEntries(FACTIONS.map((f) => [f, stats.popularity])) as Record<Ideology, number>),
     expeditions: raw.expeditions ?? [],
     scoutedIslandIds: raw.scoutedIslandIds ?? [],
+    // Saves from before trades: filled in below, once the rest of the country is here.
+    trained: raw.trained ?? { food: Infinity, industry: Infinity },
+    workPlan: raw.workPlan ?? null,
+    workPlanNext: raw.workPlanNext ?? null,
     daysShortOfWorkers: raw.daysShortOfWorkers ?? 0,
     events: raw.events ?? [],
     monthlyReports: raw.monthlyReports ?? [],
@@ -176,6 +181,8 @@ export function hydrateGameState(raw: Partial<GameState>): GameState {
   if (!raw.provinces) {
     state.provinces = createProvinceStates(getNation(state.nationId).provinceIds, stats.population, getHousingCapacityByProvince(state), stats.stability);
   }
+  // Saves from before trades: everyone working knows their work.
+  if (!raw.trained) state.trained = getHiredInTrades(getLabourSituation(state));
   // Saves from before the trees split into paths may be heading for a
   // technology that now sits further down another path: let that area
   // choose again rather than skip the path rule.

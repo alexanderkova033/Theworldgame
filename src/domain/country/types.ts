@@ -6,6 +6,8 @@ import type { ForeignGovernment } from "../diplomacy/types";
 import type { MarketOrders, MarketState, OrderTally } from "../market/types";
 import type { Expedition } from "../expeditions/types";
 import type { Difficulty } from "../difficulty/difficultyData";
+import type { WorkPlan } from "../labour/labourRules";
+import type { TrainedWorkers } from "../labour/trainingRules";
 import type { Ledger } from "../ledger/types";
 import type { Ideology } from "../parties/types";
 import type { ModifierEffects } from "../policy/modifiers";
@@ -64,6 +66,7 @@ export interface PolicyInProgress {
 // fix without reading its words.
 export type EventTopic =
   | "paused" // the game stopped itself; `about` says for what
+  | "workers" // the player's moves between sectors taking effect at a month's end
   | "hunger"
   | "cold"
   | "homes"
@@ -187,6 +190,9 @@ export interface GameState {
   factionApproval: Record<Ideology, number>; // per-ideology approval (0-100); stats.popularity is their electorate-weighted average — see domain/parties/factionRules.ts
   expeditions: Expedition[]; // in-progress scouting trips to unclaimed islands
   scoutedIslandIds: string[]; // islands a completed expedition has already visited
+  trained: TrainedWorkers; // people who know each trade, working in it or not (see domain/labour/trainingRules.ts)
+  workPlan: WorkPlan | null; // the player's limit on each sector, or null for Automatic
+  workPlanNext: WorkPlan | "automatic" | null; // the change waiting for the month's end, if any
   daysShortOfWorkers: number; // days in a row the country has been short of workers (see isShortOfWorkers); brings the captain's offer
   events: GameEvent[];
   monthlyReports: MonthlyReport[];

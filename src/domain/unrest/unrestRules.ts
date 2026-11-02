@@ -96,7 +96,7 @@ export function rollRiotDamage(
   const targets = placedBuildings.filter((b) => isWorking(b) && (provinceId === undefined || b.provinceId === provinceId));
   if (targets.length === 0) return { placedBuildings, wrecked: null };
   const target = targets[Math.floor(Math.random() * targets.length)];
-  const wrecked: PlacedBuilding = { ...target, condition: "broken", wornUntilDay: undefined };
+  const wrecked: PlacedBuilding = { ...target, condition: "broken", wornUntilDay: undefined, serviceUntilDay: undefined };
   return { placedBuildings: placedBuildings.map((b) => (b.id === target.id ? wrecked : b)), wrecked };
 }
 

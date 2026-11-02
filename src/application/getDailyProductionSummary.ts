@@ -70,7 +70,7 @@ export function getDailyProductionSummary(state: GameState): DailyProductionSumm
   const foodProduced = farmFood + processedFood;
   const foodConsumed = consumeFood(state.stats, mods);
 
-  const rawProduction = getGoodsProduction(state, season, (id) => labour.provinces[id]?.industryStaffing ?? 0);
+  const rawProduction = getGoodsProduction(state, season, (id) => labour.provinces[id]?.industryOutput ?? 0);
   const colonies = getColonyAccounts(state);
   const colonyIncome = colonies.supply + colonies.salt;
   const armyPay = getArmyPay(state.regiments, state.nationId);

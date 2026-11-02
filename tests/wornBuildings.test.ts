@@ -128,12 +128,11 @@ describe("a notice of wear", () => {
 });
 
 describe("servicing", () => {
-  it("clears the wear at once, and the building never leaves service", () => {
+  it("clears the wear when the crew finishes, and the building never leaves service", () => {
     const { state, id } = withWornFarm();
     const working = getWorkingCounts(state);
     expect(canServiceBuilding(state, id)).toBe(true);
     const after = serviceBuilding(state, id);
-    expect(isWorn(find(after, id))).toBe(false);
     expect(find(after, id).condition).toBeUndefined();
     expect(getWorkingCounts(after)).toEqual(working);
     let later = after;

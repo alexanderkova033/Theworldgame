@@ -129,3 +129,14 @@
 .repairs-panel__progress .progress-bar__fill {
   display: block;
 }
+
+.repairs-panel__crew {
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.repairs-panel__crew.is-untrained {
+  font-weight: 700;
+  color: var(--warning);
+}

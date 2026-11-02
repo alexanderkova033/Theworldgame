@@ -42,7 +42,7 @@ export function strikeCrisis(state: GameState, provinceId: string, kind: CrisisK
     const washed = new Set(homes.slice(0, homesLost).map((b) => b.id));
     placedBuildings = placedBuildings
       .filter((b) => !washed.has(b.id))
-      .map((b): PlacedBuilding => (b.provinceId === provinceId && b.type === "farm" && b.condition !== "seized" ? { ...b, condition: "ruined", repairDaysRemaining: undefined, wornUntilDay: undefined } : b));
+      .map((b): PlacedBuilding => (b.provinceId === provinceId && b.type === "farm" && b.condition !== "seized" ? { ...b, condition: "ruined", repairDaysRemaining: undefined, wornUntilDay: undefined, serviceUntilDay: undefined } : b));
     stats = { ...stats, food: stats.food * (1 - FLOOD_FOOD_SHARE) };
   }
   if (kind === "fever") {

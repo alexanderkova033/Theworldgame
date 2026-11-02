@@ -11,6 +11,7 @@ import { getProvinceStatus, type ProvinceOverview } from "../../application/getP
 import { buildCannery, buildEducation, buildEstate, buildFactory, buildFarm, buildFoundry, buildGranary, buildHarbour, buildHousing, buildMine, buildModelFarm, buildRoad, buildSawmill, buildSteelworks, buildTenement, buildTower, buyAndBuild, countBuildingsInProvince, planBuyAndBuild } from "../../application/actions";
 import { getBuildCostIn, upfrontCost, type BuildAction } from "../../application/actions/createBuildAction";
 import { describeWait, getDaysToSave } from "../../application/getDaysToSave";
+import { getWorkerSource } from "../../application/getWorkerSource";
 import {
   CANNERY_BUILD_DAYS,
   COAL_PER_MINE,
@@ -612,7 +613,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, n
                           {item.buildDays}d
                         </span>
                         {workers > 0 && (
-                          <span className="build-row__cost build-row__cost--plain" data-tip={`Needs ${formatAmount(workers)} workers from your population. Without them it runs below capacity.`}>
+                          <span className="build-row__cost build-row__cost--plain" data-tip={getWorkerSource(state, item.type) ?? `Needs ${formatAmount(workers)} workers from your population. Without them it runs below capacity.`}>
                             <StatIcon type="population" size={14} />
                             {formatAmount(workers)}
                           </span>

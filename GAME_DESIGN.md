@@ -144,7 +144,11 @@ You build in whichever of your provinces is selected. Each building type is capp
 | Cannery | 1,100 Cr + ore | Turns fish into food. |
 | School | 400 Cr + wood | Speeds research and allows more scientists. |
 
-Construction pays part of the price when ordered and the rest during the build. Buildings wear out at random and need repairs.
+Construction pays part of the price when ordered and the rest during the build. Buildings wear out at random. A worn building keeps working for a time, and then breaks and needs a repair. Servicing it before then takes a crew of 20 from its province: 5 days if most of that trade are trained, or 10 days at half as much again if not. It keeps working meanwhile, and its wear stops counting down.
+
+**Trained workers.** A country has a number of trained farm hands and factory hands, which is everyone working on the first day. Anyone else starts at 60% of a trained hand, and reaches 68% after a month, 90% after six and 97% after a year. An old skill fades only as a new one is learned. Schools need no training.
+
+**Who works where.** On Automatic, jobs fill by themselves, food first, then schools, then factories. The player may instead set the most people in each sector, for the whole country, in Build's People section. People moved finish the month in their old jobs. A limit never makes anyone jobless: those left over take any open job, so what you get can differ from what you set, and a new building under a limit can stand empty. None of this changes when the country counts as short of workers.
 
 ## Resources and the market
 
