@@ -70,5 +70,6 @@ export interface PlacedBuilding {
   condition?: "broken" | "repairing" | "seized" | "ruined"; // seized: held by a province that has risen (see domain/uprising); ruined: by a crisis, until it is put right (domain/crises)
   repairDaysRemaining?: number;
   serviceUntilDay?: number; // a crew is servicing it: the dayNumber the wear is gone. The wear clock stops meanwhile (see domain/maintenance)
+  serviceDays?: number; // how long that service takes in all, for its progress bar. A save from before this has none (see getServiceProgress)
   wornUntilDay?: number; // worn, and still working: the dayNumber it breaks on unless serviced. A date, not a countdown, so the map is not redrawn every day (see domain/maintenance)
 }

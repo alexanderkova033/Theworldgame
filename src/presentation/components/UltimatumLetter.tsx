@@ -4,6 +4,7 @@
 // the garrison.
 import "./DecisionModal.css";
 import { canPayTribute } from "../../application/actions/ultimatumActions";
+import { lettersBehind } from "../../application/chapters";
 import { RELATIONS_TRIBUTE, TRIBUTE } from "../../domain/constants";
 import { formatDate } from "../../domain/country/calendar";
 import type { GameState } from "../../domain/country/types";
@@ -13,6 +14,7 @@ import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { playDrum, playSeal } from "../audio/sound";
 import { formatAmount } from "../formatNumber";
 import { Modal } from "./Modal";
+import { MoreWaiting } from "./MoreWaiting";
 import { StatIcon } from "./StatIcon";
 
 export function UltimatumLetter({ state, onPay, onStandFirm }: { state: GameState; onPay: () => void; onStandFirm: () => void }) {
@@ -26,6 +28,7 @@ export function UltimatumLetter({ state, onPay, onStandFirm }: { state: GameStat
   return (
     <Modal title={`An Ultimatum from ${nation.name}`}>
       <div className="decision-modal">
+        <MoreWaiting count={lettersBehind(state)} />
         <div className="decision-modal__icon">
           <StatIcon type="regiment" size={36} />
         </div>

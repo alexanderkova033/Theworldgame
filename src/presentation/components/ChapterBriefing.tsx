@@ -10,6 +10,7 @@ import { getDecision } from "../../domain/decisions/decisionRules";
 import { playSeal } from "../audio/sound";
 import { LetterAnswers } from "./DecisionModal";
 import { Modal } from "./Modal";
+import { MoreWaiting } from "./MoreWaiting";
 import { NavIcon } from "./NavIcon";
 import { StoryPlate } from "./StoryPlate";
 
@@ -49,7 +50,7 @@ export function ChapterBriefing({ state, onRead, onAnswer }: ChapterBriefingProp
     // Keyed so that the next one in a queue starts at its top, not scrolled.
     <Modal key={id} title={chapter.title} icon={<NavIcon type="reports" size={22} />} onClose={letter ? undefined : read} wide={!!letter}>
       <div className={`briefing ${letter ? "briefing--joined" : ""}`}>
-        {behind > 0 && <p className="briefing__waiting">{behind} more waiting</p>}
+        <MoreWaiting count={behind} />
         <div className="briefing__story">
           <StoryPlate chapterId={id} />
           <p className="briefing__letter">

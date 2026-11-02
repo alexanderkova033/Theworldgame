@@ -120,14 +120,8 @@
   color: var(--text-muted);
 }
 
-.repairs-panel__progress .progress-bar {
-  display: block;
+.repairs-panel__progress .gauge {
   flex: 1;
-  margin: 0;
-}
-
-.repairs-panel__progress .progress-bar__fill {
-  display: block;
 }
 
 .repairs-panel__crew {

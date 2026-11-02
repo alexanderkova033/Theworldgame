@@ -1,25 +1,32 @@
 // Trained workers, the player's choice of who works where, and service crews.
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it } from "vitest";
 import { marchRegiments, raiseRegiment } from "../src/application/actions/armyActions";
 import { canServiceBuilding, getServiceOrder, serviceBuilding } from "../src/application/actions/serviceBuilding";
 import { cancelWorkChange, canMoveWorkers, chooseAutomaticWork, chooseWork, moveWorkers, setWorkPlan } from "../src/application/actions/workPlanActions";
 import { applySettlementArrival } from "../src/application/applySettlementArrival";
+import { getAdvisorOutlook } from "../src/application/getAdvisorOutlook";
+import { getDailyProductionSummary } from "../src/application/getDailyProductionSummary";
+import { getForecasts } from "../src/application/getForecasts";
+import { getHeatingOutlook } from "../src/application/getHeatingOutlook";
 import { getWorkerSource } from "../src/application/getWorkerSource";
 import { simulateDay } from "../src/application/simulateDay";
 import { startNewGame } from "../src/application/startNewGame";
-import { COMMUTE_SHARE, LABOUR_SHARE, SERVICE_CREW, SERVICE_DAYS_TRAINED, SERVICE_DAYS_UNTRAINED, TRAINING_RATE, UNTRAINED_EFFICIENCY, WORK_PLAN_STEP, WORN_WARNING_DAYS } from "../src/domain/constants";
+import { ADVISOR_FARM_STAFF_CRITICAL, COMMUTE_SHARE, LABOUR_SHARE, SERVICE_CREW, SERVICE_DAYS_TRAINED, SERVICE_DAYS_UNTRAINED, TRAINING_RATE, UNTRAINED_EFFICIENCY, WORK_PLAN_STEP, WORN_WARNING_DAYS } from "../src/domain/constants";
 import { dayNumber } from "../src/domain/country/calendar";
 import type { GameState } from "../src/domain/country/types";
 import { ISLANDS } from "../src/domain/islands/islandData";
 import { isIsland } from "../src/domain/islands/islandRules";
 import { getLabourSituation, hasTrainedCrew, isShortOfWorkers, SECTORS, type LabourSituation, type WorkPlan } from "../src/domain/labour/labourRules";
 import { advanceTraining, getSkill, isCrewTrained } from "../src/domain/labour/trainingRules";
-import { getServiceCost, getWorkingCounts, isBeingServiced, isWorn } from "../src/domain/maintenance/maintenanceRules";
+import { getServiceCost, getServiceProgress, getWorkingCounts, isBeingServiced, isWorn } from "../src/domain/maintenance/maintenanceRules";
 import { getNation } from "../src/domain/nations/nationRules";
 import { getOwnedProvinceIds } from "../src/domain/provinces/provinceRules";
 import type { PlacedBuilding } from "../src/domain/provinces/types";
 import { rollRiotDamage } from "../src/domain/unrest/unrestRules";
 import { seizeBuildings } from "../src/domain/uprising/uprisingRules";
+import { RepairsPanel } from "../src/presentation/components/RepairsPanel";
 import { hydrateGameState } from "../src/presentation/hooks/gameSave";
 import { calmStart } from "./support/calmStart";
 import { NATIONS, playCarefully } from "./support/carefulPlayer";
@@ -378,7 +385,13 @@ describe("the choice, with commuting, islands and armies", () => {
     expectEveryoneCounted(limited);
   });
 
-  it("plays whole games with a limit while settling, fighting and holding garrisons", () => {
+  // Whole games under a limit. A script that also holds garrisons scatters the
+  // regiments its war habit waits to gather, and no war came in 90 such games
+  // (30 seeds, every nation), so the wars come from games without that habit.
+  it.each([
+    ["holding garrisons", true],
+    ["fighting a war", false],
+  ])("plays whole games with a limit while settling and %s", (_, army) => {
     let colonies = 0;
     let regiments = 0;
     let warDays = 0;
@@ -390,7 +403,7 @@ describe("the choice, with commuting, islands and armies", () => {
         difficulty: "easy",
         settle: true,
         treaties: true,
-        army: true,
+        army,
         war: true,
         habit: (s) => (s.date.day === 1 ? setWorkPlan(s, { food: Math.round(s.stats.population * 0.18), school: 500, industry: 5000 }) : s),
         onDay: (s) => {
@@ -409,11 +422,11 @@ describe("the choice, with commuting, islands and armies", () => {
       colonies += end.settledIslandIds.length;
       regiments += end.regiments.filter((r) => r.nationId === nation).length;
     }
-    // The games really did hold islands and raise regiments. Whether a war
-    // came is up to the money, so that is only recorded.
+    // The games really did hold islands, raise regiments and, without the
+    // garrisons, go to war, with the checks above running on every day of it.
     expect(colonies).toBeGreaterThan(0);
     expect(regiments).toBeGreaterThan(0);
-    expect(warDays).toBeGreaterThanOrEqual(0);
+    if (!army) expect(warDays).toBeGreaterThan(0);
   }, 120000);
 
   it("regiments on the march don't touch who works where", () => {
@@ -537,9 +550,11 @@ describe("service crews", () => {
     const { placedBuildings } = rollRiotDamage([building], 0);
     Math.random = original;
     expect(placedBuildings[0].serviceUntilDay).toBeUndefined();
+    expect(placedBuildings[0].serviceDays).toBeUndefined();
     expect(placedBuildings[0].condition).toBe("broken");
     const seized = seizeBuildings(s.placedBuildings, building.provinceId).find((b) => b.id === id)!;
     expect(seized.serviceUntilDay).toBeUndefined();
+    expect(seized.serviceDays).toBeUndefined();
     expect(seized.condition).toBe("seized");
   });
 
@@ -547,7 +562,100 @@ describe("service crews", () => {
     const { state, id } = worn();
     const s = hydrateGameState(JSON.parse(JSON.stringify(serviceBuilding(state, id))));
     expect(isBeingServiced(find(s, id))).toBe(true);
+    expect(find(s, id).serviceDays).toBe(SERVICE_DAYS_TRAINED);
   });
+
+  it("shows how far along a service is, from nothing to nearly done", () => {
+    const { state, id } = worn();
+    let s = serviceBuilding(untrainedFood(state), id);
+    expect(find(s, id).serviceDays).toBe(SERVICE_DAYS_UNTRAINED);
+    expect(getServiceProgress(find(s, id), s.date)).toBe(0);
+    for (let day = 1; day < SERVICE_DAYS_UNTRAINED; day++) {
+      s = simulateDay(s);
+      expect(getServiceProgress(find(s, id), s.date)).toBeCloseTo(day / SERVICE_DAYS_UNTRAINED);
+    }
+    s = simulateDay(s);
+    expect(find(s, id).serviceDays).toBeUndefined();
+  });
+
+  it("a save from before a service's length was kept still shows a bar, and finishes", () => {
+    const { state, id } = worn();
+    const today = dayNumber(state.date);
+    const old = (left: number): GameState => {
+      const raw = JSON.parse(JSON.stringify(serviceBuilding(untrainedFood(state), id))) as GameState;
+      const placedBuildings = raw.placedBuildings.map((b) => {
+        if (b.id !== id) return b;
+        const { serviceDays: _days, ...rest } = b;
+        return { ...rest, serviceUntilDay: today + left };
+      });
+      return hydrateGameState({ ...raw, placedBuildings });
+    };
+    // More days left than a trained crew takes: it can only be an untrained one.
+    expect(getServiceProgress(find(old(8), id), state.date)).toBeCloseTo(1 - 8 / SERVICE_DAYS_UNTRAINED);
+    expect(getServiceProgress(find(old(3), id), state.date)).toBeCloseTo(1 - 3 / SERVICE_DAYS_TRAINED);
+    let s = old(2);
+    for (let day = 0; day < 2; day++) s = simulateDay(s);
+    expect(isWorn(find(s, id))).toBe(false);
+  });
+
+  it("shows the bar on the Repairs row", () => {
+    const { state, id } = worn();
+    const html = renderToStaticMarkup(createElement(RepairsPanel, { state: simulateDay(simulateDay(serviceBuilding(state, id))), dispatch: () => {} }));
+    expect(html).toContain("gauge__fill");
+    expect(html).toContain(`width:${(2 / SERVICE_DAYS_TRAINED) * 100}%`);
+  });
+});
+
+describe("the advisor on staffing", () => {
+  const alertOf = (s: GameState, kind: string) => {
+    const production = getDailyProductionSummary(s);
+    return getAdvisorOutlook(s, production, getHeatingOutlook(s), getForecasts(s, production)).alerts.find((a) => a.kind === kind);
+  };
+  const capital = getNation(NATION).capitalProvinceId;
+  // Every province's people gone but a few: a real shortage.
+  const short = (s: GameState, share: number): GameState => ({ ...s, provinces: Object.fromEntries(Object.entries(s.provinces).map(([id, p]) => [id, { ...p, population: p.population * share }])) });
+
+  it("raises no alarm when the player's own limit is what holds the farms back, and says so", () => {
+    // Factories enough to take everyone a limit turns away from the farms.
+    const s = placed(calmStart(NATION, PARTY), "factory", capital, 3);
+    const jobs = getLabourSituation(s).sectors.food.jobs;
+    expect(alertOf(s, "farmWorkers")).toBeUndefined();
+    const limited: GameState = { ...s, workPlan: { food: Math.round(jobs * 0.5), school: 1e9, industry: 1e9 } };
+    const labour = getLabourSituation(limited);
+    expect(labour.foodStaffing).toBeLessThan(ADVISOR_FARM_STAFF_CRITICAL);
+    expect(getLabourSituation(s).foodStaffing).toBe(1);
+    const alert = alertOf(limited, "farmWorkers")!;
+    expect(alert.critical).toBe(false);
+    expect(alert.text).toBe(`Farms: ${Math.round(labour.foodStaffing * 100)}%, your limit`);
+    expect(alert.detail).toContain("Your limit");
+    expect(alert.detail).toContain("100%");
+  });
+
+  it("still raises a real shortage as it did", () => {
+    const s = short(calmStart(NATION, PARTY), 0.4);
+    const labour = getLabourSituation(s);
+    expect(labour.foodStaffing).toBeLessThan(0.85);
+    const alert = alertOf(s, "farmWorkers")!;
+    expect(alert.critical).toBe(true);
+    expect(alert.text).toBe(`Farms: ${Math.round(labour.foodStaffing * 100)}% staffed`);
+    expect(alert.detail).toContain("Not enough workers");
+  });
+
+  it("still raises a real shortage under a limit that isn't the cause", () => {
+    const s = short({ ...calmStart(NATION, PARTY), workPlan: { food: 1e9, school: 1e9, industry: 1e9 } }, 0.4);
+    const alert = alertOf(s, "farmWorkers")!;
+    expect(alert.critical).toBe(true);
+    expect(alert.text).toContain("staffed");
+  });
+
+  it("judges the alarm by what no limit would give, when both are to blame", () => {
+    const base = short(calmStart(NATION, PARTY), 0.4);
+    const jobs = getLabourSituation(base).sectors.food.jobs;
+    const alert = alertOf(placed({ ...base, workPlan: { food: Math.round(jobs * 0.2), school: 1e9, industry: 1e9 } }, "factory", capital, 6), "farmWorkers")!;
+    expect(alert.critical).toBe(true);
+    expect(alert.detail).toContain("Your limit");
+  });
+
 });
 
 describe("where a new building's workers come from", () => {

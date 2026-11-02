@@ -389,9 +389,15 @@ function App() {
     setWindows(holdWindowBack);
   }, [crisisKey]);
 
-  // The last letter dealt with, including a story letter still on its way:
-  // the window a letter held back comes back.
-  const lettersWaiting = !!state && (isLetterWaiting(state) || state.chapters.letters.length > 0);
+  // A new term's burdens, the same way (see BurdenLetter).
+  const burdenKey = state?.burdenOffer?.join(",") ?? null;
+  useEffect(() => {
+    if (burdenKey) setWindows(holdWindowBack);
+  }, [burdenKey]);
+
+  // The last letter on screen dealt with: the window a letter held back comes
+  // back, even with a story letter due tomorrow (that one holds it back again).
+  const lettersWaiting = !!state && isLetterWaiting(state);
   useEffect(() => {
     if (!lettersWaiting) setWindows(giveWindowBack);
   }, [lettersWaiting]);

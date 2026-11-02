@@ -2,11 +2,13 @@
 // player takes one of the burdens on offer, and the game waits until they
 // do (see domain/reign and application/actions/burdenActions.ts).
 import "./BurdenLetter.css";
+import { lettersBehind } from "../../application/chapters";
 import type { GameState } from "../../domain/country/types";
 import type { BurdenId } from "../../domain/reign/reignData";
 import { describeBurden, getBurden } from "../../domain/reign/reignRules";
 import { playSeal } from "../audio/sound";
 import { Modal } from "./Modal";
+import { MoreWaiting } from "./MoreWaiting";
 import { NavIcon } from "./NavIcon";
 
 interface BurdenLetterProps {
@@ -19,6 +21,7 @@ export function BurdenLetter({ state, onTake }: BurdenLetterProps) {
   return (
     <Modal title={`Term ${state.electionsWon + 1} Begins`} icon={<NavIcon type="politics" size={22} />}>
       <div className="burden-letter">
+        <MoreWaiting count={lettersBehind(state)} />
         <p className="burden-letter__lead">Power has its price. Take on one of these for the rest of your reign.</p>
         <div className="burden-letter__options">
           {state.burdenOffer.map((id) => {

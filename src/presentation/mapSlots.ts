@@ -29,6 +29,15 @@ const EDGE_MARGINS = [14, 10, 6]; // a picture stays on its own side of a border
 const JITTER = 0.03; // a small steady wobble, so the plots don't read as a grid
 const CAPITAL_ROOM = { halfWidth: 16, above: 30, below: 6 }; // the star, just above the province's middle
 const CROWD_REACH = { across: 28, above: 36, below: 14 }; // the ground a crowd covers round its point
+// The outline of a crowd's picture round its point, at the widest of the three
+// (see Camp, Strike and Riot in MapSettlements), as points to keep on land.
+export const CROWD_FOOTPRINT: Point[] = [
+  [-11, -34], [3, -34], [16, -34], // the placards
+  [-18, -26], [24, -26],
+  [-26, -17], [26, -17],
+  [-26, 0], [0, 0], [26, 0],
+  [-24, 10], [-12, 11], [0, 11], [10, 8], // the tents and the front rank
+];
 const CROWD_EDGE_MARGIN = 13;
 const CROWD_GRID = 7;
 const GROUNDS_APART = 60;
@@ -80,6 +89,13 @@ const apart = (a: Point, b: Point, distance: number) => Math.hypot(a[0] - b[0], 
 // A crowd's point must leave the crowd itself clear of the room.
 const widenedForCrowd = (r: Room): Room => ({ left: r.left - CROWD_REACH.across, right: r.right + CROWD_REACH.across, top: r.top - CROWD_REACH.below, bottom: r.bottom + CROWD_REACH.above });
 
+const LAND = [...MAP_GEOMETRY.provinces, ...MAP_GEOMETRY.islands].map((place) => parsePolygon(place.path));
+
+// Whether this point is on any land at all: a province's border is no shore.
+export function onLand(point: Point): boolean {
+  return LAND.some((polygon) => inside(point, polygon));
+}
+
 const plotsById = new Map<string, ProvincePlots>();
 
 export function getProvincePlots(provinceId: string): ProvincePlots | null {
@@ -110,8 +126,12 @@ export function getProvincePlots(provinceId: string): ProvincePlots | null {
   // Clear of the star first; anywhere in the province after those.
   const nearestFirst = (points: Point[]) => points.sort((a, b) => distance(a) - distance(b));
   const open = [...nearestFirst(candidates(polygon, CROWD_GRID, rooms.map(widenedForCrowd), CROWD_EDGE_MARGIN, 0)), ...nearestFirst(candidates(polygon, CROWD_GRID, [], 0, 0))];
+  // Off the water, as far as the place has room: the most of the crowd on land.
+  const landShare = (ground: Point) => CROWD_FOOTPRINT.filter(([x, y]) => onLand([ground[0] + x, ground[1] + y])).length;
+  const mostOnLand = Math.max(0, ...open.map(landShare));
+  const dry = open.filter((ground) => landShare(ground) === mostOnLand);
 
-  const result: ProvincePlots = { plots, grounds: open.length > 0 ? open : [middle] };
+  const result: ProvincePlots = { plots, grounds: dry.length > 0 ? dry : [middle] };
   plotsById.set(provinceId, result);
   return result;
 }

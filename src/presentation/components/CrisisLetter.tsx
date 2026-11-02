@@ -3,6 +3,7 @@
 // since putting it aside would be an answer nobody chose.
 import "./DecisionModal.css";
 import { canAnswerCrisis, getCrisisAnswers } from "../../application/actions";
+import { lettersBehind } from "../../application/chapters";
 import type { GameState } from "../../domain/country/types";
 import { getAnswerCost } from "../../domain/crises/crisisRules";
 import type { CrisisAnswer } from "../../domain/crises/types";
@@ -12,6 +13,7 @@ import { formatAmount } from "../formatNumber";
 import { answerPlate, CRISIS_TITLES, crisisPrompt } from "../crisisText";
 import { CrisisIcon } from "./CrisisIcon";
 import { Modal } from "./Modal";
+import { MoreWaiting } from "./MoreWaiting";
 
 export function CrisisLetter({ state, onAnswer }: { state: GameState; onAnswer: (answer: CrisisAnswer) => void }) {
   const id = state.pendingCrisis;
@@ -23,6 +25,7 @@ export function CrisisLetter({ state, onAnswer }: { state: GameState; onAnswer: 
   return (
     <Modal title={CRISIS_TITLES[crisis.kind]}>
       <div className="decision-modal">
+        <MoreWaiting count={lettersBehind(state)} />
         <div className="decision-modal__icon">
           <CrisisIcon kind={crisis.kind} size={36} />
         </div>
