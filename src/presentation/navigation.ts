@@ -175,5 +175,7 @@ export function objectiveDestination(id: ChapterId, i: number): Destination | nu
 export function alertDestination(alert: AdvisorAlert, state: GameState): Destination {
   // Food about to run out can't wait for a farm: buy some.
   if (alert.kind === "food" && alert.critical) return reachable(state, MARKET);
+  // A stalled project mends where its cause does.
+  if (alert.kind === "stalled" && alert.stalledFor) return reachable(state, alert.stalledFor === "money" ? BUDGET : MARKET);
   return reachable(state, ALERTS[alert.kind]);
 }

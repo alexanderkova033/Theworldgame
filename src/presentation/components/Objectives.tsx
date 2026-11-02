@@ -11,9 +11,10 @@ import "./Objectives.css";
 import { useEffect, useRef, useState } from "react";
 import { objectivesMet } from "../../application/chapters";
 import { describeWait } from "../../application/getDaysToSave";
-import { getObjectiveGuidance, type ObjectiveGuidance } from "../../application/getObjectiveGuidance";
+import { getCurrentObjective, getObjectiveGuidance, getObjectiveUnderway, type ObjectiveGuidance } from "../../application/getObjectiveGuidance";
 import { getChapter, type ChapterId } from "../../domain/chapters/chapterData";
 import { CURRENCY_SYMBOL } from "../../domain/constants";
+import { counted } from "../../domain/plural";
 import type { GameState } from "../../domain/country/types";
 import { describeBurden, getBurden } from "../../domain/reign/reignRules";
 import { formatAmount } from "../formatNumber";
@@ -73,7 +74,7 @@ function ChapterCard({ state, id, onOpenPanel }: { state: GameState; id: Chapter
   const chapter = getChapter(id);
   const met = objectivesMet(state, id);
   const done = met.filter(Boolean).length;
-  const next = met.indexOf(false);
+  const next = getCurrentObjective(state, id, met);
   return (
     <div className="objectives__card">
       <div className="objectives__head">
@@ -91,6 +92,7 @@ function ChapterCard({ state, id, onOpenPanel }: { state: GameState; id: Chapter
           const to = met[i] ? null : objectiveDestination(id, i);
           const current = i === next;
           const guidance = current ? getObjectiveGuidance(state, id, i) : null;
+          const underway = met[i] ? null : getObjectiveUnderway(state, id, i);
           const mark = (
             <span className="objectives__step-mark" aria-hidden="true">
               {met[i] ? "✓" : i + 1}
@@ -111,6 +113,7 @@ function ChapterCard({ state, id, onOpenPanel }: { state: GameState; id: Chapter
                 </span>
               )}
               {guidance && <Guidance guidance={guidance} />}
+              {underway !== null && <span className="objectives__guidance objectives__guidance--underway">Under way. Back in service in {counted(underway, "day")}.</span>}
             </li>
           );
         })}
@@ -170,7 +173,7 @@ export function Objectives({ state, onOpenPanel }: { state: GameState; onOpenPan
           title in the tip) and its pips, opening where that step is done. */}
       {others.map((id) => {
         const met = objectivesMet(state, id);
-        const next = met.indexOf(false);
+        const next = getCurrentObjective(state, id, met);
         const to = next >= 0 ? objectiveDestination(id, next) : null;
         const guidance = next >= 0 ? getObjectiveGuidance(state, id, next) : null;
         const line = (

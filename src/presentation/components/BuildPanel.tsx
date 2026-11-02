@@ -24,6 +24,7 @@ import { RepairsPanel } from "./RepairsPanel";
 import type { BuildRail } from "../buildGroups";
 import { StatIcon } from "./StatIcon";
 import { SubTabs, type SubTab } from "./SubTabs";
+import { counted } from "../../domain/plural";
 
 interface BuildPanelProps {
   state: GameState;
@@ -55,7 +56,7 @@ function sectionTabs(state: GameState, production: DailyProductionSummary, provi
       label: "Buildings",
       icon: <NavIcon type="build" size={22} />,
       alert: broken > 0 || worn > 0 || stalled > 0,
-      hint: `${state.projects.length} projects underway${broken > 0 ? `, ${broken} broken buildings to repair` : ""}${worn > 0 ? `, ${worn} worn buildings to service` : ""}${stalled > 0 ? `, ${stalled} stalled` : ""}`,
+      hint: `${counted(state.projects.length, "project")} underway${broken > 0 ? `, ${counted(broken, "broken building")} to repair` : ""}${worn > 0 ? `, ${counted(worn, "worn building")} to service` : ""}${stalled > 0 ? `, ${stalled} stalled` : ""}`,
     },
     {
       key: "people",
@@ -97,7 +98,7 @@ export function BuildPanel({ state, dispatch, production, provinces, selectedPro
           {/* Every kind of building, the groups ruled off; Repairs below when
               anything needs mending. */}
           <div className="production__main" ref={list}>
-            <ActionsPanel state={state} selectedProvinceId={selectedProvinceId} dispatch={dispatch} provinces={provinces} netPerDay={production.netTreasury} />
+            <ActionsPanel state={state} selectedProvinceId={selectedProvinceId} dispatch={dispatch} provinces={provinces} income={production} />
             {needsCare && (
               <div className="production__repairs" data-rail="repairs">
                 <RepairsPanel state={state} dispatch={dispatch} />

@@ -23,6 +23,7 @@ import { getProvinceName } from "../../domain/provinces/provinceRules";
 import { formatAmount } from "../formatNumber";
 import { StatIcon } from "./StatIcon";
 import { HireTerms, Seats, StaffStepper } from "./WorkforcePanel";
+import { counted } from "../../domain/plural";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
 
@@ -86,7 +87,7 @@ function WarButton({ state, nationId, dispatch }: { state: GameState; nationId: 
 
 // Where a regiment is and what it's doing, in a few words.
 function regimentStatus(state: GameState, r: Regiment): string {
-  if (r.trainingDays > 0) return `At drill in ${getProvinceName(r.provinceId)}, ${r.trainingDays} days left`;
+  if (r.trainingDays > 0) return `At drill in ${getProvinceName(r.provinceId)}, ${counted(r.trainingDays, "day")} left`;
   if (!r.march) {
     const free = state.freeProvinces[r.provinceId];
     if (free) return `Fighting the rebels in ${getProvinceName(r.provinceId)} (rebels at ${Math.round(free.strength)})`;
@@ -94,14 +95,14 @@ function regimentStatus(state: GameState, r: Regiment): string {
     if (holder) {
       const siege = state.sieges[r.provinceId];
       return siege
-        ? `Besieging ${getProvinceName(r.provinceId)}: ${siege} of ${getSiegeDays(getIslandPeople(r.provinceId))} days`
+        ? `Besieging ${getProvinceName(r.provinceId)}: ${siege} of ${counted(getSiegeDays(getIslandPeople(r.provinceId)), "day")}`
         : `Fighting ${getNation(holder).name}'s garrison on ${getProvinceName(r.provinceId)}`;
     }
     return `Keeping order in ${getProvinceName(r.provinceId)}`;
   }
   const to = r.march.route[r.march.route.length - 1];
   const rest = r.march.route.length > 1 ? getMarchRoute(state, r.march.route[0], to) : [];
-  return `Marching to ${getProvinceName(to)}, ${r.march.daysLeft + routeDays(rest ?? [])} days`;
+  return `Marching to ${getProvinceName(to)}, ${counted(r.march.daysLeft + routeDays(rest ?? []), "day")}`;
 }
 
 export function ArmyPanel({ state, dispatch }: { state: GameState; dispatch: Dispatch }) {
@@ -179,7 +180,7 @@ export function ArmyPanel({ state, dispatch }: { state: GameState; dispatch: Dis
                     <strong>{getProvinceName(id)}</strong>: rebels at {Math.round(free.strength)} of 100, {formatAmount(free.people)} people
                   </span>
                   <span className="army-panel__strength" title="How long two regiments at full strength would take to beat them, once there">
-                    two regiments: {two.days} days
+                    two regiments: {counted(two.days, "day")}
                   </span>
                 </li>
               );

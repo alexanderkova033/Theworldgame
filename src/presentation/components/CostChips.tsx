@@ -7,6 +7,7 @@ import "./CostChips.css";
 import type { ResourceType } from "../../domain/resources/types";
 import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon, type StatIconType } from "./StatIcon";
+import { counted } from "../../domain/plural";
 
 interface ChipProps {
   amount: number | string;
@@ -48,7 +49,7 @@ export function StatChip({ type, amount, suffix }: ChipProps & { type: StatIconT
 // How long it takes once started — a small hourglass and a day count.
 export function DaysChip({ days }: { days: number }) {
   return (
-    <span className="cost-chip cost-chip--days" title={`Takes ${days} days`}>
+    <span className="cost-chip cost-chip--days" title={`Takes ${counted(days, "day")}`}>
       <svg viewBox="-10 -10 20 20" width={13} height={13}>
         <path d="M-5,-7 L5,-7 L5,-5.5 L1.2,0 L5,5.5 L5,7 L-5,7 L-5,5.5 L-1.2,0 L-5,-5.5 Z" fill="currentColor" />
       </svg>

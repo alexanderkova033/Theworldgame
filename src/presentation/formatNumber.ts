@@ -56,6 +56,15 @@ export function formatRate(value: number, points = false): string {
   return `${r > 0 ? "+" : r < 0 ? "−" : ""}${body}/d`;
 }
 
+// A requirement against its figure, for "11,960 / 12,000". Written as amounts,
+// unless rounding would make one not yet met read as met: then both are exact,
+// and the figure held is rounded down.
+export function formatRequirement(current: number, threshold: number): [current: string, threshold: string] {
+  const [have, need] = [formatAmount(current), formatAmount(threshold)];
+  if (current >= threshold || (have !== need && Math.round(current) < threshold)) return [have, need];
+  return [formatExact(Math.floor(current)), formatExact(threshold)];
+}
+
 // A reign's length: "12 years, 3 months", "1 year", "5 months".
 export function formatReign(months: number): string {
   const years = Math.floor(months / 12);

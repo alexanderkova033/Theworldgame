@@ -2,7 +2,7 @@
 // GameState, with starting infrastructure placed within that nation's own
 // provinces (so different nations feel at least slightly different from day
 // one, even though the underlying economy math is the same for everyone).
-import { JOBS_PER_BUILDING, STARTING_COAL, STARTING_EXTRA_COAL, STARTING_FOOD_PER_PERSON, STARTING_RESOURCE_STOCK, STARTING_WOOD_NO_FOREST } from "../domain/constants";
+import { JOBS_PER_BUILDING, MARKET_ORDER_RESERVE, STARTING_COAL, STARTING_EXTRA_COAL, STARTING_FOOD_PER_PERSON, STARTING_RESOURCE_STOCK, STARTING_WOOD_NO_FOREST } from "../domain/constants";
 import { getSeason } from "../domain/country/calendar";
 import { getDifficulty, type Difficulty } from "../domain/difficulty/difficultyData";
 import { createForeignPolitics } from "../domain/diplomacy/diplomacyRules";
@@ -150,6 +150,7 @@ function createInitialState(nationId: string, partyId: string, difficulty: Diffi
     foreignPolitics: createForeignPolitics(nationId),
     market: createMarket(getSeason(STARTING_DATE)),
     marketOrders: {},
+    marketOrderReserve: MARKET_ORDER_RESERVE,
     orderTally: null,
     expeditions: [],
     scoutedIslandIds: [],

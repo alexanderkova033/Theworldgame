@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
 import { getProvinceStatus, type ProvinceOverview } from "../../application/getProvinceOverview";
 import { buildCannery, buildEducation, buildEstate, buildFactory, buildFarm, buildFoundry, buildGranary, buildHarbour, buildHousing, buildMine, buildModelFarm, buildRoad, buildSawmill, buildSteelworks, buildTenement, buildTower, buyAndBuild, countBuildingsInProvince, planBuyAndBuild } from "../../application/actions";
 import { getBuildCostIn, upfrontCost, type BuildAction } from "../../application/actions/createBuildAction";
-import { describeWait, getDaysToSave } from "../../application/getDaysToSave";
+import { describeWait, getDaysToSave, type SavingIncome } from "../../application/getDaysToSave";
 import { getWorkerSource } from "../../application/getWorkerSource";
 import {
   CANNERY_BUILD_DAYS,
@@ -107,13 +107,14 @@ import { StatIcon } from "./StatIcon";
 import { BuildingGlyph, LockIcon } from "./CauseIcon";
 import { chapterFor, isFeatureOpen } from "../../domain/chapters/chapterData";
 import { BUILD_GROUPS, type BuildGroup } from "../buildGroups";
+import { counted } from "../../domain/plural";
 
 interface ActionsPanelProps {
   state: GameState;
   selectedProvinceId: string;
   dispatch: (action: (state: GameState) => GameState) => void;
   provinces: ProvinceOverview[];
-  netPerDay: number; // the treasury's daily balance, for how long a shortfall takes to save
+  income: SavingIncome; // the treasury's daily balance, for how long a shortfall takes to save
 }
 
 function HourglassIcon() {
@@ -456,7 +457,7 @@ interface Reason {
 
 // Why this building can't go up right now: the first thing in the way. Null
 // when it can.
-function blockedReason(item: BuildItem, cost: number, state: GameState, provinceId: string, provinceName: string, count: number, max: number, unlockName: string | undefined, isLocked: boolean, netPerDay: number, shutUntil?: string): Reason | null {
+function blockedReason(item: BuildItem, cost: number, state: GameState, provinceId: string, provinceName: string, count: number, max: number, unlockName: string | undefined, isLocked: boolean, income: SavingIncome, shutUntil?: string): Reason | null {
   if (shutUntil) return { short: "Not open yet.", full: `Locked. ${shutUntil}.` };
   if (isLocked) {
     const short = `Research “${unlockName ?? "a new technique"}” first.`;
@@ -469,7 +470,7 @@ function blockedReason(item: BuildItem, cost: number, state: GameState, province
   if (count >= max) return { short: "No room here.", full: `No room: all ${max} are built or underway in ${provinceName}.` };
   const moneyShort = upfrontCost(cost) - state.stats.treasury;
   if (moneyShort > 0) {
-    const days = getDaysToSave(state, moneyShort, netPerDay);
+    const days = getDaysToSave(state, moneyShort, income);
     const short = `${formatAmount(Math.ceil(moneyShort))} ${CURRENCY_SYMBOL} short`;
     return { short: `${short}.`, full: days !== null ? `Enough money ${describeWait(days)} at today's income (${short}).` : `${short} of the first payment.` };
   }
@@ -499,7 +500,7 @@ function Pips({ count, max }: { count: number; max: number }) {
   );
 }
 
-export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, netPerDay }: ActionsPanelProps) {
+export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, income }: ActionsPanelProps) {
   const season = getSeason(state.date);
   const mods = getModifiers(state);
   const jobsPer = getJobsPerBuilding(state);
@@ -548,7 +549,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, n
                 ? { short: `Rebels hold ${provinceName}.`, full: `Rebels hold ${provinceName}. Nothing can be built there until the uprising ends.` }
                 : plan
                 ? { short: `Short of ${item.resourceType}.`, full: `Short of ${item.resourceType}: buys ${Math.round(plan.amount)} for ${formatAmount(Math.round(plan.goodsCost))} ${CURRENCY_SYMBOL}, plus ${formatAmount(upfrontCost(cost))} ${CURRENCY_SYMBOL} to start.` }
-                : blockedReason(item, cost, state, selectedProvinceId, provinceName, count, max, unlockName, isLocked, netPerDay, shutUntil);
+                : blockedReason(item, cost, state, selectedProvinceId, provinceName, count, max, unlockName, isLocked, income, shutUntil);
               const workers = item.type in jobsPer ? jobsPer[item.type as JobBuilding] : 0;
 
               return (
@@ -608,7 +609,7 @@ export function ActionsPanel({ state, selectedProvinceId, dispatch, provinces, n
                           {item.resourceCost}
                           <span className="build-row__first">({upfrontCost(item.resourceCost)} now)</span>
                         </span>
-                        <span className="build-row__cost build-row__cost--plain" data-tip={`${item.buildDays} days to build`}>
+                        <span className="build-row__cost build-row__cost--plain" data-tip={`${counted(item.buildDays, "day")} to build`}>
                           <HourglassIcon />
                           {item.buildDays}d
                         </span>

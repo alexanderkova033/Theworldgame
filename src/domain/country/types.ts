@@ -13,7 +13,7 @@ import type { Ideology } from "../parties/types";
 import type { ModifierEffects } from "../policy/modifiers";
 import type { PlacedBuilding, ProvinceState } from "../provinces/types";
 import type { ResearchCategory, ResearchOutcomeTier } from "../research/types";
-import type { ResourceBundle } from "../resources/types";
+import type { ResourceBundle, ResourceType } from "../resources/types";
 import type { UnrestStage } from "../unrest/types";
 import type { Demand } from "../uprising/types";
 import type { ForeignVoyage, Settlement } from "../islands/types";
@@ -107,6 +107,7 @@ export interface GameEvent {
   severity: EventSeverity;
   topic?: EventTopic; // absent on events from older saves
   about?: EventTopic; // for a pause: the danger that stopped the game
+  stalledFor?: "money" | ResourceType; // for a stalled project: where to go to mend it. Absent when nothing can be bought yet, or on older saves
   tier?: ResearchOutcomeTier; // for a finished research: how it turned out
   minor?: boolean; // kept in the log, never popped up (a rival's campaign talk)
 }
@@ -186,6 +187,7 @@ export interface GameState {
   foreignPolitics: Record<string, ForeignGovernment>; // every nation but the player's — see domain/diplomacy
   market: MarketState; // the continental market's stock of every good — see domain/market
   marketOrders: MarketOrders; // the player's standing orders, good by good
+  marketOrderReserve: number; // what they leave in the treasury
   orderTally: OrderTally | null; // what they have done this month
   factionApproval: Record<Ideology, number>; // per-ideology approval (0-100); stats.popularity is their electorate-weighted average — see domain/parties/factionRules.ts
   expeditions: Expedition[]; // in-progress scouting trips to unclaimed islands

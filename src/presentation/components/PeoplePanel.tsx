@@ -24,6 +24,7 @@ import type { OpenPanel } from "../navigation";
 import { getForecasts } from "../../application/getForecasts";
 import { isFeatureOpen } from "../../domain/chapters/chapterData";
 import { StatIcon } from "./StatIcon";
+import { counted } from "../../domain/plural";
 
 // The food meter's full length: a season's eating in store.
 const FOOD_STORE_SCALE_DAYS = 90;
@@ -436,7 +437,7 @@ export function PeoplePanel({ state, dispatch, production, provinces, selectedPr
               <StatIcon type="population" size={14} />
               {formatSigned(-eaten)}
             </span>
-            {runOut && <span className="people-meter__fuel-rate">{runOut.days === 0 ? "none left" : `lasts ${runOut.days} days`}</span>}
+            {runOut && <span className="people-meter__fuel-rate">{runOut.days === 0 ? "none left" : `lasts ${counted(runOut.days, "day")}`}</span>}
           </span>
         }
         action={

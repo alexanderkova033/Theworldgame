@@ -6,6 +6,7 @@ import { deductResource } from "../../domain/resources/resourceRules";
 import { ONE_OFF, recordAction } from "./recordAction";
 import { describePolicyImpact } from "../describePolicyImpact";
 import { isFeatureOpen } from "../../domain/chapters/chapterData";
+import { counted } from "../../domain/plural";
 
 export { canEnactLaw };
 
@@ -62,7 +63,7 @@ export function enactLaw(state: GameState, lawId: string): GameState {
       {
         id: generateId("event"),
         date: state.date,
-        message: `${law.name} passes the vote. It comes into force in ${days} days.`,
+        message: `${law.name} passes the vote. It comes into force in ${counted(days, "day")}.`,
         severity: "info",
         topic: "laws",
       },

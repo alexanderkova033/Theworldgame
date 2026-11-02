@@ -210,6 +210,11 @@
   line-height: 1.25;
 }
 
+.objectives__guidance--underway {
+  color: var(--ink-muted);
+  font-weight: 400;
+}
+
 .objectives__also .objectives__guidance {
   flex-basis: 100%;
   margin: 0;

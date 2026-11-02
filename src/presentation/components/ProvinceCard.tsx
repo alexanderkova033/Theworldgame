@@ -36,6 +36,7 @@ import { ResourceIcon } from "./ResourceIcon";
 import { StatIcon } from "./StatIcon";
 import type { OpenPanel } from "../navigation";
 import { BUILDING_NAMES } from "../names";
+import { counted } from "../../domain/plural";
 
 
 const SECTOR_LABELS: Array<[Sector, string]> = [
@@ -373,7 +374,7 @@ export function ProvinceCard({ state, dispatch, province, onOpenPanel, onClose }
             {projects.map((project, i) => (
               <span key={project.id}>
                 {i > 0 && " · "}
-                {BUILDING_NAMES[project.type][0]}, {Math.ceil(project.daysRemaining)} days left
+                {BUILDING_NAMES[project.type][0]}, {counted(Math.ceil(project.daysRemaining), "day")} left
                 {project.isStalled && <span className="province-card__bad"> (stalled)</span>}
               </span>
             ))}

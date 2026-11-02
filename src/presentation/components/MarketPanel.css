@@ -125,6 +125,14 @@
   display: none;
 }
 
+.market-order-warning {
+  margin: 0;
+  padding: 0 0.5rem 0.5rem;
+  color: var(--tone-tight);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
 .market-order-edit {
   display: flex;
   flex-wrap: wrap;

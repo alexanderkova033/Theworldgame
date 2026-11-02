@@ -64,6 +64,7 @@ import { BUDGET, HOMES, lockedReason, MARKET, PEOPLE, type Destination, type Ope
 import { MilitiaForce, PoliceForce } from "./WorkforcePanel";
 import { formatAmount, formatRate, formatSigned } from "../formatNumber";
 import { isLongReign } from "../../domain/reign/reignRules";
+import { counted } from "../../domain/plural";
 
 type Dispatch = (action: (state: GameState) => GameState) => void;
 
@@ -243,7 +244,7 @@ function Chamber({
       className="chamber"
       viewBox={`${-radius - pad} ${-radius - pad} ${2 * (radius + pad)} ${radius + pad + seatRadius + 2}`}
       role="img"
-      aria-label={`If the vote were today: ${party.name} ${yours} seats, ${rival.name} ${CHAMBER.seats - yours}. ${getElectionThreshold(state)} seats win. Support is heading for ${heading}.`}
+      aria-label={`If the vote were today: ${party.name} ${counted(yours, "seat")}, ${rival.name} ${CHAMBER.seats - yours}. ${getElectionThreshold(state)} seats win. Support is heading for ${heading}.`}
       onMouseLeave={() => onFocus(null)}
     >
       {/* The line to win: half the chamber for the first election, further
@@ -395,7 +396,7 @@ function SupportView({ state, dispatch, onOpenPanel, onSection }: { state: GameS
           when the vote is and how many you've won; under it the verdict,
           and what your support earns every day. */}
       <div className="politics-hero">
-        <div className="politics-hero__side" title={`The election is in ${monthsLeft} months`}>
+        <div className="politics-hero__side" title={`The election is in ${counted(monthsLeft, "month")}`}>
           <HourglassIcon size={24} />
           <span className="politics-hero__big">{monthsLeft}</span>
           <span className="politics-hero__unit">months</span>
@@ -748,7 +749,7 @@ function Uprisings({ state, dispatch }: { state: GameState; dispatch: Dispatch }
           <li key={o.id} className="uprisings__brewing">
             <StatIcon type="uprising" size={18} />
             <span>
-              <strong>{o.name}</strong> has rioted on its own for {o.riotDays} of {o.riotDaysToRise} days. Give it homes and work, or it rises.
+              <strong>{o.name}</strong> has rioted on its own for {o.riotDays} of {counted(o.riotDaysToRise, "day")}. Give it homes and work, or it rises.
             </span>
           </li>
         ))}
@@ -770,7 +771,7 @@ function UprisingRow({ state, dispatch, province }: { state: GameState; dispatch
   ].filter(Boolean);
   const trend =
     change.total < 0
-      ? `${formatRate(change.total, true)}: over in about ${Math.ceil(uprising.strength / -change.total)} days`
+      ? `${formatRate(change.total, true)}: over in about ${counted(Math.ceil(uprising.strength / -change.total), "day")}`
       : `${formatRate(change.total, true)}: growing`;
   const sendHint = canSendMilitia(state, province.id)
     ? `Send a company in: ${MILITIA_SEND_POLITICAL_POWER} political power, and support ${MILITIA_SEND_SUPPORT} with everyone`
@@ -845,7 +846,7 @@ export function PoliticsPanel({ state, dispatch, onOpenPanel, section, onSection
             label: "Support",
             icon: <StatIcon type="popularity" size={22} />,
             alert: popularity < getElectionThreshold(state) || getPopularityOutlook(state).target < getElectionThreshold(state),
-            hint: `Election in ${months} months: ${popularity >= getElectionThreshold(state) ? "you'd win today" : "you'd lose today"}`,
+            hint: `Election in ${counted(months, "month")}: ${popularity >= getElectionThreshold(state) ? "you'd win today" : "you'd lose today"}`,
           },
           {
             key: "voters",

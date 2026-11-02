@@ -28,13 +28,14 @@ import { getPairHeld, getSynergiesForLaw } from "../../domain/synergy/synergyRul
 import { playGavel } from "../audio/sound";
 import { pickDefaultNode } from "../pickDefaultNode";
 import { revealTreeDetails } from "../revealTreeDetails";
-import { formatAmount } from "../formatNumber";
+import { formatAmount, formatRequirement } from "../formatNumber";
 import { CostChips, DaysChip, ResourceChip, StatChip, TreasuryChip } from "./CostChips";
 import { StatIcon } from "./StatIcon";
 import { HourglassIcon } from "./CauseIcon";
 import { SubTabs } from "./SubTabs";
 import { pairMarks } from "../treeMarks";
 import { InspectorHeader, Lockouts, PathInspector, StatusLine, SynergyLine, TreeBank, TreeColumns, VoteRow, WorkInProgress, type TreeNodeStatus } from "./TechTree";
+import { counted } from "../../domain/plural";
 
 interface LawsPanelProps {
   state: GameState;
@@ -84,6 +85,12 @@ const QUOTA_ICONS: Record<QuotaStat, "treasury" | "population" | "food" | "indus
   stability: "stability",
   popularity: "popularity",
 };
+
+// Both sides of a quota's progress. One not met never reads as met.
+function formatQuotaProgress(stat: QuotaStat, current: number, threshold: number): string {
+  const [have, need] = formatRequirement(current, threshold);
+  return stat === "treasury" ? `${have} / ${need} ${CURRENCY_SYMBOL}` : `${have} / ${need}`;
+}
 
 function formatQuotaValue(stat: QuotaStat, value: number): string {
   if (stat === "treasury") return `${formatAmount(Math.round(value))} ${CURRENCY_SYMBOL}`;
@@ -249,7 +256,7 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
 
       {status === "enacted" && <StatusLine status="enacted">In force.</StatusLine>}
       {status === "in-progress" && state.activeLaw && (
-        <StatusLine status="in-progress">Passed. In force in {state.activeLaw.daysRemaining} days.</StatusLine>
+        <StatusLine status="in-progress">Passed. In force in {counted(state.activeLaw.daysRemaining, "day")}.</StatusLine>
       )}
       {status === "foreclosed" && <StatusLine status="foreclosed">{closedReason(state, node)}</StatusLine>}
       {status === "locked-prerequisite" && (
@@ -264,10 +271,10 @@ function LawInspector({ node, state, status, isArmed, onArm, onConfirm }: LawIns
           </StatusLine>
           <span className="law-inspector__quota-label">
             <StatIcon type={QUOTA_ICONS[node.quota.stat]} size={15} />
-            {QUOTA_LABELS[node.quota.stat]} {formatQuotaValue(node.quota.stat, quota.current)} / {formatQuotaValue(node.quota.stat, quota.threshold)}
+            {QUOTA_LABELS[node.quota.stat]} {formatQuotaProgress(node.quota.stat, quota.current, quota.threshold)}
           </span>
           <div className="progress-bar">
-            <div className="progress-bar__fill" style={{ width: `${Math.round(quota.ratio * 100)}%` }} />
+            <div className="progress-bar__fill" style={{ width: `${Math.floor(quota.ratio * 100)}%` }} />
           </div>
           <p className="law-inspector__quota-hint">{quotaHint(state, node)}</p>
         </div>

@@ -24,6 +24,7 @@ import { StatIcon, type StatIconType } from "./StatIcon";
 import type { Synergy } from "../../domain/synergy/synergyData";
 import type { NodeMarks } from "../treeMarks";
 import { formatRate } from "../formatNumber";
+import { counted } from "../../domain/plural";
 
 
 // Both trees carry the same status vocabulary; Research simply never
@@ -782,7 +783,7 @@ export function WorkInProgress({
 }) {
   const ratio = 1 - daysRemaining / totalDays;
   return (
-    <button type="button" className="law-tree__work" onClick={onSelect} title={`${node.name}: ${daysRemaining} of ${totalDays} days left`}>
+    <button type="button" className="law-tree__work" onClick={onSelect} title={`${node.name}: ${daysRemaining} of ${counted(totalDays, "day")} left`}>
       <NodeGlyph id={node.id} category={node.category} icon={node.icon} size={22} />
       <span className="law-tree__work-name">{node.name}</span>
       <span className="law-tree__work-bar">

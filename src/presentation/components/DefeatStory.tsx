@@ -1,6 +1,7 @@
 import "./DefeatStory.css";
 import type { DefeatStory as Story } from "../../domain/ledger/defeatRules";
 import { formatChange, getCauseInfo, getDefeatTip } from "../causes";
+import { counted } from "../../domain/plural";
 
 const WIDTH = 300;
 const HEIGHT = 84;
@@ -30,7 +31,7 @@ export function DefeatStory({ story }: { story: Story }) {
         <svg
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
           role="img"
-          aria-label={`${metric === "support" ? "Support" : "Stability"} went from ${show(trail[0])} to ${show(trail[last])} over the last ${last} months; it had to stay above ${show(line)}`}
+          aria-label={`${metric === "support" ? "Support" : "Stability"} went from ${show(trail[0])} to ${show(trail[last])} over the last ${counted(last, "month")}; it had to stay above ${show(line)}`}
         >
           <line className="defeat-story__line" x1={PAD} x2={WIDTH - PAD} y1={y(line)} y2={y(line)} />
           <path className="defeat-story__trail" d={path} />
