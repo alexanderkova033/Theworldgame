@@ -209,7 +209,7 @@ describe("difficulty", { timeout: 180000 }, () => {
     expect(wins("normal", "sloppy")).toBeLessThanOrEqual(3);
   });
 
-  it("Hard: a careful player wins about a third of its games, a sloppy one never", () => {
+  it("Hard: a careful player wins about one game in four, a sloppy one never", () => {
     const careful = wins("hard", "careful");
     expect(careful).toBeGreaterThanOrEqual(5);
     expect(careful).toBeLessThanOrEqual(14);

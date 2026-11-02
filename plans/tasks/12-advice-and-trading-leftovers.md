@@ -141,3 +141,5 @@ Caldenreich at 1.3 shows a mean of -10 and a low of -176 in the raw output. Spen
 - "1 day" forms were checked in tests, not seen on screen.
 - Screens were looked at in Astravia only, and not at phone width.
 - The coal figures come from the scripted player, which never changes an order. No real player has tried any of this.
+
+**Manager's change at merge.** The coal warning now gives its advice only when homes would go cold. When wood covers the rest, it says "The rest would burn wood.", since careful games won less at high price limits. The plural exemption in `tests/adviceAndOrders.test.ts` is gone, and the three files it named are fixed.

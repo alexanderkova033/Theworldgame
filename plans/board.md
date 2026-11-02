@@ -22,10 +22,10 @@ Baseline before any task (`cebb053`, 2026-10-31): 408 tests pass in 29 files, an
 | 08b | [Scouting opens when workers run short](tasks/08b-worker-ceiling.md) | merged | `task/08b-worker-ceiling` | chapters, balance | alone |
 | 10 | [Trading orders](tasks/10-trading-orders.md) | merged | `task/10-trading-orders` | market, a day step | alone |
 | 11 | [Trained workers](tasks/11-trained-workers.md) | merged, with limits that aren't exact | `task/11-trained-workers` | labour, balance, People | alone |
-| 12 | [Leftovers: advice and trading](tasks/12-advice-and-trading-leftovers.md) | running | `task/12-advice-trading` | messages, Objectives, forecasts, market orders | 13 |
-| 13 | [Leftovers: windows, map, workers](tasks/13-windows-map-workers-leftovers.md) | running | `task/13-windows-map-workers` | window holds, People, Repairs, map, tests | 12 |
+| 12 | [Leftovers: advice and trading](tasks/12-advice-and-trading-leftovers.md) | merged | `task/12-advice-trading` | messages, Objectives, forecasts, market orders | 13 |
+| 13 | [Leftovers: windows, map, workers](tasks/13-windows-map-workers-leftovers.md) | merged, with crowds kept clear of buildings before land | `task/13-windows-map-workers` | window holds, People, Repairs, map, tests | 12 |
 
-Work branch: `setup-screen-flags`, which holds the latest game (`main` is two commits behind it). Task branches start from it and merge back into it, with 04 last. After each merge, the manager reruns all the checks. The owner plays the result before anything is pushed, and decides when it goes to `main`.
+Work branch: `setup-screen-flags`, which holds the latest game (`main` is behind it). Task branches start from it and merge back into it. After each merge, the manager reruns all the checks. The owner decides when anything is pushed and when it goes to `main`.
 
 Owner's decisions, 2026-10-31: buildings warn before breaking, and a new game's level defaults to Easy (done).
 
@@ -55,83 +55,44 @@ Owner's decisions on the worker design, 2026-11-01: everyone working on day one 
 
 Planned order: the look (1, 2, 3, 5, 10), then the numbers one at a time (4, 6, 9), then trading (8), then workers (7) alone and last. Item 3 gets real screenshots of options for the owner to pick from.
 
-## Watch
+## Left open
 
-- Task 07 moved the ladder to Easy 10 and 27, Normal 0 and 18, Hard 0 and 7, Ruthless 0 and 3. Task 07b moved it to Easy 12 and 27, Normal 0 and 17, Hard 0 and 5, Ruthless 0 and 3, and task 08 to Easy 14 and 27, Normal 0 and 17, Hard 0 and 7, Ruthless 0 and 2 (recorded in `difficultyData.ts`). `balance.test.ts` allows Hard no lower than 5. Careful wins after 07b over 18 seeds, as Astravia, Caldenreich, Veldoria: Normal 10, 16, 5; Hard 5, 8, 0; Ruthless 5, 4, 0. The ladder games pass no laws, so they can't judge the scaled requirements.
-- Veldoria now passes about three times as many Labour laws, but wins no more. It wins nothing on Hard or Ruthless. Why is not traced.
-- "Population 12k / 12k" can show while a law is still locked (at 11,960, say), because of the number format.
-- Hard's test title in `balance.test.ts` says "about a third", which no longer fits.
+Tasks 12 and 13 took the board's other follow-ups. Details and measurements are under Results in each task file.
 
-- One test failed once in `npm test` after task 02 merged, and was not identified. Task 04 then saw `tests/interruptions.test.ts` time out at 5 seconds and an unexplained failure in `tests/balance.test.ts`. The limit is now 30 seconds. If a failure recurs, save the name and the error.
+### For the owner to decide
 
-## Small follow-ups from task 11
+- **The first day's income.** A new game's `stats.industry` starts at 6 whatever is broken or unstaffed, and day 1 really pays on it, so the top bar shows a higher rate on Jan 1 only. Correcting it takes up to 15 Cr off day 1 at every level, which could move the ladder.
+- **Veldoria.** It fails on stability, not at elections. Won, collapsed, voted out, of 18: Normal 6, 8, 4; Hard 0, 17, 1; Ruthless 0, 16, 2. Causes: no stability income, more province drag (one of four weighs more than one of six, inferred), thin food, and less from police (not traced). With Caldenreich's stability it stops collapsing but is voted out, 9, 0, 1 wins. No single change tried opens Hard or Ruthless.
+- **The `agriculture-machines` research path.** It wins 12 of 54 on Normal, against 33 for no path followed, and leaves 22% jobless with or without a limit.
+- **Coal orders at high limits win less.** Careful Normal, 6 seeds, wins with no order and at limits 1.0, 1.15, 1.3, 1.5: Astravia 4, 5, 4, 3, 3; Veldoria 3, 0, 2, 1, 1. Few games. A high limit costs up to 4,095 Cr a year.
 
-- Ladder now Easy 14 and 27, Normal 0 and 19, Hard 0 and 8, Ruthless 0 and 1. Ruthless sits on the test's floor of 1, so one more lost game fails `balance.test.ts`. Careful Normal is 33 of 54 (10, 17, 6 by nation); the start screen now says about three games in five (owner, 2026-11-02).
-- A limit isn't exact, because it never leaves anyone jobless: 1,800 on Astravia's farms gives 2,014, and setting almost any limit pays a little. The owner accepted this and will judge it in play.
-- "Farms: 84% staffed" shows in red even when the player's own limit is the cause.
-- A service in progress shows days left and no progress bar.
-- Servicing everything, careful, of 54 against instant servicing: Normal 29 (33), Hard 13 (14), Ruthless 7 (7).
-- Not tested: whether a war broke out in the games under a limit, moving people with the seasons, laws or research that cut jobs under a limit. Schools under a limit have weak evidence. Nobody has played it.
+### To judge in play
 
-## Small follow-ups from task 09b
+- A limit isn't exact, and setting almost any limit pays a little (owner accepted, to judge).
+- A window held back by letters comes back for one day when a story letter is due the next day, which may read as a flicker.
+- With Build docked at 50rem, only 3 of Astravia's 6 provinces can be clicked at the default map position until the map is dragged.
+- A regiment at sea hides a few letters of a name as it passes. Still shots only, no march watched.
+- Whether a player acts on the winter warning in time, and reads "short of workers" as the reason scouting opened.
+- Building ahead of your people loses games, on money. Not softened, by the owner's decision.
+- Orders make selling a surplus effortless (Caldenreich's coal, up to +2,171 Cr a year).
 
-- Ladder at that point: Easy 14 and 27, Normal 0 and 20, Hard 0 and 7, Ruthless 0 and 2. The test's ceiling on Normal is 22.
-- A coal order with a high enough limit keeps a country warm, but at 1.5 of base it costs 2,200 to 4,200 Cr a year, and careful Veldoria's wins fell at most limits (8 with no order; 5, 7, 4, 4). Nothing tells the player an order's yearly cost.
-- Veldoria still wins nothing on Hard or Ruthless, with or without orders.
+### Small things found, not fixed
 
-## Small follow-ups from task 08b
+- `.progress-bar` has no base style, so the bars in Laws, Research and Ventures are probably invisible. Repairs moved to `Gauge`. Showing them changes the look, so see them first.
+- `App.tsx` can show an ultimatum stacked with a demand or a crisis.
+- A burden letter plays no arrival sound, unlike the others.
+- When farms are held only by a limit, a real factory shortage stays hidden behind the farm row, as it already was behind any farm row.
+- Crowds partly over the shore: 14, 16, 20 of 44 with 2, 3, 6 buildings a place (were 20, 20, 23). Touching a building: 0, 1, 6, as before. Keeping them all on land put 8, 11, 19 on buildings, against the rule that pictures never overlap. Levers not tried: smaller crowds where room is short. A crowd near a coast can also stand close to a name at sea.
+- The whole-game war test needs games without garrisons: no war came in 90 games with garrisons and war on together, as the garrison habit appears to scatter the regiments.
+- Islands relieve the worker shortage little: only Veldoria on Easy at month 48 (jobs over workers 24% to 19%). Island people can't commute. Thin evidence above Easy, as the script rarely settles.
 
-- Countries are short of workers from month 1 in nearly every careful game, which is why the line is as high as 45% of workers. Whether a player reads this as "not enough workers" depends on how it's shown.
-- A crude script that builds ahead of its people loses games (careful Normal 1, 2, 0 against 7, 8, 2). Watch this with task 11, since it is the behaviour the chapter answers.
-- No game has tested whether islands relieve the shortage.
+### Watch
 
-## Small follow-ups from task 10
-
-- Coal order figures were measured before the 5 to 1 heating landed, so rerun them.
-- Nothing tells a player that a coal order with a low price limit will fall short by winter.
-- Orders make selling a surplus effortless (Caldenreich's coal, up to +2,171 Cr a year). Goods are being made, so this is allowed, but worth watching.
-- The 500 Cr reserve can be seen but not set.
-
-## Small follow-ups from task 09
-
-- Veldoria digs no coal either and got none extra. Careful on Normal it goes cold in 8 of 16 second winters and 7 of 9 third winters, and its wins over 18 seeds fell from 4 to 2. The autumn warning shows every year there. The owner chose 60 extra coal: task 09b.
-- Heat shares 0.8 and 0.65 have unit tests only, as no scripted game builds tenements or apartment blocks.
-- Nobody has checked that a person acts on the warning in time.
-
-## Small follow-ups from task 08
-
-- `isAtJobCeiling` (no building slots left) never fired in 216 measured games. The owner meant not enough workers: task 08b replaces it.
-- The 2,500 Cr rule in the scripted player holds back its scouting more than the date does.
-
-## Small follow-ups from task 06
-
-- Strike and riot crowds can stand partly over the shoreline (`placeCrowds`).
-- A regiment passing over a name at sea hasn't been seen on screen.
-
-## Small follow-ups from task 05
-
-- With Build docked at 50rem, only 3 of Astravia's 6 provinces can be clicked at the default map position until the map is dragged. The owner should judge this in play.
-- The money and goods cost tips stay `title`, because `Tooltips.tsx` only follows a changing `title`.
-
-## Small follow-ups from task 03
-
-- A burden offer opens over the window rather than holding it back.
-- The "more waiting" sign shows on briefings only.
-- A held window stays hidden for the day while a story letter is queued.
-
-## Small follow-ups from task 01
-
-- A stalled project's button always goes to Build, even when a good is short. The event would have to carry the cause.
-- `getForecasts` leaves island flocks out, so food forecasts are too gloomy with a grazing island.
-- The tip in `ProjectsPanel.tsx` can blame money when an earlier project took the last of a good.
-- "lasts 1 days" and "Runs out in 1 days" have a wrong plural.
-
-## Small follow-ups from task 02
-
-- Caldenreich and Veldoria make no wood, so they can't start homes until the market opens, even on Easy with money in hand. Balance question for the owner.
-- The repair step stays lit with "Go" for the 10 days after both repairs are paid, which holds back the farm step's guidance.
-- The first-day wait reads 8 days, then 10 the next day: income shows +44 a day on Jan 1 and +29 from Jan 2. Cause not traced.
-- The school, Thornwick farm and harbour steps have no guidance yet.
+- Ladder: Easy 14 and 27, Normal 0 and 19, Hard 0 and 8, Ruthless 0 and 1. Ruthless sits on the test's floor of 1, so one more lost game fails `balance.test.ts`. Normal's ceiling is 22.
+- Veldoria's careful Normal is 6 of 18, and it wins nothing on Hard or Ruthless.
+- `balance.test.ts` can hit its 30-second limits when other sessions load the machine. Task 12 saw only timeouts in the errors it read, passing with a 300-second limit. Task 13 saw two failures it didn't capture, which passed alone and in the next run. If a failure recurs, save the name and the error.
+- Hard's start screen says about one game in four: careful wins are 15 of 54.
+- Nobody has played any of this, nor have touch screens or other browsers been checked.
 
 ## Not taken from the 2026-10-31 feedback
 

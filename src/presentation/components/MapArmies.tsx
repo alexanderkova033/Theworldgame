@@ -16,6 +16,7 @@ import { getNation } from "../../domain/nations/nationRules";
 import { getPlace, getProvinceName } from "../../domain/provinces/provinceRules";
 import { StatIcon } from "./StatIcon";
 import { seaWay } from "../seaRoutes";
+import { counted } from "../../domain/plural";
 
 type Point = { x: number; y: number };
 
@@ -260,7 +261,7 @@ export const ArmyLayer = memo(function ArmyLayer({ regiments, playerNationId, ma
           <g key={`siege-${id}`} className="map-armies__siege" pointerEvents="none">
             <rect x={at.x - 44} y={at.y + 22} width={88} height={18} rx={4} className="map-armies__days-plate" />
             <text x={at.x} y={at.y + 35} className="map-armies__days">
-              Siege {days} of {getSiegeDays(getIslandPeople(id))} days
+              Siege {days} of {counted(getSiegeDays(getIslandPeople(id)), "day")}
             </text>
           </g>
         );

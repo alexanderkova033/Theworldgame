@@ -123,15 +123,14 @@ export function getProvincePlots(provinceId: string): ProvincePlots | null {
   const distance = ([x, y]: Point) => Math.hypot(x - place.labelX, y - place.labelY);
   plots.sort((a, b) => distance(a) - distance(b));
 
-  // Clear of the star first; anywhere in the province after those.
-  const nearestFirst = (points: Point[]) => points.sort((a, b) => distance(a) - distance(b));
-  const open = [...nearestFirst(candidates(polygon, CROWD_GRID, rooms.map(widenedForCrowd), CROWD_EDGE_MARGIN, 0)), ...nearestFirst(candidates(polygon, CROWD_GRID, [], 0, 0))];
-  // Off the water, as far as the place has room: the most of the crowd on land.
+  // Clear of the star first; anywhere in the province after those. Within each,
+  // the most of the crowd on land, then nearest the middle: a crowd takes the
+  // driest ground that is clear of buildings, as pictures never overlap.
   const landShare = (ground: Point) => CROWD_FOOTPRINT.filter(([x, y]) => onLand([ground[0] + x, ground[1] + y])).length;
-  const mostOnLand = Math.max(0, ...open.map(landShare));
-  const dry = open.filter((ground) => landShare(ground) === mostOnLand);
+  const driestFirst = (points: Point[]) => points.map((point) => ({ point, land: landShare(point), far: distance(point) })).sort((a, b) => b.land - a.land || a.far - b.far).map(({ point }) => point);
+  const open = [...driestFirst(candidates(polygon, CROWD_GRID, rooms.map(widenedForCrowd), CROWD_EDGE_MARGIN, 0)), ...driestFirst(candidates(polygon, CROWD_GRID, [], 0, 0))];
 
-  const result: ProvincePlots = { plots, grounds: dry.length > 0 ? dry : [middle] };
+  const result: ProvincePlots = { plots, grounds: open.length > 0 ? open : [middle] };
   plotsById.set(provinceId, result);
   return result;
 }
@@ -157,7 +156,7 @@ export function placeBuildings(provinceId: string, types: ProjectType[]): Array<
 }
 
 // Whether a crowd standing at this point would touch a building there.
-const crowdTouches = ([x, y]: Point, [bx, by]: Point) =>
+export const crowdTouches = ([x, y]: Point, [bx, by]: Point) =>
   Math.abs(bx - x) < CROWD_REACH.across + BUILDING_ROOM.width / 2 && by - y < CROWD_REACH.below + BUILDING_ROOM.height / 2 && y - by < CROWD_REACH.above + BUILDING_ROOM.height / 2;
 
 // The nearest ground clear of everything in the way; failing that, the one

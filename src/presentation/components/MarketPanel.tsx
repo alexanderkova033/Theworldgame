@@ -151,10 +151,11 @@ function CoalOrderWarning({ state }: { state: GameState }) {
   const held = formatAmount(Math.floor(outlook.coalAtWinter));
   const burn = formatAmount(Math.ceil(outlook.winterBurn));
   const when = getSeason(state.date) === "winter" ? `You hold about ${held} coal, and the rest of winter burns ${burn}.` : `This order reaches about ${held} coal by winter, which burns ${burn}.`;
-  const after = outlook.coldDays > 0 ? `Homes would go cold for about ${counted(outlook.coldDays, "day")} of it.` : "The rest would burn wood.";
+  // Advice only when homes would go cold: paying more to spare wood is the player's call.
+  const cold = outlook.coldDays > 0;
   return (
-    <p className="market-order-warning" data-tip={`${after} Worked out from today's prices and homes.`}>
-      {when} {LIMIT_ADVICE[outlook.heldBackBy]}
+    <p className="market-order-warning" data-tip={`${cold ? `Homes would go cold for about ${counted(outlook.coldDays, "day")} of it. ` : ""}Worked out from today's prices and homes.`}>
+      {when} {cold ? LIMIT_ADVICE[outlook.heldBackBy] : "The rest would burn wood."}
     </p>
   );
 }

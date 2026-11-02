@@ -297,7 +297,7 @@ export function PeoplePanel({ state, dispatch, production, provinces, selectedPr
   const heating = getHeatingOutlook(state);
   const fuelShort = heating.fuel < heating.fuelNeeded;
   const fuelDays = Number.isFinite(heating.daysOfFuel) ? Math.floor(heating.daysOfFuel) : "∞";
-  const fuelAgainst = `${heating.winterDaysLeft} ${heating.isWinter ? "days of winter left" : "days of next winter"}`;
+  const fuelAgainst = `${counted(heating.winterDaysLeft, "day")} of ${heating.isWinter ? "winter left" : "next winter"}`;
   // Buying only once the market is open (see domain/chapters).
   const market = isFeatureOpen(state, "market");
 
@@ -373,24 +373,24 @@ export function PeoplePanel({ state, dispatch, production, provinces, selectedPr
           />
         }
         danger={fuelShort && (heating.isWinter || heating.daysUntilWinter <= ADVISOR_WINTER_PREP_DAYS)}
-        value={`fuel for ${fuelDays} of ${heating.winterDaysLeft} days`}
+        value={`fuel for ${fuelDays} of ${counted(heating.winterDaysLeft, "day")}`}
         detail={
           <span className="people-meter__fuel">
-            <span title={`Coal, burned first. Lasts ${Number.isFinite(heating.coalDays) ? Math.floor(heating.coalDays) : "∞"} days.`}>
+            <span title={`Coal, burned first. Lasts ${Number.isFinite(heating.coalDays) ? counted(Math.floor(heating.coalDays), "day") : "∞ days"}.`}>
               <svg viewBox="-10 -10 20 20" width={14} height={14}>
                 <ResourceIcon type="coal" size={8} />
               </svg>
               {Math.floor(state.resources.coal)}
             </span>
             <span>+</span>
-            <span title={`Firewood, burned once the coal runs out. ${WOOD_PER_COAL_HEAT} wood do the work of 1 coal, so it lasts ${Number.isFinite(heating.woodDays) ? Math.floor(heating.woodDays) : "∞"} days.`}>
+            <span title={`Firewood, burned once the coal runs out. ${WOOD_PER_COAL_HEAT} wood do the work of 1 coal, so it lasts ${Number.isFinite(heating.woodDays) ? counted(Math.floor(heating.woodDays), "day") : "∞ days"}.`}>
               <svg viewBox="-10 -10 20 20" width={14} height={14}>
                 <ResourceIcon type="wood" size={8} />
               </svg>
               {Math.floor(state.resources.wood)}
             </span>
             <span className="people-meter__fuel-rate">
-              {formatRate(-heating.fuelPerDay)} coal or {formatRate(-heating.fuelPerDay * WOOD_PER_COAL_HEAT)} wood{heating.isWinter ? "" : ` · winter in ${heating.daysUntilWinter} days`}
+              {formatRate(-heating.fuelPerDay)} coal or {formatRate(-heating.fuelPerDay * WOOD_PER_COAL_HEAT)} wood{heating.isWinter ? "" : ` · winter in ${counted(heating.daysUntilWinter, "day")}`}
             </span>
           </span>
         }
@@ -416,7 +416,7 @@ export function PeoplePanel({ state, dispatch, production, provinces, selectedPr
               },
             ]}
             size="lg"
-            label={`${formatAmount(Math.floor(state.stats.food))} food in store, ${Number.isFinite(storeDays) ? `${Math.floor(storeDays)} days of eating` : "nobody to feed"}`}
+            label={`${formatAmount(Math.floor(state.stats.food))} food in store, ${Number.isFinite(storeDays) ? `${counted(Math.floor(storeDays), "day")} of eating` : "nobody to feed"}`}
           />
         }
         danger={foodShort}

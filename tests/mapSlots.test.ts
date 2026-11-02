@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { getNation } from "../src/domain/nations/nationRules";
 import { MAP_GEOMETRY } from "../src/domain/provinces/provinceData";
-import { BUILDING_ROOM, CROWD_FOOTPRINT, getProvincePlots, onLand, placeBuildings, placeCrowds, separatePlates } from "../src/presentation/mapSlots";
+import { BUILDING_ROOM, CROWD_FOOTPRINT, crowdTouches, getProvincePlots, onLand, placeBuildings, placeCrowds, separatePlates } from "../src/presentation/mapSlots";
 
 const places = [...MAP_GEOMETRY.provinces, ...MAP_GEOMETRY.islands];
 
@@ -38,14 +38,15 @@ describe("plots on the map", () => {
     }
   });
 
-  it("keeps a crowd's whole picture on land, in every place, however full", () => {
+  it("stands a crowd clear of buildings where it can, and then on land where it can", () => {
+    const dry = ([gx, gy]: [number, number]) => CROWD_FOOTPRINT.every(([x, y]) => onLand([gx + x, gy + y]));
     for (const place of places) {
       for (const kinds of [[], ["housing", "farm"], ["housing", "farm", "factory", "housing", "farm", "factory"]] as const) {
         const standing = placeBuildings(place.id, [...kinds]).filter((p) => p !== null);
-        const { camp, square } = placeCrowds(place.id, standing)!;
-        for (const [gx, gy] of [camp, square]) {
-          for (const [x, y] of CROWD_FOOTPRINT) expect(onLand([gx + x, gy + y]), place.name).toBe(true);
-        }
+        const { camp } = placeCrowds(place.id, standing)!;
+        const clear = getProvincePlots(place.id)!.grounds.filter((g) => !standing.some((b) => crowdTouches(g, b)));
+        if (clear.length > 0) expect(standing.some((b) => crowdTouches(camp, b)), place.name).toBe(false);
+        if (clear.length > 0 && clear.every(dry)) expect(dry(camp), place.name).toBe(true);
       }
     }
     // The shore is a real test: open water just past the coast isn't land.

@@ -213,3 +213,5 @@ All driven in headless Chrome from saves I built. Letters, staffing, service and
 - **`.progress-bar` is unstyled in Laws, Research and Ventures too**, so those bars probably can't be seen. Found by search, not looked at.
 - A burden letter plays no arrival sound, unlike the other letters.
 - `tests/balance.test.ts` is unchanged; Hard's title still says "about a third".
+
+**Manager's change at merge, item 6.** Land no longer beats the rule that pictures never overlap. A crowd takes the driest ground clear of buildings. Over water 14, 16, 20 of 44 and touching a building 0, 1, 6, with 2, 3, 6 buildings a place. The lasting test now holds that order. Screenshots: `6b-crowds-*.png` in the scratchpad's `shots` folder.

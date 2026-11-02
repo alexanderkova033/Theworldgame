@@ -12,6 +12,7 @@ import { playRepair } from "../audio/sound";
 import { BuildingIcon } from "./BuildingIcon";
 import { CostChips, ResourceChip, TreasuryChip } from "./CostChips";
 import { Gauge } from "./Gauge";
+import { counted } from "../../domain/plural";
 
 export function WrenchIcon({ size = 14 }: { size?: number }) {
   return (
@@ -57,8 +58,8 @@ export function RepairsPanel({ state, dispatch }: { state: GameState; dispatch: 
               </span>
               <span className="repairs-panel__where">{getProvinceName(building.provinceId)}</span>
               {isRepairing ? (
-                <div className="repairs-panel__progress" title={`${daysLeft} days until it's back in service`}>
-                  <Gauge max={1} size="sm" segments={[{ value: 1 - daysLeft / REPAIR_DAYS, tone: "good" }]} label={`Repair: ${daysLeft} days left`} />
+                <div className="repairs-panel__progress" title={`${counted(daysLeft, "day")} until it's back in service`}>
+                  <Gauge max={1} size="sm" segments={[{ value: 1 - daysLeft / REPAIR_DAYS, tone: "good" }]} label={`Repair: ${counted(daysLeft, "day")} left`} />
                   {daysLeft}d
                 </div>
               ) : (
@@ -93,8 +94,8 @@ export function RepairsPanel({ state, dispatch }: { state: GameState; dispatch: 
               </span>
               <span className="repairs-panel__where">{getProvinceName(building.provinceId)}</span>
               <span className="repairs-panel__crew">Crew at work</span>
-              <div className="repairs-panel__progress" data-tip={`${SERVICE_CREW} people are servicing it. It keeps working, and the wear is gone in ${daysLeft} days.`}>
-                <Gauge max={1} size="sm" segments={[{ value: getServiceProgress(building, state.date), tone: "good" }]} label={`Service: ${daysLeft} days left`} />
+              <div className="repairs-panel__progress" data-tip={`${SERVICE_CREW} people are servicing it. It keeps working, and the wear is gone in ${counted(daysLeft, "day")}.`}>
+                <Gauge max={1} size="sm" segments={[{ value: getServiceProgress(building, state.date), tone: "good" }]} label={`Service: ${counted(daysLeft, "day")} left`} />
                 {daysLeft}d
               </div>
             </li>
@@ -112,7 +113,7 @@ export function RepairsPanel({ state, dispatch }: { state: GameState; dispatch: 
                 <span className="repairs-panel__badge">!</span>
               </span>
               <span className="repairs-panel__where">{getProvinceName(building.provinceId)}</span>
-              <span className="repairs-panel__days" title={`Worn: breaks down in ${daysLeft} days unless serviced`}>
+              <span className="repairs-panel__days" title={`Worn: breaks down in ${counted(daysLeft, "day")} unless serviced`}>
                 {daysLeft}d
               </span>
               <span className={`repairs-panel__crew ${trainedCrew ? "" : "is-untrained"}`}>{trainedCrew ? "Trained crew" : "Untrained crew"}, {days}d</span>
@@ -120,7 +121,7 @@ export function RepairsPanel({ state, dispatch }: { state: GameState; dispatch: 
                 type="button"
                 className="btn-primary repairs-panel__button"
                 disabled={!canServiceBuilding(state, building.id)}
-                data-tip={`${SERVICE_CREW} people from ${getProvinceName(building.provinceId)} take ${days} days. It keeps working, and its wear stops counting down. ${trainedCrew ? `Trained crews take ${SERVICE_DAYS_TRAINED} days.` : `Fewer than 9 in 10 of those in this trade are trained, so the crew is slower and costs half as much again.`}`}
+                data-tip={`${SERVICE_CREW} people from ${getProvinceName(building.provinceId)} take ${counted(days, "day")}. It keeps working, and its wear stops counting down. ${trainedCrew ? `Trained crews take ${SERVICE_DAYS_TRAINED} days.` : `Fewer than 9 in 10 of those in this trade are trained, so the crew is slower and costs half as much again.`}`}
                 onClick={() => {
                   playRepair();
                   dispatch((s) => serviceBuilding(s, building.id));

@@ -40,9 +40,6 @@ describe("counted words", () => {
     expect(counted(12000, "day", "days", "12k")).toBe("12k days");
   });
 
-  // Task 13 is working in these. Their counted days and months are listed in plans/tasks/12's Results.
-  const LEFT_FOR_TASK_13 = ["PeoplePanel.tsx", "RepairsPanel.tsx", "MapArmies.tsx"];
-
   it("leaves no count of days or months to be written by hand", () => {
     const files = (path: string): string[] => (statSync(path).isFile() ? [path] : readdirSync(path).flatMap((name) => files(join(path, name))));
     // A number we can't vouch for: anything but a fixed constant in capitals.
@@ -50,7 +47,7 @@ describe("counted words", () => {
     // A line that has already taken the singular out, as a letter's "a month" does.
     const singularHandled = /=== \d+ \? "a /;
     const offenders = files("src")
-      .filter((file) => /\.tsx?$/.test(file) && !LEFT_FOR_TASK_13.some((left) => file.endsWith(left)))
+      .filter((file) => /\.tsx?$/.test(file))
       .flatMap((file) => readFileSync(file, "utf8").split(/\r?\n/).filter((line) => byHand.test(line) && !singularHandled.test(line)).map((line) => `${file}: ${line.trim()}`));
     expect(offenders).toEqual([]);
   });
